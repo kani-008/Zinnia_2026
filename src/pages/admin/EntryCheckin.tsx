@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { store } from '../../services/store';
 import { AttendanceRecord } from '@packages/types/src';
+import { DoorOpen, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export const EntryCheckinPage: React.FC = () => {
   const [agentInput, setAgentInput] = useState('');
@@ -19,7 +20,6 @@ export const EntryCheckinPage: React.FC = () => {
     const cleaned = agentInput.trim();
     if (!cleaned) return;
 
-    // Search by ID or email
     const participant = store.getParticipantByIdOrEmail(cleaned);
     if (!participant) {
       setFeedback({ type: 'error', message: `Participant "${cleaned}" not found in database.` });
@@ -37,21 +37,21 @@ export const EntryCheckinPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8 font-mono text-xs">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-black text-white flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-heading font-black text-white flex items-center gap-2 font-sans">
             <DoorOpen className="w-6 h-6 text-cyan-400" />
             CAMPUS GATE ENTRY STATION
           </h1>
           <p className="text-xs font-mono text-slate-400 mt-1">
-            Check-in arriving temporal agents and prevent accidental duplicate access.
+            Check-in arriving participants and prevent duplicate access.
           </p>
         </div>
 
         <div className="flex items-center gap-3 font-mono text-xs">
-          <div className="p-2 rounded bg-slate-900 border border-slate-700 text-center">
+          <div className="p-2 rounded bg-[#070c1b] border border-slate-700 text-center">
             <span className="text-slate-400">CHECKED IN: </span>
             <strong className="text-emerald-400 text-sm">{checkedInCount}</strong>
             <span className="text-slate-500"> / {totalRegistered}</span>
@@ -60,10 +60,10 @@ export const EntryCheckinPage: React.FC = () => {
       </div>
 
       {/* Main Entry Checkin Box */}
-      <div className="glass-panel p-6 sm:p-8 tech-bracket border-cyan-500/40 space-y-6">
+      <div className="cyber-card p-6 sm:p-8 cyber-bracket border-cyan-500/40 space-y-6 bg-[#070c1b]/95">
         <form onSubmit={handleEntryCheckin} className="space-y-4 font-mono text-xs">
-          <label className="block text-slate-300 font-bold uppercase tracking-wider text-sm">
-            Scan or Enter Participant ID / Email
+          <label className="block text-slate-300 font-bold uppercase tracking-wider text-sm font-sans">
+            Scan QR or Enter Participant ID / Email
           </label>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -72,9 +72,9 @@ export const EntryCheckinPage: React.FC = () => {
               placeholder="e.g. ZIN26-A8F41C or student@gce.ac.in"
               value={agentInput}
               onChange={(e) => setAgentInput(e.target.value)}
-              className="flex-1 px-4 py-3 rounded-lg bg-slate-950 border border-slate-700 text-white font-sans text-sm focus:border-cyan-400 focus:outline-none uppercase"
+              className="flex-1 px-4 py-3 rounded-lg bg-[#040711] border border-slate-700 text-white font-sans text-sm focus:border-cyan-400 focus:outline-none uppercase"
             />
-            <button type="submit" className="btn-temporal py-3 px-8 text-sm">
+            <button type="submit" className="btn-cyber-primary py-3 px-8 text-xs font-bold">
               <span>RECORD GATE ENTRY</span>
             </button>
           </div>
@@ -99,9 +99,9 @@ export const EntryCheckinPage: React.FC = () => {
       </div>
 
       {/* Arrived Attendees Table */}
-      <div className="glass-panel p-6 tech-bracket border-slate-800 space-y-4">
+      <div className="cyber-card p-6 cyber-bracket border-slate-800 space-y-4 bg-[#070c1b]/95">
         <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-          <h3 className="font-heading font-bold text-white text-sm flex items-center gap-2">
+          <h3 className="font-heading font-bold text-white text-sm flex items-center gap-2 font-sans">
             <Clock className="w-4 h-4 text-cyan-400" />
             RECENT GATE ARRIVALS ({attendance.length})
           </h3>
@@ -120,17 +120,17 @@ export const EntryCheckinPage: React.FC = () => {
                 <th className="pb-2 px-2 text-right">STATUS</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-900">
+            <tbody className="divide-y divide-slate-900 font-sans">
               {attendance.map((rec) => (
                 <tr key={rec.id} className="hover:bg-slate-900/40">
-                  <td className="py-2.5 px-2 text-cyan-400 font-bold">{rec.agent_id}</td>
-                  <td className="py-2.5 px-2 text-white font-sans">{rec.participant_name}</td>
-                  <td className="py-2.5 px-2 text-slate-300 font-sans">{rec.college}</td>
-                  <td className="py-2.5 px-2 text-slate-400">
+                  <td className="py-2.5 px-2 text-cyan-400 font-bold font-mono">{rec.agent_id}</td>
+                  <td className="py-2.5 px-2 text-white font-bold">{rec.participant_name}</td>
+                  <td className="py-2.5 px-2 text-slate-300">{rec.college}</td>
+                  <td className="py-2.5 px-2 text-slate-400 font-mono">
                     {new Date(rec.scanned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </td>
-                  <td className="py-2.5 px-2 text-slate-500">{rec.scanned_by}</td>
-                  <td className="py-2.5 px-2 text-right text-emerald-400 font-bold">
+                  <td className="py-2.5 px-2 text-slate-500 font-mono">{rec.scanned_by}</td>
+                  <td className="py-2.5 px-2 text-right text-emerald-400 font-bold font-mono">
                     ✓ CHECKED IN
                   </td>
                 </tr>
@@ -142,3 +142,5 @@ export const EntryCheckinPage: React.FC = () => {
     </div>
   );
 };
+
+export default EntryCheckinPage;

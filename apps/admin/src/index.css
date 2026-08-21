@@ -1,27 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@400;600;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #05080e;
-  --bg-secondary: #090e17;
-  --bg-card: rgba(11, 18, 28, 0.85);
+  --bg-main: #08090d;
+  --bg-surface: #0e111a;
+  --bg-card: rgba(16, 20, 34, 0.7);
 
-  --cyan-core: #00f0ff;
-  --cyan-glow: rgba(0, 240, 255, 0.4);
+  --accent-indigo: #6366f1;
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
 
-  --violet-core: #8b5cf6;
-
-  --border-subtle: rgba(0, 240, 255, 0.2);
-
+  --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --font-heading: 'Orbitron', 'Space Grotesk', sans-serif;
-  --font-sans: 'Inter', sans-serif;
 }
 
 body {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-main);
   color: #f1f5f9;
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
   min-height: 100vh;
 }
 
@@ -31,66 +29,4 @@ body {
 
 .font-mono {
   font-family: var(--font-mono);
-}
-
-.glass-panel {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-}
-
-.btn-temporal {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(139, 92, 246, 0.15));
-  color: var(--cyan-core);
-  border: 1px solid var(--cyan-core);
-  padding: 10px 20px;
-  font-family: var(--font-heading);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border-radius: 6px;
-  text-decoration: none;
-}
-
-.btn-temporal:hover {
-  background: var(--cyan-core);
-  color: #000;
-  box-shadow: 0 0 20px var(--cyan-glow);
-}
-
-.tech-bracket {
-  position: relative;
-}
-
-.tech-bracket::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: -1px;
-  width: 6px;
-  height: 6px;
-  border-top: 2px solid var(--cyan-core);
-  border-left: 2px solid var(--cyan-core);
-  pointer-events: none;
-}
-
-.tech-bracket::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  right: -1px;
-  width: 6px;
-  height: 6px;
-  border-bottom: 2px solid var(--cyan-core);
-  border-right: 2px solid var(--cyan-core);
-  pointer-events: none;
 }

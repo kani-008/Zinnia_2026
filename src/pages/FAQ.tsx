@@ -1,99 +1,139 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { HelpCircle, ChevronDown, ChevronUp, Shield, Terminal, ArrowRight } from 'lucide-react';
-import { GlitchText } from '../components/hero/GlitchText';
-
-interface FAQItem {
-  q: string;
-  a: string;
-  category: string;
-}
+import { sound } from '../services/sound';
+import { PageHeader } from '../components/ui/PageHeader';
+import { HelpCircle, Search, ChevronDown, ChevronUp, Zap, Sparkles } from 'lucide-react';
 
 export const FAQPage: React.FC = () => {
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<'ALL' | 'EVENTS' | 'REGISTRATION' | 'PASS' | 'LOGISTICS'>('ALL');
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const faqs: FAQItem[] = [
+  const faqs = [
     {
-      category: 'GENERAL & PASSPORT',
-      q: 'What is ZINNIA 2026 and how is it structured?',
-      a: 'ZINNIA 2026 is the annual flagship technical symposium hosted by the Department of Computer Science & Engineering. The event is framed within a classified sci-fi theme where every participant acts as a Temporal Agent investigating the disappearance of Black Cipher. Participants receive a Digital Symposium Passport for campus check-in, food distribution, and mission verification.'
+      category: 'REGISTRATION',
+      q: 'Who is eligible to participate in ZINNIA 2026?',
+      a: 'All engineering students (B.E / B.Tech / M.E / M.Tech / MCA / B.Sc CS / BCA) across any college and department are eligible to participate.'
     },
     {
-      category: 'GENERAL & PASSPORT',
-      q: 'How does the single QR code system work?',
-      a: 'After completing your online registration, a unique Participant ID (e.g. ZIN26-A8F41C) and Digital Passport with an encrypted QR code is generated. You can present this single QR code on your mobile device at the Main Gate for campus entry, at the Food Station for lunch/refreshments, and at specific event halls for mission check-ins.'
+      category: 'EVENTS',
+      q: 'Can I register for both Technical and Non-Technical events?',
+      a: 'Yes! You can register for multiple technical and non-technical tracks, provided their schedule times do not overlap. However, single marathon events (like Infinity Protocol or UI/UX Design) run continuously and cannot be combined with other parallel tracks.'
     },
     {
-      category: 'MISSIONS & RULES',
-      q: 'Can I register for multiple events?',
-      a: 'Yes! You can select multiple short technical and non-technical missions as long as their timings do not directly conflict. Note that single-event marathon tracks (like Operation: Infinity Protocol or UI/UX Design) run for the full duration and are mutually exclusive.'
+      category: 'PASS',
+      q: 'What is the Digital Cyber Pass and how do I use it on symposium day?',
+      a: 'Your Digital Cyber Pass contains your unique Agent ID (e.g. ZIN26-A8F41C) and a verified QR token. Simply show this QR code on your phone at the campus entrance and lunch counters.'
     },
     {
-      category: 'MISSIONS & RULES',
-      q: 'What if my phone battery dies or the camera fails to scan my QR code?',
-      a: 'All CHRONOS verification stations are equipped with a Manual Agent ID Fallback lookup. Simply state or show your 6-character Agent ID (e.g. ZIN26-XXXXXX) to staff to verify your attendance and claim meals.'
+      category: 'LOGISTICS',
+      q: 'Is food and lunch provided for all registered participants?',
+      a: 'Yes! A complimentary lunch and morning refreshments are provided to all verified registered participants upon scanning their Cyber Pass at the food counter.'
     },
     {
-      category: 'FOOD & CERTIFICATES',
-      q: 'Will participants receive food and certificates?',
-      a: 'Yes. All registered attendees receive lunch and refreshments (token verified via your Digital Passport). E-certificates of participation and winner merit awards will be issued and directly accessible from your Digital Passport portal.'
+      category: 'EVENTS',
+      q: 'Are certificates provided for all participants?',
+      a: 'Yes. Official digitally signed e-certificates with instant QR verification are issued to all attendees who attend their registered events. 1st, 2nd, and 3rd place winners also receive cash rewards and trophies.'
+    },
+    {
+      category: 'LOGISTICS',
+      q: 'What is the exact venue for ZINNIA 2026?',
+      a: 'The symposium takes place on 17 September 2026 across the Department of Computer Science & Engineering and Main Auditorium, Government College of Engineering (GCE), Salem - 636 011.'
     }
   ];
 
+  const filtered = faqs.filter(item => {
+    const matchesCat = activeCategory === 'ALL' || item.category === activeCategory;
+    const matchesSearch = 
+      item.q.toLowerCase().includes(search.toLowerCase()) || 
+      item.a.toLowerCase().includes(search.toLowerCase());
+    return matchesCat && matchesSearch;
+  });
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
-      <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 text-xs font-mono tracking-widest uppercase">
-          <HelpCircle className="w-3.5 h-3.5" />
-          CHRONOS SECURITY BRIEFING // FAQ
+    <div className="page-container py-12 space-y-10 font-mono text-xs">
+      {/* Header */}
+      <PageHeader
+        badgeText="SYMPOSIUM KNOWLEDGE BASE"
+        badgeIcon={<HelpCircle className="w-3.5 h-3.5 text-cyan-400" />}
+        title="FREQUENTLY ASKED"
+        glitchWord="QUESTIONS"
+        description="Official guidance regarding event registrations, team participation, food tokens, and certificates."
+        highlightTag="HELP DESK"
+      />
+
+      {/* Search & Category Tabs */}
+      <div className="cyber-card p-4 cyber-bracket border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-[#070c1b]/95 max-w-3xl mx-auto">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <input
+            type="text"
+            placeholder="Search inquiries..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 rounded bg-[#040711] border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none"
+          />
         </div>
-        <h1 className="text-3xl sm:text-5xl font-heading font-black text-white">
-          FREQUENTLY ASKED <GlitchText text="QUESTIONS" />
-        </h1>
-        <p className="text-slate-400 max-w-xl mx-auto font-mono text-xs sm:text-sm">
-          Clearance protocols, passport guidelines, and symposium rules.
-        </p>
-      </div>
 
-      <div className="space-y-4">
-        {faqs.map((faq, idx) => (
-          <div
-            key={idx}
-            className="glass-panel tech-bracket border-slate-800 hover:border-cyan-500/40 transition-all overflow-hidden"
-          >
+        <div className="flex flex-wrap items-center gap-1.5 font-bold">
+          {(['ALL', 'EVENTS', 'REGISTRATION', 'PASS', 'LOGISTICS'] as const).map(cat => (
             <button
-              onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-              className="w-full p-5 text-left flex justify-between items-center gap-4 focus:outline-none"
+              key={cat}
+              onClick={() => {
+                sound.playKeyClick();
+                setActiveCategory(cat);
+              }}
+              className={`px-2.5 py-1.5 rounded text-[10px] transition-all ${
+                activeCategory === cat
+                  ? 'bg-cyan-950 text-cyan-300 border border-cyan-400 shadow-[0_0_10px_rgba(0,240,255,0.3)]'
+                  : 'bg-[#040711] text-slate-400 border border-slate-800 hover:text-white'
+              }`}
             >
-              <div className="space-y-1">
-                <span className="text-[10px] font-mono text-cyan-400 font-bold tracking-wider">
-                  {faq.category}
-                </span>
-                <h3 className="text-base font-heading font-bold text-white">
-                  {faq.q}
-                </h3>
-              </div>
-              <div className="p-1.5 rounded-full bg-slate-900 border border-slate-700 text-cyan-400 shrink-0">
-                {openIndex === idx ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </div>
+              {cat}
             </button>
-
-            {openIndex === idx && (
-              <div className="px-5 pb-5 pt-1 text-sm text-slate-300 font-sans leading-relaxed border-t border-slate-800/60">
-                {faq.a}
-              </div>
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      <div className="p-6 rounded-xl bg-slate-900/60 border border-slate-800 text-center font-mono text-xs text-slate-400 space-y-2">
-        <div>Have further inquiries about registration or event venues?</div>
-        <Link to="/contact" className="text-cyan-400 hover:underline font-bold inline-flex items-center gap-1">
-          <span>Contact CHRONOS Command Desk</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+      {/* FAQ Accordion List */}
+      <div className="max-w-3xl mx-auto space-y-3">
+        {filtered.map((item, idx) => {
+          const isOpen = openIndex === idx;
+          return (
+            <div
+              key={idx}
+              className="cyber-card cyber-bracket border-slate-800 overflow-hidden bg-[#070c1b]/90 transition-all hover:border-cyan-400"
+            >
+              <button
+                onClick={() => {
+                  sound.playKeyClick();
+                  setOpenIndex(isOpen ? null : idx);
+                }}
+                className="w-full p-4 text-left flex justify-between items-center gap-4 transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-cyan-400 font-bold">Q{idx + 1}.</span>
+                  <span className="font-heading font-bold text-white text-xs font-sans">
+                    {item.q}
+                  </span>
+                </div>
+                {isOpen ? (
+                  <ChevronUp className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                )}
+              </button>
+
+              {isOpen && (
+                <div className="p-4 pt-0 border-t border-slate-800/80 text-slate-300 font-sans text-xs leading-relaxed bg-[#040711]/60">
+                  {item.a}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 };
+
+export default FAQPage;

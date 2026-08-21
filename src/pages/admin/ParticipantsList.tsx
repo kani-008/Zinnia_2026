@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { store } from '../../services/store';
 import { Participant } from '@packages/types/src';
-import { Users, Search, Filter, Trash2, Eye, Shield, Award, CheckCircle2 } from 'lucide-react';
+import { Users, Search, Filter, Trash2, Eye, Award, CheckCircle2 } from 'lucide-react';
 import { exportParticipantsExcel } from '../../services/exportService';
 
 export const ParticipantsListPage: React.FC = () => {
@@ -12,7 +12,6 @@ export const ParticipantsListPage: React.FC = () => {
 
   const allEvents = store.getEvents();
 
-  // Colleges list
   const colleges = ['ALL', ...Array.from(new Set(participants.map(p => p.college)))];
 
   const filtered = participants.filter(p => {
@@ -27,7 +26,7 @@ export const ParticipantsListPage: React.FC = () => {
   });
 
   const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to remove Agent ${name}?`)) {
+    if (window.confirm(`Are you sure you want to remove participant ${name}?`)) {
       store.deleteParticipant(id);
       setParticipants(store.getParticipants());
       if (selectedAgent?.id === id) setSelectedAgent(null);
@@ -35,37 +34,37 @@ export const ParticipantsListPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8 font-mono text-xs">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-black text-white flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-heading font-black text-white flex items-center gap-2 font-sans">
             <Users className="w-6 h-6 text-cyan-400" />
-            PARTICIPANT REGISTRY
+            PARTICIPANT REGISTRY & TELEMETRY
           </h1>
           <p className="text-xs font-mono text-slate-400 mt-1">
-            Total {participants.length} registered temporal agents across institutions.
+            Total {participants.length} registered symposium participants across colleges.
           </p>
         </div>
 
         <button
           onClick={exportParticipantsExcel}
-          className="btn-temporal py-2 px-4 text-xs font-bold"
+          className="btn-cyber-primary py-2 px-4 text-xs font-bold"
         >
           <span>EXPORT TO EXCEL (.XLSX)</span>
         </button>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="glass-panel p-4 tech-bracket border-slate-800 flex flex-col sm:flex-row gap-3">
+      <div className="cyber-card p-4 cyber-bracket border-slate-800 flex flex-col sm:flex-row gap-3 bg-[#070c1b]/95">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
           <input
             type="text"
             placeholder="Search by Agent ID, Name, Email, or College..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none"
+            className="w-full pl-9 pr-4 py-2 rounded bg-[#040711] border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none"
           />
         </div>
 
@@ -74,7 +73,7 @@ export const ParticipantsListPage: React.FC = () => {
           <select
             value={selectedCollege}
             onChange={(e) => setSelectedCollege(e.target.value)}
-            className="bg-slate-950 border border-slate-700 text-slate-300 px-3 py-2 rounded text-xs focus:outline-none"
+            className="bg-[#040711] border border-slate-700 text-slate-300 px-3 py-2 rounded text-xs focus:outline-none"
           >
             {colleges.map((c) => (
               <option key={c} value={c}>
@@ -86,47 +85,49 @@ export const ParticipantsListPage: React.FC = () => {
       </div>
 
       {/* Participants Master Table */}
-      <div className="glass-panel p-6 tech-bracket border-slate-800 overflow-x-auto">
+      <div className="cyber-card p-6 cyber-bracket border-slate-800 overflow-x-auto bg-[#070c1b]/95">
         <table className="w-full text-left font-mono text-xs">
           <thead>
             <tr className="border-b border-slate-800 text-slate-400">
               <th className="pb-3 px-2">AGENT ID</th>
               <th className="pb-3 px-2">NAME</th>
               <th className="pb-3 px-2">COLLEGE & DEPT</th>
-              <th className="pb-3 px-2">CLEARANCE</th>
+              <th className="pb-3 px-2">FOOD STATUS</th>
               <th className="pb-3 px-2">MISSIONS</th>
               <th className="pb-3 px-2">STATUS</th>
               <th className="pb-3 px-2 text-right">ACTIONS</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-900">
+          <tbody className="divide-y divide-slate-900 font-sans">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-slate-500">
+                <td colSpan={7} className="py-8 text-center text-slate-500 font-mono">
                   No participants matched your search criteria.
                 </td>
               </tr>
             ) : (
               filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-900/40">
-                  <td className="py-3 px-2 text-cyan-400 font-bold">{p.agent_id}</td>
+                  <td className="py-3 px-2 text-cyan-400 font-bold font-mono">{p.agent_id}</td>
                   <td className="py-3 px-2">
-                    <div className="text-white font-sans font-bold">{p.name}</div>
-                    <div className="text-[11px] text-slate-500 font-sans">{p.email}</div>
+                    <div className="text-white font-bold">{p.name}</div>
+                    <div className="text-[11px] text-slate-400 font-mono">{p.email}</div>
                   </td>
-                  <td className="py-3 px-2 font-sans">
+                  <td className="py-3 px-2">
                     <div className="text-slate-300 truncate max-w-xs">{p.college}</div>
-                    <div className="text-[11px] text-slate-500">{p.department} &bull; Yr {p.year}</div>
+                    <div className="text-[11px] text-slate-400">{p.department} &bull; Yr {p.year}</div>
                   </td>
-                  <td className="py-3 px-2">
-                    <span className="px-2 py-0.5 rounded bg-violet-950 text-violet-400 text-[10px] font-bold border border-violet-500/30">
-                      {p.clearance_level}
-                    </span>
+                  <td className="py-3 px-2 font-mono">
+                    {p.food_collected ? (
+                      <span className="text-emerald-400 font-bold">✓ REDEEMED</span>
+                    ) : (
+                      <span className="text-amber-400">PENDING</span>
+                    )}
                   </td>
-                  <td className="py-3 px-2 text-amber-400 font-bold">
-                    {p.registered_events.length} Assigned
+                  <td className="py-3 px-2 text-fuchsia-400 font-bold font-mono">
+                    {p.registered_events.length} Tracks
                   </td>
-                  <td className="py-3 px-2">
+                  <td className="py-3 px-2 font-mono">
                     <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
                       {p.status}
                     </span>
@@ -134,14 +135,14 @@ export const ParticipantsListPage: React.FC = () => {
                   <td className="py-3 px-2 text-right space-x-2">
                     <button
                       onClick={() => setSelectedAgent(p)}
-                      className="p-1.5 rounded bg-slate-900 text-cyan-400 hover:bg-slate-800"
-                      title="View Dossier"
+                      className="p-1.5 rounded bg-slate-900 text-cyan-400 hover:bg-slate-800 border border-slate-800"
+                      title="View Details"
                     >
                       <Eye className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleDelete(p.id, p.name)}
-                      className="p-1.5 rounded bg-slate-900 text-red-400 hover:bg-red-950"
+                      className="p-1.5 rounded bg-slate-900 text-rose-400 hover:bg-rose-950 border border-slate-800"
                       title="Remove Record"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -154,20 +155,20 @@ export const ParticipantsListPage: React.FC = () => {
         </table>
       </div>
 
-      {/* Participant Dossier Modal */}
+      {/* Participant Modal */}
       {selectedAgent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="glass-panel max-w-lg w-full p-6 tech-bracket border-cyan-400 shadow-2xl space-y-4 font-mono text-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="cyber-card max-w-lg w-full p-6 cyber-bracket border-cyan-400 shadow-2xl space-y-4 font-mono text-xs bg-[#070c1b]">
             <div className="flex justify-between items-start border-b border-slate-800 pb-3">
               <div>
-                <div className="text-[10px] text-cyan-400 font-bold">AGENT DOSSIER</div>
+                <div className="text-[10px] text-cyan-400 font-bold">PARTICIPANT PROFILE</div>
                 <h3 className="text-xl font-heading font-black text-white font-sans">
                   {selectedAgent.name}
                 </h3>
               </div>
               <button
                 onClick={() => setSelectedAgent(null)}
-                className="px-2 py-1 rounded bg-slate-900 text-slate-400 hover:text-white"
+                className="px-2.5 py-1 rounded bg-slate-900 text-slate-400 hover:text-white"
               >
                 CLOSE
               </button>
@@ -175,30 +176,30 @@ export const ParticipantsListPage: React.FC = () => {
 
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
-                <div className="p-2 rounded bg-slate-950 border border-slate-800">
+                <div className="p-2.5 rounded bg-[#040711] border border-slate-800">
                   <span className="text-[10px] text-slate-500">AGENT ID</span>
                   <div className="text-cyan-300 font-bold text-sm">{selectedAgent.agent_id}</div>
                 </div>
-                <div className="p-2 rounded bg-slate-950 border border-slate-800">
-                  <span className="text-[10px] text-slate-500">PHONE</span>
+                <div className="p-2.5 rounded bg-[#040711] border border-slate-800">
+                  <span className="text-[10px] text-slate-500">CONTACT</span>
                   <div className="text-slate-300">{selectedAgent.phone}</div>
                 </div>
               </div>
 
-              <div className="p-2.5 rounded bg-slate-950 border border-slate-800 space-y-1">
+              <div className="p-2.5 rounded bg-[#040711] border border-slate-800 space-y-1">
                 <span className="text-[10px] text-slate-500">INSTITUTION</span>
                 <div className="text-white font-sans font-bold">{selectedAgent.college}</div>
                 <div className="text-slate-400 font-sans text-[11px]">{selectedAgent.department} &bull; Year {selectedAgent.year}</div>
               </div>
 
-              <div className="p-2.5 rounded bg-slate-950 border border-slate-800 space-y-1">
-                <span className="text-[10px] text-slate-500">ASSIGNED MISSIONS</span>
+              <div className="p-2.5 rounded bg-[#040711] border border-slate-800 space-y-1">
+                <span className="text-[10px] text-slate-500">REGISTERED BATTLEGROUNDS</span>
                 <div className="space-y-1">
                   {selectedAgent.registered_events.map((eId) => {
                     const evt = allEvents.find(e => e.id === eId);
                     return (
                       <div key={eId} className="text-slate-300 flex items-center gap-1.5">
-                        <span className="text-cyan-400 font-bold">{evt?.code || 'MSN'}:</span>
+                        <span className="text-cyan-400 font-bold">[{evt?.event_type || 'OP'}] {evt?.code || 'MSN'}:</span>
                         <span>{evt?.mission_name || eId}</span>
                       </div>
                     );
@@ -212,3 +213,5 @@ export const ParticipantsListPage: React.FC = () => {
     </div>
   );
 };
+
+export default ParticipantsListPage;

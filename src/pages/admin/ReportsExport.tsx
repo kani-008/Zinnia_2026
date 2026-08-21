@@ -6,7 +6,7 @@ import {
   Clock, 
   Utensils, 
   Zap, 
-  ShieldCheck 
+  Award 
 } from 'lucide-react';
 import { 
   exportParticipantsExcel, 
@@ -19,15 +19,15 @@ import { store } from '../../services/store';
 export const ReportsExportPage: React.FC = () => {
   const participants = store.getParticipants();
   const attendance = store.getAttendance();
-  const foodRecords = store.getFoodRecords();
   const events = store.getEvents();
+  const foodClaimed = participants.filter(p => p.food_collected).length;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8 font-mono text-xs">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-black text-white flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-heading font-black text-white flex items-center gap-2 font-sans">
             <FileSpreadsheet className="w-6 h-6 text-emerald-400" />
             EXCEL DATA & SYMPOSIUM REPORTING
           </h1>
@@ -40,7 +40,7 @@ export const ReportsExportPage: React.FC = () => {
       {/* Reports Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Report 1: Participants */}
-        <div className="glass-panel p-6 tech-bracket border-cyan-500/30 flex flex-col justify-between space-y-4">
+        <div className="cyber-card p-6 cyber-bracket border-cyan-500/30 flex flex-col justify-between space-y-4 bg-[#070c1b]/95">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 font-bold border border-cyan-500/30">
@@ -48,11 +48,11 @@ export const ReportsExportPage: React.FC = () => {
               </span>
               <span className="text-slate-400">{participants.length} Records</span>
             </div>
-            <h3 className="text-lg font-heading font-bold text-white">
+            <h3 className="text-lg font-heading font-bold text-white font-sans">
               Export Participants.xlsx
             </h3>
             <p className="text-xs font-sans text-slate-300 leading-relaxed">
-              Complete list of all registered temporal agents including Agent IDs, student names, phone numbers, verified emails, institutions, branches, and registered missions.
+              Complete list of all registered participants including Agent IDs, student names, contact numbers, emails, colleges, departments, food status, and registered tracks.
             </p>
           </div>
 
@@ -66,7 +66,7 @@ export const ReportsExportPage: React.FC = () => {
         </div>
 
         {/* Report 2: Attendance */}
-        <div className="glass-panel p-6 tech-bracket border-emerald-500/30 flex flex-col justify-between space-y-4">
+        <div className="cyber-card p-6 cyber-bracket border-emerald-500/30 flex flex-col justify-between space-y-4 bg-[#070c1b]/95">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-bold border border-emerald-500/30">
@@ -74,7 +74,7 @@ export const ReportsExportPage: React.FC = () => {
               </span>
               <span className="text-slate-400">{attendance.length} Scans</span>
             </div>
-            <h3 className="text-lg font-heading font-bold text-white">
+            <h3 className="text-lg font-heading font-bold text-white font-sans">
               Export Attendance.xlsx
             </h3>
             <p className="text-xs font-sans text-slate-300 leading-relaxed">
@@ -92,15 +92,15 @@ export const ReportsExportPage: React.FC = () => {
         </div>
 
         {/* Report 3: Food Distribution */}
-        <div className="glass-panel p-6 tech-bracket border-amber-500/30 flex flex-col justify-between space-y-4">
+        <div className="cyber-card p-6 cyber-bracket border-amber-500/30 flex flex-col justify-between space-y-4 bg-[#070c1b]/95">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="px-2 py-0.5 rounded bg-amber-950 text-amber-400 font-bold border border-amber-500/30">
                 CATERING & MEALS
               </span>
-              <span className="text-slate-400">{foodRecords.length} Tokens</span>
+              <span className="text-slate-400">{foodClaimed} Claimed</span>
             </div>
-            <h3 className="text-lg font-heading font-bold text-white">
+            <h3 className="text-lg font-heading font-bold text-white font-sans">
               Export Food_Distribution.xlsx
             </h3>
             <p className="text-xs font-sans text-slate-300 leading-relaxed">
@@ -118,25 +118,25 @@ export const ReportsExportPage: React.FC = () => {
         </div>
 
         {/* Report 4: Missions Overview */}
-        <div className="glass-panel p-6 tech-bracket border-violet-500/30 flex flex-col justify-between space-y-4">
+        <div className="cyber-card p-6 cyber-bracket border-fuchsia-500/30 flex flex-col justify-between space-y-4 bg-[#070c1b]/95">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-mono">
-              <span className="px-2 py-0.5 rounded bg-violet-950 text-violet-400 font-bold border border-violet-500/30">
-                EVENT ANALYTICS
+              <span className="px-2 py-0.5 rounded bg-fuchsia-950 text-fuchsia-400 font-bold border border-fuchsia-500/30">
+                MISSION ANALYTICS
               </span>
-              <span className="text-slate-400">{events.length} Operations</span>
+              <span className="text-slate-400">{events.length} Tracks</span>
             </div>
-            <h3 className="text-lg font-heading font-bold text-white">
+            <h3 className="text-lg font-heading font-bold text-white font-sans">
               Export Missions_Report.xlsx
             </h3>
             <p className="text-xs font-sans text-slate-300 leading-relaxed">
-              Consolidated breakdown per mission: registered headcount, checked-in turnout, schedules, venues, and clearance parameters.
+              Consolidated breakdown per mission: TECH/NON_TECH category, registered headcount, checked-in turnout, schedules, venues, and prize positions.
             </p>
           </div>
 
           <button
             onClick={exportEventsReportExcel}
-            className="w-full py-2.5 rounded bg-violet-500/20 border border-violet-400 text-violet-300 font-heading font-bold text-xs hover:bg-violet-500 hover:text-black transition-all flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded bg-fuchsia-500/20 border border-fuchsia-400 text-fuchsia-300 font-heading font-bold text-xs hover:bg-fuchsia-500 hover:text-black transition-all flex items-center justify-center gap-2"
           >
             <Download className="w-4 h-4" />
             <span>DOWNLOAD MISSIONS REPORT (.XLSX)</span>
@@ -146,3 +146,5 @@ export const ReportsExportPage: React.FC = () => {
     </div>
   );
 };
+
+export default ReportsExportPage;

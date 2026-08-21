@@ -1,14 +1,15 @@
 import { ClearanceLevel } from './participant';
 
+export type EventType = 'TECH' | 'NON_TECH';
 export type EventCategory = 'TECHNICAL' | 'NON_TECHNICAL';
-
-export type EventStatus = 'AVAILABLE' | 'REGISTRATION_CLOSED' | 'LIVE' | 'CONCLUDED';
+export type EventStatus = 'AVAILABLE' | 'REGISTRATION_CLOSED' | 'LIVE' | 'CONCLUDED' | 'IN_PROGRESS' | 'COMPLETED' | 'LOCKED';
 
 export interface EventMission {
   id: string;
   code: string;
   mission_name: string;
   title: string;
+  event_type: EventType; // Required TECH or NON_TECH
   category: EventCategory;
   clearance_level: ClearanceLevel;
   team_size_min: number;
@@ -19,7 +20,13 @@ export interface EventMission {
   venue: string;
   description: string;
   rules: string[];
-  coordinators: {
+  status: EventStatus;
+  
+  // Results Finalization
+  results_finalized?: boolean;
+  results_finalized_at?: string;
+  
+  coordinators?: {
     name: string;
     role: string;
     phone?: string;
@@ -29,5 +36,16 @@ export interface EventMission {
     second?: string;
     third?: string;
   };
-  status: EventStatus;
+}
+
+export type PrizePosition = 1 | 2 | 3 | null;
+
+export interface EventRegistration {
+  id: string;
+  event_id: string;
+  participant_id: string;
+  team_id?: string;
+  team_name?: string;
+  position?: PrizePosition; // 1 = 1st Prize, 2 = 2nd Prize, 3 = 3rd Prize, null = Participated
+  registered_at: string;
 }

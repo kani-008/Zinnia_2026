@@ -16,39 +16,31 @@ import {
 import { 
   exportParticipantsExcel, 
   exportAttendanceExcel, 
-  exportFoodExcel 
+  exportEventsReportExcel 
 } from '../../services/exportService';
 
 export const AdminDashboardPage: React.FC = () => {
   const participants = store.getParticipants();
   const attendance = store.getAttendance();
-  const foodRecords = store.getFoodRecords();
-  const certificates = store.getCertificates();
   const events = store.getEvents();
 
   const totalRegistered = participants.length;
   const gateCheckins = attendance.filter(a => a.checkin_type === 'ENTRY').length;
-  const foodClaimed = foodRecords.filter(f => f.collected).length;
+  const foodClaimed = participants.filter(p => p.food_collected).length;
   const missionCheckins = attendance.filter(a => a.checkin_type === 'EVENT').length;
 
   const attendanceRate = totalRegistered > 0 ? Math.round((gateCheckins / totalRegistered) * 100) : 0;
 
-  // College distribution summary
-  const collegeCounts: { [key: string]: number } = {};
-  participants.forEach(p => {
-    collegeCounts[p.college] = (collegeCounts[p.college] || 0) + 1;
-  });
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 font-mono text-xs">
       {/* Welcome & Quick Action Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-black text-white">
+          <h1 className="text-2xl sm:text-3xl font-heading font-black text-white font-sans">
             OPERATIONAL COMMAND DASHBOARD
           </h1>
           <p className="text-xs font-mono text-slate-400 mt-1">
-            Real-time symposium participant telemetry, verification stations, and reporting.
+            Real-time symposium participant telemetry, verification stations, and dynamic certificate generation.
           </p>
         </div>
 
@@ -66,12 +58,12 @@ export const AdminDashboardPage: React.FC = () => {
       {/* Stat Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Registrations */}
-        <div className="glass-panel p-5 tech-bracket border-cyan-500/30 space-y-2">
+        <div className="classified-card p-5 tech-bracket border-cyan-500/30 space-y-2 bg-[#070b14]/90">
           <div className="flex justify-between items-center text-slate-400 font-mono text-xs">
             <span>TOTAL AGENTS</span>
             <Users className="w-4 h-4 text-cyan-400" />
           </div>
-          <div className="text-3xl font-heading font-black text-white">
+          <div className="text-3xl font-heading font-black text-white font-sans">
             {totalRegistered}
           </div>
           <div className="text-[11px] font-mono text-cyan-400">
@@ -80,12 +72,12 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* Card 2: Gate Check-ins */}
-        <div className="glass-panel p-5 tech-bracket border-emerald-500/30 space-y-2">
+        <div className="classified-card p-5 tech-bracket border-emerald-500/30 space-y-2 bg-[#070b14]/90">
           <div className="flex justify-between items-center text-slate-400 font-mono text-xs">
             <span>GATE ENTRY</span>
             <DoorOpen className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-3xl font-heading font-black text-emerald-400">
+          <div className="text-3xl font-heading font-black text-emerald-400 font-sans">
             {gateCheckins}
           </div>
           <div className="text-[11px] font-mono text-slate-400">
@@ -94,12 +86,12 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* Card 3: Food Distributed */}
-        <div className="glass-panel p-5 tech-bracket border-amber-500/30 space-y-2">
+        <div className="classified-card p-5 tech-bracket border-amber-500/30 space-y-2 bg-[#070b14]/90">
           <div className="flex justify-between items-center text-slate-400 font-mono text-xs">
             <span>FOOD TOKENS</span>
             <Utensils className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-3xl font-heading font-black text-amber-400">
+          <div className="text-3xl font-heading font-black text-amber-400 font-sans">
             {foodClaimed}
           </div>
           <div className="text-[11px] font-mono text-slate-400">
@@ -108,12 +100,12 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* Card 4: Mission Verifications */}
-        <div className="glass-panel p-5 tech-bracket border-violet-500/30 space-y-2">
+        <div className="classified-card p-5 tech-bracket border-violet-500/30 space-y-2 bg-[#070b14]/90">
           <div className="flex justify-between items-center text-slate-400 font-mono text-xs">
             <span>MISSION CHECKS</span>
             <Zap className="w-4 h-4 text-violet-400" />
           </div>
-          <div className="text-3xl font-heading font-black text-violet-400">
+          <div className="text-3xl font-heading font-black text-violet-400 font-sans">
             {missionCheckins}
           </div>
           <div className="text-[11px] font-mono text-slate-400">
@@ -124,16 +116,16 @@ export const AdminDashboardPage: React.FC = () => {
 
       {/* Quick Stations Launch Grid */}
       <div className="space-y-3">
-        <h3 className="text-sm font-heading font-bold text-slate-300 font-mono">
+        <h3 className="text-xs font-heading font-bold text-slate-300 font-mono uppercase tracking-wider">
           OPERATIONAL CHECKPOINT STATIONS
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
             to="/admin/entry"
-            className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-400 hover:bg-cyan-950/20 transition-all flex items-center justify-between group"
+            className="p-5 rounded-xl bg-[#070b14] border border-slate-800 hover:border-cyan-400 hover:bg-cyan-950/20 transition-all flex items-center justify-between group"
           >
             <div className="space-y-1">
-              <div className="font-heading font-bold text-white group-hover:text-cyan-300 flex items-center gap-2">
+              <div className="font-heading font-bold text-white group-hover:text-cyan-300 flex items-center gap-2 font-sans">
                 <DoorOpen className="w-4 h-4 text-cyan-400" />
                 GATE ENTRY STATION
               </div>
@@ -146,34 +138,34 @@ export const AdminDashboardPage: React.FC = () => {
 
           <Link
             to="/admin/food"
-            className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-amber-400 hover:bg-amber-950/20 transition-all flex items-center justify-between group"
+            className="p-5 rounded-xl bg-[#070b14] border border-slate-800 hover:border-amber-400 hover:bg-amber-950/20 transition-all flex items-center justify-between group"
           >
             <div className="space-y-1">
-              <div className="font-heading font-bold text-white group-hover:text-amber-300 flex items-center gap-2">
+              <div className="font-heading font-bold text-white group-hover:text-amber-300 flex items-center gap-2 font-sans">
                 <Utensils className="w-4 h-4 text-amber-400" />
                 FOOD DISTRIBUTION
               </div>
               <div className="text-xs font-mono text-slate-400">
-                Redeem lunch token with duplicate detection.
+                Redeem lunch token tracked on participant record.
               </div>
             </div>
             <ArrowUpRight className="w-5 h-5 text-slate-500 group-hover:text-amber-400 transition-colors" />
           </Link>
 
           <Link
-            to="/admin/events"
-            className="p-5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-violet-400 hover:bg-violet-950/20 transition-all flex items-center justify-between group"
+            to="/admin/certificates"
+            className="p-5 rounded-xl bg-[#070b14] border border-slate-800 hover:border-emerald-400 hover:bg-emerald-950/20 transition-all flex items-center justify-between group"
           >
             <div className="space-y-1">
-              <div className="font-heading font-bold text-white group-hover:text-violet-300 flex items-center gap-2">
-                <Zap className="w-4 h-4 text-violet-400" />
-                MISSION DESKS
+              <div className="font-heading font-bold text-white group-hover:text-emerald-300 flex items-center gap-2 font-sans">
+                <Award className="w-4 h-4 text-emerald-400" />
+                PRIZES & CERTIFICATES
               </div>
               <div className="text-xs font-mono text-slate-400">
-                Verify event registration per participant.
+                Assign 1st/2nd/3rd prize & generate dynamic e-certs.
               </div>
             </div>
-            <ArrowUpRight className="w-5 h-5 text-slate-500 group-hover:text-violet-400 transition-colors" />
+            <ArrowUpRight className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 transition-colors" />
           </Link>
         </div>
       </div>
@@ -181,9 +173,9 @@ export const AdminDashboardPage: React.FC = () => {
       {/* Two Columns: Recent Attendance Activity + Reports & Exports */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Recent Check-in Feed */}
-        <div className="lg:col-span-7 glass-panel p-6 tech-bracket space-y-4 border-slate-800">
+        <div className="lg:col-span-7 classified-card p-6 tech-bracket space-y-4 border-slate-800 bg-[#070b14]/90">
           <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-            <h3 className="font-heading font-bold text-white text-sm flex items-center gap-2">
+            <h3 className="font-heading font-bold text-white text-sm flex items-center gap-2 font-sans">
               <Clock className="w-4 h-4 text-cyan-400" />
               LIVE TELEMETRY STREAM
             </h3>
@@ -197,10 +189,10 @@ export const AdminDashboardPage: React.FC = () => {
               attendance.slice(0, 8).map((record) => (
                 <div
                   key={record.id}
-                  className="p-3 rounded bg-slate-950/60 border border-slate-900 flex items-center justify-between"
+                  className="p-3 rounded bg-slate-950/80 border border-slate-900 flex items-center justify-between"
                 >
                   <div className="space-y-0.5">
-                    <div className="font-bold text-white flex items-center gap-2">
+                    <div className="font-bold text-white flex items-center gap-2 font-sans">
                       <span>{record.participant_name}</span>
                       <span className="text-cyan-400 font-mono text-[11px]">({record.agent_id})</span>
                     </div>
@@ -210,7 +202,7 @@ export const AdminDashboardPage: React.FC = () => {
                   </div>
                   <div className="text-right text-[10px] text-slate-400">
                     <div>{new Date(record.scanned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                    <span className="text-emerald-400">✓ VERIFIED</span>
+                    <span className="text-emerald-400 font-bold">✓ VERIFIED</span>
                   </div>
                 </div>
               ))
@@ -219,9 +211,9 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* Right Column: Excel Export & Stats */}
-        <div className="lg:col-span-5 glass-panel p-6 tech-bracket space-y-4 border-slate-800">
+        <div className="lg:col-span-5 classified-card p-6 tech-bracket space-y-4 border-slate-800 bg-[#070b14]/90">
           <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-            <h3 className="font-heading font-bold text-white text-sm flex items-center gap-2">
+            <h3 className="font-heading font-bold text-white text-sm flex items-center gap-2 font-sans">
               <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
               EXCEL DATA EXPORTS
             </h3>
@@ -250,11 +242,11 @@ export const AdminDashboardPage: React.FC = () => {
             </button>
 
             <button
-              onClick={exportFoodExcel}
+              onClick={exportEventsReportExcel}
               className="w-full py-2 px-3 rounded bg-slate-900 border border-slate-700 text-slate-200 hover:border-emerald-400 hover:text-emerald-300 transition-colors flex items-center justify-between"
             >
-              <span>Export Food_Distribution.xlsx</span>
-              <span className="text-slate-500">{foodClaimed} records</span>
+              <span>Export Missions_Report.xlsx</span>
+              <span className="text-slate-500">{events.length} events</span>
             </button>
           </div>
         </div>
@@ -262,3 +254,5 @@ export const AdminDashboardPage: React.FC = () => {
     </div>
   );
 };
+
+export default AdminDashboardPage;

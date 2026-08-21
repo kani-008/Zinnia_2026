@@ -1,152 +1,183 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, Shield, Terminal, CheckCircle2 } from 'lucide-react';
-import { GlitchText } from '../components/hero/GlitchText';
+import { sound } from '../services/sound';
+import { PageHeader } from '../components/ui/PageHeader';
+import { Button } from '../components/ui/Button';
+import { 
+  Radio, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Send, 
+  CheckCircle2, 
+  Building,
+  UserCheck
+} from 'lucide-react';
 
 export const ContactPage: React.FC = () => {
-  const [sent, setSent] = useState(false);
-  const [agentName, setAgentName] = useState('');
-  const [agentEmail, setAgentEmail] = useState('');
-  const [message, setMessage] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSent(true);
+    sound.playConfirmTone();
+    setSubmitted(true);
   };
 
-  const staffLeads = [
-    { role: 'Faculty Convener', name: 'Dr. A. Senthil Kumar', department: 'Dept of CSE', phone: '+91 98401 23456', email: 'senthil.cse@gce.ac.in' },
-    { role: 'Staff Coordinator', name: 'Prof. M. Priya', department: 'Dept of CSE', phone: '+91 98402 34567', email: 'priya.cse@gce.ac.in' }
-  ];
-
-  const studentCoordinators = [
-    { role: 'Student President', name: 'R. Kanishkar', phone: '+91 94451 98765', email: 'kanishkar.m@gce.ac.in' },
-    { role: 'Student Vice President', name: 'D. Harini', phone: '+91 98765 43210', email: 'harini.d@gce.ac.in' },
-    { role: 'Technical Operations Lead', name: 'S. Vignesh', phone: '+91 97890 12345', email: 'vignesh.s@gce.ac.in' }
-  ];
-
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
-      <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 text-xs font-mono tracking-widest uppercase">
-          <Terminal className="w-3.5 h-3.5" />
-          COMMUNICATION NODE // CHRONOS HQ
-        </div>
-        <h1 className="text-3xl sm:text-5xl font-heading font-black text-white">
-          COMMAND <GlitchText text="COORDINATES" />
-        </h1>
-        <p className="text-slate-400 max-w-xl mx-auto font-mono text-xs sm:text-sm">
-          Connect with symposium faculty conveners, student coordinators, and technical team leads.
-        </p>
-      </div>
+    <div className="page-container py-12 space-y-10 font-mono text-xs">
+      {/* Header */}
+      <PageHeader
+        badgeText="COMMAND HEADQUARTERS & COORDINATES"
+        badgeIcon={<Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />}
+        title="COMMUNICATIONS"
+        glitchWord="CHANNELS"
+        description="Direct links to symposium staff conveners, student coordinators, and campus venue coordinates."
+        highlightTag="GCE SALEM CSE"
+      />
 
+      {/* 12-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Coordinators Column */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="glass-panel p-6 tech-bracket space-y-4 border-slate-800">
-            <h3 className="text-base font-heading font-bold text-white text-cyan-400 flex items-center gap-2">
-              <Shield className="w-4 h-4" /> FACULTY CONVENERS
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs">
-              {staffLeads.map((lead, i) => (
-                <div key={i} className="p-3 rounded bg-slate-900/60 border border-slate-800 space-y-1">
-                  <div className="text-[10px] text-slate-500 uppercase">{lead.role}</div>
-                  <div className="text-white font-bold text-sm font-sans">{lead.name}</div>
-                  <div className="text-slate-400 text-[11px]">{lead.department}</div>
-                  <div className="text-cyan-400 text-[11px] pt-1">{lead.phone}</div>
-                </div>
-              ))}
+        
+        {/* Left Coordinates & Leadership (col-span-5) */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="cyber-card p-6 cyber-bracket border-slate-800 space-y-4 bg-[#070c1b]/95">
+            <div className="text-white font-heading font-bold text-sm border-b border-slate-800 pb-2 flex items-center gap-2 font-sans">
+              <MapPin className="w-4 h-4 text-cyan-400" />
+              <span>SYMPOSIUM VENUE COORDINATES</span>
+            </div>
+
+            <div className="space-y-1 text-slate-300 font-sans text-xs">
+              <div className="font-bold text-white">Department of Computer Science & Engineering</div>
+              <div>Government College of Engineering (Autonomous)</div>
+              <div className="text-slate-400 text-[11px]">Bangalore Highway, Salem - 636 011, Tamil Nadu</div>
+            </div>
+
+            <div className="pt-2 border-t border-slate-800 space-y-2 text-xs">
+              <div className="flex items-center gap-2 text-slate-300 font-mono">
+                <Mail className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                <span>zinnia2026.gce@gmail.com</span>
+              </div>
+              <div className="flex items-center gap-2 text-slate-300 font-mono">
+                <Phone className="w-4 h-4 text-fuchsia-400 flex-shrink-0" />
+                <span>+91 98401 98765 / +91 94451 23456</span>
+              </div>
             </div>
           </div>
 
-          <div className="glass-panel p-6 tech-bracket space-y-4 border-slate-800">
-            <h3 className="text-base font-heading font-bold text-white text-violet-400 flex items-center gap-2">
-              <Terminal className="w-4 h-4" /> STUDENT COMMAND DESK
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
-              {studentCoordinators.map((lead, i) => (
-                <div key={i} className="p-3 rounded bg-slate-900/60 border border-slate-800 space-y-1">
-                  <div className="text-[9px] text-slate-500 uppercase">{lead.role}</div>
-                  <div className="text-white font-bold font-sans text-xs">{lead.name}</div>
-                  <div className="text-violet-300 text-[11px] pt-1">{lead.phone}</div>
-                </div>
-              ))}
+          <div className="cyber-card p-6 cyber-bracket border-slate-800 space-y-3 bg-[#070c1b]/95">
+            <div className="text-white font-heading font-bold text-sm border-b border-slate-800 pb-2 flex items-center gap-2 font-sans">
+              <UserCheck className="w-4 h-4 text-emerald-400" />
+              <span>FACULTY & STUDENT COORDINATION</span>
             </div>
-          </div>
 
-          {/* Physical Address */}
-          <div className="glass-panel p-6 tech-bracket space-y-2 border-slate-800 font-mono text-xs text-slate-300">
-            <div className="text-emerald-400 font-bold flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4" /> CAMPUS LOCATION
+            <div className="space-y-3 text-[11px] text-slate-300">
+              <div>
+                <div className="text-slate-500 uppercase text-[10px] font-bold">STAFF CONVENER & HOD</div>
+                <div className="text-white font-bold font-sans">Dr. A. Rajesh, M.E., Ph.D.</div>
+                <div className="text-slate-400 font-sans">Head, Department of CSE &bull; GCE Salem</div>
+              </div>
+
+              <div>
+                <div className="text-slate-500 uppercase text-[10px] font-bold">STUDENT SECRETARY</div>
+                <div className="text-white font-bold font-sans">Kanishkar M (Final Year CSE)</div>
+                <div className="text-slate-400 font-sans">Secretary, CSE Association 2026</div>
+              </div>
             </div>
-            <p className="font-sans text-slate-400">
-              Department of Computer Science & Engineering, Government College of Engineering, Tamil Nadu, India.
-            </p>
           </div>
         </div>
 
-        {/* Message Dispatch Form */}
-        <div className="lg:col-span-5">
-          <div className="glass-panel p-6 sm:p-8 tech-bracket border-cyan-500/40 shadow-2xl">
-            <h3 className="text-lg font-heading font-bold text-white mb-2">
-              DISPATCH TRANSMISSION
-            </h3>
-            <p className="text-xs font-mono text-slate-400 mb-6">
-              Send an inquiry directly to the event operations team.
-            </p>
+        {/* Right Transmission Dispatch Form (col-span-7) */}
+        <div className="lg:col-span-7">
+          <div className="cyber-card p-6 sm:p-8 cyber-bracket border-slate-800 bg-[#070c1b]/95 space-y-5">
+            <div className="text-white font-heading font-bold text-sm border-b border-slate-800 pb-2 flex items-center gap-2 font-sans">
+              <Send className="w-4 h-4 text-cyan-400" />
+              <span>DISPATCH INQUIRY TO ORGANIZERS</span>
+            </div>
 
-            {sent ? (
-              <div className="p-6 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-center font-mono text-xs space-y-2">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
-                <div className="text-emerald-300 font-bold text-sm">TRANSMISSION RECEIVED</div>
-                <p className="text-slate-300">Our temporal dispatch officers will respond to your frequency shortly.</p>
+            {submitted ? (
+              <div className="p-8 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-950 border border-emerald-400 flex items-center justify-center mx-auto text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-heading font-bold text-white uppercase font-sans">
+                  MESSAGE TRANSMITTED
+                </h3>
+                <p className="text-slate-300 font-sans text-xs">
+                  Your query has been dispatched to the symposium organizing team. We will respond promptly.
+                </p>
+                <Button variant="SECONDARY" size="sm" onClick={() => setSubmitted(false)}>
+                  <span>Send Another Message</span>
+                </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4 font-mono text-xs">
-                <div>
-                  <label className="block text-slate-300 font-bold mb-1">AGENT / SENDER NAME</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-slate-300 font-bold">NAME *</label>
+                    <input
+                      type="text"
+                      placeholder="Your Full Name"
+                      value={formData.name}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-3.5 py-2 rounded bg-[#040711] border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-slate-300 font-bold">EMAIL ADDRESS *</label>
+                    <input
+                      type="email"
+                      placeholder="your.email@college.edu"
+                      value={formData.email}
+                      onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-3.5 py-2 rounded bg-[#040711] border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-slate-300 font-bold">SUBJECT *</label>
                   <input
                     type="text"
+                    placeholder="e.g. Mission Schedule Clarification or Registration Query"
+                    value={formData.subject}
+                    onChange={e => setFormData({ ...formData, subject: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded bg-[#040711] border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none"
                     required
-                    placeholder="Your Name"
-                    value={agentName}
-                    onChange={(e) => setAgentName(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded bg-slate-950 border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-slate-300 font-bold mb-1">RETURN FREQUENCY (EMAIL)</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="email@domain.com"
-                    value={agentEmail}
-                    onChange={(e) => setAgentEmail(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded bg-slate-950 border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 font-bold mb-1">TRANSMISSION CONTENT</label>
+                <div className="space-y-1">
+                  <label className="block text-slate-300 font-bold">MESSAGE *</label>
                   <textarea
                     rows={4}
+                    placeholder="Type your message or inquiry here..."
+                    value={formData.message}
+                    onChange={e => setFormData({ ...formData, message: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded bg-[#040711] border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none"
                     required
-                    placeholder="Describe your inquiry..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded bg-slate-950 border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none"
                   />
                 </div>
 
-                <button type="submit" className="btn-temporal w-full py-2.5">
-                  <span>DISPATCH MESSAGE</span>
-                  <Send className="w-3.5 h-3.5" />
-                </button>
+                <div className="pt-2 flex justify-end">
+                  <Button type="submit" variant="PRIMARY" rightIcon={<Send className="w-3.5 h-3.5" />}>
+                    <span>DISPATCH MESSAGE</span>
+                  </Button>
+                </div>
               </form>
             )}
           </div>
         </div>
+
       </div>
     </div>
   );
 };
+
+export default ContactPage;

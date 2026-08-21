@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { store } from '../../services/store';
-import { FoodRecord } from '@packages/types/src';
+import { Participant } from '@packages/types/src';
 import { Utensils, CheckCircle2, AlertTriangle, Search, Clock, Shield } from 'lucide-react';
 
 export const FoodCheckinPage: React.FC = () => {
   const [agentInput, setAgentInput] = useState('');
-  const [session, setSession] = useState<'LUNCH' | 'SNACKS'>('LUNCH');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
-  const [foodRecords, setFoodRecords] = useState<FoodRecord[]>(store.getFoodRecords());
+  const [participants, setParticipants] = useState<Participant[]>(store.getParticipants());
 
-  const participants = store.getParticipants();
-  const collectedCount = foodRecords.filter(f => f.collected && f.meal_session === session).length;
+  const collectedParticipants = participants.filter(p => p.food_collected);
+  const totalRegistered = participants.length;
 
   const handleRedeemFood = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,10 +23,10 @@ export const FoodCheckinPage: React.FC = () => {
       return;
     }
 
-    const res = store.recordFoodDistribution(participant.agent_id, session, `Food Counter 01 (${session})`);
+    const res = store.recordFoodDistribution(participant.agent_id, 'Food Counter 01');
     if (res.success) {
       setFeedback({ type: 'success', message: res.message });
-      setFoodRecords(store.getFoodRecords());
+      setParticipants(store.getParticipants());
       setAgentInput('');
     } else {
       setFeedback({ type: 'warning', message: res.message });
@@ -35,62 +34,45 @@ export const FoodCheckinPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8 font-mono text-xs">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-heading font-black text-white flex items-center gap-2">
             <Utensils className="w-6 h-6 text-amber-400" />
-            FOOD & REFRESHMENT DISTRIBUTION
+            FOOD & MEAL DISTRIBUTION
           </h1>
           <p className="text-xs font-mono text-slate-400 mt-1">
-            Redeem participant meal tokens with strict duplicate prevention.
+            Redeem participant lunch tokens tracked directly on the participant record.
           </p>
         </div>
 
         <div className="flex items-center gap-3 font-mono text-xs">
           <div className="p-2 rounded bg-slate-900 border border-slate-700 text-center">
-            <span className="text-slate-400">MEALS SERVED ({session}): </span>
-            <strong className="text-amber-400 text-sm">{collectedCount}</strong>
-            <span className="text-slate-500"> / {participants.length}</span>
+            <span className="text-slate-400">MEALS SERVED: </span>
+            <strong className="text-amber-400 text-sm">{collectedParticipants.length}</strong>
+            <span className="text-slate-500"> / {totalRegistered}</span>
           </div>
         </div>
       </div>
 
       {/* Main Food Redemption Box */}
-      <div className="glass-panel p-6 sm:p-8 tech-bracket border-amber-500/40 space-y-6">
-        <div className="flex gap-2 font-mono text-xs">
-          {(['LUNCH', 'SNACKS'] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setSession(s)}
-              className={`px-4 py-2 rounded-lg font-bold transition-all ${
-                session === s
-                  ? 'bg-amber-500 text-black shadow-[0_0_10px_rgba(245,158,11,0.4)]'
-                  : 'bg-slate-900 text-slate-400 border border-slate-800'
-              }`}
-            >
-              {s} SESSION
-            </button>
-          ))}
-        </div>
-
+      <div className="classified-card p-6 sm:p-8 tech-bracket border-amber-500/40 space-y-6 bg-[#070b14]/90">
         <form onSubmit={handleRedeemFood} className="space-y-4 font-mono text-xs">
-          <label className="block text-slate-300 font-bold uppercase tracking-wider text-sm">
-            Scan or Enter Agent ID for {session} Token
+          <label className="block text-slate-300 font-bold uppercase tracking-wider text-sm font-sans">
+            Scan QR or Enter Agent ID / Email
           </label>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               autoFocus
-              placeholder="e.g. ZIN26-A8F41C"
+              placeholder="e.g. ZIN26-A8F41C or email"
               value={agentInput}
               onChange={(e) => setAgentInput(e.target.value)}
-              className="flex-1 px-4 py-3 rounded-lg bg-slate-950 border border-slate-700 text-white font-sans text-sm focus:border-amber-400 focus:outline-none uppercase"
+              className="flex-1 px-4 py-3 rounded-lg bg-[#030508] border border-slate-700 text-white font-sans text-sm focus:border-amber-400 focus:outline-none uppercase"
             />
-            <button type="submit" className="py-3 px-8 rounded bg-amber-500 text-black font-heading font-bold text-sm hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all">
-              <span>REDEEM TOKEN</span>
+            <button type="submit" className="py-3 px-8 rounded bg-amber-500 text-black font-heading font-bold text-sm hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)] transition-all font-sans">
+              <span>REDEEM LUNCH</span>
             </button>
           </div>
         </form>
@@ -114,13 +96,13 @@ export const FoodCheckinPage: React.FC = () => {
       </div>
 
       {/* Food Redemption Log */}
-      <div className="glass-panel p-6 tech-bracket border-slate-800 space-y-4">
+      <div className="classified-card p-6 tech-bracket border-slate-800 space-y-4 bg-[#070b14]/90">
         <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-          <h3 className="font-heading font-bold text-white text-sm flex items-center gap-2">
+          <h3 className="font-heading font-bold text-white text-sm flex items-center gap-2 font-sans">
             <Clock className="w-4 h-4 text-amber-400" />
-            REDEMPTION HISTORY ({foodRecords.length})
+            COLLECTED MEAL LOG ({collectedParticipants.length})
           </h3>
-          <span className="font-mono text-[10px] text-slate-400">MEAL TOKENS</span>
+          <span className="font-mono text-[10px] text-slate-400">PARTICIPANT RECORDS</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -129,27 +111,33 @@ export const FoodCheckinPage: React.FC = () => {
               <tr className="border-b border-slate-800 text-slate-400">
                 <th className="pb-2 px-2">AGENT ID</th>
                 <th className="pb-2 px-2">NAME</th>
-                <th className="pb-2 px-2">SESSION</th>
-                <th className="pb-2 px-2">TIME</th>
-                <th className="pb-2 px-2">COUNTER</th>
+                <th className="pb-2 px-2">COLLEGE</th>
+                <th className="pb-2 px-2">COLLECTED AT</th>
                 <th className="pb-2 px-2 text-right">STATUS</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-900">
-              {foodRecords.map((f) => (
-                <tr key={f.id} className="hover:bg-slate-900/40">
-                  <td className="py-2.5 px-2 text-cyan-400 font-bold">{f.agent_id}</td>
-                  <td className="py-2.5 px-2 text-white font-sans">{f.participant_name}</td>
-                  <td className="py-2.5 px-2 text-amber-400 font-bold">{f.meal_session}</td>
-                  <td className="py-2.5 px-2 text-slate-400">
-                    {f.collected_at ? new Date(f.collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
-                  </td>
-                  <td className="py-2.5 px-2 text-slate-500">{f.scanned_by}</td>
-                  <td className="py-2.5 px-2 text-right text-emerald-400 font-bold">
-                    ✓ REDEEMED
+            <tbody className="divide-y divide-slate-900 font-sans">
+              {collectedParticipants.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-6 text-center text-slate-500 font-mono">
+                    No meal tokens collected yet.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                collectedParticipants.map((p) => (
+                  <tr key={p.id} className="hover:bg-slate-900/40">
+                    <td className="py-2.5 px-2 text-cyan-400 font-mono font-bold">{p.agent_id}</td>
+                    <td className="py-2.5 px-2 text-white font-bold">{p.name}</td>
+                    <td className="py-2.5 px-2 text-slate-300 truncate max-w-xs">{p.college}</td>
+                    <td className="py-2.5 px-2 text-slate-400 font-mono">
+                      {p.food_collected_at ? new Date(p.food_collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Verified'}
+                    </td>
+                    <td className="py-2.5 px-2 text-right text-emerald-400 font-bold font-mono">
+                      ✓ REDEEMED
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -157,3 +145,5 @@ export const FoodCheckinPage: React.FC = () => {
     </div>
   );
 };
+
+export default FoodCheckinPage;

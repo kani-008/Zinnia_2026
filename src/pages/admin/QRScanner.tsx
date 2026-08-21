@@ -27,7 +27,6 @@ export const QRScannerPage: React.FC = () => {
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const allEvents = store.getEvents();
 
-  // Play auditory feedback beep
   const playTone = (isSuccess: boolean) => {
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -41,7 +40,7 @@ export const QRScannerPage: React.FC = () => {
       osc.start();
       osc.stop(audioCtx.currentTime + (isSuccess ? 0.15 : 0.3));
     } catch (e) {
-      // Audio context might be restricted before interaction
+      // Audio context might be restricted
     }
   };
 
@@ -56,7 +55,7 @@ export const QRScannerPage: React.FC = () => {
           qrbox: { width: 250, height: 250 },
           rememberLastUsedCamera: true
         },
-        /* verbose= */ false
+        false
       );
 
       scanner.render(
@@ -64,7 +63,7 @@ export const QRScannerPage: React.FC = () => {
           handleScannedData(decodedText);
         },
         (error) => {
-          // Ignore frequent scan frame misses
+          // Ignore
         }
       );
 
@@ -130,9 +129,10 @@ export const QRScannerPage: React.FC = () => {
 
   const handleFoodRedemption = () => {
     if (!scannedParticipant) return;
-    const res = store.recordFoodDistribution(scannedParticipant.agent_id, 'LUNCH', 'Food Terminal');
+    const res = store.recordFoodDistribution(scannedParticipant.agent_id, 'QR Scanner Terminal');
     if (res.success) {
       setFeedback({ type: 'success', message: res.message });
+      setScannedParticipant(store.getParticipantByAgentId(scannedParticipant.agent_id) || null);
       playTone(true);
     } else {
       setFeedback({ type: 'warning', message: res.message });
@@ -153,11 +153,11 @@ export const QRScannerPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8 font-mono text-xs">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-black text-white flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-heading font-black text-white flex items-center gap-2 font-sans">
             <QrCode className="w-6 h-6 text-cyan-400" />
             CHRONOS UNIFIED QR SCANNER
           </h1>
@@ -169,7 +169,7 @@ export const QRScannerPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsCameraActive(!isCameraActive)}
-            className="px-3 py-1.5 rounded bg-slate-900 border border-slate-700 text-xs font-mono text-slate-300"
+            className="px-3 py-1.5 rounded bg-slate-900 border border-slate-700 text-xs font-mono text-slate-300 hover:text-white"
           >
             {isCameraActive ? 'PAUSE CAMERA' : 'ENABLE CAMERA'}
           </button>
@@ -181,7 +181,7 @@ export const QRScannerPage: React.FC = () => {
         {/* Left Col: Camera Scanner + Manual ID Fallback */}
         <div className="lg:col-span-6 space-y-6">
           {/* Camera Viewport */}
-          <div className="glass-panel p-4 tech-bracket border-cyan-500/40 text-center space-y-3">
+          <div className="classified-card p-4 tech-bracket border-cyan-500/40 text-center space-y-3 bg-[#070b14]/90">
             <div className="text-xs font-mono text-cyan-400 font-bold flex items-center justify-between px-2">
               <span>CAMERA FEED // ACTIVE</span>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
@@ -195,14 +195,14 @@ export const QRScannerPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Manual ID Fallback (Crucial requirement from prompt) */}
-          <div className="glass-panel p-5 tech-bracket border-slate-800 space-y-3">
+          {/* Manual ID Fallback */}
+          <div className="classified-card p-5 tech-bracket border-slate-800 space-y-3 bg-[#070b14]/90">
             <div className="text-xs font-mono font-bold text-slate-300 flex items-center gap-2">
               <Search className="w-4 h-4 text-cyan-400" />
               MANUAL PARTICIPANT ID FALLBACK
             </div>
             <p className="text-[11px] font-mono text-slate-400">
-              If camera scanning fails, enter the 6-character Agent ID or participant email.
+              If camera scanning fails, enter the Agent ID or participant email.
             </p>
 
             <form onSubmit={handleManualSearch} className="flex gap-2 font-mono text-xs">
@@ -213,7 +213,7 @@ export const QRScannerPage: React.FC = () => {
                 onChange={(e) => setManualId(e.target.value)}
                 className="flex-1 px-3 py-2 rounded bg-slate-950 border border-slate-700 text-white font-sans text-xs focus:border-cyan-400 focus:outline-none uppercase"
               />
-              <button type="submit" className="btn-temporal py-2 px-4 text-xs">
+              <button type="submit" className="btn-temporal py-2 px-4 text-xs font-bold">
                 <span>LOOKUP</span>
               </button>
             </form>
@@ -240,17 +240,17 @@ export const QRScannerPage: React.FC = () => {
           )}
 
           {scannedParticipant ? (
-            <div className="glass-panel p-6 tech-bracket border-cyan-400 space-y-6 shadow-2xl">
+            <div className="classified-card p-6 tech-bracket border-cyan-400 space-y-6 shadow-2xl bg-[#070b14]/95">
               {/* Participant Header */}
               <div className="flex justify-between items-start border-b border-slate-800 pb-4">
                 <div>
                   <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase">
                     PARTICIPANT VERIFIED // {scannedParticipant.clearance_level}
                   </div>
-                  <h3 className="text-xl font-heading font-black text-white">
+                  <h3 className="text-xl font-heading font-black text-white font-sans">
                     {scannedParticipant.name}
                   </h3>
-                  <div className="text-xs font-mono text-slate-300 mt-0.5">
+                  <div className="text-xs font-sans text-slate-300 mt-0.5">
                     {scannedParticipant.college}
                   </div>
                 </div>
@@ -270,6 +270,12 @@ export const QRScannerPage: React.FC = () => {
                   <div className="text-[10px] text-slate-500 uppercase">CONTACT</div>
                   <div className="text-slate-300">{scannedParticipant.phone}</div>
                 </div>
+                <div>
+                  <div className="text-[10px] text-slate-500 uppercase">FOOD STATUS</div>
+                  <div className={scannedParticipant.food_collected ? "text-emerald-400 font-bold" : "text-amber-400"}>
+                    {scannedParticipant.food_collected ? "✓ COLLECTED" : "PENDING"}
+                  </div>
+                </div>
                 <div className="col-span-2">
                   <div className="text-[10px] text-slate-500 uppercase">REGISTERED MISSIONS</div>
                   <div className="flex flex-wrap gap-1.5 mt-1">
@@ -277,7 +283,7 @@ export const QRScannerPage: React.FC = () => {
                       const evt = allEvents.find(e => e.id === eId);
                       return (
                         <span key={eId} className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300 text-[10px]">
-                          {evt ? evt.mission_name : eId}
+                          [{evt?.event_type || 'OP'}] {evt ? evt.mission_name : eId}
                         </span>
                       );
                     })}
@@ -324,7 +330,7 @@ export const QRScannerPage: React.FC = () => {
                     >
                       {allEvents.map((evt) => (
                         <option key={evt.id} value={evt.id}>
-                          {evt.code} - {evt.mission_name}
+                          [{evt.event_type}] {evt.code} - {evt.mission_name}
                         </option>
                       ))}
                     </select>
@@ -339,10 +345,10 @@ export const QRScannerPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="glass-panel p-12 text-center font-mono text-xs text-slate-500 space-y-3 border-slate-800">
+            <div className="classified-card p-12 text-center font-mono text-xs text-slate-500 space-y-3 border-slate-800 bg-[#070b14]/80">
               <QrCode className="w-12 h-12 text-slate-700 mx-auto animate-pulse" />
-              <div className="text-slate-400 font-bold">READY FOR SCANNING</div>
-              <p>Point participant QR code at the camera above or use Manual ID lookup on the left.</p>
+              <div className="text-slate-400 font-bold font-sans">READY FOR SCANNING</div>
+              <p className="font-sans">Point participant QR code at the camera above or use Manual ID lookup on the left.</p>
             </div>
           )}
         </div>
@@ -350,3 +356,5 @@ export const QRScannerPage: React.FC = () => {
     </div>
   );
 };
+
+export default QRScannerPage;

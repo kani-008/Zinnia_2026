@@ -21,19 +21,21 @@ export const TemporalCoreCanvas: React.FC = () => {
 
     window.addEventListener('resize', handleResize);
 
-    // Particle nodes representing fractured timeline fragments
-    const particleCount = 45;
+    // High-voltage cyber particles
+    const particleCount = 55;
     const particles: { x: number; y: number; radius: number; angle: number; speed: number; dist: number; color: string }[] = [];
+
+    const colors = ['#00f0ff', '#f000ff', '#ffe600', '#00ff66'];
 
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: width / 2,
         y: height / 2,
-        radius: Math.random() * 2 + 1,
+        radius: Math.random() * 2.2 + 1,
         angle: Math.random() * Math.PI * 2,
-        speed: (Math.random() * 0.015 + 0.005) * (Math.random() > 0.5 ? 1 : -1),
-        dist: Math.random() * (Math.min(width, height) * 0.42) + 30,
-        color: Math.random() > 0.3 ? '#00f0ff' : '#8b5cf6'
+        speed: (Math.random() * 0.02 + 0.008) * (Math.random() > 0.5 ? 1 : -1),
+        dist: Math.random() * (Math.min(width, height) * 0.44) + 25,
+        color: colors[Math.floor(Math.random() * colors.length)]
       });
     }
 
@@ -45,52 +47,52 @@ export const TemporalCoreCanvas: React.FC = () => {
       const centerX = width / 2;
       const centerY = height / 2;
 
-      // Draw outer glowing rings
+      // Draw outer glowing cyber rings
       ctx.save();
       ctx.translate(centerX, centerY);
 
-      // Ring 1 - Outer Pulsing Dashed
+      // Ring 1 - Outer Pulsing Dashed (Neon Cyan)
       ctx.beginPath();
-      ctx.arc(0, 0, Math.min(width, height) * 0.38, 0, Math.PI * 2);
-      ctx.setLineDash([8, 12]);
-      ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
-      ctx.lineWidth = 1.5;
-      ctx.rotate(coreRotation * 0.5);
+      ctx.arc(0, 0, Math.min(width, height) * 0.4, 0, Math.PI * 2);
+      ctx.setLineDash([10, 14]);
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.rotate(coreRotation * 0.6);
       ctx.stroke();
 
-      // Ring 2 - Middle Reverse Dashed
+      // Ring 2 - Middle Reverse Dashed (Electric Magenta)
       ctx.beginPath();
-      ctx.arc(0, 0, Math.min(width, height) * 0.28, 0, Math.PI * 2);
-      ctx.setLineDash([14, 8]);
-      ctx.strokeStyle = 'rgba(139, 92, 246, 0.4)';
+      ctx.arc(0, 0, Math.min(width, height) * 0.3, 0, Math.PI * 2);
+      ctx.setLineDash([16, 10]);
+      ctx.strokeStyle = 'rgba(240, 0, 255, 0.5)';
       ctx.lineWidth = 2;
-      ctx.rotate(-coreRotation * 1.2);
+      ctx.rotate(-coreRotation * 1.4);
       ctx.stroke();
 
-      // Ring 3 - Inner Core Boundary
+      // Ring 3 - Inner Core Boundary (Cyber Gold)
       ctx.beginPath();
-      ctx.arc(0, 0, Math.min(width, height) * 0.16, 0, Math.PI * 2);
-      ctx.setLineDash([]);
-      ctx.strokeStyle = 'rgba(0, 240, 255, 0.8)';
+      ctx.arc(0, 0, Math.min(width, height) * 0.18, 0, Math.PI * 2);
+      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = 'rgba(255, 230, 0, 0.8)';
       ctx.lineWidth = 2;
-      ctx.shadowColor = '#00f0ff';
+      ctx.shadowColor = '#ffe600';
       ctx.shadowBlur = 15;
       ctx.stroke();
       ctx.restore();
 
-      // Central glowing core gradient
-      const gradient = ctx.createRadialGradient(centerX, centerY, 5, centerX, centerY, Math.min(width, height) * 0.14);
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-      gradient.addColorStop(0.3, 'rgba(0, 240, 255, 0.8)');
-      gradient.addColorStop(0.7, 'rgba(139, 92, 246, 0.3)');
+      // Central glowing cyber core gradient
+      const gradient = ctx.createRadialGradient(centerX, centerY, 5, centerX, centerY, Math.min(width, height) * 0.16);
+      gradient.addColorStop(0, '#ffffff');
+      gradient.addColorStop(0.3, 'rgba(0, 240, 255, 0.9)');
+      gradient.addColorStop(0.7, 'rgba(240, 0, 255, 0.4)');
       gradient.addColorStop(1, 'transparent');
 
       ctx.fillStyle = gradient;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, Math.min(width, height) * 0.15, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, Math.min(width, height) * 0.16, 0, Math.PI * 2);
       ctx.fill();
 
-      // Animate and draw temporal particles
+      // Animate and draw cyber particles & matrix neural connections
       particles.forEach((p) => {
         p.angle += p.speed;
         const px = centerX + Math.cos(p.angle) * p.dist;
@@ -100,10 +102,10 @@ export const TemporalCoreCanvas: React.FC = () => {
         ctx.arc(px, py, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.shadowColor = p.color;
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 10;
         ctx.fill();
 
-        // Connect nearby particles to form timeline neural mesh
+        // Connect nearby particles with glowing cyber traces
         particles.forEach((p2) => {
           const p2x = centerX + Math.cos(p2.angle) * p2.dist;
           const p2y = centerY + Math.sin(p2.angle) * p2.dist;
@@ -111,18 +113,18 @@ export const TemporalCoreCanvas: React.FC = () => {
           const dy = py - p2y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 45) {
+          if (dist < 48) {
             ctx.beginPath();
             ctx.moveTo(px, py);
             ctx.lineTo(p2x, p2y);
-            ctx.strokeStyle = `rgba(0, 240, 255, ${0.18 * (1 - dist / 45)})`;
-            ctx.lineWidth = 0.8;
+            ctx.strokeStyle = `rgba(0, 240, 255, ${0.25 * (1 - dist / 48)})`;
+            ctx.lineWidth = 1;
             ctx.stroke();
           }
         });
       });
 
-      coreRotation += 0.008;
+      coreRotation += 0.01;
       animationFrameId = requestAnimationFrame(render);
     };
 
@@ -137,8 +139,8 @@ export const TemporalCoreCanvas: React.FC = () => {
   return (
     <div className="relative flex items-center justify-center w-full max-w-[500px] mx-auto">
       <canvas ref={canvasRef} className="w-full h-auto block" />
-      <div className="absolute font-mono text-[10px] text-cyan-400 opacity-70 tracking-widest pointer-events-none bg-black/60 px-2 py-0.5 rounded border border-cyan-500/30">
-        CORE: OVERLOAD // 10:00:13 AM
+      <div className="absolute font-mono text-[10px] text-cyan-300 font-bold tracking-widest pointer-events-none bg-black/80 px-2.5 py-1 rounded border border-cyan-400/50 shadow-[0_0_10px_rgba(0,240,255,0.4)]">
+        REACTOR // 100% OPERATIONAL
       </div>
     </div>
   );
