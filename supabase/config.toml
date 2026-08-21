@@ -1,0 +1,18 @@
+project_id = "zinnia-2026"
+
+[api]
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+shadow_port = 54320
+
+[studio]
+port = 54323
+
+[auth]
+site_url = "https://zinnia.in"
+additional_redirect_urls = ["https://admin.zinnia.in", "http://localhost:5173"]
+jwt_expiry = 3600
+enable_signup = true
