@@ -1,16 +1,58 @@
-# React + Vite
+# ZINNIA 2026 — Master Symposium & Verification Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **CSE Department National-Level Technical Symposium**  
+> *Theme: The Black Cipher Temporal Investigation & Chronos Protocol*
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🏛️ Monorepo Architecture
 
-## React Compiler
+```
+zinnia/
+│
+├── apps/
+│   ├── website/         # Public Zinnia Web Experience (zinnia.in)
+│   └── admin/           # Dedicated Operational Admin Portal (admin.zinnia.in)
+│
+├── packages/
+│   ├── types/           # Shared TypeScript types
+│   ├── ui/              # Shared reusable UI component library
+│   ├── utils/           # ID formatters, cryptographic QR encoders & date utils
+│   └── config/          # Symposium constants, official missions & configs
+│
+├── supabase/
+│   ├── migrations/      # 001 to 007 SQL schema migrations with RLS
+│   ├── functions/       # Supabase Edge Functions (passports, certificates, email)
+│   └── seed/            # Seed data (events & admin users)
+│
+└── docs/                # System architecture, database schema, & deployment guides
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🚀 Quick Start
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Prerequisites
+- Node.js >= 18.x
+- npm / pnpm
+
+### Installation
+```bash
+npm install
+```
+
+### Running Locally
+```bash
+# Run public website
+npm run dev
+
+# Or build production bundle
+npm run build
+```
+
+---
+
+## 🛡️ Core Capabilities
+- **Public Portal**: Black Cipher interactive 3D-styled Temporal Core, 8-chapter incident dossier, timeline anomaly explorer, 9 official symposium operations, 3-step registration wizard, and Digital Symposium Passport with high-contrast QR code.
+- **Admin Portal**: Multi-station operations (Gate Entry, Food/Snack token redemption, Mission access check-in), camera QR scanner with manual fallback, participant dossier manager, certificate generator, and 1-click Excel (.xlsx) exports.
+- **Backend**: PostgreSQL database with Row Level Security (RLS) on Supabase.
