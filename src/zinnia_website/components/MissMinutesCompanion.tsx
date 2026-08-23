@@ -2,18 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Send, 
   X, 
-  Sparkles, 
-  RotateCcw, 
-  Bot, 
   Clock, 
-  HelpCircle,
-  ChevronRight,
-  Database,
   MessageSquare
 } from 'lucide-react';
 import { audioManager } from '../core/AudioManager';
 import { sendChatMessage, fetchSuggestedFaqs, SuggestedFaq } from '../../services/aiChat';
-import missMinutesImg from '../../assets/miss_minutes.gif';
+
+export type MissMinutesPose = 'idle' | 'waving' | 'thinking' | 'excited' | 'pointing' | 'walking';
 
 interface Message {
   id: string;
@@ -23,7 +18,7 @@ interface Message {
   source?: string;
 }
 
-// Local offline RAG Knowledge Engine (Ensures accurate answers even if backend server is offline)
+// Local offline RAG Knowledge Engine
 const SYMPOSIUM_KNOWLEDGE: Record<string, string> = {
   events: "Oh honey, you're looking for the battlegrounds? We've got 9 active missions on this timeline!\n\n**Technical Events:**\n1. **Operation: System Recovery** (Debugging)\n2. **Operation: ORACLE** (AI & Prompt Engineering)\n3. **Operation: Broken Records** (SQL Recovery)\n4. **Infinity Protocol** (Solo Coding Anomaly)\n5. **Algorithm Overdrive** (Competitive DSA)\n\n**Non-Technical Events:**\n6. **Chamber of Enigmas** (Cipher Escape & Riddles)\n7. **Paper Syndicate** (Research Presentation)\n8. **Pixel Heist** (UI/UX Design Sprint)\n9. **Neural Clash** (Campus Strategy & Gaming)",
   venue: "ZINNIA '26 is hosted at the **Government College of Engineering, Erode** (Department of Computer Science & Engineering), Perundurai, Erode, Tamil Nadu 638053.",
@@ -58,7 +53,12 @@ function getLocalRagAnswer(query: string): string | null {
 
 export const MissMinutesCompanion: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [pose, setPose] = useState<MissMinutesPose>('idle');
+  const [isBlinking, setIsBlinking] = useState(false);
+  const [pupilOffset, setPupilOffset] = useState({ x: 0, y: 0 });
+  const [bodyTilt, setBodyTilt] = useState(0);
+  const [isWalking, setIsWalking] = useState(false);
+  const [isTalking, setIsTalking] = useState(false);
   const [speechBubble, setSpeechBubble] = useState<string>("Hey y'all! Need help?");
   const [showBubble, setShowBubble] = useState(true);
 
@@ -84,6 +84,32 @@ export const MissMinutesCompanion: React.FC = () => {
     });
   }, []);
 
+  // Periodic Blink
+  useEffect(() => {
+    const blinkTimer = setInterval(() => {
+      setIsBlinking(true);
+      setTimeout(() => setIsBlinking(false), 160);
+    }, 3800 + Math.random() * 2500);
+
+    return () => clearInterval(blinkTimer);
+  }, []);
+
+  // Randomized idle actions & poses
+  useEffect(() => {
+    if (isOpen || isLoading) return;
+    const idleTimer = setInterval(() => {
+      const poses: MissMinutesPose[] = ['idle', 'waving', 'excited'];
+      const nextPose = poses[Math.floor(Math.random() * poses.length)];
+      setPose(nextPose);
+
+      if (nextPose === 'waving') {
+        setTimeout(() => setPose('idle'), 2500);
+      }
+    }, 7000);
+
+    return () => clearInterval(idleTimer);
+  }, [isOpen, isLoading]);
+
   // Contextual speech updates
   useEffect(() => {
     const bubbleTimer = setInterval(() => {
@@ -97,10 +123,64 @@ export const MissMinutesCompanion: React.FC = () => {
       ];
       setSpeechBubble(bubbles[Math.floor(Math.random() * bubbles.length)]);
       setShowBubble(true);
-    }, 8000);
+    }, 9000);
 
     return () => clearInterval(bubbleTimer);
   }, [isOpen]);
+
+  // Scroll reaction (triggers walking/floating leg movement)
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      setIsWalking(true);
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => setIsWalking(false), 600);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, []);
+
+  // Cursor Proximity & Eye Tracking
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!companionRef.current) return;
+      const rect = companionRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const dx = e.clientX - centerX;
+      const dy = e.clientY - centerY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // Max eye pupil travel
+      const maxDist = 4.5;
+      const angle = Math.atan2(dy, dx);
+      const intensity = Math.min(dist / 350, 1);
+
+      setPupilOffset({
+        x: Math.cos(angle) * maxDist * intensity,
+        y: Math.sin(angle) * maxDist * intensity,
+      });
+
+      // Subtle body tilt toward mouse
+      const tilt = Math.max(-6, Math.min(6, (dx / 300) * 6));
+      setBodyTilt(tilt);
+
+      // Wave if cursor is close
+      if (dist < 160 && !isOpen && pose !== 'waving' && pose !== 'thinking' && !isLoading) {
+        setPose('waving');
+        setSpeechBubble("Hey there, sugar!");
+        setShowBubble(true);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [isOpen, pose, isLoading]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -113,6 +193,8 @@ export const MissMinutesCompanion: React.FC = () => {
     if (!q.trim() || isLoading) return;
 
     audioManager.playTimelineTick();
+    setPose('thinking');
+    setIsTalking(true);
 
     const userMsg: Message = {
       id: `user-${Date.now()}`,
@@ -130,7 +212,7 @@ export const MissMinutesCompanion: React.FC = () => {
       const localAnswer = getLocalRagAnswer(q.trim());
       
       if (localAnswer) {
-        await new Promise((r) => setTimeout(r, 600));
+        await new Promise((r) => setTimeout(r, 650));
         replyText = localAnswer;
       } else {
         const res = await sendChatMessage(q.trim());
@@ -151,6 +233,8 @@ export const MissMinutesCompanion: React.FC = () => {
           source: 'TVA_TIMELINE_DB'
         }
       ]);
+      setPose('excited');
+      setTimeout(() => setPose('idle'), 3000);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -161,8 +245,10 @@ export const MissMinutesCompanion: React.FC = () => {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
       ]);
+      setPose('idle');
     } finally {
       setIsLoading(false);
+      setIsTalking(false);
     }
   };
 
@@ -171,13 +257,17 @@ export const MissMinutesCompanion: React.FC = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
       setShowBubble(false);
+      setPose('waving');
+      setTimeout(() => setPose('idle'), 2000);
+    } else {
+      setPose('idle');
     }
   };
 
   return (
     <>
       {/* =========================================================================
-          MISS MINUTES LIVING FULL-CHARACTER COMPANION (Bottom-Right)
+          MISS MINUTES FULLY ARTICULATED INTERACTIVE CHARACTER
           ========================================================================= */}
       <div
         ref={companionRef}
@@ -195,27 +285,307 @@ export const MissMinutesCompanion: React.FC = () => {
           </div>
         )}
 
-        {/* Miss Minutes Full-Body Character Figure */}
+        {/* Miss Minutes Full-Body Interactive Character */}
         <div
           onClick={toggleOpen}
           onMouseEnter={() => {
-            setIsHovered(true);
+            setPose('waving');
             setSpeechBubble("Ask me anything, sugar!");
             setShowBubble(true);
           }}
-          onMouseLeave={() => setIsHovered(false)}
+          onMouseLeave={() => {
+            if (!isOpen && pose === 'waving') setPose('idle');
+          }}
           className="group relative cursor-pointer flex items-center gap-2 select-none"
         >
-          {/* Ambient Warm Golden Glow */}
-          <div className="absolute -inset-2 bg-[radial-gradient(circle,_rgba(255,140,0,0.35)_0%,_transparent_70%)] rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-300" />
+          {/* Ambient Warm Glow */}
+          <div className="absolute -inset-2 bg-[radial-gradient(circle,_rgba(255,140,0,0.3)_0%,_transparent_70%)] rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-300" />
 
-          {/* Full-Body Animated Character Graphic */}
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:-rotate-3 active:scale-95">
-            <img
-              src={missMinutesImg}
-              alt="Miss Minutes - TVA AI Guide"
-              className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)]"
-            />
+          {/* Articulated SVG Vector Character */}
+          <div 
+            style={{ transform: `rotate(${bodyTilt}deg)` }}
+            className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 transition-transform duration-150 ease-out will-change-transform group-hover:scale-105"
+          >
+            <svg
+              viewBox="0 0 160 170"
+              className="w-full h-full overflow-visible drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)]"
+            >
+              <defs>
+                {/* 3D Body Gradient */}
+                <radialGradient id="clockBevel" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#FFA726" />
+                  <stop offset="70%" stopColor="#FF7A00" />
+                  <stop offset="100%" stopColor="#E65100" />
+                </radialGradient>
+                <linearGradient id="rimShub" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#D84315" />
+                  <stop offset="100%" stopColor="#8A2300" />
+                </linearGradient>
+              </defs>
+
+              {/* ==================== LEGS & SHOES ==================== */}
+              {/* Left Leg */}
+              <g className={`origin-[68px_110px] ${isWalking ? 'animate-[spin_0.8s_ease-in-out_infinite_alternate]' : ''}`}>
+                <line
+                  x1="68"
+                  y1="110"
+                  x2="66"
+                  y2="142"
+                  stroke="#0D0D0F"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                />
+                {/* Left White Shoe */}
+                <path
+                  d="M 52 144 C 52 138, 62 136, 70 138 C 76 140, 78 148, 76 153 C 74 156, 52 156, 52 144 Z"
+                  fill="#FFFEEF"
+                  stroke="#0D0D0F"
+                  strokeWidth="3.5"
+                  strokeLinejoin="round"
+                />
+                <ellipse cx="64" cy="144" rx="4" ry="2" fill="#0D0D0F" opacity="0.3" />
+              </g>
+
+              {/* Right Leg */}
+              <g className={`origin-[92px_110px] ${isWalking ? 'animate-[spin_0.8s_ease-in-out_infinite_alternate-reverse]' : ''}`}>
+                <line
+                  x1="92"
+                  y1="110"
+                  x2="94"
+                  y2="142"
+                  stroke="#0D0D0F"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                />
+                {/* Right White Shoe */}
+                <path
+                  d="M 86 144 C 86 138, 96 136, 104 138 C 110 140, 112 148, 110 153 C 108 156, 86 156, 86 144 Z"
+                  fill="#FFFEEF"
+                  stroke="#0D0D0F"
+                  strokeWidth="3.5"
+                  strokeLinejoin="round"
+                />
+                <ellipse cx="98" cy="144" rx="4" ry="2" fill="#0D0D0F" opacity="0.3" />
+              </g>
+
+              {/* ==================== 3D CLOCK BODY ==================== */}
+              {/* 3D Right Side Bevel Rim */}
+              <ellipse
+                cx="84"
+                cy="68"
+                rx="49"
+                ry="49"
+                fill="url(#rimShub)"
+                stroke="#0D0D0F"
+                strokeWidth="4"
+              />
+
+              {/* Main Clock Face */}
+              <ellipse
+                cx="80"
+                cy="66"
+                rx="47"
+                ry="47"
+                fill="url(#clockBevel)"
+                stroke="#0D0D0F"
+                strokeWidth="4.5"
+              />
+
+              {/* Clock Tick Marks */}
+              {/* 12 o'clock */}
+              <line x1="80" y1="23" x2="80" y2="32" stroke="#0D0D0F" strokeWidth="4" strokeLinecap="round" />
+              {/* 3 o'clock */}
+              <line x1="123" y1="66" x2="114" y2="66" stroke="#0D0D0F" strokeWidth="4" strokeLinecap="round" />
+              {/* 6 o'clock */}
+              <line x1="80" y1="109" x2="80" y2="100" stroke="#0D0D0F" strokeWidth="4" strokeLinecap="round" />
+              {/* 9 o'clock */}
+              <line x1="37" y1="66" x2="46" y2="66" stroke="#0D0D0F" strokeWidth="4" strokeLinecap="round" />
+              {/* Hour dashes */}
+              <line x1="101" y1="28" x2="97" y2="35" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="118" y1="45" x2="111" y2="49" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="118" y1="87" x2="111" y2="83" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="101" y1="104" x2="97" y2="97" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="59" y1="104" x2="63" y2="97" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="42" y1="87" x2="49" y2="83" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="42" y1="45" x2="49" y2="49" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="59" y1="28" x2="63" y2="35" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
+
+              {/* Nose Center Dot */}
+              <circle cx="80" cy="62" r="4" fill="#0D0D0F" />
+
+              {/* ==================== EYES ==================== */}
+              {/* Left Eye */}
+              <ellipse
+                cx="64"
+                cy="52"
+                rx="9"
+                ry={isBlinking ? 1.5 : 12}
+                fill="#FFFEEF"
+                stroke="#0D0D0F"
+                strokeWidth="3.5"
+              />
+              {!isBlinking && (
+                <ellipse
+                  cx={64 + pupilOffset.x}
+                  cy={52 + pupilOffset.y}
+                  rx="4.8"
+                  ry="7.5"
+                  fill="#0D0D0F"
+                >
+                  <circle cx={62 + pupilOffset.x} cy={49 + pupilOffset.y} r="1.8" fill="#FFFEEF" />
+                </ellipse>
+              )}
+              {/* Left 3 Eyelashes */}
+              <path d="M 58 40 L 53 34 M 64 39 L 64 32 M 70 41 L 74 35" stroke="#0D0D0F" strokeWidth="3" strokeLinecap="round" />
+
+              {/* Right Eye */}
+              <ellipse
+                cx="96"
+                cy="52"
+                rx="9"
+                ry={isBlinking ? 1.5 : 12}
+                fill="#FFFEEF"
+                stroke="#0D0D0F"
+                strokeWidth="3.5"
+              />
+              {!isBlinking && (
+                <ellipse
+                  cx={96 + pupilOffset.x}
+                  cy={52 + pupilOffset.y}
+                  rx="4.8"
+                  ry="7.5"
+                  fill="#0D0D0F"
+                >
+                  <circle cx={94 + pupilOffset.x} cy={49 + pupilOffset.y} r="1.8" fill="#FFFEEF" />
+                </ellipse>
+              )}
+              {/* Right 3 Eyelashes */}
+              <path d="M 90 41 L 86 35 M 96 39 L 96 32 M 102 40 L 107 34" stroke="#0D0D0F" strokeWidth="3" strokeLinecap="round" />
+
+              {/* ==================== MOUTH ==================== */}
+              {pose === 'thinking' && (
+                <ellipse cx="80" cy="80" rx="5" ry="4" fill="#0D0D0F" />
+              )}
+              {(pose === 'excited' || isTalking) && (
+                <path
+                  d="M 64 74 Q 80 96 96 74 Z"
+                  fill="#D50000"
+                  stroke="#0D0D0F"
+                  strokeWidth="3.5"
+                  strokeLinejoin="round"
+                />
+              )}
+              {(pose === 'idle' || pose === 'waving') && !isTalking && (
+                <path
+                  d="M 66 74 Q 80 88 94 74"
+                  fill="#FFFEEF"
+                  stroke="#0D0D0F"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                />
+              )}
+
+              {/* Rosy Cheeks */}
+              <circle cx="51" cy="66" r="5" fill="#E64A19" opacity="0.4" />
+              <circle cx="109" cy="66" r="5" fill="#E64A19" opacity="0.4" />
+
+              {/* ==================== ARMS & WHITE GLOVES ==================== */}
+              {/* LEFT ARM */}
+              {pose === 'waving' ? (
+                /* Waving Left Hand */
+                <g className="origin-[35px_65px] animate-[wiggle_0.6s_ease-in-out_infinite_alternate]">
+                  <path
+                    d="M 36 68 Q 20 48 24 32"
+                    fill="none"
+                    stroke="#FF7A00"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M 36 68 Q 20 48 24 32"
+                    fill="none"
+                    stroke="#0D0D0F"
+                    strokeWidth="11"
+                    strokeLinecap="round"
+                    style={{ zIndex: -1 }}
+                  />
+                  {/* Waving White Glove */}
+                  <g transform="translate(14, 18)">
+                    <path
+                      d="M 12 18 C 8 12, 14 6, 20 8 C 24 6, 28 10, 26 16 C 24 22, 16 24, 12 18 Z"
+                      fill="#FFFEEF"
+                      stroke="#0D0D0F"
+                      strokeWidth="3"
+                    />
+                    <circle cx="16" cy="12" r="2" fill="#FF7A00" />
+                  </g>
+                </g>
+              ) : pose === 'thinking' ? (
+                /* Thinking Left Hand touching chin */
+                <g>
+                  <path
+                    d="M 36 70 Q 38 90 62 82"
+                    fill="none"
+                    stroke="#FF7A00"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="62" cy="82" r="6" fill="#FFFEEF" stroke="#0D0D0F" strokeWidth="3" />
+                </g>
+              ) : (
+                /* Default Left Hand On Hip (Akimbo) */
+                <g className="transition-transform duration-200">
+                  <path
+                    d="M 36 64 C 18 68, 16 85, 34 94"
+                    fill="none"
+                    stroke="#FF7A00"
+                    strokeWidth="8.5"
+                    strokeLinecap="round"
+                  />
+                  {/* White Gloved Hand on Hip */}
+                  <path
+                    d="M 32 90 C 28 86, 36 82, 40 88 C 42 92, 38 98, 32 96 Z"
+                    fill="#FFFEEF"
+                    stroke="#0D0D0F"
+                    strokeWidth="3"
+                  />
+                </g>
+              )}
+
+              {/* RIGHT ARM */}
+              {pose === 'excited' ? (
+                /* Cheerful Raised Right Arm */
+                <g className="origin-[125px_65px] animate-[wiggle_0.5s_ease-in-out_infinite_alternate]">
+                  <path
+                    d="M 124 68 Q 140 48 136 32"
+                    fill="none"
+                    stroke="#FF7A00"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
+                  {/* Right White Glove Up */}
+                  <circle cx="136" cy="28" r="7" fill="#FFFEEF" stroke="#0D0D0F" strokeWidth="3" />
+                </g>
+              ) : (
+                /* Default Right Hand On Hip (Akimbo) */
+                <g className="transition-transform duration-200">
+                  <path
+                    d="M 124 64 C 142 68, 144 85, 126 94"
+                    fill="none"
+                    stroke="#FF7A00"
+                    strokeWidth="8.5"
+                    strokeLinecap="round"
+                  />
+                  {/* White Gloved Hand on Hip */}
+                  <path
+                    d="M 128 90 C 132 86, 124 82, 120 88 C 118 92, 122 98, 128 96 Z"
+                    fill="#FFFEEF"
+                    stroke="#0D0D0F"
+                    strokeWidth="3"
+                  />
+                </g>
+              )}
+            </svg>
           </div>
 
           {/* Side Comic Badge / Talk Prompt */}
@@ -240,8 +610,8 @@ export const MissMinutesCompanion: React.FC = () => {
           {/* Header Bar */}
           <div className="bg-[#FF8C00] text-[#0D0D0F] p-3 sm:p-3.5 border-b-[3px] border-[#0D0D0F] flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#0D0D0F] border border-[#FF8C00] overflow-hidden flex items-center justify-center p-0.5">
-                <img src={missMinutesImg} alt="Miss Minutes" className="w-full h-full object-contain" />
+              <div className="w-8 h-8 rounded-full bg-[#0D0D0F] border border-[#FF8C00] flex items-center justify-center font-display text-base text-[#FFA726]">
+                ⏰
               </div>
               <div>
                 <h3 className="font-display text-base sm:text-lg uppercase tracking-wide leading-none">
