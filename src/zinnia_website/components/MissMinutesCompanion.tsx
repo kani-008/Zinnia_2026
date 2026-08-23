@@ -267,11 +267,11 @@ export const MissMinutesCompanion: React.FC = () => {
   return (
     <>
       {/* =========================================================================
-          MISS MINUTES FULLY ARTICULATED INTERACTIVE CHARACTER
+          MISS MINUTES FULLY ARTICULATED INTERACTIVE CHARACTER (Fixed to Viewport Corner)
           ========================================================================= */}
       <div
         ref={companionRef}
-        className="relative flex items-center justify-end z-[999] select-none"
+        className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 flex items-center justify-end z-[999] select-none pointer-events-auto"
       >
         {/* Floating Contextual Speech Balloon */}
         {showBubble && !isOpen && (
