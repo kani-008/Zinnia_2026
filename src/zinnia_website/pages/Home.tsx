@@ -133,15 +133,9 @@ export const WebsiteHomePage: React.FC = () => {
   return (
     <div className="relative w-screen h-screen max-h-screen overflow-hidden bg-[#0D0D0F] text-[#F2F2F0] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none">
       {/* =========================================================================
-          6. FULL-SCREEN WEBGL LIQUID/GLASS DISTORTION BACKGROUND (Lusion.io Style)
+          FULL-SCREEN WEBGL LIQUID/GLASS DISTORTION BACKGROUND (Lusion.io Style)
           ========================================================================= */}
-      <LiquidGlassBackground
-        colorBg="#0D0D0F"
-        colorYellow="#F5D90A"
-        colorPink="#FF3366"
-        colorCyan="#3CE7FF"
-        intensity={1.0}
-      />
+      <LiquidGlassBackground intensity={1.0} speed={0.85} />
 
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (

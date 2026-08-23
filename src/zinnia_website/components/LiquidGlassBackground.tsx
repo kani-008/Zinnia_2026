@@ -1,315 +1,360 @@
 import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
 
-export interface LiquidGlassOptions {
-  colorBg?: string; // Near-black background (default: #0D0D0F)
-  colorYellow?: string; // Cyberpunk Yellow (default: #F5D90A)
-  colorPink?: string; // Neon Pink (default: #FF3366)
-  colorCyan?: string; // Electric Cyan (default: #3CE7FF)
-  intensity?: number; // Overall distortion intensity (default: 1.0)
+interface LiquidGlassProps {
   className?: string;
+  intensity?: number;
+  speed?: number;
 }
 
-const VERTEX_SHADER = `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = vec4(position, 1.0);
-}
-`;
-
-const FRAGMENT_SHADER = `
-uniform float uTime;
-uniform vec2 uResolution;
-uniform vec2 uMouse;
-uniform float uMouseVelocity;
-uniform vec3 uColorBg;
-uniform vec3 uColorYellow;
-uniform vec3 uColorPink;
-uniform vec3 uColorCyan;
-uniform float uIntensity;
-
-varying vec2 vUv;
-
-// 2D Simplex Noise
-vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
-float snoise(vec2 v){
-  const vec4 C = vec4(0.211324865405187, 0.366025403784439,
-           -0.577350269189626, 0.024390243902439);
-  vec2 i  = floor(v + dot(v, C.yy) );
-  vec2 x0 = v -   i + dot(i, C.xx);
-  vec2 i1;
-  i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-  vec4 x12 = x0.xyxy + C.xxzz;
-  x12.xy -= i1;
-  i = mod(i, 289.0);
-  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 ))
-  + i.x + vec3(0.0, i1.x, 1.0 ));
-  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
-  m = m*m;
-  m = m*m;
-  vec3 x = 2.0 * fract(p * C.www) - 1.0;
-  vec3 h = abs(x) - 0.5;
-  vec3 ox = floor(x + 0.5);
-  vec3 a0 = x - ox;
-  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-  vec3 g;
-  g.x  = a0.x  * x0.x  + h.x  * x0.y;
-  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-  return 130.0 * dot(m, g);
-}
-
-// Layered Fractal Brownian Motion (fBm)
-float fbm(vec2 p) {
-  float value = 0.0;
-  float amplitude = 0.5;
-  float frequency = 1.0;
-  for (int i = 0; i < 3; i++) {
-    value += amplitude * snoise(p * frequency);
-    frequency *= 2.05;
-    amplitude *= 0.48;
-  }
-  return value;
-}
-
-// Procedural Liquid Neon Gradient Field
-vec3 getBaseColorField(vec2 uv) {
-  vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);
-  
-  float n1 = fbm(uv * 1.5 + vec2(uTime * 0.03, uTime * 0.02));
-  float n2 = fbm(uv * 2.2 - vec2(uTime * 0.025, -uTime * 0.015));
-  
-  // Drifting fluid color vortexes
-  vec2 yellowCenter = vec2(0.2, 0.8) + vec2(sin(uTime * 0.18) * 0.12, cos(uTime * 0.22) * 0.08);
-  vec2 pinkCenter = vec2(0.85, 0.2) + vec2(cos(uTime * 0.15) * 0.12, sin(uTime * 0.2) * 0.09);
-  vec2 cyanCenter = vec2(0.5, 0.45) + vec2(sin(uTime * 0.12) * 0.15, -cos(uTime * 0.16) * 0.1);
-  
-  float dYellow = smoothstep(0.75, 0.0, length((uv - yellowCenter) * aspect));
-  float dPink = smoothstep(0.7, 0.0, length((uv - pinkCenter) * aspect));
-  float dCyan = smoothstep(0.85, 0.0, length((uv - cyanCenter) * aspect));
-  
-  vec3 col = uColorBg;
-  col = mix(col, uColorYellow, dYellow * 0.24 * (0.8 + 0.25 * n1));
-  col = mix(col, uColorPink, dPink * 0.22 * (0.8 + 0.25 * n2));
-  col = mix(col, uColorCyan, dCyan * 0.20 * (0.8 + 0.25 * n1));
-  
-  return col;
-}
-
-void main() {
-  vec2 uv = vUv;
-  vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);
-  
-  // Radial distance from smooth cursor position
-  vec2 mouseUv = uMouse;
-  vec2 mouseDelta = (uv - mouseUv) * aspect;
-  float mouseDist = length(mouseDelta);
-  
-  // Soft smoothstep falloff (~0.18 - 0.28 screen space)
-  float mouseInfluence = smoothstep(0.32, 0.0, mouseDist);
-  
-  // Ambient idle ripple noise (gentle breathing wave)
-  vec2 idleNoise = vec2(
-    fbm(uv * 2.8 + vec2(uTime * 0.04, 0.0)),
-    fbm(uv * 2.8 + vec2(0.0, uTime * 0.05))
-  ) * 0.012;
-  
-  // Cursor-following fluid turbulence
-  vec2 cursorNoise = vec2(
-    snoise(uv * 5.5 + vec2(uTime * 0.15, 0.0)),
-    snoise(uv * 5.5 - vec2(0.0, uTime * 0.15))
-  ) * mouseInfluence * (0.04 + uMouseVelocity * 0.1);
-  
-  vec2 distortion = (idleNoise + cursorNoise) * uIntensity;
-  vec2 distortedUv = uv + distortion;
-  
-  // Glass surface normal & Fresnel rim highlight
-  vec3 normal = normalize(vec3(-distortion.x * 15.0, -distortion.y * 15.0, 1.0));
-  vec3 lightDir = normalize(vec3(0.4, 0.6, 0.7));
-  vec3 viewDir = vec3(0.0, 0.0, 1.0);
-  
-  // Specular gleam (Glass highlight)
-  vec3 halfVector = normalize(lightDir + viewDir);
-  float spec = pow(max(dot(normal, halfVector), 0.0), 28.0) * (0.08 + mouseInfluence * 0.45);
-  
-  // Fresnel edge sheen
-  float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.0) * 0.3;
-  
-  // Chromatic Aberration with proportional color separation
-  float aberrationStrength = (0.005 + length(distortion) * 0.6) * (0.35 + mouseInfluence * 1.1);
-  vec2 dir = normalize(distortion + vec2(0.0001));
-  
-  float r = getBaseColorField(distortedUv + dir * aberrationStrength).r;
-  float g = getBaseColorField(distortedUv).g;
-  float b = getBaseColorField(distortedUv - dir * aberrationStrength).b;
-  
-  vec3 finalColor = vec3(r, g, b);
-  
-  // Layer glass highlights & fresnel rim glow
-  finalColor += vec3(spec);
-  finalColor += vec3(fresnel * 0.45) * uColorCyan;
-  
-  // Filmic Vignette to maintain deep contrast along borders
-  float vignette = smoothstep(1.45, 0.45, length((uv - 0.5) * aspect));
-  finalColor = mix(uColorBg, finalColor, vignette);
-  
-  gl_FragColor = vec4(finalColor, 1.0);
-}
-`;
-
-export const LiquidGlassBackground: React.FC<LiquidGlassOptions> = ({
-  colorBg = '#0D0D0F',
-  colorYellow = '#F5D90A',
-  colorPink = '#FF3366',
-  colorCyan = '#3CE7FF',
-  intensity = 1.0,
+export const LiquidGlassBackground: React.FC<LiquidGlassProps> = ({
   className = '',
+  intensity = 1.0,
+  speed = 0.8,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    if (isMobile || !containerRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    const container = containerRef.current;
-    let animationFrameId: number;
-    let isVisible = true;
-
-    // 1. Scene, Camera, and Downscaled Performance Renderer
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    
-    // Cap pixel ratio to 1.25 for buttery 60fps
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.25);
-    const renderer = new THREE.WebGLRenderer({
-      powerPreference: 'high-performance',
-      antialias: false,
+    const gl = canvas.getContext('webgl', {
       alpha: false,
-    });
-    renderer.setPixelRatio(pixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    container.appendChild(renderer.domElement);
-
-    // 2. Uniforms & Materials
-    const hexToVec3 = (hex: string) => {
-      const c = new THREE.Color(hex);
-      return new THREE.Vector3(c.r, c.g, c.b);
-    };
-
-    const uniforms = {
-      uTime: { value: 0 },
-      uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-      uMouse: { value: new THREE.Vector2(0.5, 0.5) },
-      uMouseVelocity: { value: 0 },
-      uColorBg: { value: hexToVec3(colorBg) },
-      uColorYellow: { value: hexToVec3(colorYellow) },
-      uColorPink: { value: hexToVec3(colorPink) },
-      uColorCyan: { value: hexToVec3(colorCyan) },
-      uIntensity: { value: intensity },
-    };
-
-    const material = new THREE.ShaderMaterial({
-      vertexShader: VERTEX_SHADER,
-      fragmentShader: FRAGMENT_SHADER,
-      uniforms,
-      depthWrite: false,
-      depthTest: false,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      preserveDrawingBuffer: false,
+      powerPreference: 'high-performance',
     });
 
-    const plane = new THREE.PlaneGeometry(2, 2);
-    const mesh = new THREE.Mesh(plane, material);
-    scene.add(mesh);
+    if (!gl) {
+      console.warn('WebGL not supported for LiquidGlassBackground');
+      return;
+    }
 
-    // 3. Fluid Mouse Tracking with Smooth Lerp & Decaying Velocity
-    const targetMouse = { x: 0.5, y: 0.5 };
-    const currentMouse = { x: 0.5, y: 0.5 };
-    let lastRawMouse = { x: 0.5, y: 0.5 };
-    let smoothedVelocity = 0;
+    // Vertex Shader (Full-screen quad)
+    const vsSource = `
+      attribute vec2 a_position;
+      varying vec2 v_uv;
+      void main() {
+        v_uv = (a_position + 1.0) * 0.5;
+        gl_Position = vec4(a_position, 0.0, 1.0);
+      }
+    `;
+
+    // Fragment Shader: Lusion.io inspired Liquid Glass Refraction & Chromatic Aberration
+    const fsSource = `
+      precision highp float;
+      varying vec2 v_uv;
+
+      uniform vec2 u_resolution;
+      uniform vec2 u_mouse;
+      uniform vec2 u_mouse_velocity;
+      uniform float u_time;
+      uniform float u_intensity;
+      uniform float u_speed;
+
+      // --- GLSL Simplex Noise / Hash Functions ---
+      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
+      vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+      float snoise(vec3 v) {
+        const vec2 C = vec2(1.0 / 6.0, 1.0 / 3.0);
+        const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+
+        vec3 i  = floor(v + dot(v, C.yyy));
+        vec3 x0 = v - i + dot(i, C.xxx);
+
+        vec3 g = step(x0.yzx, x0.xyz);
+        vec3 l = 1.0 - g;
+        vec3 i1 = min(g.xyz, l.zxy);
+        vec3 i2 = max(g.xyz, l.zxy);
+
+        vec3 x1 = x0 - i1 + C.xxx;
+        vec3 x2 = x0 - i2 + C.yyy;
+        vec3 x3 = x0 - D.yyy;
+
+        i = mod289(i);
+        vec4 p = permute(permute(permute(
+                  i.z + vec4(0.0, i1.z, i2.z, 1.0))
+                + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+                + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+
+        float n_ = 0.142857142857;
+        vec3 ns = n_ * D.wyz - D.xzx;
+
+        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+
+        vec4 x_ = floor(j * ns.z);
+        vec4 y_ = floor(j - 7.0 * x_);
+
+        vec4 x = x_ * ns.x + ns.yyyy;
+        vec4 y = y_ * ns.x + ns.yyyy;
+        vec4 h = 1.0 - abs(x) - abs(y);
+
+        vec4 b0 = vec4(x.xy, y.xy);
+        vec4 b1 = vec4(x.zw, y.zw);
+
+        vec4 s0 = floor(b0) * 2.0 + 1.0;
+        vec4 s1 = floor(b1) * 2.0 + 1.0;
+        vec4 sh = -step(h, vec4(0.0));
+
+        vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+        vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+
+        vec3 p0 = vec3(a0.xy, h.x);
+        vec3 p1 = vec3(a0.zw, h.y);
+        vec3 p2 = vec3(a1.xy, h.z);
+        vec3 p3 = vec3(a1.zw, h.w);
+
+        vec4 norm = taylorInvSqrt(vec4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
+        p0 *= norm.x;
+        p1 *= norm.y;
+        p2 *= norm.z;
+        p3 *= norm.w;
+
+        vec4 m = max(0.6 - vec4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0);
+        m = m * m;
+        return 42.0 * dot(m * m, vec4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
+      }
+
+      // Domain Warped Fractal Brownian Motion (Simulates liquid flows)
+      float fbm(vec2 p, float t) {
+        float total = 0.0;
+        float amp = 0.5;
+        float freq = 1.0;
+        for (int i = 0; i < 4; i++) {
+          total += amp * snoise(vec3(p * freq, t * 0.3));
+          freq *= 2.05;
+          amp *= 0.48;
+        }
+        return total;
+      }
+
+      // Normal map generation from height gradient
+      vec3 getNormal(vec2 p, float t) {
+        float eps = 0.006;
+        float h = fbm(p, t);
+        float hx = fbm(p + vec2(eps, 0.0), t);
+        float hy = fbm(p + vec2(0.0, eps), t);
+        vec3 dx = vec3(eps, 0.0, (hx - h) * 1.8);
+        vec3 dy = vec3(0.0, eps, (hy - h) * 1.8);
+        return normalize(cross(dx, dy));
+      }
+
+      void main() {
+        vec2 st = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+        vec2 mouse = (u_mouse * 2.0 - u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+
+        float t = u_time * u_speed * 0.28;
+
+        // Interactive mouse disturbance / fluid wake
+        float mouseDist = length(st - mouse);
+        float mouseInteraction = exp(-mouseDist * 2.2) * (0.35 + length(u_mouse_velocity) * 1.2);
+        vec2 mouseOffset = normalize(st - mouse + 0.0001) * mouseInteraction * 0.4;
+
+        // Warped coordinates (Lusion liquid domain warp)
+        vec2 p = st * 1.25 + mouseOffset;
+        vec2 q = vec2(fbm(p + vec2(0.0, 0.0), t), fbm(p + vec2(5.2, 1.3), t));
+        vec2 r = vec2(fbm(p + 3.2 * q + vec2(1.7, 9.2), t * 1.1), fbm(p + 3.2 * q + vec2(8.3, 2.8), t * 0.9));
+        float f = fbm(p + 3.8 * r, t * 1.2);
+
+        // Compute 3D normal for glass refraction and specular highlights
+        vec3 N = getNormal(p + 3.2 * r, t);
+        vec3 V = vec3(0.0, 0.0, 1.0); // View vector (towards viewer)
+        vec3 L = normalize(vec3(mouse.x * 0.8, mouse.y * 0.8, 1.2)); // Virtual cursor-tracking point light
+
+        // Chromatic Aberration / Dispersion (Refracting R, G, B at slightly different wavelengths)
+        float disp = 0.042 * u_intensity;
+        vec2 refractR = v_uv + N.xy * (disp * 0.85);
+        vec2 refractG = v_uv + N.xy * (disp * 1.0);
+        vec2 refractB = v_uv + N.xy * (disp * 1.18);
+
+        // Rich Dark-Theme Color Gradient Sampling
+        // Base Void -> Deep Glass Obsidian -> Cyber Gold (#F5D90A) -> Neon Pink (#FF3366) -> Electric Cyan (#3CE7FF)
+        vec3 colBase     = vec3(0.051, 0.051, 0.059);  // #0D0D0F Deep background void
+        vec3 colObsidian = vec3(0.094, 0.094, 0.114);  // #18181D Rich dark charcoal glass
+        vec3 colYellow   = vec3(0.961, 0.851, 0.039);  // #F5D90A Cyberpunk Yellow accent
+        vec3 colPink     = vec3(1.000, 0.200, 0.400);  // #FF3366 Neon Pink / Magenta
+        vec3 colCyan     = vec3(0.235, 0.906, 1.000);  // #3CE7FF Electric Cyan / Azure
+
+        // Multi-layer fluid tone blending
+        float mixR = fbm(refractR * 1.4, t);
+        float mixG = fbm(refractG * 1.4, t);
+        float mixB = fbm(refractB * 1.4, t);
+
+        vec3 fluidCol = colBase;
+        fluidCol = mix(fluidCol, colObsidian, smoothstep(-0.4, 0.6, mixG));
+        fluidCol = mix(fluidCol, colYellow * 0.65, pow(smoothstep(0.35, 0.85, mixR), 2.2) * 0.45);
+        fluidCol = mix(fluidCol, colPink * 0.55,   pow(smoothstep(0.45, 0.95, mixB), 2.5) * 0.35);
+        fluidCol = mix(fluidCol, colCyan * 0.60,   pow(smoothstep(0.55, 1.00, mixG), 2.0) * 0.40);
+
+        // Glass Specular highlights & Fresnel rim light
+        vec3 H = normalize(L + V);
+        float spec = pow(max(dot(N, H), 0.0), 36.0);
+        float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+
+        // Add caustics and metallic rim illumination
+        vec3 finalColor = fluidCol;
+        finalColor += colCyan * fresnel * 0.28;
+        finalColor += colYellow * spec * 0.45;
+        finalColor += colPink * (mouseInteraction * 0.25);
+
+        // Vignette around edges to frame content smoothly
+        float vignette = 1.0 - smoothstep(0.45, 1.45, length(st));
+        finalColor *= mix(0.75, 1.0, vignette);
+
+        gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `;
+
+    // Compile helper
+    const createShader = (type: number, source: string) => {
+      const shader = gl.createShader(type);
+      if (!shader) return null;
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('Shader compilation failed:', gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    };
+
+    const vs = createShader(gl.VERTEX_SHADER, vsSource);
+    const fs = createShader(gl.FRAGMENT_SHADER, fsSource);
+    if (!vs || !fs) return;
+
+    const program = gl.createProgram();
+    if (!program) return;
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('Program linking failed:', gl.getProgramInfoLog(program));
+      return;
+    }
+
+    gl.useProgram(program);
+
+    // Full-screen quad geometry
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    const positions = new Float32Array([
+      -1, -1,
+       1, -1,
+      -1,  1,
+      -1,  1,
+       1, -1,
+       1,  1,
+    ]);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+    const aPositionLoc = gl.getAttribLocation(program, 'a_position');
+    gl.enableVertexAttribArray(aPositionLoc);
+    gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, 0, 0);
+
+    // Uniform locations
+    const uResolutionLoc = gl.getUniformLocation(program, 'u_resolution');
+    const uMouseLoc = gl.getUniformLocation(program, 'u_mouse');
+    const uMouseVelLoc = gl.getUniformLocation(program, 'u_mouse_velocity');
+    const uTimeLoc = gl.getUniformLocation(program, 'u_time');
+    const uIntensityLoc = gl.getUniformLocation(program, 'u_intensity');
+    const uSpeedLoc = gl.getUniformLocation(program, 'u_speed');
+
+    let animationFrameId: number;
+    let startTime = performance.now();
+
+    // Mouse tracking with smooth lerp and velocity estimation
+    const mouse = {
+      targetX: window.innerWidth * 0.5,
+      targetY: window.innerHeight * 0.5,
+      currentX: window.innerWidth * 0.5,
+      currentY: window.innerHeight * 0.5,
+      prevX: window.innerWidth * 0.5,
+      prevY: window.innerHeight * 0.5,
+      vx: 0,
+      vy: 0,
+    };
 
     const handleMouseMove = (e: MouseEvent) => {
-      const x = e.clientX / window.innerWidth;
-      const y = 1.0 - e.clientY / window.innerHeight; // Invert Y for GLSL coordinate system
-      targetMouse.x = x;
-      targetMouse.y = y;
-
-      const dx = x - lastRawMouse.x;
-      const dy = y - lastRawMouse.y;
-      const rawVel = Math.min(Math.sqrt(dx * dx + dy * dy) * 20.0, 1.0);
-      smoothedVelocity = Math.max(smoothedVelocity, rawVel);
-      lastRawMouse = { x, y };
+      mouse.targetX = e.clientX;
+      mouse.targetY = window.innerHeight - e.clientY; // Invert for GL coordinates
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-    // 4. Resize Handler
-    const handleResize = () => {
+    // Responsive Canvas Resize
+    const resize = () => {
+      if (!canvas) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5); // Cap DPR at 1.5 for buttery 60fps
       const width = window.innerWidth;
       const height = window.innerHeight;
-      renderer.setSize(width, height);
-      uniforms.uResolution.value.set(width, height);
+
+      if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', resize);
+    resize();
 
-    // 5. Visibility Change (Pause render loop when tab inactive to save power)
-    const handleVisibilityChange = () => {
-      isVisible = !document.hidden;
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Render loop
+    const render = (now: number) => {
+      const elapsedTime = (now - startTime) * 0.001;
 
-    // 6. 60fps Render Loop
-    const clock = new THREE.Clock();
-    const animate = () => {
-      animationFrameId = requestAnimationFrame(animate);
+      // Smooth mouse interpolation (spring/lerp feel)
+      mouse.prevX = mouse.currentX;
+      mouse.prevY = mouse.currentY;
+      mouse.currentX += (mouse.targetX - mouse.currentX) * 0.08;
+      mouse.currentY += (mouse.targetY - mouse.currentY) * 0.08;
 
-      if (!isVisible) return;
+      mouse.vx = (mouse.currentX - mouse.prevX) * 0.05;
+      mouse.vy = (mouse.currentY - mouse.prevY) * 0.05;
 
-      const delta = clock.getDelta();
-      uniforms.uTime.value = clock.getElapsedTime();
+      gl.uniform2f(uResolutionLoc, canvas.width, canvas.height);
+      gl.uniform2f(uMouseLoc, mouse.currentX * (canvas.width / window.innerWidth), mouse.currentY * (canvas.height / window.innerHeight));
+      gl.uniform2f(uMouseVelLoc, mouse.vx, mouse.vy);
+      gl.uniform1f(uTimeLoc, elapsedTime);
+      gl.uniform1f(uIntensityLoc, intensity);
+      gl.uniform1f(uSpeedLoc, speed);
 
-      // Fluid trailing lerp (0.08 factor gives that viscous liquid drag)
-      currentMouse.x += (targetMouse.x - currentMouse.x) * 0.08;
-      currentMouse.y += (targetMouse.y - currentMouse.y) * 0.08;
-      uniforms.uMouse.value.set(currentMouse.x, currentMouse.y);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-      // Decay velocity gradually over ~1-1.5s
-      smoothedVelocity *= Math.pow(0.92, delta * 60);
-      uniforms.uMouseVelocity.value = smoothedVelocity;
-
-      renderer.render(scene, camera);
+      animationFrameId = requestAnimationFrame(render);
     };
 
-    animate();
+    animationFrameId = requestAnimationFrame(render);
 
-    // 7. Cleanup
+    // Cleanup
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('resize', handleResize);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (renderer.domElement.parentNode) {
-        renderer.domElement.parentNode.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
-      material.dispose();
-      plane.dispose();
+      window.removeEventListener('resize', resize);
+      if (positionBuffer) gl.deleteBuffer(positionBuffer);
+      if (vs) gl.deleteShader(vs);
+      if (fs) gl.deleteShader(fs);
+      if (program) gl.deleteProgram(program);
     };
-  }, [colorBg, colorYellow, colorPink, colorCyan, intensity, isMobile]);
-
-  if (isMobile) {
-    // Lightweight fallback for mobile / touch devices
-    return (
-      <div
-        className={`pointer-events-none fixed inset-0 z-0 bg-[#0D0D0F] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(60,231,255,0.15),rgba(255,255,255,0))] ${className}`}
-      />
-    );
-  }
+  }, [intensity, speed]);
 
   return (
-    <div
-      ref={containerRef}
-      className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}
-      style={{ pointerEvents: 'none' }}
+    <canvas
+      ref={canvasRef}
+      className={`fixed inset-0 w-full h-full pointer-events-none z-0 ${className}`}
+      style={{
+        display: 'block',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+      }}
     />
   );
 };
