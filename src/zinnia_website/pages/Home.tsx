@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { audioManager } from '../core/AudioManager';
 import ultronImg from '../../assets/ultron.svg';
+import { LiquidGlassBackground } from '../components/LiquidGlassBackground';
 
 // 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
 const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
@@ -132,13 +133,14 @@ export const WebsiteHomePage: React.FC = () => {
   return (
     <div className="relative w-screen h-screen max-h-screen overflow-hidden bg-[#0D0D0F] text-[#F2F2F0] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none">
       {/* =========================================================================
-          6. LUSION SIGNATURE CURSOR-FOLLOW AMBIENT GLOW BLOB (Dark Theme Neon Bloom)
+          6. FULL-SCREEN WEBGL LIQUID/GLASS DISTORTION BACKGROUND (Lusion.io Style)
           ========================================================================= */}
-      <div
-        className="pointer-events-none fixed top-0 left-0 w-80 h-80 rounded-full bg-[radial-gradient(circle,_rgba(245,217,10,0.15)_0%,_rgba(60,231,255,0.12)_45%,_transparent_75%)] blur-3xl z-0 will-change-transform transition-transform duration-150 ease-out"
-        style={{
-          transform: `translate3d(${mousePos.x}px, ${mousePos.y}px, 0) translate(-50%, -50%)`,
-        }}
+      <LiquidGlassBackground
+        colorBg="#0D0D0F"
+        colorYellow="#F5D90A"
+        colorPink="#FF3366"
+        colorCyan="#3CE7FF"
+        intensity={1.0}
       />
 
       {/* Floating Interactive Comic Sound FX Pop */}
