@@ -109,6 +109,7 @@ export const MissMinutesCompanion: React.FC = () => {
   const leftLegRef = useRef<SVGGElement | null>(null);
   const rightLegRef = useRef<SVGGElement | null>(null);
   const leftArmRef = useRef<SVGGElement | null>(null);
+  const leftArmWavingRef = useRef<SVGGElement | null>(null);
   const rightArmRef = useRef<SVGGElement | null>(null);
   const mouthRef = useRef<SVGPathElement | null>(null);
   const glowRef = useRef<HTMLDivElement | null>(null);
@@ -294,12 +295,13 @@ export const MissMinutesCompanion: React.FC = () => {
           state.isBlinking = false;
         }
 
-        // 4. Click Wave Animation
+        // 4. Click Wave Animation (Waves upward high in the air like "HI!")
         if (state.isWaving) {
           const waveElapsed = (time - state.waveStartTime) / 1000;
           if (waveElapsed < 0.85) {
+            // 3 cycles of cheerful waving back and forth in the air (-18deg to +18deg)
             const waveProgress = (waveElapsed / 0.85) * (Math.PI * 6);
-            state.waveArmAngle = -Math.abs(Math.sin(waveProgress)) * 48;
+            state.waveArmAngle = Math.sin(waveProgress) * 22;
           } else {
             state.isWaving = false;
             state.waveArmAngle = 0;
@@ -340,14 +342,21 @@ export const MissMinutesCompanion: React.FC = () => {
       if (leftEyeRef.current) leftEyeRef.current.setAttribute('ry', `${eyeRy}`);
       if (rightEyeRef.current) rightEyeRef.current.setAttribute('ry', `${eyeRy}`);
 
-      if (leftArmRef.current) {
-        if (state.isWaving) {
-          leftArmRef.current.style.transform = `rotate(${state.waveArmAngle}deg)`;
-        } else if (state.isWalking) {
-          const armSwing = Math.sin(state.walkPhase) * 12;
+      // Arm Animation - Switch between resting on hip and waving high in the air
+      if (state.isWaving) {
+        if (leftArmRef.current) leftArmRef.current.style.display = 'none';
+        if (leftArmWavingRef.current) {
+          leftArmWavingRef.current.style.display = 'block';
+          leftArmWavingRef.current.style.transform = `rotate(${state.waveArmAngle}deg)`;
+        }
+      } else {
+        if (leftArmRef.current) {
+          leftArmRef.current.style.display = 'block';
+          const armSwing = state.isWalking ? Math.sin(state.walkPhase) * 12 : 0;
           leftArmRef.current.style.transform = `rotate(${armSwing}deg)`;
-        } else {
-          leftArmRef.current.style.transform = 'rotate(0deg)';
+        }
+        if (leftArmWavingRef.current) {
+          leftArmWavingRef.current.style.display = 'none';
         }
       }
 
@@ -591,6 +600,7 @@ export const MissMinutesCompanion: React.FC = () => {
               <circle cx="109" cy="66" r="5" fill="#E64A19" opacity="0.45" />
 
               {/* ==================== 5. ARMS & WHITE GLOVES ==================== */}
+              {/* Left Arm - Resting On Hip */}
               <g
                 ref={leftArmRef}
                 className="origin-[36px_65px] will-change-transform"
@@ -618,6 +628,44 @@ export const MissMinutesCompanion: React.FC = () => {
                 />
               </g>
 
+              {/* Left Arm - Raised High Waving ("HI!" Greeting with Open Glove) */}
+              <g
+                ref={leftArmWavingRef}
+                className="origin-[36px_65px] will-change-transform"
+                style={{ display: 'none' }}
+              >
+                {/* Arm raised up */}
+                <path
+                  d="M 36 66 Q 14 42 22 18"
+                  fill="none"
+                  stroke="#FF7A00"
+                  strokeWidth="8.5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M 36 66 Q 14 42 22 18"
+                  fill="none"
+                  stroke="#0D0D0F"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  style={{ zIndex: -1 }}
+                />
+                {/* Cheerful Open White Glove Waving High */}
+                <g transform="translate(10, 2)">
+                  <path
+                    d="M 12 18 C 8 12, 10 4, 16 5 C 19 2, 25 4, 24 10 C 28 8, 30 14, 27 18 C 24 23, 16 24, 12 18 Z"
+                    fill="#FFFEEF"
+                    stroke="#0D0D0F"
+                    strokeWidth="3"
+                    strokeLinejoin="round"
+                  />
+                  {/* Palm details */}
+                  <line x1="16" y1="12" x2="19" y2="16" stroke="#0D0D0F" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1="21" y1="12" x2="23" y2="15" stroke="#0D0D0F" strokeWidth="1.5" strokeLinecap="round" />
+                </g>
+              </g>
+
+              {/* Right Arm (Resting on Hip) */}
               <g
                 ref={rightArmRef}
                 className="origin-[124px_65px] will-change-transform"
@@ -637,6 +685,7 @@ export const MissMinutesCompanion: React.FC = () => {
                   strokeLinecap="round"
                   style={{ zIndex: -1 }}
                 />
+                {/* White Gloved Hand on Hip */}
                 <path
                   d="M 128 90 C 132 86, 124 82, 120 88 C 118 92, 122 98, 128 96 Z"
                   fill="#FFFEEF"
