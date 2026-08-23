@@ -46,11 +46,8 @@ export const WebsiteHomePage: React.FC = () => {
   return (
     <div className="relative w-screen h-screen max-h-screen overflow-hidden bg-[#FFFDF0] text-[#0F0F14] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none">
       {/* =========================================================================
-          COMIC PAGE BACKGROUND TEXTURES & PRINTS
+          COMIC PAGE BACKGROUND
           ========================================================================= */}
-      {/* Halftone Dot Matrix Overlay */}
-      <div className="absolute inset-0 bg-halftone-dots opacity-10 pointer-events-none z-0" />
-
       {/* Comic Page Center Crease / Spine Fold */}
       <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[2px] bg-black/10 pointer-events-none z-0" />
 
@@ -156,13 +153,8 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Comic Panel Frame */}
+          {/* Main Comic Panel Frame - Pure Solid White */}
           <div className="relative w-full bg-white border-[4px] sm:border-[5px] border-black shadow-[7px_7px_0px_#000000] p-4 sm:p-6 md:p-8 pt-6 sm:pt-7">
-            {/* Panel Background: Halftone & Sunburst Texture */}
-            <div className="absolute inset-0 bg-comic-sunburst-cyan opacity-25 pointer-events-none" />
-            <div className="absolute inset-0 bg-halftone-dots-cyan opacity-20 pointer-events-none" />
-            <div className="absolute inset-0 bg-comic-hatch opacity-15 pointer-events-none" />
-
             {/* -------------------------------------------------------------
                 HERO CONTENT GRID INSIDE THE COMIC PANEL
                 ------------------------------------------------------------- */}
@@ -189,13 +181,13 @@ export const WebsiteHomePage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Comic Speech Bubble / Narrative Box */}
-                <div className="relative p-2.5 sm:p-3.5 bg-[#FFFDF0] border-[2.5px] border-black shadow-[3.5px_3.5px_0px_#000000]">
+                {/* Comic Speech Bubble / Narrative Box - Pure Clean White */}
+                <div className="relative p-2.5 sm:p-3.5 bg-white border-[2.5px] border-black shadow-[3.5px_3.5px_0px_#000000]">
                   <p className="font-comic text-xs sm:text-sm md:text-[15px] text-gray-900 leading-snug font-medium">
                     "A TIMELINE WAS BROKEN. SOMETHING EMERGED FROM IT. NINE BATTLEGROUNDS AWAIT THE BOLDEST MINDS IN COMPUTATION!"
                   </p>
                   {/* Speech Arrow */}
-                  <div className="absolute -bottom-2.5 left-6 w-3 h-3 bg-[#FFFDF0] border-r-[2.5px] border-b-[2.5px] border-black rotate-45" />
+                  <div className="absolute -bottom-2.5 left-6 w-3 h-3 bg-white border-r-[2.5px] border-b-[2.5px] border-black rotate-45" />
                 </div>
 
                 {/* 9 Battlegrounds Sticker Strip */}
@@ -212,10 +204,8 @@ export const WebsiteHomePage: React.FC = () => {
               {/* Right Column (5 cols): 2D Hand-Drawn Illustrated Hero Art */}
               <div className="md:col-span-5 relative flex items-center justify-center">
                 <div className="relative w-36 h-36 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 flex items-center justify-center">
-                  {/* Halftone Starburst Radial Badge Behind Character */}
-                  <div className="absolute inset-0 bg-[#FFE600] border-[3.5px] border-black rounded-full shadow-[5px_5px_0px_#000000] rotate-12 flex items-center justify-center">
-                    <div className="w-full h-full bg-halftone-dots opacity-20 rounded-full" />
-                  </div>
+                  {/* Yellow Solid Radial Badge Behind Character */}
+                  <div className="absolute inset-0 bg-[#FFE600] border-[3.5px] border-black rounded-full shadow-[5px_5px_0px_#000000] rotate-12 flex items-center justify-center" />
 
                   {/* 2D Comic Illustrated Cyborg Character (SVG Ink Art) */}
                   <svg
