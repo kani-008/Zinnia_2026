@@ -2,32 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { audioManager } from '../core/AudioManager';
 import ultronImg from '../../assets/ultron.svg';
 
-// 2D-only Flip / Airport Departure Board Digit Swap Component
+// 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
 const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
-  const [displayValue, setDisplayValue] = useState(value);
-  const [prevValue, setPrevValue] = useState(value);
-  const [isFlipping, setIsFlipping] = useState(false);
+  const [current, setCurrent] = useState(value);
+  const [animating, setAnimating] = useState(false);
 
   useEffect(() => {
-    if (value !== displayValue) {
-      setPrevValue(displayValue);
-      setDisplayValue(value);
-      setIsFlipping(true);
-      const timer = setTimeout(() => setIsFlipping(false), 240);
+    if (value !== current) {
+      setCurrent(value);
+      setAnimating(true);
+      const timer = setTimeout(() => setAnimating(false), 200);
       return () => clearTimeout(timer);
     }
-  }, [value, displayValue]);
+  }, [value, current]);
 
   return (
-    <div className={`relative overflow-hidden h-[1.12em] flex items-center justify-center ${className}`}>
-      <div
-        className={`flex flex-col items-center justify-center transition-transform duration-[220ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-          isFlipping ? '-translate-y-1/2' : 'translate-y-0'
+    <div className={`flex items-center justify-center h-8 sm:h-9 md:h-10 overflow-visible ${className}`}>
+      <span
+        key={current}
+        className={`leading-none select-none inline-block transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+          animating ? 'scale-110 -translate-y-0.5' : 'scale-100 translate-y-0'
         }`}
       >
-        <span className="leading-none block select-none">{isFlipping ? prevValue : displayValue}</span>
-        {isFlipping && <span className="leading-none block select-none">{displayValue}</span>}
-      </div>
+        {current}
+      </span>
     </div>
   );
 };
@@ -411,11 +409,10 @@ export const WebsiteHomePage: React.FC = () => {
               REGISTRATION OPENS IN
             </div>
 
-            {/* Countdown Comic Number Boxes with Tactile Sticker Pop */}
-            {/* Countdown Comic Number Boxes with Split-Flap Flip Digits & Tactile Sticker Pop */}
+            {/* Countdown Comic Number Boxes with Clean Parallel Alignment & Tactile Hover */}
             <div className="flex items-center gap-2 pt-1">
               {/* Days */}
-              <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px] sticker-pop cursor-pointer">
+              <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[48px] sm:min-w-[56px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#000000] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.days}
                   className="font-display text-xl sm:text-2xl md:text-3xl text-black"
@@ -428,7 +425,7 @@ export const WebsiteHomePage: React.FC = () => {
               <span className="font-display text-xl text-black animate-pulse">:</span>
 
               {/* Hours */}
-              <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px] sticker-pop cursor-pointer">
+              <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[48px] sm:min-w-[56px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#000000] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.hours}
                   className="font-display text-xl sm:text-2xl md:text-3xl text-black"
@@ -441,7 +438,7 @@ export const WebsiteHomePage: React.FC = () => {
               <span className="font-display text-xl text-black animate-pulse">:</span>
 
               {/* Minutes */}
-              <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px] sticker-pop cursor-pointer">
+              <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[48px] sm:min-w-[56px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#000000] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.minutes}
                   className="font-display text-xl sm:text-2xl md:text-3xl text-black"
@@ -454,7 +451,7 @@ export const WebsiteHomePage: React.FC = () => {
               <span className="font-display text-xl text-black animate-pulse">:</span>
 
               {/* Seconds */}
-              <div className="flex flex-col items-center p-1.5 bg-[#FFE600] border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px] sticker-pop-alt cursor-pointer">
+              <div className="flex flex-col items-center p-1.5 bg-[#FFE600] border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[48px] sm:min-w-[56px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#000000] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.seconds}
                   className="font-display text-xl sm:text-2xl md:text-3xl text-[#FF2E63] font-black"
