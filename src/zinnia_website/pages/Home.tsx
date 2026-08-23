@@ -45,12 +45,6 @@ export const WebsiteHomePage: React.FC = () => {
 
   return (
     <div className="relative w-screen h-screen max-h-screen overflow-hidden bg-[#FFFDF0] text-[#0F0F14] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none">
-      {/* =========================================================================
-          COMIC PAGE BACKGROUND
-          ========================================================================= */}
-      {/* Comic Page Center Crease / Spine Fold */}
-      <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[2px] bg-black/10 pointer-events-none z-0" />
-
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
