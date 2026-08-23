@@ -249,15 +249,15 @@ export const WebsiteHomePage: React.FC = () => {
                     <line x1="188" y1="108" x2="162" y2="108" stroke="#000" strokeWidth="3" strokeLinecap="round" />
                     <line x1="180" y1="160" x2="145" y2="145" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
 
-                    {/* Ultron Vector Art: Fitted & Cropped by the Curve of the Yellow Circle */}
+                    {/* Ultron Vector Art: Cropped naturally by the Curve of the Yellow Circle (Unstretched) */}
                     <image
                       href={ultronImg}
-                      x="18"
-                      y="18"
-                      width="164"
-                      height="164"
+                      x="12"
+                      y="14"
+                      width="176"
+                      height="176"
                       clipPath="url(#yellowCircleClip)"
-                      preserveAspectRatio="xMidYMid meet"
+                      preserveAspectRatio="xMidYMin slice"
                     />
                   </svg>
 
