@@ -271,13 +271,13 @@ export const MissMinutesCompanion: React.FC = () => {
           ========================================================================= */}
       <div
         ref={companionRef}
-        className="relative flex items-center justify-end z-50 select-none"
+        className="relative flex items-center justify-end z-[999] select-none"
       >
         {/* Floating Contextual Speech Balloon */}
         {showBubble && !isOpen && (
           <div 
             onClick={toggleOpen}
-            className="absolute -top-14 right-20 sm:right-28 whitespace-nowrap bg-[#FF8C00] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3.5px_3.5px_0px_#8A5500] px-3.5 py-1.5 font-comic text-xs sm:text-sm tracking-wide font-extrabold rotate-2 sticker-pop cursor-pointer z-50 animate-bounce"
+            className="absolute -top-14 right-20 sm:right-28 whitespace-nowrap bg-[#FF8C00] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3.5px_3.5px_0px_#8A5500] px-3.5 py-1.5 font-comic text-xs sm:text-sm tracking-wide font-extrabold rotate-2 sticker-pop cursor-pointer z-[9999] animate-bounce"
           >
             <span>{speechBubble}</span>
             {/* Speech Tail */}
@@ -606,7 +606,7 @@ export const MissMinutesCompanion: React.FC = () => {
           TVA CONVERSATIONAL AI ASSISTANT DIALOG PANEL
           ========================================================================= */}
       {isOpen && (
-        <div className="fixed bottom-24 sm:bottom-28 right-3 sm:right-6 w-[94vw] max-w-[420px] max-h-[78vh] sm:max-h-[580px] bg-[#141417] border-[3.5px] border-[#FF8C00] shadow-[0_0_40px_rgba(255,140,0,0.25),_8px_8px_0px_#000000] z-90 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed bottom-24 sm:bottom-28 right-3 sm:right-6 w-[94vw] max-w-[420px] max-h-[78vh] sm:max-h-[580px] bg-[#141417] border-[3.5px] border-[#FF8C00] shadow-[0_0_40px_rgba(255,140,0,0.25),_8px_8px_0px_#000000] z-[99999] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {/* Header Bar */}
           <div className="bg-[#FF8C00] text-[#0D0D0F] p-3 sm:p-3.5 border-b-[3px] border-[#0D0D0F] flex items-center justify-between">
             <div className="flex items-center gap-2.5">

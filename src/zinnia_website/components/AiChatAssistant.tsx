@@ -226,8 +226,8 @@ export const AiChatAssistant: React.FC<AiChatAssistantProps> = ({
       className={`flex flex-col bg-[#030706]/95 border border-cyan-500/30 rounded-3xl backdrop-blur-2xl shadow-[0_0_50px_rgba(0,255,102,0.12)] font-mono text-xs overflow-hidden transition-all duration-300 ${
         isDrawer
           ? isExpanded
-            ? 'fixed inset-4 sm:inset-10 z-50'
-            : 'fixed bottom-5 right-5 sm:right-8 z-50 w-[92vw] sm:w-[460px] h-[600px] max-h-[85vh]'
+            ? 'fixed inset-4 sm:inset-10 z-[99999]'
+            : 'fixed bottom-5 right-5 sm:right-8 z-[99999] w-[92vw] sm:w-[460px] h-[600px] max-h-[85vh]'
           : 'w-full h-full min-h-[550px]'
       }`}
     >
