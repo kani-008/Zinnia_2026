@@ -18,7 +18,7 @@ interface Message {
   source?: string;
 }
 
-// Local offline RAG Knowledge Engine (Ensures instant, accurate answers even if backend server is offline)
+// Local offline RAG Knowledge Engine
 const SYMPOSIUM_KNOWLEDGE: Record<string, string> = {
   events: "Oh honey, you're looking for the battlegrounds? We've got 9 active missions on this timeline!\n\n**Technical Events:**\n1. **Operation: System Recovery** (Debugging)\n2. **Operation: ORACLE** (AI & Prompt Engineering)\n3. **Operation: Broken Records** (SQL Recovery)\n4. **Infinity Protocol** (Solo Coding Anomaly)\n5. **Algorithm Overdrive** (Competitive DSA)\n\n**Non-Technical Events:**\n6. **Chamber of Enigmas** (Cipher Escape & Riddles)\n7. **Paper Syndicate** (Research Presentation)\n8. **Pixel Heist** (UI/UX Design Sprint)\n9. **Neural Clash** (Campus Strategy & Gaming)",
   venue: "ZINNIA '26 is hosted at the **Government College of Engineering, Erode** (Department of Computer Science & Engineering), Perundurai, Erode, Tamil Nadu 638053.",
@@ -68,26 +68,16 @@ export const MissMinutesCompanion: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [suggestedFaqs, setSuggestedFaqs] = useState<SuggestedFaq[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const charWrapperRef = useRef<HTMLDivElement | null>(null);
 
-  // Animation Engine State Ref (Maintains 60fps single rAF loop without React render churn)
+  // Animation Engine State Ref (Maintains 60fps single rAF loop without shifting position)
   const animState = useRef({
-    charX: typeof window !== 'undefined' ? window.innerWidth - 140 : 800,
-    charY: 0,
-    targetX: typeof window !== 'undefined' ? window.innerWidth - 140 : 800,
     pointerX: typeof window !== 'undefined' ? window.innerWidth * 0.5 : 500,
     pointerY: typeof window !== 'undefined' ? window.innerHeight * 0.5 : 400,
-    hasPointer: false,
-    facing: 1, // 1 = right, -1 = left
-    facingDisplay: 1,
-    isWalking: false,
-    walkPhase: 0,
     pupilX: 0,
     pupilY: 0,
     bodyTilt: 0,
     bodyBob: 0,
-    leftLegAngle: 0,
-    rightLegAngle: 0,
     isWaving: false,
     waveStartTime: 0,
     waveArmAngle: 0,
@@ -99,18 +89,14 @@ export const MissMinutesCompanion: React.FC = () => {
     speechTimer: 0,
   });
 
-  // DOM direct mutation refs for ultra-smooth 60fps GPU rendering
-  const charWrapperRef = useRef<HTMLDivElement | null>(null);
+  // DOM direct mutation refs
   const bodyGroupRef = useRef<SVGGElement | null>(null);
   const pupilLeftRef = useRef<SVGEllipseElement | null>(null);
   const pupilRightRef = useRef<SVGEllipseElement | null>(null);
   const leftEyeRef = useRef<SVGEllipseElement | null>(null);
   const rightEyeRef = useRef<SVGEllipseElement | null>(null);
-  const leftLegRef = useRef<SVGGElement | null>(null);
-  const rightLegRef = useRef<SVGGElement | null>(null);
   const leftArmRef = useRef<SVGGElement | null>(null);
   const leftArmWavingRef = useRef<SVGGElement | null>(null);
-  const rightArmRef = useRef<SVGGElement | null>(null);
   const mouthRef = useRef<SVGPathElement | null>(null);
   const glowRef = useRef<HTMLDivElement | null>(null);
   const speechBubbleRef = useRef<HTMLDivElement | null>(null);
@@ -195,91 +181,57 @@ export const MissMinutesCompanion: React.FC = () => {
     if (!mounted || typeof window === 'undefined') return;
 
     const state = animState.current;
-    state.charX = window.innerWidth - 140;
-    state.targetX = window.innerWidth - 140;
-
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-    // Pointer tracking
+    // Pointer tracking across screen (tracks eyes and tilt, does NOT move character position)
     const handlePointerMove = (e: PointerEvent) => {
-      if (prefersReducedMotion || isTouchDevice) return;
+      if (prefersReducedMotion) return;
       state.pointerX = e.clientX;
       state.pointerY = e.clientY;
-      state.hasPointer = true;
-
-      // Follow mouse X with subtle trailing target
-      state.targetX = Math.max(50, Math.min(window.innerWidth - 110, e.clientX));
     };
 
     const handleWindowClick = (e: MouseEvent) => {
-      // Background click wave animation
+      // Cheerful wave in place
       state.isWaving = true;
       state.waveStartTime = performance.now();
       audioManager.playTimelineTick();
     };
 
-    const handleResize = () => {
-      state.targetX = Math.min(state.targetX, window.innerWidth - 110);
-      state.charX = Math.min(state.charX, window.innerWidth - 110);
-    };
-
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
     window.addEventListener('pointerdown', handleWindowClick, { passive: true });
-    window.addEventListener('resize', handleResize, { passive: true });
 
     let nextBlinkTime = performance.now() + 3500 + Math.random() * 2000;
     let rAFId: number;
 
     const renderLoop = (time: number) => {
       if (!prefersReducedMotion) {
-        // 1. Movement Lerp
-        const dx = state.targetX - state.charX;
-        const distToTarget = Math.abs(dx);
+        // 1. Subtle gentle idle breathing bob in place
+        state.bodyBob = Math.sin(time * 0.003) * 2;
 
-        if (distToTarget > 14 && !isTouchDevice) {
-          state.isWalking = true;
-          state.charX += dx * 0.045;
-
-          if (dx > 4) state.facing = 1;
-          else if (dx < -4) state.facing = -1;
-
-          state.walkPhase += 0.22;
-          state.leftLegAngle = Math.sin(state.walkPhase) * 28;
-          state.rightLegAngle = -Math.sin(state.walkPhase) * 28;
-          state.bodyBob = -Math.abs(Math.sin(state.walkPhase * 2)) * 3.5;
-        } else {
-          state.isWalking = false;
-          state.leftLegAngle *= 0.85;
-          state.rightLegAngle *= 0.85;
-          state.bodyBob = Math.sin(time * 0.003) * 1.6;
-        }
-
-        state.facingDisplay += (state.facing - state.facingDisplay) * 0.15;
-
-        // 2. Eye Tracking & Proximity
-        const charCenterX = state.charX + 45;
-        const charCenterY = window.innerHeight - 55;
+        // 2. Eye tracking relative to her stationary bottom-right corner
+        const charCenterX = window.innerWidth - 65;
+        const charCenterY = window.innerHeight - 60;
         const toPointerX = state.pointerX - charCenterX;
         const toPointerY = state.pointerY - charCenterY;
         const distToPointer = Math.hypot(toPointerX, toPointerY);
 
         const eyeAngle = Math.atan2(toPointerY, toPointerX);
-        const maxPupilRadius = 3.5;
+        const maxPupilRadius = 3.6;
         const targetRadius = Math.min(maxPupilRadius, distToPointer / 90);
 
         const targetPupilX = Math.cos(eyeAngle) * targetRadius;
         const targetPupilY = Math.sin(eyeAngle) * targetRadius;
 
-        state.pupilX += (targetPupilX - state.pupilX) * 0.12;
-        state.pupilY += (targetPupilY - state.pupilY) * 0.12;
+        state.pupilX += (targetPupilX - state.pupilX) * 0.14;
+        state.pupilY += (targetPupilY - state.pupilY) * 0.14;
 
-        if (distToPointer < 150) {
+        // Proximity reaction
+        if (distToPointer < 160) {
           state.proximity = 'curious';
-          state.bodyTilt = Math.max(-6, Math.min(6, (toPointerX / 150) * 6));
-        } else if (distToPointer < 280) {
+          state.bodyTilt = Math.max(-5, Math.min(5, (toPointerX / 160) * 5));
+        } else if (distToPointer < 320) {
           state.proximity = 'watching';
-          state.bodyTilt = Math.max(-3, Math.min(3, (toPointerX / 280) * 3));
+          state.bodyTilt = Math.max(-3, Math.min(3, (toPointerX / 320) * 3));
         } else {
           state.proximity = 'idle';
           state.bodyTilt *= 0.9;
@@ -295,13 +247,12 @@ export const MissMinutesCompanion: React.FC = () => {
           state.isBlinking = false;
         }
 
-        // 4. Click Wave Animation (Waves upward high in the air like "HI!")
+        // 4. Upward High Waving Animation in place ("HI!" Greeting)
         if (state.isWaving) {
           const waveElapsed = (time - state.waveStartTime) / 1000;
           if (waveElapsed < 0.85) {
-            // 3 cycles of cheerful waving back and forth in the air (-18deg to +18deg)
             const waveProgress = (waveElapsed / 0.85) * (Math.PI * 6);
-            state.waveArmAngle = Math.sin(waveProgress) * 22;
+            state.waveArmAngle = Math.sin(waveProgress) * 24;
           } else {
             state.isWaving = false;
             state.waveArmAngle = 0;
@@ -313,20 +264,13 @@ export const MissMinutesCompanion: React.FC = () => {
         }
       }
 
-      // DOM Updates
+      // DOM Updates (Zero layout recalculation)
       if (charWrapperRef.current) {
-        charWrapperRef.current.style.transform = `translate3d(${state.charX}px, ${state.bodyBob}px, 0)`;
+        charWrapperRef.current.style.transform = `translate3d(0, ${state.bodyBob}px, 0)`;
       }
 
       if (bodyGroupRef.current) {
-        bodyGroupRef.current.style.transform = `scaleX(${state.facingDisplay}) rotate(${state.bodyTilt}deg)`;
-      }
-
-      if (leftLegRef.current) {
-        leftLegRef.current.style.transform = `rotate(${state.leftLegAngle}deg)`;
-      }
-      if (rightLegRef.current) {
-        rightLegRef.current.style.transform = `rotate(${state.rightLegAngle}deg)`;
+        bodyGroupRef.current.style.transform = `rotate(${state.bodyTilt}deg)`;
       }
 
       if (pupilLeftRef.current) {
@@ -350,14 +294,8 @@ export const MissMinutesCompanion: React.FC = () => {
           leftArmWavingRef.current.style.transform = `rotate(${state.waveArmAngle}deg)`;
         }
       } else {
-        if (leftArmRef.current) {
-          leftArmRef.current.style.display = 'block';
-          const armSwing = state.isWalking ? Math.sin(state.walkPhase) * 12 : 0;
-          leftArmRef.current.style.transform = `rotate(${armSwing}deg)`;
-        }
-        if (leftArmWavingRef.current) {
-          leftArmWavingRef.current.style.display = 'none';
-        }
+        if (leftArmRef.current) leftArmRef.current.style.display = 'block';
+        if (leftArmWavingRef.current) leftArmWavingRef.current.style.display = 'none';
       }
 
       if (mouthRef.current) {
@@ -390,28 +328,21 @@ export const MissMinutesCompanion: React.FC = () => {
       cancelAnimationFrame(rAFId);
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerdown', handleWindowClick);
-      window.removeEventListener('resize', handleResize);
     };
   }, [mounted, isRagOpen]);
 
   if (!mounted || typeof document === 'undefined') return null;
 
   return createPortal(
-    <div
-      ref={containerRef}
-      className="fixed inset-x-0 bottom-0 pointer-events-none z-[99999] overflow-visible select-none h-0"
-    >
+    <>
       {/* =========================================================================
-          MISS MINUTES LIVING WALKING MASCOT CONTAINER
+          MISS MINUTES STATIONARY LIVING MASCOT (Fixed to Bottom-Right Corner)
           ========================================================================= */}
       <div
         ref={charWrapperRef}
-        className="absolute bottom-0 left-0 will-change-transform pointer-events-auto cursor-pointer"
-        style={{
-          transform: 'translate3d(800px, 0, 0)',
-        }}
+        className="fixed bottom-3 sm:bottom-4 right-3 sm:right-6 pointer-events-auto cursor-pointer z-[99998] select-none will-change-transform"
         onClick={(e) => {
-          e.stopPropagation(); // Stop window pointerdown so dialog stays open
+          e.stopPropagation(); // Stop background window click
           const state = animState.current;
           state.isWaving = true;
           state.waveStartTime = performance.now();
@@ -437,7 +368,7 @@ export const MissMinutesCompanion: React.FC = () => {
         />
 
         {/* =========================================================================
-            ARTICULATED SVG CHARACTER (Twisted/Unstable Comic Silhouette + Smooth Motion)
+            ARTICULATED SVG CHARACTER (Stays in corner, waves upward, tracks eyes)
             ========================================================================= */}
         <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 select-none group">
           <svg
@@ -456,17 +387,14 @@ export const MissMinutesCompanion: React.FC = () => {
               </linearGradient>
             </defs>
 
-            {/* Subtree Container for Flip and Tilt */}
+            {/* Subtree Container for Tilt */}
             <g
               ref={bodyGroupRef}
               className="origin-[80px_90px] transition-transform duration-100 ease-out will-change-transform"
             >
               {/* ==================== 1. LEGS & SHOES ==================== */}
               {/* Left Leg */}
-              <g
-                ref={leftLegRef}
-                className="origin-[68px_110px] will-change-transform"
-              >
+              <g className="origin-[68px_110px]">
                 <line
                   x1="68"
                   y1="110"
@@ -486,10 +414,7 @@ export const MissMinutesCompanion: React.FC = () => {
               </g>
 
               {/* Right Leg */}
-              <g
-                ref={rightLegRef}
-                className="origin-[92px_110px] will-change-transform"
-              >
+              <g className="origin-[92px_110px]">
                 <line
                   x1="92"
                   y1="110"
@@ -634,7 +559,6 @@ export const MissMinutesCompanion: React.FC = () => {
                 className="origin-[36px_65px] will-change-transform"
                 style={{ display: 'none' }}
               >
-                {/* Arm raised up */}
                 <path
                   d="M 36 66 Q 14 42 22 18"
                   fill="none"
@@ -659,7 +583,6 @@ export const MissMinutesCompanion: React.FC = () => {
                     strokeWidth="3"
                     strokeLinejoin="round"
                   />
-                  {/* Palm details */}
                   <line x1="16" y1="12" x2="19" y2="16" stroke="#0D0D0F" strokeWidth="1.5" strokeLinecap="round" />
                   <line x1="21" y1="12" x2="23" y2="15" stroke="#0D0D0F" strokeWidth="1.5" strokeLinecap="round" />
                 </g>
@@ -685,7 +608,6 @@ export const MissMinutesCompanion: React.FC = () => {
                   strokeLinecap="round"
                   style={{ zIndex: -1 }}
                 />
-                {/* White Gloved Hand on Hip */}
                 <path
                   d="M 128 90 C 132 86, 124 82, 120 88 C 118 92, 122 98, 128 96 Z"
                   fill="#FFFEEF"
@@ -815,7 +737,7 @@ export const MissMinutesCompanion: React.FC = () => {
           </form>
         </div>
       )}
-    </div>,
+    </>,
     document.body
   );
 };
