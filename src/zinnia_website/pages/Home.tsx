@@ -2,6 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { audioManager } from '../core/AudioManager';
 import ultronImg from '../../assets/ultron.svg';
 
+// 2D-only Flip / Airport Departure Board Digit Swap Component
+const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
+  const [displayValue, setDisplayValue] = useState(value);
+  const [prevValue, setPrevValue] = useState(value);
+  const [isFlipping, setIsFlipping] = useState(false);
+
+  useEffect(() => {
+    if (value !== displayValue) {
+      setPrevValue(displayValue);
+      setDisplayValue(value);
+      setIsFlipping(true);
+      const timer = setTimeout(() => setIsFlipping(false), 240);
+      return () => clearTimeout(timer);
+    }
+  }, [value, displayValue]);
+
+  return (
+    <div className={`relative overflow-hidden h-[1.12em] flex items-center justify-center ${className}`}>
+      <div
+        className={`flex flex-col items-center justify-center transition-transform duration-[220ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+          isFlipping ? '-translate-y-1/2' : 'translate-y-0'
+        }`}
+      >
+        <span className="leading-none block select-none">{isFlipping ? prevValue : displayValue}</span>
+        {isFlipping && <span className="leading-none block select-none">{displayValue}</span>}
+      </div>
+    </div>
+  );
+};
+
 // 2D-only Magnetic Interaction Component (Translates smoothly based on mouse proximity)
 const MagneticElement: React.FC<{
   children: React.ReactNode;
@@ -59,6 +89,17 @@ export const WebsiteHomePage: React.FC = () => {
 
   const [interactiveSoundText, setInteractiveSoundText] = useState<string | null>(null);
 
+  // Lusion Signature Cursor Trail Position
+  const [mousePos, setMousePos] = useState({ x: -250, y: -250 });
+
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+  }, []);
+
   useEffect(() => {
     const targetDate = new Date('2026-09-17T09:00:00+05:30').getTime();
 
@@ -92,6 +133,16 @@ export const WebsiteHomePage: React.FC = () => {
 
   return (
     <div className="relative w-screen h-screen max-h-screen overflow-hidden bg-[#FFFDF0] text-[#0F0F14] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none">
+      {/* =========================================================================
+          6. LUSION SIGNATURE CURSOR-FOLLOW AMBIENT GLOW BLOB (Lagged 0.15s)
+          ========================================================================= */}
+      <div
+        className="pointer-events-none fixed top-0 left-0 w-80 h-80 rounded-full bg-[radial-gradient(circle,_rgba(255,230,0,0.18)_0%,_rgba(0,229,255,0.08)_50%,_transparent_75%)] blur-3xl z-0 will-change-transform transition-transform duration-150 ease-out"
+        style={{
+          transform: `translate3d(${mousePos.x}px, ${mousePos.y}px, 0) translate(-50%, -50%)`,
+        }}
+      />
+
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
@@ -103,10 +154,32 @@ export const WebsiteHomePage: React.FC = () => {
         </div>
       )}
 
-      {/* Comic Book Header Stamp Top Left & Right */}
-      <div className="max-w-6xl mx-auto w-full flex items-center justify-between text-[9px] sm:text-[11px] font-mono tracking-widest text-black/50 uppercase hidden sm:flex z-10 px-2">
-        <span>VOL. 2026 &bull; ISSUE #01 &bull; SPECIAL EDITION &bull; GCE ERODE CSE</span>
-        <span>ALL-NEW 2D SYMPO EXPERIENCE &bull; 17 SEPTEMBER 2026</span>
+      {/* =========================================================================
+          7. INFINITE MARQUEE TICKER (Smooth 2D Horizontal Scroll)
+          ========================================================================= */}
+      <div className="max-w-6xl mx-auto w-full overflow-hidden whitespace-nowrap text-[9px] sm:text-[11px] font-mono tracking-widest text-black/60 uppercase z-10 px-2 py-0.5 border-b border-black/10">
+        <div className="animate-marquee gap-8">
+          <div className="flex items-center gap-6 shrink-0">
+            <span>VOL. 2026 &bull; ISSUE #01 &bull; SPECIAL EDITION &bull; GCE ERODE CSE</span>
+            <span className="text-[#FF2E63] font-bold">&bull;&bull;&bull;</span>
+            <span>ALL-NEW 2D SYMPO EXPERIENCE &bull; 17 SEPTEMBER 2026</span>
+            <span className="text-[#00E5FF] font-bold">&bull;&bull;&bull;</span>
+            <span>NATIONAL LEVEL TECHNICAL SYMPOSIUM &bull; 9 BATTLEGROUNDS</span>
+            <span className="text-[#FFE600] font-bold">&bull;&bull;&bull;</span>
+            <span>ANNA UNIVERSITY VERIFIED &bull; CASH PRIZE ₹25,000+</span>
+            <span className="text-black/40 font-bold">&bull;&bull;&bull;</span>
+          </div>
+          <div className="flex items-center gap-6 shrink-0" aria-hidden="true">
+            <span>VOL. 2026 &bull; ISSUE #01 &bull; SPECIAL EDITION &bull; GCE ERODE CSE</span>
+            <span className="text-[#FF2E63] font-bold">&bull;&bull;&bull;</span>
+            <span>ALL-NEW 2D SYMPO EXPERIENCE &bull; 17 SEPTEMBER 2026</span>
+            <span className="text-[#00E5FF] font-bold">&bull;&bull;&bull;</span>
+            <span>NATIONAL LEVEL TECHNICAL SYMPOSIUM &bull; 9 BATTLEGROUNDS</span>
+            <span className="text-[#FFE600] font-bold">&bull;&bull;&bull;</span>
+            <span>ANNA UNIVERSITY VERIFIED &bull; CASH PRIZE ₹25,000+</span>
+            <span className="text-black/40 font-bold">&bull;&bull;&bull;</span>
+          </div>
+        </div>
       </div>
 
       {/* =========================================================================
@@ -339,12 +412,14 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
 
             {/* Countdown Comic Number Boxes with Tactile Sticker Pop */}
+            {/* Countdown Comic Number Boxes with Split-Flap Flip Digits & Tactile Sticker Pop */}
             <div className="flex items-center gap-2 pt-1">
               {/* Days */}
               <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px] sticker-pop cursor-pointer">
-                <span className="font-display text-xl sm:text-2xl md:text-3xl text-black leading-none">
-                  {timeLeft.days}
-                </span>
+                <FlipNumber
+                  value={timeLeft.days}
+                  className="font-display text-xl sm:text-2xl md:text-3xl text-black"
+                />
                 <span className="font-comic text-[8px] sm:text-[9px] text-gray-500 font-bold uppercase mt-0.5">
                   DAYS
                 </span>
@@ -354,9 +429,10 @@ export const WebsiteHomePage: React.FC = () => {
 
               {/* Hours */}
               <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px] sticker-pop cursor-pointer">
-                <span className="font-display text-xl sm:text-2xl md:text-3xl text-black leading-none">
-                  {timeLeft.hours}
-                </span>
+                <FlipNumber
+                  value={timeLeft.hours}
+                  className="font-display text-xl sm:text-2xl md:text-3xl text-black"
+                />
                 <span className="font-comic text-[8px] sm:text-[9px] text-gray-500 font-bold uppercase mt-0.5">
                   HRS
                 </span>
@@ -366,9 +442,10 @@ export const WebsiteHomePage: React.FC = () => {
 
               {/* Minutes */}
               <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px] sticker-pop cursor-pointer">
-                <span className="font-display text-xl sm:text-2xl md:text-3xl text-black leading-none">
-                  {timeLeft.minutes}
-                </span>
+                <FlipNumber
+                  value={timeLeft.minutes}
+                  className="font-display text-xl sm:text-2xl md:text-3xl text-black"
+                />
                 <span className="font-comic text-[8px] sm:text-[9px] text-gray-500 font-bold uppercase mt-0.5">
                   MIN
                 </span>
@@ -378,9 +455,10 @@ export const WebsiteHomePage: React.FC = () => {
 
               {/* Seconds */}
               <div className="flex flex-col items-center p-1.5 bg-[#FFE600] border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px] sticker-pop-alt cursor-pointer">
-                <span className="font-display text-xl sm:text-2xl md:text-3xl text-[#FF2E63] leading-none font-black">
-                  {timeLeft.seconds}
-                </span>
+                <FlipNumber
+                  value={timeLeft.seconds}
+                  className="font-display text-xl sm:text-2xl md:text-3xl text-[#FF2E63] font-black"
+                />
                 <span className="font-comic text-[8px] sm:text-[9px] text-black font-extrabold uppercase mt-0.5">
                   SEC
                 </span>

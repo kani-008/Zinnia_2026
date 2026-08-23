@@ -177,10 +177,26 @@ body {
   box-shadow: 5px 5px 0px #000000;
 }
 
-.btn-comic:active {
-  transform: translate(3px, 3px);
-  box-shadow: 2px 2px 0px #000000;
+/* Infinite Marquee Ticker */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 25s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 
 /* Jagged Hand-Drawn Borders (Clip Paths & Borders) */
 .comic-panel-skew-1 {
