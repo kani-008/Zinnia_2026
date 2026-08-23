@@ -29,6 +29,62 @@ const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, cl
   );
 };
 
+// Pure Vanilla Dependency-Free Scroll Reveal Component (Intersection Observer + Ease-Out-Expo Curve)
+const ScrollReveal: React.FC<{
+  children: React.ReactNode;
+  delayMs?: number;
+  className?: string;
+}> = ({ children, delayMs = 0, className = '' }) => {
+  const domRef = React.useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Respect OS prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            if (domRef.current) {
+              observer.unobserve(domRef.current);
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.18,
+        rootMargin: '-50px',
+      }
+    );
+
+    if (domRef.current) {
+      observer.observe(domRef.current);
+    }
+
+    return () => {
+      if (domRef.current) observer.unobserve(domRef.current);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={domRef}
+      style={{
+        transitionDelay: isVisible ? `${delayMs}ms` : '0ms',
+      }}
+      className={`scroll-reveal-init ${isVisible ? 'scroll-reveal-visible' : ''} ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
+
 // 2D-only Magnetic Interaction Component (Translates smoothly based on mouse proximity)
 const MagneticElement: React.FC<{
   children: React.ReactNode;
@@ -476,14 +532,14 @@ export const WebsiteHomePage: React.FC = () => {
       </main>
 
       {/* =========================================================================
-          8. ABOUT SECTION / CHAPTER 02 (Scrollable Dark Neubrutalist Comic Story)
+          8. ABOUT SECTION / CHAPTER 02 (Scroll-Triggered Neubrutalist Comic Story)
           ========================================================================= */}
       <section
         id="about"
-        className="relative z-30 max-w-6xl mx-auto w-full py-12 sm:py-16 md:py-20 px-2 my-6 sm:my-10"
+        className="relative z-30 max-w-6xl mx-auto w-full py-12 sm:py-16 md:py-20 px-2 my-6 sm:my-10 overflow-visible"
       >
-        {/* Top Floating Badge for Chapter 02 */}
-        <div className="relative mb-6 sm:mb-8">
+        {/* Top Floating Badge & Heading with ScrollReveal */}
+        <ScrollReveal delayMs={0} className="relative mb-6 sm:mb-8">
           <div
             onClick={() => triggerComicFX('CHAPTER 02!')}
             className="inline-block cursor-pointer bg-[#3CE7FF] text-[#0D0D0F] border-[2.5px] border-[#3CE7FF] shadow-[3.5px_3.5px_0px_#1E8FA3] px-3.5 sm:px-5 py-1.5 -rotate-1 sticker-pop"
@@ -500,127 +556,141 @@ export const WebsiteHomePage: React.FC = () => {
             ZINNIA '26 is the flagship National-Level Technical Symposium hosted by the
             Department of Computer Science & Engineering at Government College of Engineering, Erode.
           </p>
-        </div>
+        </ScrollReveal>
 
-        {/* 3 Comic Panels Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 pt-2">
+        {/* 3 Comic Panels Grid with Staggered ScrollReveal (80-120ms intervals) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 pt-2 overflow-visible">
           {/* Card 1: The Lore / Chronos Protocol */}
-          <div
-            onClick={() => triggerComicFX('LORE!')}
-            className="group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#F5D90A] shadow-[5px_5px_0px_#8A7400] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#8A7400] cursor-pointer flex flex-col justify-between"
-          >
-            {/* Corner Badge */}
-            <div className="absolute -top-3.5 left-4 bg-[#F5D90A] text-[#0D0D0F] px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
-              01 &bull; THE LORE
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <div className="w-10 h-10 bg-[#F5D90A]/15 border-[2px] border-[#F5D90A] flex items-center justify-center text-xl text-[#F5D90A]">
-                ⚡
+          <ScrollReveal delayMs={0} className="h-full">
+            <div
+              onClick={() => triggerComicFX('LORE!')}
+              className="h-full group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#F5D90A] shadow-[5px_5px_0px_#8A7400] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#8A7400] cursor-pointer flex flex-col justify-between"
+            >
+              {/* Corner Badge */}
+              <div className="absolute -top-3.5 left-4 bg-[#F5D90A] text-[#0D0D0F] px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
+                01 &bull; THE LORE
               </div>
-              <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
-                THE CHRONOS TIMELINE
-              </h3>
-              <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
-                When a catastrophic glitch fractured the digital space-time continuum, 9 isolated battlegrounds
-                emerged. Only coders with absolute algorithmic mastery can restore the central core.
-              </p>
-            </div>
 
-            <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#F5D90A] font-bold">
-              <span>9 BATTLEGROUNDS</span>
-              <span>&rarr;</span>
+              <div className="space-y-3 pt-2">
+                <div className="w-10 h-10 bg-[#F5D90A]/15 border-[2px] border-[#F5D90A] flex items-center justify-center text-xl text-[#F5D90A]">
+                  ⚡
+                </div>
+                <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
+                  THE CHRONOS TIMELINE
+                </h3>
+                <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
+                  When a catastrophic glitch fractured the digital space-time continuum, 9 isolated battlegrounds
+                  emerged. Only coders with absolute algorithmic mastery can restore the central core.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#F5D90A] font-bold">
+                <span>9 BATTLEGROUNDS</span>
+                <span>&rarr;</span>
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Card 2: The Department & College Legacy */}
-          <div
-            onClick={() => triggerComicFX('LEGACY!')}
-            className="group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#3CE7FF] shadow-[5px_5px_0px_#1E8FA3] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#1E8FA3] cursor-pointer flex flex-col justify-between"
-          >
-            {/* Corner Badge */}
-            <div className="absolute -top-3.5 left-4 bg-[#3CE7FF] text-[#0D0D0F] px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
-              02 &bull; GCE ERODE
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <div className="w-10 h-10 bg-[#3CE7FF]/15 border-[2px] border-[#3CE7FF] flex items-center justify-center text-xl text-[#3CE7FF]">
-                🏛️
+          <ScrollReveal delayMs={100} className="h-full">
+            <div
+              onClick={() => triggerComicFX('LEGACY!')}
+              className="h-full group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#3CE7FF] shadow-[5px_5px_0px_#1E8FA3] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#1E8FA3] cursor-pointer flex flex-col justify-between"
+            >
+              {/* Corner Badge */}
+              <div className="absolute -top-3.5 left-4 bg-[#3CE7FF] text-[#0D0D0F] px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
+                02 &bull; GCE ERODE
               </div>
-              <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
-                CSE EXCELLENCE
-              </h3>
-              <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
-                Organized with precision by the Computer Science & Engineering department of Govt College of Engineering,
-                Erode. Celebrating innovation, competitive coding, machine intelligence, and web supremacy.
-              </p>
-            </div>
 
-            <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#3CE7FF] font-bold">
-              <span>ANNA UNIV AFFILIATED</span>
-              <span>&rarr;</span>
+              <div className="space-y-3 pt-2">
+                <div className="w-10 h-10 bg-[#3CE7FF]/15 border-[2px] border-[#3CE7FF] flex items-center justify-center text-xl text-[#3CE7FF]">
+                  🏛️
+                </div>
+                <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
+                  CSE EXCELLENCE
+                </h3>
+                <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
+                  Organized with precision by the Computer Science & Engineering department of Govt College of Engineering,
+                  Erode. Celebrating innovation, competitive coding, machine intelligence, and web supremacy.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#3CE7FF] font-bold">
+                <span>ANNA UNIV AFFILIATED</span>
+                <span>&rarr;</span>
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Card 3: Cash Prizes & National Recognition */}
-          <div
-            onClick={() => triggerComicFX('REWARDS!')}
-            className="group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#FF3366] shadow-[5px_5px_0px_#B01F45] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#B01F45] cursor-pointer flex flex-col justify-between"
-          >
-            {/* Corner Badge */}
-            <div className="absolute -top-3.5 left-4 bg-[#FF3366] text-white px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
-              03 &bull; THE SPOILS
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <div className="w-10 h-10 bg-[#FF3366]/15 border-[2px] border-[#FF3366] flex items-center justify-center text-xl text-[#FF3366]">
-                🏆
+          <ScrollReveal delayMs={200} className="h-full">
+            <div
+              onClick={() => triggerComicFX('REWARDS!')}
+              className="h-full group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#FF3366] shadow-[5px_5px_0px_#B01F45] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#B01F45] cursor-pointer flex flex-col justify-between"
+            >
+              {/* Corner Badge */}
+              <div className="absolute -top-3.5 left-4 bg-[#FF3366] text-white px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
+                03 &bull; THE SPOILS
               </div>
-              <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
-                ₹25,000+ CASH POOL
-              </h3>
-              <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
-                High-stakes competitive rewards, verified certificates signed by academic authorities,
-                exclusive winner memorabilia, and direct networking with top tech talent across the nation.
-              </p>
-            </div>
 
-            <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#FF3366] font-bold">
-              <span>MERIT CERTIFICATES</span>
-              <span>&rarr;</span>
+              <div className="space-y-3 pt-2">
+                <div className="w-10 h-10 bg-[#FF3366]/15 border-[2px] border-[#FF3366] flex items-center justify-center text-xl text-[#FF3366]">
+                  🏆
+                </div>
+                <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
+                  ₹25,000+ CASH POOL
+                </h3>
+                <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
+                  High-stakes competitive rewards, verified certificates signed by academic authorities,
+                  exclusive winner memorabilia, and direct networking with top tech talent across the nation.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#FF3366] font-bold">
+                <span>MERIT CERTIFICATES</span>
+                <span>&rarr;</span>
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
 
-        {/* 4-Stat Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-4">
-          <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
-            <span className="font-display text-2xl sm:text-3xl text-[#F5D90A] block">9</span>
-            <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
-              BATTLEGROUNDS
-            </span>
-          </div>
+        {/* 4-Stat Strip with Staggered Cascading ScrollReveal */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-4 overflow-visible">
+          <ScrollReveal delayMs={0}>
+            <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
+              <span className="font-display text-2xl sm:text-3xl text-[#F5D90A] block">9</span>
+              <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
+                BATTLEGROUNDS
+              </span>
+            </div>
+          </ScrollReveal>
 
-          <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
-            <span className="font-display text-2xl sm:text-3xl text-[#FF3366] block">₹25,000+</span>
-            <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
-              PRIZE POOL
-            </span>
-          </div>
+          <ScrollReveal delayMs={80}>
+            <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
+              <span className="font-display text-2xl sm:text-3xl text-[#FF3366] block">₹25,000+</span>
+              <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
+                PRIZE POOL
+              </span>
+            </div>
+          </ScrollReveal>
 
-          <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
-            <span className="font-display text-2xl sm:text-3xl text-[#3CE7FF] block">50+</span>
-            <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
-              COLLEGES
-            </span>
-          </div>
+          <ScrollReveal delayMs={160}>
+            <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
+              <span className="font-display text-2xl sm:text-3xl text-[#3CE7FF] block">50+</span>
+              <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
+                COLLEGES
+              </span>
+            </div>
+          </ScrollReveal>
 
-          <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
-            <span className="font-display text-2xl sm:text-3xl text-[#F2F2F0] block">500+</span>
-            <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
-              WARRIORS
-            </span>
-          </div>
+          <ScrollReveal delayMs={240}>
+            <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
+              <span className="font-display text-2xl sm:text-3xl text-[#F2F2F0] block">500+</span>
+              <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
+                WARRIORS
+              </span>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 

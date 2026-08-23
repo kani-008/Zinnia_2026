@@ -199,6 +199,27 @@ body {
 }
 
 
+/* Scroll Reveal (Ease-out-expo cubic-bezier curve) */
+.scroll-reveal-init {
+  opacity: 0;
+  transform: translateY(40px) scale(0.95);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.scroll-reveal-visible {
+  opacity: 1 !important;
+  transform: translateY(0px) scale(1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal-init {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 /* Jagged Hand-Drawn Borders (Clip Paths & Borders) */
 .comic-panel-skew-1 {
   clip-path: polygon(0.5% 1%, 99.2% 0.3%, 99.8% 99.2%, 0.2% 98.6%);
