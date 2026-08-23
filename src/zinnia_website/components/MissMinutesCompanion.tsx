@@ -97,6 +97,7 @@ export const MissMinutesCompanion: React.FC = () => {
   const rightEyeRef = useRef<SVGEllipseElement | null>(null);
   const leftArmRef = useRef<SVGGElement | null>(null);
   const leftArmWavingRef = useRef<SVGGElement | null>(null);
+  const rightArmRef = useRef<SVGGElement | null>(null);
   const mouthRef = useRef<SVGPathElement | null>(null);
   const glowRef = useRef<HTMLDivElement | null>(null);
   const speechBubbleRef = useRef<HTMLDivElement | null>(null);
