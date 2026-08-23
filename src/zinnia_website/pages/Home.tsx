@@ -49,7 +49,7 @@ export const WebsiteHomePage: React.FC = () => {
       {interactiveSoundText && (
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
           <div className="px-6 py-2.5 bg-[#FFE600] border-4 border-black shadow-[6px_6px_0px_#000000] rotate-6">
-            <span className="font-display text-4xl sm:text-6xl text-[#FF2E63] text-stroke-comic-sm tracking-wider">
+            <span className="font-display text-4xl sm:text-6xl text-[#FF2E63] tracking-wider">
               {interactiveSoundText}
             </span>
           </div>
@@ -77,7 +77,7 @@ export const WebsiteHomePage: React.FC = () => {
               <span className="font-display text-2xl sm:text-3xl text-black tracking-wide">
                 ZINNIA
               </span>
-              <span className="font-comic text-xl sm:text-2xl text-[#FF2E63] text-stroke-comic-sm font-black">
+              <span className="font-comic text-xl sm:text-2xl text-[#FF2E63] font-black">
                 '26
               </span>
             </div>
@@ -138,7 +138,7 @@ export const WebsiteHomePage: React.FC = () => {
             className="cursor-pointer absolute -top-4 right-3 sm:right-6 z-50 bg-[#FF2E63] border-[2.5px] border-black shadow-[3.5px_3.5px_0px_#000000] px-3.5 sm:px-5 py-1.5 rotate-4 hover:rotate-8 transition-transform hover:scale-105"
           >
             <div className="flex flex-col items-center justify-center leading-none text-center">
-              <span className="font-display text-sm sm:text-base md:text-lg text-white text-stroke-comic-sm tracking-wide">
+              <span className="font-display text-sm sm:text-base md:text-lg text-white font-extrabold tracking-wide">
                 ₹25,000+
               </span>
               <span className="font-comic text-[8px] sm:text-[10px] text-[#FFE600] tracking-wider uppercase mt-0.5 font-black">
@@ -166,7 +166,7 @@ export const WebsiteHomePage: React.FC = () => {
                     ZINNIA
                   </h1>
                   <div className="flex items-center gap-3 pt-0.5">
-                    <span className="font-comic text-2xl sm:text-3xl md:text-4xl text-[#00E5FF] text-stroke-comic-sm font-black">
+                    <span className="font-comic text-2xl sm:text-3xl md:text-4xl text-[#0891B2] font-black">
                       2026
                     </span>
                     <span className="px-2.5 py-0.5 bg-[#FF2E63] text-white border-[2px] border-black font-bungee text-[10px] sm:text-xs -rotate-2">
@@ -252,7 +252,7 @@ export const WebsiteHomePage: React.FC = () => {
                     onClick={() => triggerComicFX('ZAP!')}
                     className="cursor-pointer absolute -bottom-2.5 -left-2.5 z-40 bg-[#FFE600] border-2 border-black shadow-[3.5px_3.5px_0px_#000000] px-2.5 py-1 -rotate-12 hover:rotate-0 transition-transform"
                   >
-                    <span className="font-display text-xs sm:text-sm md:text-base text-[#FF2E63] text-stroke-comic-sm">
+                    <span className="font-display text-xs sm:text-sm md:text-base text-[#FF2E63] font-bold">
                       ⚡ CRACKLE!
                     </span>
                   </div>
@@ -313,7 +313,7 @@ export const WebsiteHomePage: React.FC = () => {
 
               {/* Seconds */}
               <div className="flex flex-col items-center p-1.5 bg-[#FFE600] border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px]">
-                <span className="font-display text-xl sm:text-2xl md:text-3xl text-[#FF2E63] text-stroke-comic-sm leading-none font-bold">
+                <span className="font-display text-xl sm:text-2xl md:text-3xl text-[#FF2E63] leading-none font-black">
                   {timeLeft.seconds}
                 </span>
                 <span className="font-comic text-[8px] sm:text-[9px] text-black font-extrabold uppercase mt-0.5">
