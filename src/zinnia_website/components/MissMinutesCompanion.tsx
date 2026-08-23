@@ -1,9 +1,73 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { 
+  Send, 
+  X, 
+  Clock, 
+  MessageSquare,
+  Sparkles
+} from 'lucide-react';
 import { audioManager } from '../core/AudioManager';
+import { sendChatMessage, fetchSuggestedFaqs, SuggestedFaq } from '../../services/aiChat';
+
+interface Message {
+  id: string;
+  sender: 'miss-minutes' | 'user';
+  text: string;
+  timestamp: string;
+  source?: string;
+}
+
+// Local offline RAG Knowledge Engine (Ensures instant, accurate answers even if backend server is offline)
+const SYMPOSIUM_KNOWLEDGE: Record<string, string> = {
+  events: "Oh honey, you're looking for the battlegrounds? We've got 9 active missions on this timeline!\n\n**Technical Events:**\n1. **Operation: System Recovery** (Debugging)\n2. **Operation: ORACLE** (AI & Prompt Engineering)\n3. **Operation: Broken Records** (SQL Recovery)\n4. **Infinity Protocol** (Solo Coding Anomaly)\n5. **Algorithm Overdrive** (Competitive DSA)\n\n**Non-Technical Events:**\n6. **Chamber of Enigmas** (Cipher Escape & Riddles)\n7. **Paper Syndicate** (Research Presentation)\n8. **Pixel Heist** (UI/UX Design Sprint)\n9. **Neural Clash** (Campus Strategy & Gaming)",
+  venue: "ZINNIA '26 is hosted at the **Government College of Engineering, Erode** (Department of Computer Science & Engineering), Perundurai, Erode, Tamil Nadu 638053.",
+  prizes: "The total prize pool across all 9 battlegrounds exceeds **₹25,000+** in grand cash awards, alongside Anna University verified merit certificates and CHRONOS digital badges!",
+  fee: "Registration fee is standard at ₹250 per participant which grants access to technical events, symposium kits, food, and verified certificates!",
+  date: "Mark your timeline! ZINNIA 2026 takes place on **September 17, 2026** at GCE Erode.",
+  rules: "Participants must bring their college ID card. Individual and team participation (1-3 members) are supported depending on the mission clearance level."
+};
+
+function getLocalRagAnswer(query: string): string | null {
+  const q = query.toLowerCase();
+  if (q.includes('event') || q.includes('battleground') || q.includes('competition') || q.includes('what events')) {
+    return SYMPOSIUM_KNOWLEDGE.events;
+  }
+  if (q.includes('venue') || q.includes('where') || q.includes('location') || q.includes('college')) {
+    return SYMPOSIUM_KNOWLEDGE.venue;
+  }
+  if (q.includes('prize') || q.includes('cash') || q.includes('reward') || q.includes('money')) {
+    return SYMPOSIUM_KNOWLEDGE.prizes;
+  }
+  if (q.includes('fee') || q.includes('cost') || q.includes('price') || q.includes('pay') || q.includes('how much')) {
+    return SYMPOSIUM_KNOWLEDGE.fee;
+  }
+  if (q.includes('date') || q.includes('when') || q.includes('time') || q.includes('schedule')) {
+    return SYMPOSIUM_KNOWLEDGE.date;
+  }
+  if (q.includes('rule') || q.includes('eligib') || q.includes('allow') || q.includes('team')) {
+    return SYMPOSIUM_KNOWLEDGE.rules;
+  }
+  return null;
+}
 
 export const MissMinutesCompanion: React.FC = () => {
   const [mounted, setMounted] = useState(false);
+  const [isRagOpen, setIsRagOpen] = useState(false);
+
+  // RAG Chat State
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 'mm-welcome',
+      sender: 'miss-minutes',
+      text: "Hey y'all! I'm **Miss Minutes**, and it's my job to catch y'all up before you dive into the ZINNIA '26 timeline!\n\nAsk me anything about events, rules, registration, prizes, or the venue.",
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+  ]);
+  const [inputQuery, setInputQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [suggestedFaqs, setSuggestedFaqs] = useState<SuggestedFaq[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Animation Engine State Ref (Maintains 60fps single rAF loop without React render churn)
@@ -30,7 +94,7 @@ export const MissMinutesCompanion: React.FC = () => {
     isBlinking: false,
     blinkStartTime: 0,
     proximity: 'idle' as 'idle' | 'watching' | 'curious',
-    speechText: "Hey y'all!",
+    speechText: "Hey y'all! Click me!",
     showSpeech: false,
     speechTimer: 0,
   });
@@ -52,7 +116,79 @@ export const MissMinutesCompanion: React.FC = () => {
 
   useEffect(() => {
     setMounted(true);
+    fetchSuggestedFaqs().then((faqs) => {
+      if (faqs && faqs.length > 0) setSuggestedFaqs(faqs.slice(0, 4));
+    });
   }, []);
+
+  // Auto-scroll chat
+  useEffect(() => {
+    if (isRagOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isLoading, isRagOpen]);
+
+  // Handle Send to RAG Core
+  const handleSend = async (customQuery?: string) => {
+    const q = customQuery || inputQuery;
+    if (!q.trim() || isLoading) return;
+
+    audioManager.playTimelineTick();
+    const state = animState.current;
+    state.isWaving = true;
+    state.waveStartTime = performance.now();
+
+    const userMsg: Message = {
+      id: `user-${Date.now()}`,
+      sender: 'user',
+      text: q.trim(),
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    if (!customQuery) setInputQuery('');
+    setIsLoading(true);
+
+    try {
+      let replyText = '';
+      const localAnswer = getLocalRagAnswer(q.trim());
+      
+      if (localAnswer) {
+        await new Promise((r) => setTimeout(r, 600));
+        replyText = localAnswer;
+      } else {
+        const res = await sendChatMessage(q.trim());
+        if (res.answer && !res.answer.includes('Network connection issue')) {
+          replyText = res.answer;
+        } else {
+          replyText = "Golly, that timeline record is classified or unavailable! Ask me about the **9 battlegrounds**, **₹25,000+ prize pool**, **GCE Erode venue**, or **registration process**!";
+        }
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `mm-${Date.now()}`,
+          sender: 'miss-minutes',
+          text: replyText,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          source: 'TVA_TIMELINE_DB'
+        }
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `mm-${Date.now()}`,
+          sender: 'miss-minutes',
+          text: "Don't fret, sugar! You can reach out directly to the coordinators or check the 9 events on our official timeline!",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!mounted || typeof window === 'undefined') return;
@@ -61,14 +197,10 @@ export const MissMinutesCompanion: React.FC = () => {
     state.charX = window.innerWidth - 140;
     state.targetX = window.innerWidth - 140;
 
-    // Check prefers-reduced-motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    // Check touch device
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-    // -------------------------------------------------------------
-    // POINTER TRACKING (pointermove & pointerdown)
-    // -------------------------------------------------------------
+    // Pointer tracking
     const handlePointerMove = (e: PointerEvent) => {
       if (prefersReducedMotion || isTouchDevice) return;
       state.pointerX = e.clientX;
@@ -80,16 +212,10 @@ export const MissMinutesCompanion: React.FC = () => {
     };
 
     const handleWindowClick = (e: MouseEvent) => {
-      // Trigger Cheerful Wave Animation anywhere on click
+      // Background click wave animation
       state.isWaving = true;
       state.waveStartTime = performance.now();
       audioManager.playTimelineTick();
-
-      // Show speech
-      const phrases = ["Hey y'all!", "Tick-tock!", "Hold on to your timeline!", "Well, hello there!"];
-      state.speechText = phrases[Math.floor(Math.random() * phrases.length)];
-      state.showSpeech = true;
-      state.speechTimer = performance.now() + 2200;
     };
 
     const handleResize = () => {
@@ -101,48 +227,36 @@ export const MissMinutesCompanion: React.FC = () => {
     window.addEventListener('pointerdown', handleWindowClick, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
 
-    // Blink timer generator
     let nextBlinkTime = performance.now() + 3500 + Math.random() * 2000;
-
-    // -------------------------------------------------------------
-    // 60FPS SINGLE REQUESTANIMATIONFRAME LOOP
-    // -------------------------------------------------------------
     let rAFId: number;
 
     const renderLoop = (time: number) => {
       if (!prefersReducedMotion) {
-        // 1. HORIZONTAL LERP MOVEMENT
+        // 1. Movement Lerp
         const dx = state.targetX - state.charX;
         const distToTarget = Math.abs(dx);
 
-        // Deadzone: stop walking when close to cursor
         if (distToTarget > 14 && !isTouchDevice) {
           state.isWalking = true;
-          // Smooth spring/lerp (mouse moves -> notices -> walks toward it)
           state.charX += dx * 0.045;
 
-          // Direction facing
           if (dx > 4) state.facing = 1;
           else if (dx < -4) state.facing = -1;
 
-          // Walking cycle oscillation
           state.walkPhase += 0.22;
           state.leftLegAngle = Math.sin(state.walkPhase) * 28;
           state.rightLegAngle = -Math.sin(state.walkPhase) * 28;
           state.bodyBob = -Math.abs(Math.sin(state.walkPhase * 2)) * 3.5;
         } else {
-          // Idle stance
           state.isWalking = false;
           state.leftLegAngle *= 0.85;
           state.rightLegAngle *= 0.85;
-          // Subtle breathing bob
           state.bodyBob = Math.sin(time * 0.003) * 1.6;
         }
 
-        // Smooth direction flip interpolation
         state.facingDisplay += (state.facing - state.facingDisplay) * 0.15;
 
-        // 2. EYE TRACKING & PROXIMITY
+        // 2. Eye Tracking & Proximity
         const charCenterX = state.charX + 45;
         const charCenterY = window.innerHeight - 55;
         const toPointerX = state.pointerX - charCenterX;
@@ -159,7 +273,6 @@ export const MissMinutesCompanion: React.FC = () => {
         state.pupilX += (targetPupilX - state.pupilX) * 0.12;
         state.pupilY += (targetPupilY - state.pupilY) * 0.12;
 
-        // Proximity state
         if (distToPointer < 150) {
           state.proximity = 'curious';
           state.bodyTilt = Math.max(-6, Math.min(6, (toPointerX / 150) * 6));
@@ -171,7 +284,7 @@ export const MissMinutesCompanion: React.FC = () => {
           state.bodyTilt *= 0.9;
         }
 
-        // 3. BLINKING
+        // 3. Blinking
         if (time > nextBlinkTime) {
           state.isBlinking = true;
           state.blinkStartTime = time;
@@ -181,11 +294,10 @@ export const MissMinutesCompanion: React.FC = () => {
           state.isBlinking = false;
         }
 
-        // 4. CLICK WAVE ANIMATION (3 wave cycles over ~0.85s)
+        // 4. Click Wave Animation
         if (state.isWaving) {
           const waveElapsed = (time - state.waveStartTime) / 1000;
           if (waveElapsed < 0.85) {
-            // 3 cycles of 0deg -> -45deg -> 0deg
             const waveProgress = (waveElapsed / 0.85) * (Math.PI * 6);
             state.waveArmAngle = -Math.abs(Math.sin(waveProgress)) * 48;
           } else {
@@ -194,26 +306,20 @@ export const MissMinutesCompanion: React.FC = () => {
           }
         }
 
-        // Speech bubble duration
         if (state.showSpeech && time > state.speechTimer) {
           state.showSpeech = false;
         }
       }
 
-      // -------------------------------------------------------------
-      // DOM UPDATES (Zero layout recalculations - GPU transforms only)
-      // -------------------------------------------------------------
+      // DOM Updates
       if (charWrapperRef.current) {
         charWrapperRef.current.style.transform = `translate3d(${state.charX}px, ${state.bodyBob}px, 0)`;
       }
 
       if (bodyGroupRef.current) {
-        // Face orientation and head tilt
-        const flip = state.facingDisplay < 0 ? -1 : 1;
         bodyGroupRef.current.style.transform = `scaleX(${state.facingDisplay}) rotate(${state.bodyTilt}deg)`;
       }
 
-      // Legs
       if (leftLegRef.current) {
         leftLegRef.current.style.transform = `rotate(${state.leftLegAngle}deg)`;
       }
@@ -221,7 +327,6 @@ export const MissMinutesCompanion: React.FC = () => {
         rightLegRef.current.style.transform = `rotate(${state.rightLegAngle}deg)`;
       }
 
-      // Eyes / Pupils
       if (pupilLeftRef.current) {
         pupilLeftRef.current.setAttribute('cx', `${64 + state.pupilX}`);
         pupilLeftRef.current.setAttribute('cy', `${52 + state.pupilY}`);
@@ -231,12 +336,10 @@ export const MissMinutesCompanion: React.FC = () => {
         pupilRightRef.current.setAttribute('cy', `${52 + state.pupilY}`);
       }
 
-      // Eyelids (Blink & Alert)
       const eyeRy = state.isBlinking ? 1.5 : state.proximity === 'curious' ? 13.5 : 11.5;
       if (leftEyeRef.current) leftEyeRef.current.setAttribute('ry', `${eyeRy}`);
       if (rightEyeRef.current) rightEyeRef.current.setAttribute('ry', `${eyeRy}`);
 
-      // Arm / Wave
       if (leftArmRef.current) {
         if (state.isWaving) {
           leftArmRef.current.style.transform = `rotate(${state.waveArmAngle}deg)`;
@@ -248,25 +351,20 @@ export const MissMinutesCompanion: React.FC = () => {
         }
       }
 
-      // Mouth expression
       if (mouthRef.current) {
-        if (state.isWaving || state.proximity === 'curious') {
-          // Cheerful open smile
+        if (state.isWaving || state.proximity === 'curious' || isRagOpen) {
           mouthRef.current.setAttribute('d', 'M 64 72 Q 80 94 96 72 Z');
           mouthRef.current.setAttribute('fill', '#D50000');
         } else {
-          // Normal pleasant smile
           mouthRef.current.setAttribute('d', 'M 66 74 Q 80 87 94 74');
           mouthRef.current.setAttribute('fill', '#FFFEEF');
         }
       }
 
-      // Glow Intensity
       if (glowRef.current) {
         glowRef.current.style.opacity = state.proximity === 'curious' ? '0.75' : state.isWaving ? '0.9' : '0.4';
       }
 
-      // Speech bubble visibility
       if (speechBubbleRef.current) {
         speechBubbleRef.current.style.opacity = state.showSpeech ? '1' : '0';
         speechBubbleRef.current.style.transform = state.showSpeech
@@ -285,7 +383,7 @@ export const MissMinutesCompanion: React.FC = () => {
       window.removeEventListener('pointerdown', handleWindowClick);
       window.removeEventListener('resize', handleResize);
     };
-  }, [mounted]);
+  }, [mounted, isRagOpen]);
 
   if (!mounted || typeof document === 'undefined') return null;
 
@@ -303,14 +401,13 @@ export const MissMinutesCompanion: React.FC = () => {
         style={{
           transform: 'translate3d(800px, 0, 0)',
         }}
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation(); // Stop window pointerdown so dialog stays open
           const state = animState.current;
           state.isWaving = true;
           state.waveStartTime = performance.now();
-          audioManager.playTimelineTick();
-          state.speechText = "Hey y'all! I'm Miss Minutes!";
-          state.showSpeech = true;
-          state.speechTimer = performance.now() + 2500;
+          audioManager.playNodeEngage();
+          setIsRagOpen((prev) => !prev);
         }}
       >
         {/* Floating Comic Speech Bubble */}
@@ -333,19 +430,17 @@ export const MissMinutesCompanion: React.FC = () => {
         {/* =========================================================================
             ARTICULATED SVG CHARACTER (Twisted/Unstable Comic Silhouette + Smooth Motion)
             ========================================================================= */}
-        <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 select-none">
+        <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 select-none group">
           <svg
             viewBox="0 0 160 170"
-            className="w-full h-full overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.85)]"
+            className="w-full h-full overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.85)] group-hover:scale-105 transition-transform duration-150"
           >
             <defs>
-              {/* 3D Clock Bevel Gradient */}
               <radialGradient id="mmClockBevel" cx="38%" cy="38%" r="62%">
                 <stop offset="0%" stopColor="#FFA726" />
                 <stop offset="68%" stopColor="#FF7A00" />
                 <stop offset="100%" stopColor="#E65100" />
               </radialGradient>
-              {/* Rim Shade */}
               <linearGradient id="mmRimShade" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#D84315" />
                 <stop offset="100%" stopColor="#7E1D00" />
@@ -372,7 +467,6 @@ export const MissMinutesCompanion: React.FC = () => {
                   strokeWidth="4.5"
                   strokeLinecap="round"
                 />
-                {/* Left White Shoe */}
                 <path
                   d="M 50 144 C 50 137, 62 135, 70 138 C 76 140, 78 148, 76 153 C 74 156, 50 156, 50 144 Z"
                   fill="#FFFEEF"
@@ -396,7 +490,6 @@ export const MissMinutesCompanion: React.FC = () => {
                   strokeWidth="4.5"
                   strokeLinecap="round"
                 />
-                {/* Right White Shoe */}
                 <path
                   d="M 86 144 C 86 137, 98 135, 106 138 C 112 140, 114 148, 112 153 C 110 156, 86 156, 86 144 Z"
                   fill="#FFFEEF"
@@ -407,7 +500,6 @@ export const MissMinutesCompanion: React.FC = () => {
               </g>
 
               {/* ==================== 2. 3D CLOCK BODY ==================== */}
-              {/* Bevel Rim */}
               <ellipse
                 cx="84"
                 cy="68"
@@ -418,7 +510,6 @@ export const MissMinutesCompanion: React.FC = () => {
                 strokeWidth="4.2"
               />
 
-              {/* Clock Face (Twisted Comic Imperfect Circle) */}
               <path
                 d="M 80 19
                    C 107 19, 128 39, 127 67
@@ -430,16 +521,11 @@ export const MissMinutesCompanion: React.FC = () => {
                 strokeWidth="4.5"
               />
 
-              {/* Clock Tick Marks */}
-              {/* 12 o'clock */}
+              {/* Tick Marks */}
               <line x1="80" y1="23" x2="80" y2="33" stroke="#0D0D0F" strokeWidth="4.2" strokeLinecap="round" />
-              {/* 3 o'clock */}
               <line x1="123" y1="66" x2="113" y2="66" stroke="#0D0D0F" strokeWidth="4.2" strokeLinecap="round" />
-              {/* 6 o'clock */}
               <line x1="80" y1="109" x2="80" y2="99" stroke="#0D0D0F" strokeWidth="4.2" strokeLinecap="round" />
-              {/* 9 o'clock */}
               <line x1="37" y1="66" x2="47" y2="66" stroke="#0D0D0F" strokeWidth="4.2" strokeLinecap="round" />
-              {/* Hour Dashes */}
               <line x1="101" y1="28" x2="96" y2="35" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
               <line x1="118" y1="45" x2="111" y2="49" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
               <line x1="118" y1="87" x2="111" y2="83" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
@@ -449,11 +535,9 @@ export const MissMinutesCompanion: React.FC = () => {
               <line x1="42" y1="45" x2="49" y2="49" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
               <line x1="59" y1="28" x2="64" y2="35" stroke="#0D0D0F" strokeWidth="2.5" strokeLinecap="round" />
 
-              {/* Nose Center Pin */}
               <circle cx="80" cy="62" r="4.2" fill="#0D0D0F" />
 
               {/* ==================== 3. EYES & EYELASHES ==================== */}
-              {/* Left Eye Sclera */}
               <ellipse
                 ref={leftEyeRef}
                 cx="64"
@@ -464,7 +548,6 @@ export const MissMinutesCompanion: React.FC = () => {
                 stroke="#0D0D0F"
                 strokeWidth="3.5"
               />
-              {/* Left Pupil (Tracks Cursor) */}
               <ellipse
                 ref={pupilLeftRef}
                 cx="64"
@@ -473,10 +556,8 @@ export const MissMinutesCompanion: React.FC = () => {
                 ry="7.5"
                 fill="#0D0D0F"
               />
-              {/* Left 3 Eyelashes */}
               <path d="M 57 39 L 52 33 M 64 38 L 64 31 M 71 40 L 76 34" stroke="#0D0D0F" strokeWidth="3" strokeLinecap="round" />
 
-              {/* Right Eye Sclera */}
               <ellipse
                 ref={rightEyeRef}
                 cx="96"
@@ -487,7 +568,6 @@ export const MissMinutesCompanion: React.FC = () => {
                 stroke="#0D0D0F"
                 strokeWidth="3.5"
               />
-              {/* Right Pupil (Tracks Cursor) */}
               <ellipse
                 ref={pupilRightRef}
                 cx="96"
@@ -496,7 +576,6 @@ export const MissMinutesCompanion: React.FC = () => {
                 ry="7.5"
                 fill="#0D0D0F"
               />
-              {/* Right 3 Eyelashes */}
               <path d="M 89 40 L 84 34 M 96 38 L 96 31 M 103 39 L 108 33" stroke="#0D0D0F" strokeWidth="3" strokeLinecap="round" />
 
               {/* ==================== 4. MOUTH & CHEEKS ==================== */}
@@ -508,17 +587,14 @@ export const MissMinutesCompanion: React.FC = () => {
                 strokeWidth="3.5"
                 strokeLinecap="round"
               />
-              {/* Rosy Cheeks */}
               <circle cx="51" cy="66" r="5" fill="#E64A19" opacity="0.45" />
               <circle cx="109" cy="66" r="5" fill="#E64A19" opacity="0.45" />
 
               {/* ==================== 5. ARMS & WHITE GLOVES ==================== */}
-              {/* Left Arm (Supports Waving and Resting on Hip) */}
               <g
                 ref={leftArmRef}
                 className="origin-[36px_65px] will-change-transform"
               >
-                {/* Arm Stroke */}
                 <path
                   d="M 36 64 C 18 68, 16 85, 34 94"
                   fill="none"
@@ -534,7 +610,6 @@ export const MissMinutesCompanion: React.FC = () => {
                   strokeLinecap="round"
                   style={{ zIndex: -1 }}
                 />
-                {/* White Gloved Hand on Hip */}
                 <path
                   d="M 32 90 C 28 86, 36 82, 40 88 C 42 92, 38 98, 32 96 Z"
                   fill="#FFFEEF"
@@ -543,12 +618,10 @@ export const MissMinutesCompanion: React.FC = () => {
                 />
               </g>
 
-              {/* Right Arm (Resting on Hip) */}
               <g
                 ref={rightArmRef}
                 className="origin-[124px_65px] will-change-transform"
               >
-                {/* Arm Stroke */}
                 <path
                   d="M 124 64 C 142 68, 144 85, 126 94"
                   fill="none"
@@ -564,7 +637,6 @@ export const MissMinutesCompanion: React.FC = () => {
                   strokeLinecap="round"
                   style={{ zIndex: -1 }}
                 />
-                {/* White Gloved Hand on Hip */}
                 <path
                   d="M 128 90 C 132 86, 124 82, 120 88 C 118 92, 122 98, 128 96 Z"
                   fill="#FFFEEF"
@@ -576,6 +648,124 @@ export const MissMinutesCompanion: React.FC = () => {
           </svg>
         </div>
       </div>
+
+      {/* =========================================================================
+          TVA CONVERSATIONAL AI RAG ASSISTANT DIALOG PANEL
+          ========================================================================= */}
+      {isRagOpen && (
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          className="fixed bottom-24 sm:bottom-28 right-3 sm:right-6 w-[94vw] max-w-[420px] max-h-[78vh] sm:max-h-[580px] bg-[#141417] border-[3.5px] border-[#FF8C00] shadow-[0_0_40px_rgba(255,140,0,0.3),_8px_8px_0px_#000000] z-[99999] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 pointer-events-auto select-auto"
+        >
+          {/* Header Bar */}
+          <div className="bg-[#FF8C00] text-[#0D0D0F] p-3 sm:p-3.5 border-b-[3px] border-[#0D0D0F] flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#0D0D0F] border border-[#FF8C00] flex items-center justify-center font-display text-base text-[#FFA726]">
+                ⏰
+              </div>
+              <div>
+                <h3 className="font-display text-base sm:text-lg uppercase tracking-wide leading-none">
+                  MISS MINUTES AI CORE
+                </h3>
+                <span className="font-mono text-[9px] uppercase font-black tracking-widest text-[#5A3000] block mt-0.5">
+                  TVA TEMPORAL PROTOCOL &bull; ACTIVE
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsRagOpen(false)}
+              className="p-1 hover:bg-[#0D0D0F] hover:text-[#FF8C00] border-[1.5px] border-[#0D0D0F] transition-colors cursor-pointer text-[#0D0D0F]"
+            >
+              <X className="w-5 h-5 stroke-[2.5]" />
+            </button>
+          </div>
+
+          {/* Quick Suggested Queries Chips */}
+          <div className="p-2.5 bg-[#1A1A1D] border-b border-[#3A3A3E] flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <button
+              onClick={() => handleSend("What events are available?")}
+              className="whitespace-nowrap px-2.5 py-1 bg-[#26262B] hover:bg-[#FF8C00] hover:text-[#0D0D0F] border border-[#FF8C00]/60 text-[10px] font-mono text-[#FF8C00] font-bold transition-colors cursor-pointer"
+            >
+              ⚡ 9 BATTLEGROUNDS
+            </button>
+            <button
+              onClick={() => handleSend("Where is the venue?")}
+              className="whitespace-nowrap px-2.5 py-1 bg-[#26262B] hover:bg-[#3CE7FF] hover:text-[#0D0D0F] border border-[#3CE7FF]/60 text-[10px] font-mono text-[#3CE7FF] font-bold transition-colors cursor-pointer"
+            >
+              🏛️ VENUE
+            </button>
+            <button
+              onClick={() => handleSend("What is the prize pool?")}
+              className="whitespace-nowrap px-2.5 py-1 bg-[#26262B] hover:bg-[#FF3366] hover:text-[#FFFFFF] border border-[#FF3366]/60 text-[10px] font-mono text-[#FF3366] font-bold transition-colors cursor-pointer"
+            >
+              🏆 ₹25,000+ PRIZES
+            </button>
+            <button
+              onClick={() => handleSend("What is the registration fee?")}
+              className="whitespace-nowrap px-2.5 py-1 bg-[#26262B] hover:bg-[#F5D90A] hover:text-[#0D0D0F] border border-[#F5D90A]/60 text-[10px] font-mono text-[#F5D90A] font-bold transition-colors cursor-pointer"
+            >
+              🎟️ REGISTRATION
+            </button>
+          </div>
+
+          {/* Message Stream */}
+          <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-3.5 bg-[#0F0F12]">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] p-3 text-xs sm:text-sm font-comic leading-relaxed border-[2px] ${
+                    msg.sender === 'user'
+                      ? 'bg-[#FF8C00] text-[#0D0D0F] border-[#FF8C00] shadow-[3px_3px_0px_#8A5500] font-bold'
+                      : 'bg-[#1A1A1D] text-[#F2F2F0] border-[#3A3A3E] shadow-[3px_3px_0px_#000000]'
+                  }`}
+                >
+                  <div className="whitespace-pre-line">{msg.text}</div>
+                </div>
+                <span className="text-[8px] font-mono text-[#A8A8AC] mt-1 px-1">
+                  {msg.timestamp}
+                </span>
+              </div>
+            ))}
+
+            {/* Loading / Searching Timeline Status */}
+            {isLoading && (
+              <div className="flex items-center gap-2 p-2.5 bg-[#1A1A1D] border border-[#FF8C00] text-[#FF8C00] text-xs font-mono max-w-[80%] animate-pulse shadow-[2px_2px_0px_#8A5500]">
+                <Clock className="w-4 h-4 animate-spin" />
+                <span className="font-bold">CONSULTING TVA DATABASE...</span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Bar */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="p-2.5 sm:p-3 bg-[#1A1A1D] border-t-[2px] border-[#3A3A3E] flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={inputQuery}
+              onChange={(e) => setInputQuery(e.target.value)}
+              placeholder="Ask Miss Minutes anything..."
+              className="flex-1 bg-[#0F0F12] border-[1.5px] border-[#3A3A3E] focus:border-[#FF8C00] text-xs sm:text-sm text-[#F2F2F0] px-3 py-2 outline-none font-comic placeholder:text-[#A8A8AC]"
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !inputQuery.trim()}
+              className="px-3.5 py-2 bg-[#FF8C00] hover:bg-[#F5D90A] disabled:opacity-50 text-[#0D0D0F] border-[1.5px] border-[#0D0D0F] shadow-[2px_2px_0px_#8A5500] font-display text-xs tracking-wider uppercase cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        </div>
+      )}
     </div>,
     document.body
   );
