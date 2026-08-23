@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { audioManager } from '../core/AudioManager';
 import ultronImg from '../../assets/ultron.svg';
+import { MissMinutesCompanion } from '../components/MissMinutesCompanion';
 
 // 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
 const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
@@ -517,17 +518,8 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Large Comic Register Magnetic CTA Button (Yellow Border + Rich Gold Shadow) */}
-          <MagneticElement strength={0.35} onClick={() => triggerComicFX('REGISTERED!')}>
-            <button
-              className="btn-comic group px-8 sm:px-12 py-3 sm:py-3.5 bg-[#F5D90A] hover:bg-[#3CE7FF] border-[3px] border-[#F5D90A] hover:border-[#3CE7FF] shadow-[6px_6px_0px_#8A7400] hover:shadow-[6px_6px_0px_#1E8FA3] font-display text-lg sm:text-xl md:text-2xl text-[#0D0D0F] tracking-wider uppercase -rotate-1 hover:rotate-0 cursor-pointer flex items-center gap-3 active:translate-x-1 active:translate-y-1 transition-all"
-            >
-              <span>REGISTER</span>
-              <span className="font-display text-2xl sm:text-3xl text-[#FF3366] group-hover:translate-x-2 transition-transform">
-                &rarr;
-              </span>
-            </button>
-          </MagneticElement>
+          {/* Miss Minutes Animated Living AI Companion (Replaces bottom-right register block) */}
+          <MissMinutesCompanion />
         </div>
       </main>
 
