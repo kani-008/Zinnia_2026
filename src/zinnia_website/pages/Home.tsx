@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { audioManager } from '../core/AudioManager';
 import ultronImg from '../../assets/ultron.svg';
-import { LiquidGlassBackground } from '../components/LiquidGlassBackground';
 
 // 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
 const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
@@ -21,9 +20,8 @@ const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, cl
     <div className={`flex items-center justify-center h-8 sm:h-9 md:h-10 overflow-visible ${className}`}>
       <span
         key={current}
-        className={`leading-none select-none inline-block transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-          animating ? 'scale-110 -translate-y-0.5' : 'scale-100 translate-y-0'
-        }`}
+        className={`leading-none select-none inline-block transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${animating ? 'scale-110 -translate-y-0.5' : 'scale-100 translate-y-0'
+          }`}
       >
         {current}
       </span>
@@ -124,22 +122,19 @@ export const WebsiteHomePage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const triggerComicFX = (sound: string) => {
-    audioManager.playTimelineTick();
-    setInteractiveSoundText(sound);
-    setTimeout(() => setInteractiveSoundText(null), 1000);
+  const scrollToSection = (id: string, sound: string) => {
+    triggerComicFX(sound);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
-    <div className="relative w-screen h-screen max-h-screen overflow-hidden bg-[#0D0D0F] text-[#F2F2F0] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none">
-      {/* =========================================================================
-          FULL-SCREEN WEBGL LIQUID/GLASS DISTORTION BACKGROUND (Lusion.io Style)
-          ========================================================================= */}
-      <LiquidGlassBackground intensity={1.0} speed={0.85} />
-
+    <div className="relative w-full min-h-screen bg-[#0D0D0F] text-[#F2F2F0] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none scroll-smooth">
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
+        <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
           <div className="px-6 py-2.5 bg-[#F5D90A] border-3 border-[#F5D90A] shadow-[6px_6px_0px_#8A7400] rotate-6 sticker-pop">
             <span className="font-display text-4xl sm:text-6xl text-[#FF3366] tracking-wider">
               {interactiveSoundText}
@@ -208,7 +203,7 @@ export const WebsiteHomePage: React.FC = () => {
 
         {/* Center/Right Comic Navigation Tabs with Magnetic Pull */}
         <nav className="flex items-center gap-2 sm:gap-4">
-          <MagneticElement strength={0.3} onClick={() => triggerComicFX('INFO!')}>
+          <MagneticElement strength={0.3} onClick={() => scrollToSection('about', 'ABOUT!')}>
             <button className="px-3.5 sm:px-4 py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#EAEAEA] hover:text-[#FFFFFF] text-[#F2F2F0] border-[2px] border-[#3A3A3E] shadow-[3px_3px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
               ABOUT
             </button>
@@ -232,7 +227,7 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
           2. CENTER HERO: LARGE COMIC PANEL (Main Visual Focus)
           ========================================================================= */}
-      <main className="relative z-30 flex-1 flex flex-col items-center justify-center max-w-6xl mx-auto w-full my-auto py-2 sm:py-3 px-2">
+      <main className="relative z-30 max-w-6xl mx-auto w-full py-4 sm:py-6 px-2 min-h-[calc(100vh-140px)] flex flex-col justify-center">
         {/* Outer unclipped wrapper for top floating badges */}
         <div className="relative w-full">
           {/* Top-Left Panel Narration Box (Yellow Badge + Gold Shadow) */}
@@ -481,16 +476,165 @@ export const WebsiteHomePage: React.FC = () => {
       </main>
 
       {/* =========================================================================
+          8. ABOUT SECTION / CHAPTER 02 (Scrollable Dark Neubrutalist Comic Story)
+          ========================================================================= */}
+      <section
+        id="about"
+        className="relative z-30 max-w-6xl mx-auto w-full py-12 sm:py-16 md:py-20 px-2 my-6 sm:my-10"
+      >
+        {/* Top Floating Badge for Chapter 02 */}
+        <div className="relative mb-6 sm:mb-8">
+          <div
+            onClick={() => triggerComicFX('CHAPTER 02!')}
+            className="inline-block cursor-pointer bg-[#3CE7FF] text-[#0D0D0F] border-[2.5px] border-[#3CE7FF] shadow-[3.5px_3.5px_0px_#1E8FA3] px-3.5 sm:px-5 py-1.5 -rotate-1 sticker-pop"
+          >
+            <span className="font-comic text-xs sm:text-sm uppercase tracking-wider font-black">
+              CHAPTER 02: THE GENESIS OF ZINNIA
+            </span>
+          </div>
+
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#F2F2F0] uppercase tracking-tight mt-3">
+            BORN FROM CODE. DRIVEN BY GLORY.
+          </h2>
+          <p className="font-comic text-sm sm:text-base md:text-lg text-[#A8A8AC] max-w-3xl mt-2 font-medium">
+            ZINNIA '26 is the flagship National-Level Technical Symposium hosted by the
+            Department of Computer Science & Engineering at Government College of Engineering, Erode.
+          </p>
+        </div>
+
+        {/* 3 Comic Panels Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 pt-2">
+          {/* Card 1: The Lore / Chronos Protocol */}
+          <div
+            onClick={() => triggerComicFX('LORE!')}
+            className="group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#F5D90A] shadow-[5px_5px_0px_#8A7400] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#8A7400] cursor-pointer flex flex-col justify-between"
+          >
+            {/* Corner Badge */}
+            <div className="absolute -top-3.5 left-4 bg-[#F5D90A] text-[#0D0D0F] px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
+              01 &bull; THE LORE
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <div className="w-10 h-10 bg-[#F5D90A]/15 border-[2px] border-[#F5D90A] flex items-center justify-center text-xl text-[#F5D90A]">
+                ⚡
+              </div>
+              <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
+                THE CHRONOS TIMELINE
+              </h3>
+              <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
+                When a catastrophic glitch fractured the digital space-time continuum, 9 isolated battlegrounds
+                emerged. Only coders with absolute algorithmic mastery can restore the central core.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#F5D90A] font-bold">
+              <span>9 BATTLEGROUNDS</span>
+              <span>&rarr;</span>
+            </div>
+          </div>
+
+          {/* Card 2: The Department & College Legacy */}
+          <div
+            onClick={() => triggerComicFX('LEGACY!')}
+            className="group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#3CE7FF] shadow-[5px_5px_0px_#1E8FA3] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#1E8FA3] cursor-pointer flex flex-col justify-between"
+          >
+            {/* Corner Badge */}
+            <div className="absolute -top-3.5 left-4 bg-[#3CE7FF] text-[#0D0D0F] px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
+              02 &bull; GCE ERODE
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <div className="w-10 h-10 bg-[#3CE7FF]/15 border-[2px] border-[#3CE7FF] flex items-center justify-center text-xl text-[#3CE7FF]">
+                🏛️
+              </div>
+              <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
+                CSE EXCELLENCE
+              </h3>
+              <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
+                Organized with precision by the Computer Science & Engineering department of Govt College of Engineering,
+                Erode. Celebrating innovation, competitive coding, machine intelligence, and web supremacy.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#3CE7FF] font-bold">
+              <span>ANNA UNIV AFFILIATED</span>
+              <span>&rarr;</span>
+            </div>
+          </div>
+
+          {/* Card 3: Cash Prizes & National Recognition */}
+          <div
+            onClick={() => triggerComicFX('REWARDS!')}
+            className="group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#FF3366] shadow-[5px_5px_0px_#B01F45] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#B01F45] cursor-pointer flex flex-col justify-between"
+          >
+            {/* Corner Badge */}
+            <div className="absolute -top-3.5 left-4 bg-[#FF3366] text-white px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
+              03 &bull; THE SPOILS
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <div className="w-10 h-10 bg-[#FF3366]/15 border-[2px] border-[#FF3366] flex items-center justify-center text-xl text-[#FF3366]">
+                🏆
+              </div>
+              <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
+                ₹25,000+ CASH POOL
+              </h3>
+              <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
+                High-stakes competitive rewards, verified certificates signed by academic authorities,
+                exclusive winner memorabilia, and direct networking with top tech talent across the nation.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#FF3366] font-bold">
+              <span>MERIT CERTIFICATES</span>
+              <span>&rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 4-Stat Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-4">
+          <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
+            <span className="font-display text-2xl sm:text-3xl text-[#F5D90A] block">9</span>
+            <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
+              BATTLEGROUNDS
+            </span>
+          </div>
+
+          <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
+            <span className="font-display text-2xl sm:text-3xl text-[#FF3366] block">₹25,000+</span>
+            <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
+              PRIZE POOL
+            </span>
+          </div>
+
+          <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
+            <span className="font-display text-2xl sm:text-3xl text-[#3CE7FF] block">50+</span>
+            <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
+              COLLEGES
+            </span>
+          </div>
+
+          <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
+            <span className="font-display text-2xl sm:text-3xl text-[#F2F2F0] block">500+</span>
+            <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
+              WARRIORS
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
           5. FOOTER (Hand-Drawn Divider + Comic Stamp Footer with Magnetic Links)
           ========================================================================= */}
-      <footer className="relative z-30 max-w-6xl mx-auto w-full pt-1 px-2">
+      <footer className="relative z-30 max-w-6xl mx-auto w-full pt-6 pb-2 px-2">
         {/* Hand-Drawn Ink Divider (Dark Charcoal Line) */}
-        <div className="w-full h-[2px] bg-[#3A3A3E] mb-1.5 relative">
+        <div className="w-full h-[2px] bg-[#3A3A3E] mb-2.5 relative">
           <div className="absolute -top-1 left-1/4 w-2.5 h-2.5 bg-[#3A3A3E] rotate-45" />
           <div className="absolute -top-1 right-1/4 w-2.5 h-2.5 bg-[#3A3A3E] rotate-45" />
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10px] sm:text-xs font-comic tracking-wider text-[#A8A8AC]">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] sm:text-xs font-comic tracking-wider text-[#A8A8AC]">
           {/* Left Copyright */}
           <div className="flex items-center gap-2">
             <span className="bg-[#1A1A1D] text-[#F5D90A] border border-[#8A7400] shadow-[2px_2px_0px_#000000] px-2 py-0.5 text-[9px] sm:text-[10px] font-bold sticker-pop cursor-pointer">
@@ -503,7 +647,7 @@ export const WebsiteHomePage: React.FC = () => {
 
           {/* Right Links & Socials with Magnetic Pull */}
           <div className="flex items-center gap-3.5 text-[#A8A8AC] uppercase font-black">
-            <MagneticElement strength={0.2} onClick={() => triggerComicFX('ABOUT')}>
+            <MagneticElement strength={0.2} onClick={() => scrollToSection('about', 'ABOUT!')}>
               <button className="hover:text-[#3CE7FF] hover:underline transition-colors cursor-pointer">
                 ABOUT
               </button>
