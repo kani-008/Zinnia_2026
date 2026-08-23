@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { audioManager } from '../core/AudioManager';
+import ultronImg from '../../assets/ultron.svg';
 
 export const WebsiteHomePage: React.FC = () => {
   // Real-time ticking countdown to September 17, 2026
@@ -195,14 +196,29 @@ export const WebsiteHomePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Right Column (5 cols): 2D Hand-Drawn Illustrated Hero Art */}
+              {/* Right Column (5 cols): 2D Hand-Drawn Illustrated Hero Art with Ultron SVG */}
               <div className="md:col-span-5 relative flex items-center justify-center">
                 <div className="relative w-44 h-44 sm:w-52 sm:h-52 md:w-60 md:h-60 lg:w-68 lg:h-68 flex items-center justify-center">
-                  {/* 2D Comic Illustrated Cyborg Character with Hand-Drawn Yellow Background Shape */}
+                  {/* 2D Comic Illustrated Ultron Character with Hand-Drawn Yellow Background Shape */}
                   <svg
                     viewBox="0 0 200 200"
                     className="relative z-30 w-full h-full hover:scale-105 transition-transform duration-200"
                   >
+                    <defs>
+                      <clipPath id="yellowCircleClip">
+                        <path
+                          d="M 102 14
+                             C 130 13, 158 24, 175 46
+                             C 191 66, 194 96, 191 123
+                             C 188 152, 169 178, 142 188
+                             C 114 197, 81 193, 56 181
+                             C 31 169, 14 143, 11 116
+                             C 8 86, 21 54, 46 34
+                             C 62 21, 82 14, 102 14 Z"
+                        />
+                      </clipPath>
+                    </defs>
+
                     {/* Hand-Drawn Irregular Comic Yellow Background Silhouette */}
                     <path
                       d="M 102 14
@@ -220,7 +236,7 @@ export const WebsiteHomePage: React.FC = () => {
                       strokeLinecap="round"
                     />
 
-                    {/* Comic Speed Lines */}
+                    {/* Comic Speed Lines Behind & Framing Ultron */}
                     <line x1="15" y1="50" x2="60" y2="70" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
                     <line x1="25" y1="35" x2="65" y2="60" stroke="#000" strokeWidth="3" strokeLinecap="round" />
                     <line x1="10" y1="100" x2="45" y2="100" stroke="#000" strokeWidth="4" strokeLinecap="round" />
@@ -233,41 +249,16 @@ export const WebsiteHomePage: React.FC = () => {
                     <line x1="188" y1="108" x2="162" y2="108" stroke="#000" strokeWidth="3" strokeLinecap="round" />
                     <line x1="180" y1="160" x2="145" y2="145" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
 
-                    {/* Torso & Clavicle Armor Plates */}
-                    <polygon points="65,125 135,125 145,185 55,185" fill="#383F4D" stroke="#000" strokeWidth="4.5" />
-                    <polygon points="80,130 120,130 110,175 90,175" fill="#00E5FF" stroke="#000" strokeWidth="3.5" />
-                    <circle cx="100" cy="150" r="10" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
-
-                    {/* Neck & Vertebrae */}
-                    <rect x="90" y="112" width="20" height="18" fill="#5E6878" stroke="#000" strokeWidth="4" />
-                    <line x1="90" y1="118" x2="110" y2="118" stroke="#000" strokeWidth="3" />
-                    <line x1="90" y1="124" x2="110" y2="124" stroke="#000" strokeWidth="3" />
-
-                    {/* Shoulders */}
-                    <polygon points="35,130 65,120 65,155 30,158" fill="#5E6878" stroke="#000" strokeWidth="4" />
-                    <polygon points="165,130 135,120 135,155 170,158" fill="#5E6878" stroke="#000" strokeWidth="4" />
-
-                    {/* Helmet / Head Shell */}
-                    <polygon points="70,45 130,45 145,90 125,120 75,120 55,90" fill="#383F4D" stroke="#000" strokeWidth="4.5" />
-                    {/* Forehead Brow Armor */}
-                    <polygon points="75,55 125,55 135,75 65,75" fill="#5E6878" stroke="#000" strokeWidth="3.5" />
-                    {/* Temporal Crests (Yellow Horns) */}
-                    <polygon points="55,60 65,45 65,85 50,75" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
-                    <polygon points="145,60 135,45 135,85 150,75" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
-
-                    {/* Angular Slit Luminous Eyes (Emerald) */}
-                    <polygon points="75,82 92,85 92,90 77,88" fill="#00FF88" stroke="#000" strokeWidth="2.5" />
-                    <polygon points="125,82 108,85 108,90 123,88" fill="#00FF88" stroke="#000" strokeWidth="2.5" />
-
-                    {/* Faceplate Jaw & Intake Vents */}
-                    <polygon points="85,98 115,98 110,118 90,118" fill="#14171F" stroke="#000" strokeWidth="3.5" />
-                    <line x1="92" y1="104" x2="108" y2="104" stroke="#00FF88" strokeWidth="2.5" />
-                    <line x1="94" y1="110" x2="106" y2="110" stroke="#00FF88" strokeWidth="2.5" />
-
-                    {/* Comic Hatching Lines on Armor */}
-                    <line x1="60" y1="90" x2="68" y2="105" stroke="#000" strokeWidth="2" />
-                    <line x1="66" y1="90" x2="74" y2="105" stroke="#000" strokeWidth="2" />
-                    <line x1="135" y1="90" x2="127" y2="105" stroke="#000" strokeWidth="2" />
+                    {/* Ultron Vector Art: Fitted & Cropped by the Curve of the Yellow Circle */}
+                    <image
+                      href={ultronImg}
+                      x="18"
+                      y="18"
+                      width="164"
+                      height="164"
+                      clipPath="url(#yellowCircleClip)"
+                      preserveAspectRatio="xMidYMid meet"
+                    />
                   </svg>
 
                   {/* "⚡ CRACKLE!" Sound Effect Overlay Sticker */}
