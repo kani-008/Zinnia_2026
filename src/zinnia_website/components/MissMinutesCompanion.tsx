@@ -8,19 +8,12 @@ import {
   Clock, 
   HelpCircle,
   ChevronRight,
-  Database
+  Database,
+  MessageSquare
 } from 'lucide-react';
 import { audioManager } from '../core/AudioManager';
 import { sendChatMessage, fetchSuggestedFaqs, SuggestedFaq } from '../../services/aiChat';
-
-export type MissMinutesExpression = 
-  | 'idle' 
-  | 'curious' 
-  | 'excited' 
-  | 'surprised' 
-  | 'thinking' 
-  | 'confused' 
-  | 'happy';
+import missMinutesImg from '../../assets/miss_minutes.gif';
 
 interface Message {
   id: string;
@@ -65,11 +58,9 @@ function getLocalRagAnswer(query: string): string | null {
 
 export const MissMinutesCompanion: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [expression, setExpression] = useState<MissMinutesExpression>('idle');
-  const [isBlinking, setIsBlinking] = useState(false);
-  const [pupilOffset, setPupilOffset] = useState({ x: 0, y: 0 });
-  const [speechBubble, setSpeechBubble] = useState<string | null>("Hey y'all! Need help?");
-  const [bubbleVisible, setBubbleVisible] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const [speechBubble, setSpeechBubble] = useState<string>("Hey y'all! Need help?");
+  const [showBubble, setShowBubble] = useState(true);
 
   // Chat State
   const [messages, setMessages] = useState<Message[]>([
@@ -93,74 +84,23 @@ export const MissMinutesCompanion: React.FC = () => {
     });
   }, []);
 
-  // Periodic Blink Animation
+  // Contextual speech updates
   useEffect(() => {
-    const blinkInterval = setInterval(() => {
-      setIsBlinking(true);
-      setTimeout(() => setIsBlinking(false), 180);
-    }, 4200 + Math.random() * 2000);
+    const bubbleTimer = setInterval(() => {
+      if (isOpen) return;
+      const bubbles = [
+        "Hey y'all! Need help?",
+        "Ask me about the 9 events!",
+        "₹25,000+ Prize Pool!",
+        "TVA Timeline Guide here!",
+        "Click me to chat!"
+      ];
+      setSpeechBubble(bubbles[Math.floor(Math.random() * bubbles.length)]);
+      setShowBubble(true);
+    }, 8000);
 
-    return () => clearInterval(blinkInterval);
-  }, []);
-
-  // Randomized Idle Expressions
-  useEffect(() => {
-    if (isOpen) return;
-    const expressionInterval = setInterval(() => {
-      const expressions: MissMinutesExpression[] = ['idle', 'curious', 'happy', 'excited'];
-      const nextExp = expressions[Math.floor(Math.random() * expressions.length)];
-      setExpression(nextExp);
-    }, 6000);
-
-    return () => clearInterval(expressionInterval);
+    return () => clearInterval(bubbleTimer);
   }, [isOpen]);
-
-  // Contextual reactions on scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      if (scrollY > 400 && expression !== 'curious') {
-        setExpression('curious');
-      } else if (scrollY <= 400 && expression === 'curious') {
-        setExpression('idle');
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [expression]);
-
-  // Cursor Proximity Eye Tracking
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!companionRef.current) return;
-      const rect = companionRef.current.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      
-      const dx = e.clientX - centerX;
-      const dy = e.clientY - centerY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      // Max eye pupil travel
-      const maxDist = 5.5;
-      const angle = Math.atan2(dy, dx);
-      const intensity = Math.min(dist / 300, 1);
-
-      setPupilOffset({
-        x: Math.cos(angle) * maxDist * intensity,
-        y: Math.sin(angle) * maxDist * intensity,
-      });
-
-      // If cursor is very close, get excited/alert
-      if (dist < 120 && !isOpen && expression !== 'excited' && expression !== 'thinking') {
-        setExpression('excited');
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [isOpen, expression]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -173,7 +113,6 @@ export const MissMinutesCompanion: React.FC = () => {
     if (!q.trim() || isLoading) return;
 
     audioManager.playTimelineTick();
-    setExpression('thinking');
 
     const userMsg: Message = {
       id: `user-${Date.now()}`,
@@ -186,14 +125,12 @@ export const MissMinutesCompanion: React.FC = () => {
     if (!customQuery) setInputQuery('');
     setIsLoading(true);
 
-    // Try backend RAG first, then fallback to rich local knowledge base
     try {
       let replyText = '';
       const localAnswer = getLocalRagAnswer(q.trim());
       
       if (localAnswer) {
-        // Instant crisp response
-        await new Promise((r) => setTimeout(r, 650));
+        await new Promise((r) => setTimeout(r, 600));
         replyText = localAnswer;
       } else {
         const res = await sendChatMessage(q.trim());
@@ -214,7 +151,6 @@ export const MissMinutesCompanion: React.FC = () => {
           source: 'TVA_TIMELINE_DB'
         }
       ]);
-      setExpression('happy');
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -225,7 +161,6 @@ export const MissMinutesCompanion: React.FC = () => {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
       ]);
-      setExpression('confused');
     } finally {
       setIsLoading(false);
     }
@@ -235,263 +170,64 @@ export const MissMinutesCompanion: React.FC = () => {
     audioManager.playNodeEngage();
     setIsOpen(!isOpen);
     if (!isOpen) {
-      setExpression('happy');
-      setBubbleVisible(false);
-    } else {
-      setExpression('idle');
+      setShowBubble(false);
     }
   };
 
   return (
     <>
       {/* =========================================================================
-          MISS MINUTES LIVING CHARACTER (Bottom-Right Companion)
+          MISS MINUTES LIVING FULL-CHARACTER COMPANION (Bottom-Right)
           ========================================================================= */}
       <div
         ref={companionRef}
-        className="relative group flex items-center justify-end z-50 select-none"
+        className="relative flex items-center justify-end z-50 select-none"
       >
-        {/* Floating Contextual Speech Bubble */}
-        {bubbleVisible && !isOpen && speechBubble && (
+        {/* Floating Contextual Speech Balloon */}
+        {showBubble && !isOpen && (
           <div 
             onClick={toggleOpen}
-            className="absolute -top-12 right-24 sm:right-28 whitespace-nowrap bg-[#FFA000] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3.5px_3.5px_0px_#8A5500] px-3 py-1.5 font-comic text-xs sm:text-sm tracking-wide font-extrabold rotate-2 sticker-pop cursor-pointer z-50 animate-bounce"
+            className="absolute -top-14 right-20 sm:right-28 whitespace-nowrap bg-[#FF8C00] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3.5px_3.5px_0px_#8A5500] px-3.5 py-1.5 font-comic text-xs sm:text-sm tracking-wide font-extrabold rotate-2 sticker-pop cursor-pointer z-50 animate-bounce"
           >
             <span>{speechBubble}</span>
-            {/* Speech Pointer Tail */}
-            <div className="absolute -bottom-2 right-4 w-3 h-3 bg-[#FFA000] border-r-[2.5px] border-b-[2.5px] border-[#0D0D0F] rotate-45" />
+            {/* Speech Tail */}
+            <div className="absolute -bottom-2 right-4 w-3 h-3 bg-[#FF8C00] border-r-[2.5px] border-b-[2.5px] border-[#0D0D0F] rotate-45" />
           </div>
         )}
 
-        {/* Miss Minutes Animated Character Card Container */}
+        {/* Miss Minutes Full-Body Character Figure */}
         <div
           onClick={toggleOpen}
           onMouseEnter={() => {
-            if (!isOpen) {
-              setExpression('curious');
-              setSpeechBubble("Ask me anything, sugar!");
-            }
+            setIsHovered(true);
+            setSpeechBubble("Ask me anything, sugar!");
+            setShowBubble(true);
           }}
-          onMouseLeave={() => {
-            if (!isOpen) setExpression('idle');
-          }}
-          className="relative cursor-pointer flex items-center gap-3 p-2 sm:p-2.5 bg-[#1A1A1D] border-[3px] border-[#FFA000] hover:border-[#F5D90A] shadow-[5px_5px_0px_#8A5500] hover:shadow-[7px_7px_0px_#8A7400] transition-all hover:-translate-y-1 active:translate-x-1 active:translate-y-1 group"
+          onMouseLeave={() => setIsHovered(false)}
+          className="group relative cursor-pointer flex items-center gap-2 select-none"
         >
-          {/* Miss Minutes 2D Illustrated SVG Avatar */}
-          <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 flex items-center justify-center will-change-transform animate-[float_4s_ease-in-out_infinite]">
-            {/* Ambient Radial Golden Glow Pulse */}
-            <div className="absolute inset-0 rounded-full bg-[#FFA000]/25 blur-md animate-pulse" />
+          {/* Ambient Warm Golden Glow */}
+          <div className="absolute -inset-2 bg-[radial-gradient(circle,_rgba(255,140,0,0.35)_0%,_transparent_70%)] rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-300" />
 
-            <svg
-              viewBox="0 0 100 100"
-              className="w-full h-full overflow-visible drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"
-            >
-              {/* Outer Clock Casing / Body (Warm TVA Orange) */}
-              <circle
-                cx="50"
-                cy="50"
-                r="42"
-                fill="#FF8C00"
-                stroke="#0D0D0F"
-                strokeWidth="4"
-              />
-
-              {/* Inner Clock Face (Bright Yellow-Orange Sunburst) */}
-              <circle
-                cx="50"
-                cy="50"
-                r="36"
-                fill="#FFB300"
-                stroke="#0D0D0F"
-                strokeWidth="2.5"
-              />
-
-              {/* Clock Tick Marks */}
-              {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
-                <line
-                  key={deg}
-                  x1="50"
-                  y1="17"
-                  x2="50"
-                  y2="21"
-                  stroke="#8A5000"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  transform={`rotate(${deg} 50 50)`}
-                />
-              ))}
-
-              {/* Cartoon Clock Hands (Hour & Minute hands acting as hair/eyebrows or antennae) */}
-              <g className="origin-[50px_50px]">
-                <line
-                  x1="50"
-                  y1="50"
-                  x2="50"
-                  y2="28"
-                  stroke="#0D0D0F"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  className="animate-[spin_20s_linear_infinite] origin-[50px_50px]"
-                />
-                <line
-                  x1="50"
-                  y1="50"
-                  x2="66"
-                  y2="50"
-                  stroke="#0D0D0F"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  className="animate-[spin_5s_linear_infinite] origin-[50px_50px]"
-                />
-              </g>
-
-              {/* Center Nose Pin */}
-              <circle cx="50" cy="50" r="3.5" fill="#0D0D0F" />
-
-              {/* Eyes */}
-              <g>
-                {/* Left Eye Socket */}
-                <ellipse
-                  cx="37"
-                  cy="42"
-                  rx="7"
-                  ry={isBlinking ? 1 : 9}
-                  fill="#FFFFFF"
-                  stroke="#0D0D0F"
-                  strokeWidth="2.5"
-                />
-                {/* Left Pupil */}
-                {!isBlinking && (
-                  <ellipse
-                    cx={37 + pupilOffset.x}
-                    cy={42 + pupilOffset.y}
-                    rx="3.5"
-                    ry="5"
-                    fill="#0D0D0F"
-                  >
-                    {/* Catchlight */}
-                    <circle cx={35.5 + pupilOffset.x} cy={40 + pupilOffset.y} r="1.2" fill="#FFFFFF" />
-                  </ellipse>
-                )}
-                {/* Left Eyelashes */}
-                <path d="M 32 34 L 28 30 M 37 33 L 37 28 M 42 34 L 46 30" stroke="#0D0D0F" strokeWidth="2" strokeLinecap="round" />
-
-                {/* Right Eye Socket */}
-                <ellipse
-                  cx="63"
-                  cy="42"
-                  rx="7"
-                  ry={isBlinking ? 1 : 9}
-                  fill="#FFFFFF"
-                  stroke="#0D0D0F"
-                  strokeWidth="2.5"
-                />
-                {/* Right Pupil */}
-                {!isBlinking && (
-                  <ellipse
-                    cx={63 + pupilOffset.x}
-                    cy={42 + pupilOffset.y}
-                    rx="3.5"
-                    ry="5"
-                    fill="#0D0D0F"
-                  >
-                    {/* Catchlight */}
-                    <circle cx={61.5 + pupilOffset.x} cy={40 + pupilOffset.y} r="1.2" fill="#FFFFFF" />
-                  </ellipse>
-                )}
-                {/* Right Eyelashes */}
-                <path d="M 58 34 L 54 30 M 63 33 L 63 28 M 68 34 L 72 30" stroke="#0D0D0F" strokeWidth="2" strokeLinecap="round" />
-              </g>
-
-              {/* Expressive Mouth States */}
-              {expression === 'idle' && (
-                <path
-                  d="M 38 62 Q 50 72 62 62"
-                  fill="#8B0000"
-                  stroke="#0D0D0F"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-              )}
-              {expression === 'happy' && (
-                <path
-                  d="M 35 60 Q 50 76 65 60 Z"
-                  fill="#E60000"
-                  stroke="#0D0D0F"
-                  strokeWidth="2.5"
-                />
-              )}
-              {expression === 'curious' && (
-                <path
-                  d="M 40 64 Q 50 60 60 62"
-                  fill="none"
-                  stroke="#0D0D0F"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-              )}
-              {expression === 'excited' && (
-                <ellipse
-                  cx="50"
-                  cy="64"
-                  rx="7"
-                  ry="9"
-                  fill="#E60000"
-                  stroke="#0D0D0F"
-                  strokeWidth="2.5"
-                />
-              )}
-              {expression === 'thinking' && (
-                <ellipse
-                  cx="53"
-                  cy="63"
-                  rx="4"
-                  ry="4"
-                  fill="#0D0D0F"
-                />
-              )}
-              {expression === 'confused' && (
-                <path
-                  d="M 38 66 Q 44 60 50 66 Q 56 72 62 66"
-                  fill="none"
-                  stroke="#0D0D0F"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
-              )}
-              {expression === 'surprised' && (
-                <circle
-                  cx="50"
-                  cy="63"
-                  r="6"
-                  fill="#FFFFFF"
-                  stroke="#0D0D0F"
-                  strokeWidth="2.5"
-                />
-              )}
-
-              {/* Cute Rosy Cheeks */}
-              <circle cx="28" cy="52" r="4.5" fill="#FF5722" opacity="0.6" />
-              <circle cx="72" cy="52" r="4.5" fill="#FF5722" opacity="0.6" />
-            </svg>
+          {/* Full-Body Animated Character Graphic */}
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110 group-hover:-rotate-3 active:scale-95">
+            <img
+              src={missMinutesImg}
+              alt="Miss Minutes - TVA AI Guide"
+              className="w-full h-full object-contain filter drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)]"
+            />
           </div>
 
-          {/* Text & Status Label */}
-          <div className="flex flex-col text-left pr-2">
-            <div className="flex items-center gap-1.5">
-              <span className="font-display text-sm sm:text-base text-[#FFA000] tracking-wide uppercase">
+          {/* Side Comic Badge / Talk Prompt */}
+          <div className="flex flex-col items-start gap-1">
+            <div className="px-3 py-1 bg-[#1A1A1D] border-[2px] border-[#FF8C00] shadow-[3px_3px_0px_#8A5500] group-hover:bg-[#FF8C00] group-hover:text-[#0D0D0F] transition-colors -rotate-2">
+              <span className="font-display text-xs sm:text-sm text-[#FF8C00] group-hover:text-[#0D0D0F] tracking-wide block uppercase">
                 MISS MINUTES
               </span>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             </div>
-            <span className="font-comic text-[9px] sm:text-[10px] text-[#A8A8AC] uppercase font-bold tracking-wider">
-              TVA AI TIMELINE GUIDE
-            </span>
-          </div>
-
-          {/* Interactive Action Indicator */}
-          <div className="px-2.5 py-1 bg-[#FFA000] text-[#0D0D0F] border-[1.5px] border-[#0D0D0F] shadow-[2px_2px_0px_#8A5500] font-bungee text-[9px] tracking-wider uppercase rotate-2">
-            {isOpen ? 'CLOSE' : 'TALK'}
+            <div className="px-2 py-0.5 bg-[#FF8C00] text-[#0D0D0F] border border-[#0D0D0F] shadow-[2px_2px_0px_#8A5500] font-bungee text-[8px] sm:text-[9px] uppercase tracking-wider rotate-1">
+              {isOpen ? 'CLOSE ✕' : 'TALK TO ME 💬'}
+            </div>
           </div>
         </div>
       </div>
@@ -500,18 +236,18 @@ export const MissMinutesCompanion: React.FC = () => {
           TVA CONVERSATIONAL AI ASSISTANT DIALOG PANEL
           ========================================================================= */}
       {isOpen && (
-        <div className="fixed bottom-24 sm:bottom-28 right-3 sm:right-6 w-[94vw] max-w-[420px] max-h-[78vh] sm:max-h-[580px] bg-[#141417] border-[3.5px] border-[#FFA000] shadow-[0_0_40px_rgba(255,160,0,0.2),_8px_8px_0px_#000000] z-90 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed bottom-24 sm:bottom-28 right-3 sm:right-6 w-[94vw] max-w-[420px] max-h-[78vh] sm:max-h-[580px] bg-[#141417] border-[3.5px] border-[#FF8C00] shadow-[0_0_40px_rgba(255,140,0,0.25),_8px_8px_0px_#000000] z-90 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {/* Header Bar */}
-          <div className="bg-[#FFA000] text-[#0D0D0F] p-3 sm:p-3.5 border-b-[3px] border-[#0D0D0F] flex items-center justify-between">
+          <div className="bg-[#FF8C00] text-[#0D0D0F] p-3 sm:p-3.5 border-b-[3px] border-[#0D0D0F] flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-[#0D0D0F] text-[#FFA000] flex items-center justify-center font-display text-base border border-[#FFA000]">
-                ⏰
+              <div className="w-8 h-8 rounded-full bg-[#0D0D0F] border border-[#FF8C00] overflow-hidden flex items-center justify-center p-0.5">
+                <img src={missMinutesImg} alt="Miss Minutes" className="w-full h-full object-contain" />
               </div>
               <div>
                 <h3 className="font-display text-base sm:text-lg uppercase tracking-wide leading-none">
                   MISS MINUTES AI CORE
                 </h3>
-                <span className="font-mono text-[9px] uppercase font-black tracking-widest text-[#5A3A00] block mt-0.5">
+                <span className="font-mono text-[9px] uppercase font-black tracking-widest text-[#5A3000] block mt-0.5">
                   TVA TEMPORAL PROTOCOL &bull; ACTIVE
                 </span>
               </div>
@@ -519,7 +255,7 @@ export const MissMinutesCompanion: React.FC = () => {
 
             <button
               onClick={toggleOpen}
-              className="p-1 hover:bg-[#0D0D0F] hover:text-[#FFA000] border-[1.5px] border-[#0D0D0F] transition-colors cursor-pointer text-[#0D0D0F]"
+              className="p-1 hover:bg-[#0D0D0F] hover:text-[#FF8C00] border-[1.5px] border-[#0D0D0F] transition-colors cursor-pointer text-[#0D0D0F]"
             >
               <X className="w-5 h-5 stroke-[2.5]" />
             </button>
@@ -529,7 +265,7 @@ export const MissMinutesCompanion: React.FC = () => {
           <div className="p-2.5 bg-[#1A1A1D] border-b border-[#3A3A3E] flex items-center gap-2 overflow-x-auto no-scrollbar">
             <button
               onClick={() => handleSend("What events are available?")}
-              className="whitespace-nowrap px-2.5 py-1 bg-[#26262B] hover:bg-[#FFA000] hover:text-[#0D0D0F] border border-[#FFA000]/60 text-[10px] font-mono text-[#FFA000] font-bold transition-colors cursor-pointer"
+              className="whitespace-nowrap px-2.5 py-1 bg-[#26262B] hover:bg-[#FF8C00] hover:text-[#0D0D0F] border border-[#FF8C00]/60 text-[10px] font-mono text-[#FF8C00] font-bold transition-colors cursor-pointer"
             >
               ⚡ 9 BATTLEGROUNDS
             </button>
@@ -563,7 +299,7 @@ export const MissMinutesCompanion: React.FC = () => {
                 <div
                   className={`max-w-[85%] p-3 text-xs sm:text-sm font-comic leading-relaxed border-[2px] ${
                     msg.sender === 'user'
-                      ? 'bg-[#FFA000] text-[#0D0D0F] border-[#FFA000] shadow-[3px_3px_0px_#8A5500] font-bold'
+                      ? 'bg-[#FF8C00] text-[#0D0D0F] border-[#FF8C00] shadow-[3px_3px_0px_#8A5500] font-bold'
                       : 'bg-[#1A1A1D] text-[#F2F2F0] border-[#3A3A3E] shadow-[3px_3px_0px_#000000]'
                   }`}
                 >
@@ -577,7 +313,7 @@ export const MissMinutesCompanion: React.FC = () => {
 
             {/* Loading / Searching Timeline Status */}
             {isLoading && (
-              <div className="flex items-center gap-2 p-2.5 bg-[#1A1A1D] border border-[#FFA000] text-[#FFA000] text-xs font-mono max-w-[80%] animate-pulse shadow-[2px_2px_0px_#8A5500]">
+              <div className="flex items-center gap-2 p-2.5 bg-[#1A1A1D] border border-[#FF8C00] text-[#FF8C00] text-xs font-mono max-w-[80%] animate-pulse shadow-[2px_2px_0px_#8A5500]">
                 <Clock className="w-4 h-4 animate-spin" />
                 <span className="font-bold">CONSULTING TVA DATABASE...</span>
               </div>
@@ -598,12 +334,12 @@ export const MissMinutesCompanion: React.FC = () => {
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               placeholder="Ask Miss Minutes anything..."
-              className="flex-1 bg-[#0F0F12] border-[1.5px] border-[#3A3A3E] focus:border-[#FFA000] text-xs sm:text-sm text-[#F2F2F0] px-3 py-2 outline-none font-comic placeholder:text-[#A8A8AC]"
+              className="flex-1 bg-[#0F0F12] border-[1.5px] border-[#3A3A3E] focus:border-[#FF8C00] text-xs sm:text-sm text-[#F2F2F0] px-3 py-2 outline-none font-comic placeholder:text-[#A8A8AC]"
             />
             <button
               type="submit"
               disabled={isLoading || !inputQuery.trim()}
-              className="px-3.5 py-2 bg-[#FFA000] hover:bg-[#F5D90A] disabled:opacity-50 text-[#0D0D0F] border-[1.5px] border-[#0D0D0F] shadow-[2px_2px_0px_#8A5500] font-display text-xs tracking-wider uppercase cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5"
+              className="px-3.5 py-2 bg-[#FF8C00] hover:bg-[#F5D90A] disabled:opacity-50 text-[#0D0D0F] border-[1.5px] border-[#0D0D0F] shadow-[2px_2px_0px_#8A5500] font-display text-xs tracking-wider uppercase cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5"
             >
               <Send className="w-4 h-4" />
             </button>
