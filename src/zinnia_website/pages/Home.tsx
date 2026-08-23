@@ -44,7 +44,7 @@ export const WebsiteHomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen max-h-screen overflow-hidden bg-[#FFFDF0] text-[#0F0F14] flex flex-col justify-between p-2.5 sm:p-3 select-none">
+    <div className="relative w-screen h-screen max-h-screen overflow-hidden bg-[#FFFDF0] text-[#0F0F14] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none">
       {/* =========================================================================
           COMIC PAGE BACKGROUND TEXTURES & PRINTS
           ========================================================================= */}
@@ -57,8 +57,8 @@ export const WebsiteHomePage: React.FC = () => {
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
-          <div className="px-5 py-2 bg-[#FFE600] border-3 border-black shadow-[6px_6px_0px_#000000] rotate-6">
-            <span className="font-display text-3xl sm:text-5xl text-[#FF2E63] text-stroke-comic-sm tracking-wider">
+          <div className="px-6 py-2.5 bg-[#FFE600] border-4 border-black shadow-[6px_6px_0px_#000000] rotate-6">
+            <span className="font-display text-4xl sm:text-6xl text-[#FF2E63] text-stroke-comic-sm tracking-wider">
               {interactiveSoundText}
             </span>
           </div>
@@ -66,7 +66,7 @@ export const WebsiteHomePage: React.FC = () => {
       )}
 
       {/* Comic Book Header Stamp Top Left & Right */}
-      <div className="max-w-5xl mx-auto w-full flex items-center justify-between text-[8px] sm:text-[9px] font-mono tracking-widest text-black/40 uppercase hidden sm:flex z-10">
+      <div className="max-w-6xl mx-auto w-full flex items-center justify-between text-[9px] sm:text-[11px] font-mono tracking-widest text-black/50 uppercase hidden sm:flex z-10 px-2">
         <span>VOL. 2026 &bull; ISSUE #01 &bull; SPECIAL EDITION &bull; GCE ERODE CSE</span>
         <span>ALL-NEW 2D SYMPO EXPERIENCE &bull; 17 SEPTEMBER 2026</span>
       </div>
@@ -74,46 +74,46 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
           1. TOP NAVBAR (100% 2D Illustrated Comic Style)
           ========================================================================= */}
-      <header className="relative z-60 max-w-5xl mx-auto w-full flex items-center justify-between gap-3 pt-0.5 px-1">
+      <header className="relative z-60 max-w-6xl mx-auto w-full flex items-center justify-between gap-4 pt-1 px-2">
         {/* Left: Illustrated ZINNIA Comic Logo */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Logo Badge */}
           <div
             onClick={() => triggerComicFX('BOOM!')}
-            className="cursor-pointer group relative px-3 py-1 bg-[#FFE600] border-[3px] border-black shadow-[3.5px_3.5px_0px_#000000] -rotate-1 hover:rotate-0 transition-transform active:translate-x-1 active:translate-y-1"
+            className="cursor-pointer group relative px-4 py-1.5 bg-[#FFE600] border-[3.5px] border-black shadow-[4px_4px_0px_#000000] -rotate-1 hover:rotate-0 transition-transform active:translate-x-1 active:translate-y-1"
           >
-            <div className="flex items-center gap-1.5">
-              <span className="font-display text-xl sm:text-2xl text-black tracking-wide">
+            <div className="flex items-center gap-2">
+              <span className="font-display text-2xl sm:text-3xl text-black tracking-wide">
                 ZINNIA
               </span>
-              <span className="font-comic text-lg sm:text-xl text-[#FF2E63] text-stroke-comic-sm">
+              <span className="font-comic text-xl sm:text-2xl text-[#FF2E63] text-stroke-comic-sm font-black">
                 '26
               </span>
             </div>
             {/* Speech Tail */}
-            <div className="absolute -bottom-2 left-4 w-2.5 h-2.5 bg-[#FFE600] border-r-[3px] border-b-[3px] border-black rotate-45" />
+            <div className="absolute -bottom-2.5 left-5 w-3 h-3 bg-[#FFE600] border-r-[3.5px] border-b-[3.5px] border-black rotate-45" />
           </div>
 
           {/* Comics Code Authority Parody Stamp */}
-          <div className="hidden sm:flex flex-col items-center justify-center p-0.5 px-1 bg-white border-2 border-black shadow-[2px_2px_0px_#000000] rotate-2 text-[6px] font-mono leading-tight uppercase font-black text-center">
+          <div className="hidden sm:flex flex-col items-center justify-center p-1 px-2 bg-white border-2 border-black shadow-[2.5px_2.5px_0px_#000000] rotate-2 text-[7px] font-mono leading-tight uppercase font-black text-center">
             <span>APPROVED</span>
-            <span className="text-[5px] text-[#FF2E63]">BY THE</span>
+            <span className="text-[6px] text-[#FF2E63]">BY THE</span>
             <span>CSE CODE</span>
           </div>
         </div>
 
         {/* Center/Right Comic Navigation Tabs */}
-        <nav className="flex items-center gap-2 sm:gap-3">
+        <nav className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={() => triggerComicFX('INFO!')}
-            className="px-3 py-1 bg-white hover:bg-[#E0F7FA] border-2 border-black shadow-[2.5px_2.5px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase transition-all hover:-translate-y-0.5"
+            className="px-3.5 sm:px-4 py-1.5 bg-white hover:bg-[#E0F7FA] border-[2.5px] border-black shadow-[3px_3px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold transition-all hover:-translate-y-0.5"
           >
             ABOUT
           </button>
 
           <button
             onClick={() => triggerComicFX('HELLO!')}
-            className="px-3 py-1 bg-white hover:bg-[#FFE600] border-2 border-black shadow-[2.5px_2.5px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase transition-all hover:-translate-y-0.5"
+            className="px-3.5 sm:px-4 py-1.5 bg-white hover:bg-[#FFE600] border-[2.5px] border-black shadow-[3px_3px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold transition-all hover:-translate-y-0.5"
           >
             CONTACT
           </button>
@@ -121,7 +121,7 @@ export const WebsiteHomePage: React.FC = () => {
           {/* Register Navbar Button */}
           <button
             onClick={() => triggerComicFX('POW!')}
-            className="px-3.5 sm:px-4 py-1 bg-[#00E5FF] hover:bg-[#FFE600] border-2 border-black shadow-[3px_3px_0px_#000000] font-display text-xs sm:text-sm tracking-wider uppercase transition-all hover:-translate-y-0.5"
+            className="px-4 sm:px-6 py-1.5 bg-[#00E5FF] hover:bg-[#FFE600] border-[2.5px] border-black shadow-[3.5px_3.5px_0px_#000000] font-display text-xs sm:text-sm tracking-wider uppercase transition-all hover:-translate-y-0.5"
           >
             REGISTER
           </button>
@@ -131,12 +131,12 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
           2. CENTER HERO: LARGE COMIC PANEL (Main Visual Focus)
           ========================================================================= */}
-      <main className="relative z-30 flex-1 flex flex-col items-center justify-center max-w-5xl mx-auto w-full my-auto py-1 px-1">
+      <main className="relative z-30 flex-1 flex flex-col items-center justify-center max-w-6xl mx-auto w-full my-auto py-2 sm:py-3 px-2">
         {/* Outer unclipped wrapper for top floating badges */}
         <div className="relative w-full">
           {/* Top-Left Panel Narration Box */}
-          <div className="absolute -top-3 left-2 sm:left-4 z-50 bg-[#FFE600] border-2 border-black shadow-[3px_3px_0px_#000000] px-2.5 py-0.5 -rotate-2">
-            <span className="font-comic text-[10px] sm:text-xs uppercase tracking-wider text-black font-bold">
+          <div className="absolute -top-3.5 left-3 sm:left-6 z-50 bg-[#FFE600] border-[2.5px] border-black shadow-[3.5px_3.5px_0px_#000000] px-3 sm:px-4 py-1 -rotate-2">
+            <span className="font-comic text-[11px] sm:text-xs md:text-sm uppercase tracking-wider text-black font-extrabold">
               CHAPTER 01: THE AWAKENING
             </span>
           </div>
@@ -144,20 +144,20 @@ export const WebsiteHomePage: React.FC = () => {
           {/* Top-Right Prize Starburst Sticker */}
           <div
             onClick={() => triggerComicFX('KACHING!')}
-            className="cursor-pointer absolute -top-3.5 right-2 sm:right-4 z-50 bg-[#FF2E63] border-2 border-black shadow-[3px_3px_0px_#000000] px-3 py-1 rotate-4 hover:rotate-8 transition-transform hover:scale-105"
+            className="cursor-pointer absolute -top-4 right-3 sm:right-6 z-50 bg-[#FF2E63] border-[2.5px] border-black shadow-[3.5px_3.5px_0px_#000000] px-3.5 sm:px-5 py-1.5 rotate-4 hover:rotate-8 transition-transform hover:scale-105"
           >
             <div className="flex flex-col items-center justify-center leading-none text-center">
-              <span className="font-display text-xs sm:text-sm text-white text-stroke-comic-sm tracking-wide">
+              <span className="font-display text-sm sm:text-base md:text-lg text-white text-stroke-comic-sm tracking-wide">
                 ₹25,000+
               </span>
-              <span className="font-comic text-[8px] sm:text-[9px] text-[#FFE600] tracking-wider uppercase mt-0.5">
+              <span className="font-comic text-[8px] sm:text-[10px] text-[#FFE600] tracking-wider uppercase mt-0.5 font-black">
                 PRIZE POOL!
               </span>
             </div>
           </div>
 
           {/* Main Comic Panel Frame */}
-          <div className="relative w-full bg-white border-[4px] border-black shadow-[6px_6px_0px_#000000] p-3 sm:p-4 md:p-5 pt-4 sm:pt-5">
+          <div className="relative w-full bg-white border-[4px] sm:border-[5px] border-black shadow-[7px_7px_0px_#000000] p-4 sm:p-6 md:p-8 pt-6 sm:pt-7">
             {/* Panel Background: Halftone & Sunburst Texture */}
             <div className="absolute inset-0 bg-comic-sunburst-cyan opacity-25 pointer-events-none" />
             <div className="absolute inset-0 bg-halftone-dots-cyan opacity-20 pointer-events-none" />
@@ -166,44 +166,44 @@ export const WebsiteHomePage: React.FC = () => {
             {/* -------------------------------------------------------------
                 HERO CONTENT GRID INSIDE THE COMIC PANEL
                 ------------------------------------------------------------- */}
-            <div className="relative z-20 grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-4 items-center">
+            <div className="relative z-20 grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-center">
               {/* Left Column (7 cols): Comic Title, Narrative & Speech Bubble */}
-              <div className="md:col-span-7 space-y-1.5 sm:space-y-2 text-left">
+              <div className="md:col-span-7 space-y-2 sm:space-y-3 text-left">
                 {/* Event Subtitle Badge */}
-                <div className="inline-block px-2 py-0.5 bg-black text-[#FFE600] font-comic text-[9px] sm:text-[10px] uppercase tracking-widest rotate-1">
+                <div className="inline-block px-2.5 py-0.5 bg-black text-[#FFE600] font-comic text-[10px] sm:text-[11px] md:text-xs uppercase tracking-widest rotate-1 font-bold">
                   GOVT COLLEGE OF ENGINEERING, ERODE &bull; CSE DEPT
                 </div>
 
                 {/* Giant Comic Title */}
-                <div className="space-y-0">
-                  <h1 className="font-display text-3xl sm:text-4xl md:text-5xl text-black tracking-tight leading-none uppercase">
+                <div className="space-y-0.5">
+                  <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-black tracking-tight leading-none uppercase">
                     ZINNIA
                   </h1>
-                  <div className="flex items-center gap-2 pt-0.5">
-                    <span className="font-comic text-xl sm:text-2xl text-[#00E5FF] text-stroke-comic-sm">
+                  <div className="flex items-center gap-3 pt-0.5">
+                    <span className="font-comic text-2xl sm:text-3xl md:text-4xl text-[#00E5FF] text-stroke-comic-sm font-black">
                       2026
                     </span>
-                    <span className="px-2 py-0.2 bg-[#FF2E63] text-white border border-black font-bungee text-[9px] sm:text-[10px] -rotate-2">
+                    <span className="px-2.5 py-0.5 bg-[#FF2E63] text-white border-[2px] border-black font-bungee text-[10px] sm:text-xs -rotate-2">
                       NATIONAL LEVEL
                     </span>
                   </div>
                 </div>
 
                 {/* Comic Speech Bubble / Narrative Box */}
-                <div className="relative p-2 sm:p-2.5 bg-[#FFFDF0] border-2 border-black shadow-[3px_3px_0px_#000000]">
-                  <p className="font-comic text-[11px] sm:text-xs text-gray-800 leading-snug">
+                <div className="relative p-2.5 sm:p-3.5 bg-[#FFFDF0] border-[2.5px] border-black shadow-[3.5px_3.5px_0px_#000000]">
+                  <p className="font-comic text-xs sm:text-sm md:text-[15px] text-gray-900 leading-snug font-medium">
                     "A TIMELINE WAS BROKEN. SOMETHING EMERGED FROM IT. NINE BATTLEGROUNDS AWAIT THE BOLDEST MINDS IN COMPUTATION!"
                   </p>
                   {/* Speech Arrow */}
-                  <div className="absolute -bottom-2 left-5 w-2.5 h-2.5 bg-[#FFFDF0] border-r-2 border-b-2 border-black rotate-45" />
+                  <div className="absolute -bottom-2.5 left-6 w-3 h-3 bg-[#FFFDF0] border-r-[2.5px] border-b-[2.5px] border-black rotate-45" />
                 </div>
 
                 {/* 9 Battlegrounds Sticker Strip */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                  <span className="px-2 py-0.5 bg-[#E0F7FA] border border-black font-mono text-[9px] sm:text-[10px] font-bold">
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <span className="px-2.5 py-1 bg-[#E0F7FA] border-[2px] border-black font-mono text-[10px] sm:text-xs font-black shadow-[2px_2px_0px_#000000]">
                     ⚡ 9 ACTIVE EVENTS
                   </span>
-                  <span className="px-2 py-0.5 bg-[#FFF9C4] border border-black font-mono text-[9px] sm:text-[10px] font-bold">
+                  <span className="px-2.5 py-1 bg-[#FFF9C4] border-[2px] border-black font-mono text-[10px] sm:text-xs font-black shadow-[2px_2px_0px_#000000]">
                     ⚡ ANNA UNIV VERIFIED
                   </span>
                 </div>
@@ -211,16 +211,16 @@ export const WebsiteHomePage: React.FC = () => {
 
               {/* Right Column (5 cols): 2D Hand-Drawn Illustrated Hero Art */}
               <div className="md:col-span-5 relative flex items-center justify-center">
-                <div className="relative w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 flex items-center justify-center">
+                <div className="relative w-36 h-36 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 flex items-center justify-center">
                   {/* Halftone Starburst Radial Badge Behind Character */}
-                  <div className="absolute inset-0 bg-[#FFE600] border-3 border-black rounded-full shadow-[4px_4px_0px_#000000] rotate-12 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[#FFE600] border-[3.5px] border-black rounded-full shadow-[5px_5px_0px_#000000] rotate-12 flex items-center justify-center">
                     <div className="w-full h-full bg-halftone-dots opacity-20 rounded-full" />
                   </div>
 
                   {/* 2D Comic Illustrated Cyborg Character (SVG Ink Art) */}
                   <svg
                     viewBox="0 0 200 200"
-                    className="relative z-30 w-full h-full drop-shadow-[4px_4px_0px_#000000] hover:scale-105 transition-transform duration-200"
+                    className="relative z-30 w-full h-full drop-shadow-[5px_5px_0px_#000000] hover:scale-105 transition-transform duration-200"
                   >
                     {/* Comic Speed Lines */}
                     <path d="M 10 30 L 50 50 M 10 100 L 40 100 M 15 170 L 50 150" stroke="#000" strokeWidth="3.5" strokeLinecap="round" />
@@ -266,9 +266,9 @@ export const WebsiteHomePage: React.FC = () => {
                   {/* "CRACKLE!" Sound Effect Overlay Sticker */}
                   <div
                     onClick={() => triggerComicFX('ZAP!')}
-                    className="cursor-pointer absolute -bottom-2 -left-2 z-40 bg-[#FFE600] border-2 border-black shadow-[3px_3px_0px_#000000] px-2 py-0.5 -rotate-12 hover:rotate-0 transition-transform"
+                    className="cursor-pointer absolute -bottom-2.5 -left-2.5 z-40 bg-[#FFE600] border-2 border-black shadow-[3.5px_3.5px_0px_#000000] px-2.5 py-1 -rotate-12 hover:rotate-0 transition-transform"
                   >
-                    <span className="font-display text-xs sm:text-sm text-[#FF2E63] text-stroke-comic-sm">
+                    <span className="font-display text-xs sm:text-sm md:text-base text-[#FF2E63] text-stroke-comic-sm">
                       ⚡ CRACKLE!
                     </span>
                   </div>
@@ -281,58 +281,58 @@ export const WebsiteHomePage: React.FC = () => {
         {/* =========================================================================
             3. COUNTDOWN & 4. REGISTER CTA (Directly Below Artwork)
             ========================================================================= */}
-        <div className="relative z-30 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-6 pt-2 w-full">
+        <div className="relative z-30 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-6 pt-3 sm:pt-4 w-full">
           {/* Illustrated Comic Countdown Module */}
           <div className="flex flex-col items-center sm:items-start">
             {/* Caption Header */}
-            <div className="px-2 py-0.2 bg-black text-white font-comic text-[9px] sm:text-[10px] uppercase tracking-widest border border-black -rotate-1">
+            <div className="px-2.5 py-0.5 bg-black text-white font-comic text-[10px] sm:text-xs uppercase tracking-widest border border-black -rotate-1 font-bold">
               REGISTRATION OPENS IN
             </div>
 
             {/* Countdown Comic Number Boxes */}
-            <div className="flex items-center gap-1.5 pt-0.5">
+            <div className="flex items-center gap-2 pt-1">
               {/* Days */}
-              <div className="flex flex-col items-center p-1 bg-white border-2 border-black shadow-[2.5px_2.5px_0px_#000000] min-w-[38px] sm:min-w-[44px]">
-                <span className="font-display text-lg sm:text-xl text-black leading-none">
+              <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px]">
+                <span className="font-display text-xl sm:text-2xl md:text-3xl text-black leading-none">
                   {timeLeft.days}
                 </span>
-                <span className="font-comic text-[7px] text-gray-500 font-bold uppercase mt-0.5">
+                <span className="font-comic text-[8px] sm:text-[9px] text-gray-500 font-bold uppercase mt-0.5">
                   DAYS
                 </span>
               </div>
 
-              <span className="font-display text-lg text-black animate-pulse">:</span>
+              <span className="font-display text-xl text-black animate-pulse">:</span>
 
               {/* Hours */}
-              <div className="flex flex-col items-center p-1 bg-white border-2 border-black shadow-[2.5px_2.5px_0px_#000000] min-w-[38px] sm:min-w-[44px]">
-                <span className="font-display text-lg sm:text-xl text-black leading-none">
+              <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px]">
+                <span className="font-display text-xl sm:text-2xl md:text-3xl text-black leading-none">
                   {timeLeft.hours}
                 </span>
-                <span className="font-comic text-[7px] text-gray-500 font-bold uppercase mt-0.5">
+                <span className="font-comic text-[8px] sm:text-[9px] text-gray-500 font-bold uppercase mt-0.5">
                   HRS
                 </span>
               </div>
 
-              <span className="font-display text-lg text-black animate-pulse">:</span>
+              <span className="font-display text-xl text-black animate-pulse">:</span>
 
               {/* Minutes */}
-              <div className="flex flex-col items-center p-1 bg-white border-2 border-black shadow-[2.5px_2.5px_0px_#000000] min-w-[38px] sm:min-w-[44px]">
-                <span className="font-display text-lg sm:text-xl text-black leading-none">
+              <div className="flex flex-col items-center p-1.5 bg-white border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px]">
+                <span className="font-display text-xl sm:text-2xl md:text-3xl text-black leading-none">
                   {timeLeft.minutes}
                 </span>
-                <span className="font-comic text-[7px] text-gray-500 font-bold uppercase mt-0.5">
+                <span className="font-comic text-[8px] sm:text-[9px] text-gray-500 font-bold uppercase mt-0.5">
                   MIN
                 </span>
               </div>
 
-              <span className="font-display text-lg text-black animate-pulse">:</span>
+              <span className="font-display text-xl text-black animate-pulse">:</span>
 
               {/* Seconds */}
-              <div className="flex flex-col items-center p-1 bg-[#FFE600] border-2 border-black shadow-[2.5px_2.5px_0px_#000000] min-w-[38px] sm:min-w-[44px]">
-                <span className="font-display text-lg sm:text-xl text-[#FF2E63] text-stroke-comic-sm leading-none">
+              <div className="flex flex-col items-center p-1.5 bg-[#FFE600] border-[2.5px] border-black shadow-[3px_3px_0px_#000000] min-w-[46px] sm:min-w-[54px]">
+                <span className="font-display text-xl sm:text-2xl md:text-3xl text-[#FF2E63] text-stroke-comic-sm leading-none font-bold">
                   {timeLeft.seconds}
                 </span>
-                <span className="font-comic text-[7px] text-black font-bold uppercase mt-0.5">
+                <span className="font-comic text-[8px] sm:text-[9px] text-black font-extrabold uppercase mt-0.5">
                   SEC
                 </span>
               </div>
@@ -342,10 +342,10 @@ export const WebsiteHomePage: React.FC = () => {
           {/* Large Comic Register CTA Button */}
           <button
             onClick={() => triggerComicFX('REGISTERED!')}
-            className="btn-comic group px-6 sm:px-8 py-2 sm:py-2.5 bg-[#FFE600] hover:bg-[#00E5FF] border-[3px] border-black shadow-[5px_5px_0px_#000000] font-display text-base sm:text-lg text-black tracking-wider uppercase -rotate-1 hover:rotate-0 cursor-pointer flex items-center gap-2"
+            className="btn-comic group px-8 sm:px-12 py-3 sm:py-3.5 bg-[#FFE600] hover:bg-[#00E5FF] border-[3.5px] border-black shadow-[6px_6px_0px_#000000] font-display text-lg sm:text-xl md:text-2xl text-black tracking-wider uppercase -rotate-1 hover:rotate-0 cursor-pointer flex items-center gap-3 transition-all hover:scale-105 active:translate-x-1 active:translate-y-1"
           >
             <span>REGISTER</span>
-            <span className="font-display text-lg sm:text-xl text-[#FF2E63] group-hover:translate-x-1 transition-transform">
+            <span className="font-display text-2xl sm:text-3xl text-[#FF2E63] group-hover:translate-x-1.5 transition-transform">
               &rarr;
             </span>
           </button>
@@ -355,26 +355,26 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
           5. FOOTER (Hand-Drawn Divider + Comic Stamp Footer)
           ========================================================================= */}
-      <footer className="relative z-30 max-w-5xl mx-auto w-full pt-0.5">
+      <footer className="relative z-30 max-w-6xl mx-auto w-full pt-1 px-2">
         {/* Hand-Drawn Ink Divider (Cross-hatched jagged line) */}
-        <div className="w-full h-[2px] bg-black mb-1 relative">
-          <div className="absolute -top-1 left-1/4 w-2.5 h-2.5 bg-black rotate-45" />
-          <div className="absolute -top-1 right-1/4 w-2.5 h-2.5 bg-black rotate-45" />
+        <div className="w-full h-[2.5px] bg-black mb-1.5 relative">
+          <div className="absolute -top-1 left-1/4 w-3 h-3 bg-black rotate-45" />
+          <div className="absolute -top-1 right-1/4 w-3 h-3 bg-black rotate-45" />
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-[9px] sm:text-[10px] font-comic tracking-wider text-black">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10px] sm:text-xs font-comic tracking-wider text-black">
           {/* Left Copyright */}
           <div className="flex items-center gap-2">
-            <span className="bg-black text-[#FFE600] px-1.5 py-0.2 text-[8px] font-bold">
+            <span className="bg-black text-[#FFE600] px-2 py-0.5 text-[9px] sm:text-[10px] font-bold">
               ZINNIA &copy; 2026
             </span>
-            <span className="text-gray-600 hidden md:inline">
+            <span className="text-gray-700 hidden md:inline font-bold">
               DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING
             </span>
           </div>
 
           {/* Right Links & Socials */}
-          <div className="flex items-center gap-3 text-gray-700 uppercase font-bold">
+          <div className="flex items-center gap-3.5 text-gray-800 uppercase font-black">
             <button
               onClick={() => triggerComicFX('ABOUT')}
               className="hover:text-[#FF2E63] hover:underline transition-colors"
