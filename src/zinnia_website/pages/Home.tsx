@@ -197,38 +197,47 @@ export const WebsiteHomePage: React.FC = () => {
 
               {/* Right Column (5 cols): 2D Hand-Drawn Illustrated Hero Art */}
               <div className="md:col-span-5 relative flex items-center justify-center">
-                <div className="relative w-36 h-36 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 flex items-center justify-center">
-                  {/* Yellow Solid Radial Badge Behind Character */}
-                  <div className="absolute inset-0 bg-[#FFE600] border-[3.5px] border-black rounded-full shadow-[5px_5px_0px_#000000] rotate-12 flex items-center justify-center" />
+                <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 flex items-center justify-center">
+                  {/* Yellow Solid Pure Circle with Bold Black Border & Hard Ink Shadow */}
+                  <div className="absolute inset-0 bg-[#FFE600] border-[4px] sm:border-[5px] border-black rounded-full shadow-[6px_6px_0px_#000000] flex items-center justify-center overflow-hidden" />
 
                   {/* 2D Comic Illustrated Cyborg Character (SVG Ink Art) */}
                   <svg
                     viewBox="0 0 200 200"
-                    className="relative z-30 w-full h-full drop-shadow-[5px_5px_0px_#000000] hover:scale-105 transition-transform duration-200"
+                    className="relative z-30 w-full h-full hover:scale-105 transition-transform duration-200"
                   >
                     {/* Comic Speed Lines */}
-                    <path d="M 10 30 L 50 50 M 10 100 L 40 100 M 15 170 L 50 150" stroke="#000" strokeWidth="3.5" strokeLinecap="round" />
-                    <path d="M 190 30 L 150 50 M 190 100 L 160 100 M 185 170 L 150 150" stroke="#000" strokeWidth="3.5" strokeLinecap="round" />
+                    <line x1="15" y1="50" x2="60" y2="70" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
+                    <line x1="25" y1="35" x2="65" y2="60" stroke="#000" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="10" y1="100" x2="45" y2="100" stroke="#000" strokeWidth="4" strokeLinecap="round" />
+                    <line x1="12" y1="108" x2="38" y2="108" stroke="#000" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="20" y1="160" x2="55" y2="145" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
+
+                    <line x1="185" y1="50" x2="140" y2="70" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
+                    <line x1="175" y1="35" x2="135" y2="60" stroke="#000" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="190" y1="100" x2="155" y2="100" stroke="#000" strokeWidth="4" strokeLinecap="round" />
+                    <line x1="188" y1="108" x2="162" y2="108" stroke="#000" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="180" y1="160" x2="145" y2="145" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
 
                     {/* Torso & Clavicle Armor Plates */}
-                    <polygon points="65,130 135,130 145,190 55,190" fill="#383F4D" stroke="#000" strokeWidth="4.5" />
-                    <polygon points="80,135 120,135 110,180 90,180" fill="#00E5FF" stroke="#000" strokeWidth="3.5" />
-                    <circle cx="100" cy="155" r="10" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
+                    <polygon points="65,125 135,125 145,185 55,185" fill="#383F4D" stroke="#000" strokeWidth="4.5" />
+                    <polygon points="80,130 120,130 110,175 90,175" fill="#00E5FF" stroke="#000" strokeWidth="3.5" />
+                    <circle cx="100" cy="150" r="10" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
 
                     {/* Neck & Vertebrae */}
-                    <rect x="90" y="115" width="20" height="20" fill="#5E6878" stroke="#000" strokeWidth="4" />
-                    <line x1="90" y1="122" x2="110" y2="122" stroke="#000" strokeWidth="3" />
-                    <line x1="90" y1="128" x2="110" y2="128" stroke="#000" strokeWidth="3" />
+                    <rect x="90" y="112" width="20" height="18" fill="#5E6878" stroke="#000" strokeWidth="4" />
+                    <line x1="90" y1="118" x2="110" y2="118" stroke="#000" strokeWidth="3" />
+                    <line x1="90" y1="124" x2="110" y2="124" stroke="#000" strokeWidth="3" />
 
                     {/* Shoulders */}
-                    <polygon points="40,135 65,125 65,155 35,160" fill="#5E6878" stroke="#000" strokeWidth="4" />
-                    <polygon points="160,135 135,125 135,155 165,160" fill="#5E6878" stroke="#000" strokeWidth="4" />
+                    <polygon points="35,130 65,120 65,155 30,158" fill="#5E6878" stroke="#000" strokeWidth="4" />
+                    <polygon points="165,130 135,120 135,155 170,158" fill="#5E6878" stroke="#000" strokeWidth="4" />
 
                     {/* Helmet / Head Shell */}
                     <polygon points="70,45 130,45 145,90 125,120 75,120 55,90" fill="#383F4D" stroke="#000" strokeWidth="4.5" />
                     {/* Forehead Brow Armor */}
                     <polygon points="75,55 125,55 135,75 65,75" fill="#5E6878" stroke="#000" strokeWidth="3.5" />
-                    {/* Temporal Crests */}
+                    {/* Temporal Crests (Yellow Horns) */}
                     <polygon points="55,60 65,45 65,85 50,75" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
                     <polygon points="145,60 135,45 135,85 150,75" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
 
@@ -247,12 +256,12 @@ export const WebsiteHomePage: React.FC = () => {
                     <line x1="135" y1="90" x2="127" y2="105" stroke="#000" strokeWidth="2" />
                   </svg>
 
-                  {/* "CRACKLE!" Sound Effect Overlay Sticker */}
+                  {/* "⚡ CRACKLE!" Sound Effect Overlay Sticker */}
                   <div
                     onClick={() => triggerComicFX('ZAP!')}
-                    className="cursor-pointer absolute -bottom-2.5 -left-2.5 z-40 bg-[#FFE600] border-2 border-black shadow-[3.5px_3.5px_0px_#000000] px-2.5 py-1 -rotate-12 hover:rotate-0 transition-transform"
+                    className="cursor-pointer absolute -bottom-2 -left-4 sm:-bottom-3 sm:-left-6 z-40 bg-[#FFE600] border-[2.5px] border-black shadow-[4px_4px_0px_#000000] px-3 py-1 -rotate-12 hover:rotate-0 transition-transform active:translate-x-0.5 active:translate-y-0.5"
                   >
-                    <span className="font-display text-xs sm:text-sm md:text-base text-[#FF2E63] font-bold">
+                    <span className="font-display text-xs sm:text-sm md:text-base text-[#FF2E63] font-black tracking-wide">
                       ⚡ CRACKLE!
                     </span>
                   </div>
