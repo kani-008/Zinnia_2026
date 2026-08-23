@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Send, 
   X, 
@@ -264,14 +265,21 @@ export const MissMinutesCompanion: React.FC = () => {
     }
   };
 
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
     <>
       {/* =========================================================================
           MISS MINUTES FULLY ARTICULATED INTERACTIVE CHARACTER (Fixed to Viewport Corner)
           ========================================================================= */}
       <div
         ref={companionRef}
-        className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 flex items-center justify-end z-[999] select-none pointer-events-auto"
+        className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 flex items-center justify-end z-[99998] select-none pointer-events-auto"
       >
         {/* Floating Contextual Speech Balloon */}
         {showBubble && !isOpen && (
@@ -716,7 +724,8 @@ export const MissMinutesCompanion: React.FC = () => {
           </form>
         </div>
       )}
-    </>
+    </>,
+    document.body
   );
 };
 
