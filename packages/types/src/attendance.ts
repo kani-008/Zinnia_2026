@@ -1,9 +1,11 @@
 export type CheckinType = 'ENTRY' | 'EVENT' | 'FOOD';
 
 export interface AttendanceRecord {
-  id: string;
-  participant_id: string;
-  agent_id: string;
+  id?: string;
+  team_id: string;
+  member_id?: string;
+  agent_id?: string; // alias for team_id / member_id
+  band_id?: string;
   participant_name: string;
   college: string;
   checkin_type: CheckinType;
@@ -15,9 +17,8 @@ export interface AttendanceRecord {
 }
 
 export interface FoodRecord {
-  id: string;
-  participant_id: string;
-  agent_id: string;
+  team_id: string;
+  member_id: string;
   participant_name: string;
   meal_session: 'LUNCH' | 'SNACKS' | 'REFRESHMENTS';
   collected: boolean;

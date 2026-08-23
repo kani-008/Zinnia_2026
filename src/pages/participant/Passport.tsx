@@ -60,9 +60,9 @@ export const PassportPage: React.FC = () => {
 
           <div className="flex flex-col items-center p-4 bg-slate-950 rounded">
             <div className="bg-white p-2 rounded">
-              <QRCodeSVG value={agent.qr_token} size={140} />
+              <QRCodeSVG value={agent.agent_id} size={140} />
             </div>
-            <span className="text-[10px] text-slate-500 mt-2 font-mono">{agent.qr_token}</span>
+            <span className="text-xs text-indigo-400 mt-2 font-mono font-bold">{agent.agent_id}</span>
           </div>
 
           <div className="text-xs space-y-1 text-slate-300">

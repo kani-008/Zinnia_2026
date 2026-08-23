@@ -24,3 +24,16 @@ dist-ssr
 *.sw?
 .env
 .env.*
+
+# Python & Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite3
+chroma_db/
+backend/chroma_db/
+backend/cache.db
+backend/__pycache__/
+.venv/
+venv/

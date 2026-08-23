@@ -10,35 +10,47 @@ export function createQRPayload(agent_id: string, token: string): string {
   return JSON.stringify(payload);
 }
 
-export function parseQRPayload(rawText: string): { agent_id: string; token?: string; isValid: boolean } {
-  if (!rawText) return { agent_id: '', isValid: false };
-  
+export function extractScanToken(rawText: string): string {
+  if (!rawText) return '';
   const trimmed = rawText.trim();
   
-  // Case 1: JSON payload format
+  // Case 1: JSON payload
   if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
     try {
       const parsed = JSON.parse(trimmed);
-      if (parsed.agent_id && typeof parsed.agent_id === 'string') {
-        return {
-          agent_id: parsed.agent_id.toUpperCase(),
-          token: parsed.token,
-          isValid: true
-        };
-      }
-    } catch {
-      // Fall through to plain text check
-    }
+      if (parsed.band_id) return String(parsed.band_id).trim().toUpperCase();
+      if (parsed.agent_id) return String(parsed.agent_id).trim().toUpperCase();
+      if (parsed.id) return String(parsed.id).trim().toUpperCase();
+    } catch {}
   }
-
-  // Case 2: Plain text Agent ID e.g. "ZIN26-A8F41C" or URL with id parameter
+  
+  // Case 2: URL containing parameter (e.g. passport?id=ZIN26-GAARAA or ?band=WB-1001)
+  if (trimmed.includes('?')) {
+    try {
+      const url = new URL(trimmed.startsWith('http') ? trimmed : `http://localhost/${trimmed}`);
+      const param = url.searchParams.get('id') || 
+                    url.searchParams.get('agent_id') || 
+                    url.searchParams.get('band') || 
+                    url.searchParams.get('band_id');
+      if (param) return param.trim().toUpperCase();
+    } catch {}
+  }
+  
+  // Case 3: Pattern matching for ZIN26 agent ids
   const match = trimmed.match(/ZIN26-[A-Z0-9]{6}/i);
   if (match) {
-    return {
-      agent_id: match[0].toUpperCase(),
-      isValid: true
-    };
+    return match[0].toUpperCase();
   }
 
-  return { agent_id: '', isValid: false };
+  return trimmed;
+}
+
+export function parseQRPayload(rawText: string): { agent_id: string; token?: string; isValid: boolean } {
+  const token = extractScanToken(rawText);
+  if (!token) return { agent_id: '', isValid: false };
+
+  return {
+    agent_id: token.toUpperCase(),
+    isValid: true
+  };
 }

@@ -41,11 +41,10 @@ export interface EventMission {
 export type PrizePosition = 1 | 2 | 3 | null;
 
 export interface EventRegistration {
-  id: string;
+  agent_id: string;
   event_id: string;
-  participant_id: string;
-  team_id?: string;
   team_name?: string;
+  team_members?: string[];
   position?: PrizePosition; // 1 = 1st Prize, 2 = 2nd Prize, 3 = 3rd Prize, null = Participated
   registered_at: string;
 }

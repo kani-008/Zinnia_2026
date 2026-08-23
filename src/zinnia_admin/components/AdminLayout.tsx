@@ -28,7 +28,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'EVENT_ADMIN', 'ENTRY_STAFF', 'FOOD_STAFF', 'CERTIFICATE_ADMIN'] },
-    { name: 'QR Scanner', path: '/admin/scanner', icon: QrCode, roles: ['SUPER_ADMIN', 'ENTRY_STAFF', 'EVENT_ADMIN', 'FOOD_STAFF'] },
     { name: 'Gate Entry', path: '/admin/entry', icon: DoorOpen, roles: ['SUPER_ADMIN', 'ENTRY_STAFF'] },
     { name: 'Food Counter', path: '/admin/food', icon: Utensils, roles: ['SUPER_ADMIN', 'FOOD_STAFF'] },
     { name: 'Event Attendance', path: '/admin/events', icon: Zap, roles: ['SUPER_ADMIN', 'EVENT_ADMIN'] },

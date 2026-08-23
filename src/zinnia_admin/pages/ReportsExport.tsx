@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileSpreadsheet, 
   Download 
@@ -12,9 +12,22 @@ import {
 import { store } from '../../services/store';
 
 export const ReportsExportPage: React.FC = () => {
-  const participants = store.getParticipants();
-  const attendance = store.getAttendance();
-  const events = store.getEvents();
+  const [participants, setParticipants] = useState(store.getParticipants());
+  const [attendance, setAttendance] = useState(store.getAttendance());
+  const [events, setEvents] = useState(store.getEvents());
+
+  useEffect(() => {
+    const update = () => {
+      setParticipants(store.getParticipants());
+      setAttendance(store.getAttendance());
+      setEvents(store.getEvents());
+    };
+    update();
+    const unsub = store.subscribe(update);
+    store.syncFromSupabase();
+    return unsub;
+  }, []);
+
   const foodClaimed = participants.filter(p => p.food_collected).length;
 
   return (

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { store } from '../../services/store';
 import { 
   Users, 
@@ -13,9 +13,21 @@ import {
 import { Link } from 'react-router-dom';
 
 export const AdminDashboardPage: React.FC = () => {
-  const participants = store.getParticipants();
-  const attendance = store.getAttendance();
-  const events = store.getEvents();
+  const [participants, setParticipants] = useState(store.getParticipants());
+  const [attendance, setAttendance] = useState(store.getAttendance());
+  const [events, setEvents] = useState(store.getEvents());
+
+  useEffect(() => {
+    const updateAll = () => {
+      setParticipants(store.getParticipants());
+      setAttendance(store.getAttendance());
+      setEvents(store.getEvents());
+    };
+    updateAll();
+    const unsub = store.subscribe(updateAll);
+    store.syncFromSupabase();
+    return unsub;
+  }, []);
 
   const totalRegistered = participants.length;
   const gateEntries = attendance.filter(a => a.checkin_type === 'ENTRY').length;

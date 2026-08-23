@@ -1,8 +1,7 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { AdminLayout } from './components/AdminLayout';
 import { AdminDashboardPage } from './pages/AdminDashboard';
-import { QRScannerPage } from './pages/QRScanner';
 import { EntryCheckinPage } from './pages/EntryCheckin';
 import { FoodCheckinPage } from './pages/FoodCheckin';
 import { EventCheckinPage } from './pages/EventCheckin';
@@ -15,7 +14,7 @@ export const AdminApp: React.FC = () => {
     <AdminLayout>
       <Routes>
         <Route path="/" element={<AdminDashboardPage />} />
-        <Route path="/scanner" element={<QRScannerPage />} />
+        <Route path="/scanner" element={<Navigate to="/admin/entry" replace />} />
         <Route path="/entry" element={<EntryCheckinPage />} />
         <Route path="/food" element={<FoodCheckinPage />} />
         <Route path="/events" element={<EventCheckinPage />} />

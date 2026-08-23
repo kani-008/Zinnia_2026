@@ -1,24 +1,50 @@
-export type ClearanceLevel = 'LEVEL 01' | 'LEVEL 02' | 'LEVEL 03' | 'CLASSIFIED';
-
-export type ParticipantStatus = 'ACTIVE' | 'PENDING' | 'DISQUALIFIED' | 'SUSPENDED';
-
-export interface Participant {
-  id: string;
-  agent_id: string; // e.g. "ZIN26-A8F41C"
+export interface TeamMember {
+  id: string; // Unique Member UUID / ID e.g. "MEM-ZIN26-1"
+  team_id: string; // References Team.team_id
   name: string;
   email: string;
   phone: string;
-  college: string;
-  department: string;
-  year: 'I' | 'II' | 'III' | 'IV' | 'PG' | string;
-  clearance_level: ClearanceLevel;
-  status: ParticipantStatus;
-  qr_token: string;
-  registered_events: string[];
+  is_leader: boolean;
   
-  // In-row food distribution tracking
+  // Physical wristband QR code assigned to this member
+  band_id?: string;
+  
+  // Individual food token claim status
   food_collected?: boolean;
   food_collected_at?: string;
   
   created_at: string;
+}
+
+export interface Team {
+  team_id: string; // Primary Key e.g. "ZIN26-T8X92B"
+  team_name: string;
+  college: string;
+  department: string;
+  year: 'I' | 'II' | 'III' | 'IV' | 'PG' | string;
+  registered_events: string[];
+  payment: boolean;
+  
+  members?: TeamMember[];
+  
+  created_at: string;
+  updated_at?: string;
+}
+
+// Backward compatibility alias while codebase transitions
+export type Participant = Team & {
+  agent_id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  band_id?: string;
+  food_collected?: boolean;
+  food_collected_at?: string;
+};
+
+export interface HandBand {
+  band_id: string; // PRIMARY KEY
+  member_id: string; // Team Member ID Reference
+  team_id: string; // Team ID Reference
+  assigned_at: string;
 }

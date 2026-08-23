@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { store } from '../../services/store';
 import { certificateService } from '../../services/certificateService';
 import { Award, CheckCircle2, Trophy } from 'lucide-react';
 
 export const CertificateAdminPage: React.FC = () => {
-  const events = store.getEvents();
+  const [events, setEvents] = useState(store.getEvents());
   const [selectedEventId, setSelectedEventId] = useState<string>(events[0]?.id || '');
   const [winner1, setWinner1] = useState('');
   const [winner2, setWinner2] = useState('');
   const [winner3, setWinner3] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      const evs = store.getEvents();
+      setEvents(evs);
+      if (!selectedEventId && evs[0]) {
+        setSelectedEventId(evs[0].id);
+      }
+    };
+    update();
+    const unsub = store.subscribe(update);
+    store.syncFromSupabase();
+    return unsub;
+  }, []);
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
 

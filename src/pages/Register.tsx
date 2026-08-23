@@ -49,7 +49,7 @@ export const RegisterPage: React.FC = () => {
     }
 
     try {
-      const participant = store.registerParticipant(formData);
+      const participant = await store.registerParticipant(formData);
       navigate(`/passport?id=${participant.agent_id}`);
     } catch (err: any) {
       setError(err.message || 'Registration failed.');

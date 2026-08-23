@@ -2,36 +2,59 @@ import * as XLSX from 'xlsx';
 import { store } from './store';
 
 export function exportParticipantsExcel(): void {
-  const participants = store.getParticipants();
-  const data = participants.map(p => ({
-    'Agent ID': p.agent_id,
-    'Full Name': p.name,
-    'Email Address': p.email,
-    'Phone': p.phone,
-    'College': p.college,
-    'Department': p.department,
-    'Year': p.year,
-    'Clearance Level': p.clearance_level,
-    'Status': p.status,
-    'Food Token Collected': p.food_collected ? 'YES' : 'NO',
-    'Food Collected Time': p.food_collected_at ? new Date(p.food_collected_at).toLocaleString() : 'N/A',
-    'Registered Missions Count': p.registered_events.length,
-    'Registered Missions IDs': p.registered_events.join(', '),
-    'Registration Date': new Date(p.created_at).toLocaleString()
-  }));
+  const teams = store.getTeams();
+  const rows: any[] = [];
 
-  const worksheet = XLSX.utils.json_to_sheet(data);
+  teams.forEach(team => {
+    if (team.members && team.members.length > 0) {
+      team.members.forEach(m => {
+        rows.push({
+          'Team ID': team.team_id,
+          'Team Name': team.team_name,
+          'Member ID': m.id,
+          'Member Role': m.is_leader ? 'Leader' : 'Member',
+          'Member Name': m.name,
+          'Member Email': m.email,
+          'Member Phone': m.phone,
+          'Hand Band ID': m.band_id || 'UNASSIGNED',
+          'Food Claimed': m.food_collected ? 'YES' : 'NO',
+          'Food Claimed At': m.food_collected_at ? new Date(m.food_collected_at).toLocaleString() : 'N/A',
+          'College': team.college,
+          'Department': team.department,
+          'Year': team.year,
+          'Fee Paid': team.payment ? 'YES' : 'NO',
+          'Registered Tracks': team.registered_events.join(', '),
+          'Registration Date': new Date(team.created_at).toLocaleString()
+        });
+      });
+    } else {
+      rows.push({
+        'Team ID': team.team_id,
+        'Team Name': team.team_name,
+        'College': team.college,
+        'Department': team.department,
+        'Year': team.year,
+        'Fee Paid': team.payment ? 'YES' : 'NO',
+        'Registered Tracks': team.registered_events.join(', '),
+        'Registration Date': new Date(team.created_at).toLocaleString()
+      });
+    }
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Participants');
-  XLSX.writeFile(workbook, `ZINNIA_2026_Participants_${Date.now()}.xlsx`);
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Teams & Attendees');
+  XLSX.writeFile(workbook, `ZINNIA_2026_Teams_Master_${Date.now()}.xlsx`);
 }
 
 export function exportAttendanceExcel(): void {
   const attendance = store.getAttendance();
   const data = attendance.map(a => ({
     'Attendance Record ID': a.id,
-    'Agent ID': a.agent_id,
-    'Participant Name': a.participant_name,
+    'Team ID': a.team_id,
+    'Member ID': a.member_id || a.agent_id,
+    'Hand Band ID': a.band_id || 'N/A',
+    'Attendee Name': a.participant_name,
     'College': a.college,
     'Check-in Type': a.checkin_type,
     'Mission Name': a.event_name || 'N/A (Gate Entry)',
@@ -47,15 +70,21 @@ export function exportAttendanceExcel(): void {
 }
 
 export function exportFoodExcel(): void {
-  const participants = store.getParticipants();
-  const data = participants.map(p => ({
-    'Agent ID': p.agent_id,
-    'Participant Name': p.name,
-    'College': p.college,
-    'Department': p.department,
-    'Food Collected': p.food_collected ? 'YES' : 'NO',
-    'Redemption Time': p.food_collected_at ? new Date(p.food_collected_at).toLocaleString() : 'PENDING'
-  }));
+  const members = store.getTeamMembers();
+  const teams = store.getTeams();
+  const data = members.map(m => {
+    const team = teams.find(t => t.team_id === m.team_id);
+    return {
+      'Team ID': m.team_id,
+      'Team Name': team?.team_name || 'N/A',
+      'Member ID': m.id,
+      'Member Name': m.name,
+      'Hand Band ID': m.band_id || 'UNASSIGNED',
+      'College': team?.college || 'N/A',
+      'Food Collected': m.food_collected ? 'YES' : 'NO',
+      'Redemption Time': m.food_collected_at ? new Date(m.food_collected_at).toLocaleString() : 'PENDING'
+    };
+  });
 
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
@@ -65,38 +94,26 @@ export function exportFoodExcel(): void {
 
 export function exportEventsReportExcel(): void {
   const events = store.getEvents();
-  const participants = store.getParticipants();
-  const attendance = store.getAttendance();
   const registrations = store.getEventRegistrations();
+  const attendance = store.getAttendance();
 
   const data = events.map(e => {
-    const registeredCount = participants.filter(p => p.registered_events.includes(e.id)).length;
-    const attendedCount = attendance.filter(a => a.checkin_type === 'EVENT' && a.event_id === e.id).length;
-    const eventRegs = registrations.filter(r => r.event_id === e.id);
-    const firstPrizeCount = eventRegs.filter(r => r.position === 1).length;
-    const secondPrizeCount = eventRegs.filter(r => r.position === 2).length;
-    const thirdPrizeCount = eventRegs.filter(r => r.position === 3).length;
-
+    const regCount = registrations.filter(r => r.event_id === e.id).length;
+    const attCount = attendance.filter(a => a.event_id === e.id).length;
     return {
-      'Mission Code': e.code,
-      'Mission Name': e.mission_name,
-      'Event Type': e.event_type,
-      'Category': e.category,
-      'Clearance': e.clearance_level,
-      'Schedule': e.schedule_time,
+      'Event Code': e.code,
+      'Event Name': e.mission_name,
+      'Type': e.event_type,
       'Venue': e.venue,
-      'Total Registrations': registeredCount,
-      'Verified Turnout': attendedCount,
-      '1st Place Assigned': firstPrizeCount > 0 ? 'YES' : 'NO',
-      '2nd Place Assigned': secondPrizeCount > 0 ? 'YES' : 'NO',
-      '3rd Place Assigned': thirdPrizeCount > 0 ? 'YES' : 'NO',
-      'Results Finalized': e.results_finalized ? 'YES' : 'NO',
-      'Status': e.status
+      'Schedule': e.schedule_time,
+      'Total Registrations': regCount,
+      'Actual Attendees': attCount,
+      'Turnout %': regCount > 0 ? `${Math.round((attCount / regCount) * 100)}%` : '0%'
     };
   });
 
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Missions Overview');
-  XLSX.writeFile(workbook, `ZINNIA_2026_Missions_Report_${Date.now()}.xlsx`);
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Events Summary');
+  XLSX.writeFile(workbook, `ZINNIA_2026_Events_Summary_${Date.now()}.xlsx`);
 }

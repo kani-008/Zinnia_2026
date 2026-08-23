@@ -1,14 +1,173 @@
 @import "tailwindcss";
 
 :root {
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --font-comic: 'Bangers', cursive, sans-serif;
+  --font-display: 'Luckiest Guy', cursive, sans-serif;
+  --font-bungee: 'Bungee', cursive, sans-serif;
+  --font-marker: 'Permanent Marker', cursive, sans-serif;
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
 }
 
 body {
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
-  background-color: #0f172a;
-  color: #f8fafc;
-  min-height: 100vh;
+  background-color: #FFFDF0;
+  color: #0F0F14;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Comic Fonts Utilities */
+.font-comic {
+  font-family: var(--font-comic);
+  letter-spacing: 0.05em;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-bungee {
+  font-family: var(--font-bungee);
+}
+
+.font-marker {
+  font-family: var(--font-marker);
+}
+
+/* Halftone Dot Pattern */
+.bg-halftone-dots {
+  background-image: radial-gradient(#000000 18%, transparent 20%);
+  background-position: 0 0, 8px 8px;
+  background-size: 16px 16px;
+}
+
+.bg-halftone-dots-cyan {
+  background-image: radial-gradient(#00E5FF 22%, transparent 24%);
+  background-position: 0 0, 6px 6px;
+  background-size: 12px 12px;
+}
+
+.bg-halftone-dots-yellow {
+  background-image: radial-gradient(#FACC15 25%, transparent 27%);
+  background-position: 0 0, 6px 6px;
+  background-size: 12px 12px;
+}
+
+.bg-halftone-dots-magenta {
+  background-image: radial-gradient(#FF2E63 22%, transparent 24%);
+  background-position: 0 0, 6px 6px;
+  background-size: 12px 12px;
+}
+
+/* Comic Crosshatch Texture */
+.bg-comic-hatch {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 6px,
+    rgba(0, 0, 0, 0.12) 6px,
+    rgba(0, 0, 0, 0.12) 7.5px
+  );
+}
+
+.bg-comic-hatch-dense {
+  background: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 4px,
+      rgba(0, 0, 0, 0.15) 4px,
+      rgba(0, 0, 0, 0.15) 5px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 4px,
+      rgba(0, 0, 0, 0.15) 4px,
+      rgba(0, 0, 0, 0.15) 5px
+    );
+}
+
+/* Comic Speedlines / Sunburst */
+.bg-comic-sunburst {
+  background: repeating-conic-gradient(
+    from 0deg,
+    #FFE600 0deg 10deg,
+    #FFD000 10deg 20deg
+  );
+}
+
+.bg-comic-sunburst-cyan {
+  background: repeating-conic-gradient(
+    from 0deg,
+    #E0F7FA 0deg 8deg,
+    #B2EBF2 8deg 16deg
+  );
+}
+
+/* Hard 2D Comic Shadows */
+.shadow-comic-sm {
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.shadow-comic {
+  box-shadow: 5px 5px 0px #000000;
+}
+
+.shadow-comic-lg {
+  box-shadow: 8px 8px 0px #000000;
+}
+
+.shadow-comic-xl {
+  box-shadow: 12px 12px 0px #000000;
+}
+
+.shadow-comic-yellow {
+  box-shadow: 6px 6px 0px #FACC15, 6px 6px 0px 3px #000000;
+}
+
+.shadow-comic-cyan {
+  box-shadow: 6px 6px 0px #00E5FF, 6px 6px 0px 3px #000000;
+}
+
+/* Comic Text Stroke Outline */
+.text-stroke-comic {
+  -webkit-text-stroke: 3px #000000;
+  text-shadow: 4px 4px 0px #000000;
+}
+
+.text-stroke-comic-sm {
+  -webkit-text-stroke: 1.5px #000000;
+  text-shadow: 2px 2px 0px #000000;
+}
+
+.text-stroke-comic-lg {
+  -webkit-text-stroke: 4.5px #000000;
+  text-shadow: 6px 6px 0px #000000;
+}
+
+/* Comic Interactive Button Pop */
+.btn-comic {
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-comic:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 10px 10px 0px #000000;
+}
+.btn-comic:active {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+/* Jagged Hand-Drawn Borders (Clip Paths & Borders) */
+.comic-panel-skew-1 {
+  clip-path: polygon(0.5% 1%, 99.2% 0.3%, 99.8% 99.2%, 0.2% 98.6%);
+}
+
+.comic-panel-skew-2 {
+  clip-path: polygon(0.8% 0.4%, 99.5% 1.2%, 98.8% 99.5%, 0.4% 99.1%);
 }
