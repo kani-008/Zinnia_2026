@@ -197,69 +197,88 @@ export const WebsiteHomePage: React.FC = () => {
 
               {/* Right Column (5 cols): 2D Hand-Drawn Illustrated Hero Art */}
               <div className="md:col-span-5 relative flex items-center justify-center">
-                <div className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 flex items-center justify-center">
-                  {/* Yellow Solid Pure Circle with Bold Black Border & Hard Ink Shadow */}
-                  <div className="absolute inset-0 bg-[#FFE600] border-[4px] sm:border-[5px] border-black rounded-full shadow-[6px_6px_0px_#000000] flex items-center justify-center overflow-hidden" />
-
-                  {/* 2D Comic Illustrated Cyborg Character (SVG Ink Art) */}
+                <div className="relative w-44 h-44 sm:w-52 sm:h-52 md:w-60 md:h-60 lg:w-72 lg:h-72 flex items-center justify-center">
+                  {/* 2D Comic Illustrated Cyborg Character & Exact Hand-Drawn Comic Yellow Shape (SVG Ink Art) */}
                   <svg
-                    viewBox="0 0 200 200"
+                    viewBox="0 0 210 210"
                     className="relative z-30 w-full h-full hover:scale-105 transition-transform duration-200"
                   >
-                    {/* Comic Speed Lines */}
-                    <line x1="15" y1="50" x2="60" y2="70" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
-                    <line x1="25" y1="35" x2="65" y2="60" stroke="#000" strokeWidth="3" strokeLinecap="round" />
-                    <line x1="10" y1="100" x2="45" y2="100" stroke="#000" strokeWidth="4" strokeLinecap="round" />
-                    <line x1="12" y1="108" x2="38" y2="108" stroke="#000" strokeWidth="3" strokeLinecap="round" />
-                    <line x1="20" y1="160" x2="55" y2="145" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
+                    {/* Hand-Drawn Hard Black Ink Shadow Arc Underneath */}
+                    <path
+                      d="M 28 135 C 38 180 88 204 158 194 C 182 188 198 170 200 148 C 196 174 162 198 108 198 C 55 198 32 165 28 135 Z"
+                      fill="#000000"
+                    />
 
-                    <line x1="185" y1="50" x2="140" y2="70" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
-                    <line x1="175" y1="35" x2="135" y2="60" stroke="#000" strokeWidth="3" strokeLinecap="round" />
-                    <line x1="190" y1="100" x2="155" y2="100" stroke="#000" strokeWidth="4" strokeLinecap="round" />
-                    <line x1="188" y1="108" x2="162" y2="108" stroke="#000" strokeWidth="3" strokeLinecap="round" />
-                    <line x1="180" y1="160" x2="145" y2="145" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
+                    {/* Exact Hand-Drawn Organic Comic Yellow Shape */}
+                    <path
+                      d="M 105 15 C 160 14 195 48 193 103 C 191 156 156 189 104 187 C 48 185 15 152 17 99 C 19 46 50 16 105 15 Z"
+                      fill="#FFE600"
+                      stroke="#000000"
+                      strokeWidth="5"
+                      strokeLinejoin="round"
+                    />
+
+                    {/* Dynamic Comic Speed Bursts & Hatch Lines Breaking the Border */}
+                    {/* Top-Left diagonal speed line */}
+                    <line x1="30" y1="28" x2="72" y2="60" stroke="#000000" strokeWidth="4.5" strokeLinecap="round" />
+                    
+                    {/* Top-Right double speed lines */}
+                    <line x1="178" y1="28" x2="136" y2="60" stroke="#000000" strokeWidth="4.5" strokeLinecap="round" />
+                    <line x1="188" y1="40" x2="148" y2="68" stroke="#000000" strokeWidth="3.2" strokeLinecap="round" />
+
+                    {/* Middle-Left double horizontal speed lines */}
+                    <line x1="8" y1="96" x2="52" y2="96" stroke="#000000" strokeWidth="4.5" strokeLinecap="round" />
+                    <line x1="12" y1="106" x2="44" y2="106" stroke="#000000" strokeWidth="3.2" strokeLinecap="round" />
+
+                    {/* Middle-Right double horizontal speed lines */}
+                    <line x1="198" y1="96" x2="154" y2="96" stroke="#000000" strokeWidth="4.5" strokeLinecap="round" />
+                    <line x1="194" y1="106" x2="160" y2="106" stroke="#000000" strokeWidth="3.2" strokeLinecap="round" />
+
+                    {/* Bottom-Left & Bottom-Right speed line bursts */}
+                    <line x1="22" y1="162" x2="65" y2="142" stroke="#000000" strokeWidth="4.5" strokeLinecap="round" />
+                    <line x1="184" y1="162" x2="142" y2="142" stroke="#000000" strokeWidth="4.5" strokeLinecap="round" />
 
                     {/* Torso & Clavicle Armor Plates */}
-                    <polygon points="65,125 135,125 145,185 55,185" fill="#383F4D" stroke="#000" strokeWidth="4.5" />
-                    <polygon points="80,130 120,130 110,175 90,175" fill="#00E5FF" stroke="#000" strokeWidth="3.5" />
-                    <circle cx="100" cy="150" r="10" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
+                    <polygon points="70,126 140,126 150,186 60,186" fill="#383F4D" stroke="#000" strokeWidth="4.5" />
+                    <polygon points="85,131 125,131 115,176 95,176" fill="#00E5FF" stroke="#000" strokeWidth="3.5" />
+                    <circle cx="105" cy="151" r="10" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
 
                     {/* Neck & Vertebrae */}
-                    <rect x="90" y="112" width="20" height="18" fill="#5E6878" stroke="#000" strokeWidth="4" />
-                    <line x1="90" y1="118" x2="110" y2="118" stroke="#000" strokeWidth="3" />
-                    <line x1="90" y1="124" x2="110" y2="124" stroke="#000" strokeWidth="3" />
+                    <rect x="95" y="113" width="20" height="18" fill="#5E6878" stroke="#000" strokeWidth="4" />
+                    <line x1="95" y1="119" x2="115" y2="119" stroke="#000" strokeWidth="3" />
+                    <line x1="95" y1="125" x2="115" y2="125" stroke="#000" strokeWidth="3" />
 
                     {/* Shoulders */}
-                    <polygon points="35,130 65,120 65,155 30,158" fill="#5E6878" stroke="#000" strokeWidth="4" />
-                    <polygon points="165,130 135,120 135,155 170,158" fill="#5E6878" stroke="#000" strokeWidth="4" />
+                    <polygon points="40,131 70,121 70,156 35,159" fill="#5E6878" stroke="#000" strokeWidth="4" />
+                    <polygon points="170,131 140,121 140,156 175,159" fill="#5E6878" stroke="#000" strokeWidth="4" />
 
                     {/* Helmet / Head Shell */}
-                    <polygon points="70,45 130,45 145,90 125,120 75,120 55,90" fill="#383F4D" stroke="#000" strokeWidth="4.5" />
+                    <polygon points="75,46 135,46 150,91 130,121 80,121 60,91" fill="#383F4D" stroke="#000" strokeWidth="4.5" />
                     {/* Forehead Brow Armor */}
-                    <polygon points="75,55 125,55 135,75 65,75" fill="#5E6878" stroke="#000" strokeWidth="3.5" />
+                    <polygon points="80,56 130,56 140,76 70,76" fill="#5E6878" stroke="#000" strokeWidth="3.5" />
                     {/* Temporal Crests (Yellow Horns) */}
-                    <polygon points="55,60 65,45 65,85 50,75" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
-                    <polygon points="145,60 135,45 135,85 150,75" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
+                    <polygon points="60,61 70,46 70,86 55,76" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
+                    <polygon points="150,61 140,46 140,86 155,76" fill="#FFE600" stroke="#000" strokeWidth="3.5" />
 
                     {/* Angular Slit Luminous Eyes (Emerald) */}
-                    <polygon points="75,82 92,85 92,90 77,88" fill="#00FF88" stroke="#000" strokeWidth="2.5" />
-                    <polygon points="125,82 108,85 108,90 123,88" fill="#00FF88" stroke="#000" strokeWidth="2.5" />
+                    <polygon points="80,83 97,86 97,91 82,89" fill="#00FF88" stroke="#000" strokeWidth="2.5" />
+                    <polygon points="130,83 113,86 113,91 128,89" fill="#00FF88" stroke="#000" strokeWidth="2.5" />
 
                     {/* Faceplate Jaw & Intake Vents */}
-                    <polygon points="85,98 115,98 110,118 90,118" fill="#14171F" stroke="#000" strokeWidth="3.5" />
-                    <line x1="92" y1="104" x2="108" y2="104" stroke="#00FF88" strokeWidth="2.5" />
-                    <line x1="94" y1="110" x2="106" y2="110" stroke="#00FF88" strokeWidth="2.5" />
+                    <polygon points="90,99 120,99 115,119 95,119" fill="#14171F" stroke="#000" strokeWidth="3.5" />
+                    <line x1="97" y1="105" x2="113" y2="105" stroke="#00FF88" strokeWidth="2.5" />
+                    <line x1="99" y1="111" x2="111" y2="111" stroke="#00FF88" strokeWidth="2.5" />
 
                     {/* Comic Hatching Lines on Armor */}
-                    <line x1="60" y1="90" x2="68" y2="105" stroke="#000" strokeWidth="2" />
-                    <line x1="66" y1="90" x2="74" y2="105" stroke="#000" strokeWidth="2" />
-                    <line x1="135" y1="90" x2="127" y2="105" stroke="#000" strokeWidth="2" />
+                    <line x1="65" y1="91" x2="73" y2="106" stroke="#000" strokeWidth="2" />
+                    <line x1="71" y1="91" x2="79" y2="106" stroke="#000" strokeWidth="2" />
+                    <line x1="140" y1="91" x2="132" y2="106" stroke="#000" strokeWidth="2" />
                   </svg>
 
                   {/* "⚡ CRACKLE!" Sound Effect Overlay Sticker */}
                   <div
                     onClick={() => triggerComicFX('ZAP!')}
-                    className="cursor-pointer absolute -bottom-2 -left-4 sm:-bottom-3 sm:-left-6 z-40 bg-[#FFE600] border-[2.5px] border-black shadow-[4px_4px_0px_#000000] px-3 py-1 -rotate-12 hover:rotate-0 transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                    className="cursor-pointer absolute -bottom-1 -left-3 sm:-bottom-2 sm:-left-4 z-40 bg-[#FFE600] border-[2.5px] border-black shadow-[4px_4px_0px_#000000] px-3 py-1 -rotate-12 hover:rotate-0 transition-transform active:translate-x-0.5 active:translate-y-0.5"
                   >
                     <span className="font-display text-xs sm:text-sm md:text-base text-[#FF2E63] font-black tracking-wide">
                       ⚡ CRACKLE!
