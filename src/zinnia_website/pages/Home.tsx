@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { audioManager } from '../core/AudioManager';
 import ultronImg from '../../assets/ultron.svg';
-import { MissMinutesCompanion } from '../components/MissMinutesCompanion';
+import { BottomWalkingMascot } from '../components/BottomWalkingMascot';
 
 // 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
 const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
@@ -518,10 +518,26 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Miss Minutes Animated Living AI Companion (Replaces bottom-right register block) */}
-          <MissMinutesCompanion />
+          {/* Comic Live Status Badge */}
+          <div
+            onClick={() => triggerComicFX('CHRONOS ACTIVE!')}
+            className="cursor-pointer flex items-center gap-2.5 px-4 py-2 bg-[#1A1A1D] border-[2px] border-[#F5D90A] shadow-[3.5px_3.5px_0px_#8A7400] sticker-pop"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-[#F5D90A] animate-ping" />
+            <div className="flex flex-col text-left">
+              <span className="font-comic text-[11px] sm:text-xs text-[#F5D90A] font-extrabold uppercase tracking-wide">
+                TEMPORAL CORE ONLINE
+              </span>
+              <span className="font-mono text-[8px] sm:text-[9px] text-[#A8A8AC] uppercase font-bold">
+                CHRONO-01 MASCOT ACTIVE
+              </span>
+            </div>
+          </div>
         </div>
       </main>
+
+      {/* Living Mascot Walking Along Bottom Viewport Edge */}
+      <BottomWalkingMascot />
 
       {/* =========================================================================
           8. ABOUT SECTION / CHAPTER 02 (Scroll-Triggered Neubrutalist Comic Story)
