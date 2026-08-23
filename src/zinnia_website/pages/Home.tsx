@@ -202,19 +202,19 @@ export const WebsiteHomePage: React.FC = () => {
                   {/* 2D Comic Illustrated Ultron Character with Hand-Drawn Yellow Background Shape */}
                   <svg
                     viewBox="0 0 200 200"
-                    className="relative z-30 w-full h-full hover:scale-105 transition-transform duration-200"
+                    className="relative z-30 w-full h-full overflow-visible hover:scale-105 transition-transform duration-200"
                   >
                     <defs>
-                      <clipPath id="yellowCircleClip">
+                      {/* Pop-Out Clip Path: Open at top so head breaks above circle, curved at bottom to match circle */}
+                      <clipPath id="ultronPopOutClip">
                         <path
-                          d="M 102 14
-                             C 130 13, 158 24, 175 46
-                             C 191 66, 194 96, 191 123
-                             C 188 152, 169 178, 142 188
-                             C 114 197, 81 193, 56 181
-                             C 31 169, 14 143, 11 116
-                             C 8 86, 21 54, 46 34
-                             C 62 21, 82 14, 102 14 Z"
+                          d="M -50 -100
+                             L 250 -100
+                             L 250 115
+                             C 220 154, 175 192, 142 192
+                             C 114 198, 81 194, 56 182
+                             C 28 170, -5 143, -15 115
+                             Z"
                         />
                       </clipPath>
                     </defs>
@@ -249,14 +249,14 @@ export const WebsiteHomePage: React.FC = () => {
                     <line x1="188" y1="108" x2="162" y2="108" stroke="#000" strokeWidth="3" strokeLinecap="round" />
                     <line x1="180" y1="160" x2="145" y2="145" stroke="#000" strokeWidth="4.5" strokeLinecap="round" />
 
-                    {/* Ultron Vector Art: Cropped naturally by the Curve of the Yellow Circle (Unstretched) */}
+                    {/* Ultron Vector Art: Enlarged with top half of head extending above circle, bottom cropped to circle */}
                     <image
                       href={ultronImg}
-                      x="12"
-                      y="14"
-                      width="176"
-                      height="176"
-                      clipPath="url(#yellowCircleClip)"
+                      x="-8"
+                      y="-28"
+                      width="216"
+                      height="216"
+                      clipPath="url(#ultronPopOutClip)"
                       preserveAspectRatio="xMidYMin slice"
                     />
                   </svg>
