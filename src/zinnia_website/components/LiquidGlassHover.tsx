@@ -54,18 +54,18 @@ export const LiquidGlassHover: React.FC<{ className?: string }> = ({ className =
 
     // Pure crystal transparent liquid hover lens (seamlessly blended into background)
     liquidSim.params.radius = 0.08;
-    liquidSim.params.force = 1.6;
-    liquidSim.params.viscosity = 0.35;
-    liquidSim.params.decay = 0.96;
-    liquidSim.params.velocityStretch = 0.8;
+    liquidSim.params.force = 1.5;
+    liquidSim.params.viscosity = 0.40;
+    liquidSim.params.decay = 0.95;
+    liquidSim.params.velocityStretch = 0.6;
 
-    liquidPass.params.refractionStrength = 0.22;
+    liquidPass.params.refractionStrength = 0.35;
     liquidPass.params.ior = 1.45;
-    liquidPass.params.magnification = 1.04;
+    liquidPass.params.magnification = 1.0;
     liquidPass.params.chromaticAberration = 0.35;
     liquidPass.params.fresnelPower = 3.5;
-    liquidPass.params.fresnelStrength = 0.50;
-    liquidPass.params.specularStrength = 0.40;
+    liquidPass.params.fresnelStrength = 0.0;
+    liquidPass.params.specularStrength = 0.0;
     liquidPass.params.darkGlossy = 0.0;
 
     // Backdrop Scene for Refraction (Cyberpunk Obsidian + Cyan/Gold/Magenta Grid & Ambient Orbs)

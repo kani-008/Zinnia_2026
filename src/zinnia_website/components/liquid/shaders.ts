@@ -130,44 +130,33 @@ void main() {
     return;
   }
 
-  // 1. Smooth Gradient & Slope Calculation
-  float hL = texture2D(uLiquidTexture, vUv - vec2(texel.x * 2.5, 0.0)).r;
-  float hR = texture2D(uLiquidTexture, vUv + vec2(texel.x * 2.5, 0.0)).r;
-  float hB = texture2D(uLiquidTexture, vUv - vec2(0.0, texel.y * 2.5)).r;
-  float hT = texture2D(uLiquidTexture, vUv + vec2(0.0, texel.y * 2.5)).r;
+  // 1. Ultra-smooth 8-tap Sobel Gradient Filter for continuous C^inf liquid wave curvature
+  float h00 = texture2D(uLiquidTexture, vUv + vec2(-texel.x, -texel.y) * 2.5).r;
+  float h10 = texture2D(uLiquidTexture, vUv + vec2(0.0,      -texel.y) * 2.5).r;
+  float h20 = texture2D(uLiquidTexture, vUv + vec2( texel.x, -texel.y) * 2.5).r;
+  float h01 = texture2D(uLiquidTexture, vUv + vec2(-texel.x,  0.0)      * 2.5).r;
+  float h21 = texture2D(uLiquidTexture, vUv + vec2( texel.x,  0.0)      * 2.5).r;
+  float h02 = texture2D(uLiquidTexture, vUv + vec2(-texel.x,  texel.y) * 2.5).r;
+  float h12 = texture2D(uLiquidTexture, vUv + vec2(0.0,       texel.y) * 2.5).r;
+  float h22 = texture2D(uLiquidTexture, vUv + vec2( texel.x,  texel.y) * 2.5).r;
 
-  float dHdx = (hR - hL);
-  float dHdy = (hT - hB);
-  float slope = length(vec2(dHdx, dHdy));
-
-  float normalStrength = 2.5;
-  vec3 normal = normalize(vec3(-dHdx * normalStrength, -dHdy * normalStrength, 1.0));
+  float dHdx = ((h20 + 2.0 * h21 + h22) - (h00 + 2.0 * h01 + h02)) * 0.25;
+  float dHdy = ((h02 + 2.0 * h12 + h22) - (h00 + 2.0 * h10 + h20)) * 0.25;
 
   if (uDebugMode == 3) {
-    gl_FragColor = vec4(normal * 0.5 + 0.5, 1.0);
+    vec3 norm = normalize(vec3(-dHdx * 3.0, -dHdy * 3.0, 1.0));
+    gl_FragColor = vec4(norm * 0.5 + 0.5, 1.0);
     return;
   }
 
-  // 2. Optical Refraction (Pure Crystal Clear Snell's Law Distortion)
-  vec3 incident = vec3(0.0, 0.0, -1.0);
-  float eta = 1.0 / max(1.001, uIOR);
-  vec3 refracted = refract(incident, normal, eta);
+  // 2. Pure Continuous Optical Refraction (No sharp rings, no cutoff discs)
+  vec2 distortion = vec2(-dHdx, -dHdy) * (uRefractionStrength * 1.8);
 
-  // Smooth Gaussian blend factor for seamless transition
-  float blendFactor = smoothstep(0.001, 0.6, height);
-  vec2 deltaUv = refracted.xy * uRefractionStrength * blendFactor;
-
-  // 3. Subtle Magnification (No dark or opaque centers)
-  vec2 uvDistorted = vUv + deltaUv;
-  float magAmount = (1.0 - 1.0 / uMagnification) * blendFactor;
-  vec2 uvMagnified = mix(uvDistorted, uMouse, magAmount * 0.15);
-  uvMagnified = clamp(uvMagnified, 0.001, 0.999);
-
-  // 4. Chromatic Aberration (Natural RGB light dispersion along refraction)
-  float chromOffset = uChromaticAberration * 0.012 * (length(deltaUv) * 8.0 + height * 0.3);
-  vec2 uvR = uvMagnified + deltaUv * (1.0 + chromOffset * 2.5);
-  vec2 uvG = uvMagnified;
-  vec2 uvB = uvMagnified - deltaUv * (1.0 + chromOffset * 2.5);
+  // 3. Smooth Chromatic Dispersion along fluid flow
+  float chromScale = uChromaticAberration * 0.35;
+  vec2 uvR = vUv + distortion * (1.0 + chromScale);
+  vec2 uvG = vUv + distortion;
+  vec2 uvB = vUv + distortion * (1.0 - chromScale);
 
   float colR = texture2D(uSceneTexture, clamp(uvR, 0.001, 0.999)).r;
   float colG = texture2D(uSceneTexture, clamp(uvG, 0.001, 0.999)).g;
@@ -175,27 +164,7 @@ void main() {
 
   vec3 sceneColor = vec3(colR, colG, colB);
 
-  // 5. Subtle Edge Glint (Active ONLY on steep wave slope, NEVER on flat center)
-  vec3 viewDir = vec3(0.0, 0.0, 1.0);
-  float ndotv = clamp(dot(normal, viewDir), 0.0, 1.0);
-  float fresnel = pow(1.0 - ndotv, uFresnelPower) * uFresnelStrength * smoothstep(0.01, 0.15, slope * 4.0);
-
-  vec3 rimColor = mix(
-    vec3(0.25, 0.85, 1.0),
-    vec3(0.75, 0.35, 1.0),
-    clamp(speed * 3.0, 0.0, 1.0)
-  );
-
-  // 6. Subtle Edge Specular (Only on wave slope curvature, zero in flat center)
-  vec3 lightDir = normalize(vec3(-0.35, 0.65, 0.85));
-  vec3 halfVec = normalize(lightDir + viewDir);
-  float specAngle = max(dot(normal, halfVec), 0.0);
-  float specular = pow(specAngle, 28.0) * uSpecularStrength * smoothstep(0.02, 0.2, slope * 5.0);
-  specular *= clamp(1.0 + speed * 2.0, 1.0, 2.5);
-
-  // 7. Pure 100% transparent composite - Seamless glass refraction
-  vec3 finalColor = sceneColor + rimColor * (fresnel * 0.35) + vec3(specular * 0.25);
-
-  gl_FragColor = vec4(finalColor, 1.0);
+  // Final 100% seamlessly blended crystal clear liquid
+  gl_FragColor = vec4(sceneColor, 1.0);
 }
 `;

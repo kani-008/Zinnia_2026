@@ -32,10 +32,10 @@ export class LiquidSimulation {
 
   public params: LiquidSimParams = {
     radius: 0.08,
-    force: 1.6,
-    viscosity: 0.35,
-    decay: 0.96,
-    velocityStretch: 0.8,
+    force: 1.5,
+    viscosity: 0.40,
+    decay: 0.95,
+    velocityStretch: 0.6,
   };
 
   constructor(renderer: THREE.WebGLRenderer, width: number, height: number) {
