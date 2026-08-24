@@ -188,7 +188,7 @@ export const WebsiteHomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-[#0D0D0F] text-[#F2F2F0] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none scroll-smooth">
+    <div className="relative w-full min-h-screen bg-transparent text-[#F2F2F0] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none scroll-smooth">
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
