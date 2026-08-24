@@ -21,13 +21,13 @@ export class LiquidPass {
   private quadMesh: THREE.Mesh;
 
   public params: LiquidPassParams = {
-    refractionStrength: 0.08,
-    ior: 1.33,
-    magnification: 1.02,
-    chromaticAberration: 0.18,
-    fresnelPower: 4.5,
-    fresnelStrength: 0.55,
-    specularStrength: 0.45,
+    refractionStrength: 0.20,
+    ior: 1.44,
+    magnification: 1.05,
+    chromaticAberration: 0.35,
+    fresnelPower: 3.5,
+    fresnelStrength: 0.70,
+    specularStrength: 0.60,
     darkGlossy: 0.0,
     debugMode: 0,
   };
