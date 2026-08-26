@@ -19,7 +19,7 @@ class BaseLLMProvider:
         raise NotImplementedError
 
 class GroqProvider(BaseLLMProvider):
-    def __init__(self, api_key: Optional[str] = None, model: str = "llama-3.3-70b-versatile"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "groq/compound-mini"):
         self.api_key = api_key or os.getenv("GROQ_API_KEY")
         self.model = os.getenv("GROQ_MODEL", model)
         self.url = "https://api.groq.com/openai/v1/chat/completions"
@@ -37,15 +37,19 @@ class GroqProvider(BaseLLMProvider):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            "temperature": 0.2,
-            "max_tokens": 600
+            "temperature": 0.3,
+            "max_tokens": 800
         }
         resp = requests.post(self.url, headers=headers, json=payload, timeout=REQUEST_TIMEOUT_SECONDS)
         if resp.status_code == 200:
             data = resp.json()
-            return data["choices"][0]["message"]["content"].strip()
+            content = data["choices"][0]["message"].get("content") or ""
+            # Strip reasoning tags if present
+            cleaned = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
+            return cleaned if cleaned else content.strip()
         else:
             raise RuntimeError(f"Groq API error (status {resp.status_code}): {resp.text}")
+
 
 class GeminiProvider(BaseLLMProvider):
     def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-flash"):

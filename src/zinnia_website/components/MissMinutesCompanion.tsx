@@ -20,32 +20,59 @@ interface Message {
 
 // Local offline RAG Knowledge Engine
 const SYMPOSIUM_KNOWLEDGE: Record<string, string> = {
-  events: "Oh honey, you're looking for the battlegrounds? We've got 9 active missions on this timeline!\n\n**Technical Events:**\n1. **Operation: System Recovery** (Debugging)\n2. **Operation: ORACLE** (AI & Prompt Engineering)\n3. **Operation: Broken Records** (SQL Recovery)\n4. **Infinity Protocol** (Solo Coding Anomaly)\n5. **Algorithm Overdrive** (Competitive DSA)\n\n**Non-Technical Events:**\n6. **Chamber of Enigmas** (Cipher Escape & Riddles)\n7. **Paper Syndicate** (Research Presentation)\n8. **Pixel Heist** (UI/UX Design Sprint)\n9. **Neural Clash** (Campus Strategy & Gaming)",
-  venue: "ZINNIA '26 is hosted at the **Government College of Engineering, Erode** (Department of Computer Science & Engineering), Perundurai, Erode, Tamil Nadu 638053.",
-  prizes: "The total prize pool across all 9 battlegrounds exceeds **₹25,000+** in grand cash awards, alongside Anna University verified merit certificates and CHRONOS digital badges!",
-  fee: "Registration fee is standard at ₹250 per participant which grants access to technical events, symposium kits, food, and verified certificates!",
+  greeting: "Hey y'all! I'm **Miss Minutes**, your official temporal guide for **ZINNIA 2026** at Government College of Engineering, Erode! ⏰✨\n\nI can help you navigate our symposium timeline:\n• ⚡ **9 Battlegrounds** (Technical & Non-Technical competitions)\n• 🎟️ **Registration & Pass** (₹150 fee, on-spot & online details)\n• 🏆 **₹30,000+ Prize Pool** (Cash awards & Anna University certificates)\n• 🏛️ **Venue & Schedule** (GCE Erode campus, timing, buffet lunch)\n• 📞 **Event Coordinators** (Helpline numbers & contacts)\n\nWhat would you like to explore first?",
+  identity: "Well howdy! I'm **Miss Minutes**, the Temporal AI Core for **ZINNIA 2026** — the National Level Technical Symposium organized by the Department of Computer Science & Engineering at **Government College of Engineering, Erode**.\n\nMy job is keeping our timeline running smoothly and giving you instant, verified information on event rules, prize pools, venues, schedules, and registration!",
+  help: "Glad you asked, sugar! Here is what I can do for you:\n\n1. 🎯 **Event Details & Rules**: Ask about *Operation System Recovery*, *ORACLE AI*, *Broken Records SQL*, *Infinity Protocol*, *Short Film*, and more!\n2. 🎟️ **Registration**: Learn about fees, eligibility (UG/PG), and how to obtain your digital Agent ID pass.\n3. 🏆 **Prizes & Rewards**: Details on our ₹30,000+ cash prize pool and merit certificates.\n4. 📍 **Location & Logistics**: Directions to GCE Erode, timings, food tokens, and hostel accommodation.\n5. 📞 **Organizer Contact**: Direct phone numbers for student and faculty coordinators.",
+  thanks: "You're mighty welcome! It's my absolute pleasure to help. ⏰✨\n\nIf any more questions pop up on your timeline, just holler. Best of luck on the battlegrounds!",
+  bye: "See ya on the timeline! Don't forget to register at **/register** and claim your Digital Agent Passport. For all time. Always! ⏰👋",
+  events: "Oh honey, you're looking for the battlegrounds? We've got 9 active missions on this timeline!\n\n**Technical Events (5):**\n1. **Operation: System Recovery** (Debugging)\n2. **Operation: ORACLE** (AI & Prompt Engineering)\n3. **Operation: Broken Records** (SQL Recovery)\n4. **Infinity Protocol** (Grand Marathon Hackathon)\n5. **Operation: Mission Control** (UI/UX Design)\n\n**Non-Technical Events (4):**\n6. **Borderland at GCE** (Campus Mystery Treasure Hunt)\n7. **Think, Strike and Win** (Fast-Paced Quiz)\n8. **Plot Twist** (Impromptu Storytelling)\n9. **Short Film** (Cinematic Showcase)",
+  venue: "ZINNIA 2026 is hosted by the Department of Computer Science & Engineering at **Government College of Engineering, Erode** (formerly IRTT), located on NH-544 (Salem-Cochin Highway), Chithode, Erode - 638316, Tamil Nadu.",
+  prizes: "The total prize pool across all 9 battlegrounds exceeds **₹30,000+** in grand cash awards, alongside Anna University verified merit certificates and digital badges!",
+  fee: "The registration fee is ₹150 per participant, which grants complete access to compete in technical and non-technical events, a welcome symposium kit, complimentary buffet lunch & refreshments, and official certificates!",
   date: "Mark your timeline! ZINNIA 2026 takes place on **September 17, 2026** at GCE Erode.",
-  rules: "Participants must bring their college ID card. Individual and team participation (1-3 members) are supported depending on the mission clearance level."
+  rules: "Participants must bring their valid college ID card. Individual and squad participation (1-5 members depending on the event) are supported with on-campus verification."
 };
 
 function getLocalRagAnswer(query: string): string | null {
-  const q = query.toLowerCase();
+  const q = query.toLowerCase().trim();
+  
+  // Greetings & conversational intents
+  if (/^(hi|hello|hey|heyy|heya|howdy|holla|yo|sup|hiya|greetings|aloha|namaste|vanakkam)[\s!.,?]*$/i.test(q) ||
+      /^hi\s+(there|miss\s+minutes|minutes|bot|ai)[\s!.,?]*$/i.test(q) ||
+      /^hello\s+(there|miss\s+minutes|minutes|bot|ai)[\s!.,?]*$/i.test(q) ||
+      /^good\s+(morning|afternoon|evening|day)[\s!.,?]*$/i.test(q)) {
+    return SYMPOSIUM_KNOWLEDGE.greeting;
+  }
+  if (/^(who|what)\s+are\s+you/i.test(q) || /what('s|\s+is)\s+your\s+name/i.test(q) || /introduce\s+yourself/i.test(q) || /are\s+you\s+miss\s+minutes/i.test(q)) {
+    return SYMPOSIUM_KNOWLEDGE.identity;
+  }
+  if (/what\s+can\s+you\s+do/i.test(q) || /^help/i.test(q) || /how\s+can\s+you\s+help/i.test(q) || /features|commands|menu/i.test(q)) {
+    return SYMPOSIUM_KNOWLEDGE.help;
+  }
+  if (/thank\s*you|thanks|thx|tysm|appreciate/i.test(q)) {
+    return SYMPOSIUM_KNOWLEDGE.thanks;
+  }
+  if (/^(bye|goodbye|cya|see\s+ya|see\s+you|good\s+night)/i.test(q)) {
+    return SYMPOSIUM_KNOWLEDGE.bye;
+  }
+
+  // Symposium topics
   if (q.includes('event') || q.includes('battleground') || q.includes('competition') || q.includes('what events')) {
     return SYMPOSIUM_KNOWLEDGE.events;
   }
-  if (q.includes('venue') || q.includes('where') || q.includes('location') || q.includes('college')) {
+  if (q.includes('venue') || q.includes('where') || q.includes('location') || q.includes('college') || q.includes('address')) {
     return SYMPOSIUM_KNOWLEDGE.venue;
   }
   if (q.includes('prize') || q.includes('cash') || q.includes('reward') || q.includes('money')) {
     return SYMPOSIUM_KNOWLEDGE.prizes;
   }
-  if (q.includes('fee') || q.includes('cost') || q.includes('price') || q.includes('pay') || q.includes('how much')) {
+  if (q.includes('fee') || q.includes('cost') || q.includes('price') || q.includes('pay') || q.includes('how much') || q.includes('ticket')) {
     return SYMPOSIUM_KNOWLEDGE.fee;
   }
-  if (q.includes('date') || q.includes('when') || q.includes('time') || q.includes('schedule')) {
+  if (q.includes('date') || q.includes('when') || q.includes('time') || q.includes('schedule') || q.includes('agenda')) {
     return SYMPOSIUM_KNOWLEDGE.date;
   }
-  if (q.includes('rule') || q.includes('eligib') || q.includes('allow') || q.includes('team')) {
+  if (q.includes('rule') || q.includes('eligib') || q.includes('allow') || q.includes('team') || q.includes('guideline')) {
     return SYMPOSIUM_KNOWLEDGE.rules;
   }
   return null;
