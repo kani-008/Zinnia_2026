@@ -4,6 +4,7 @@ Orchestrates FAQ matching, SQLite Cache, ChromaDB Vector Retrieval, and Multi-Pr
 """
 
 from typing import Dict, Any, List
+from .greetings import check_greeting_intent
 from .faq_matcher import get_faq_matcher
 from .cache import get_cache_manager, normalize_text
 from .retriever import get_retriever
@@ -20,7 +21,7 @@ class QuestionRouter:
     def process_question(self, question: str) -> Dict[str, Any]:
         """
         Process a user question through the resilient RAG pipeline:
-        1. Normalize
+        1. Greetings & Conversational Small-talk Detection (Instant, zero-cost)
         2. Semantic FAQ Lookup (Zero-cost, instant pre-written verified answers)
         3. SQLite Cache Lookup (Zero-cost, instant cache hits)
         4. ChromaDB Semantic Retrieval (Locally embedded vectors)
@@ -29,7 +30,7 @@ class QuestionRouter:
         """
         if not question or not question.strip():
             return {
-                "answer": "Please ask a question about Zinnia 2026 events, registration, rules, or schedule.",
+                "answer": "Hey y'all! Please ask any question about Zinnia 2026 symposium events, registration, rules, prizes, or schedule!",
                 "source": "fallback",
                 "cached": False,
                 "confidence": 0.0,
@@ -37,12 +38,26 @@ class QuestionRouter:
             }
 
         clean_question = question.strip()
-        norm_q = normalize_text(clean_question)
+
+        # -------------------------------------------------------------
+        # STEP 0: Conversational & Greeting Intent Handler
+        # -------------------------------------------------------------
+        greeting_res = check_greeting_intent(clean_question)
+        if greeting_res:
+            print(f"[Router] Greeting/Conversational Intent matched for '{clean_question}' ({greeting_res.get('type')})")
+            return {
+                "answer": greeting_res["answer"],
+                "source": "greeting",
+                "cached": True,
+                "confidence": greeting_res.get("confidence", 1.0),
+                "sources": [{"title": "Miss Minutes AI Core", "type": "mascot"}]
+            }
 
         # -------------------------------------------------------------
         # STEP 1: Semantic & Exact FAQ Pre-Written Answers
         # -------------------------------------------------------------
-        faq_match = self.faq_matcher.find_match(clean_question, threshold=0.80)
+        faq_match = self.faq_matcher.find_match(clean_question, threshold=0.75)
+
         if faq_match:
             print(f"[Router] FAQ Match found for '{clean_question}' -> Matched '{faq_match.get('matched_question')}' (Confidence: {faq_match.get('confidence')})")
             return {
