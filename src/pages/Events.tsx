@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { store } from '../services/store';
+import { EventMission } from '@packages/types/src';
 
 export const EventsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'TECH' | 'NON_TECH'>('TECH');
-  const allEvents = store.getEvents();
+  const [events, setEvents] = useState<EventMission[]>(() => store.getEvents());
 
-  const techEvents = allEvents.filter(e => e.event_type === 'TECH');
-  const nonTechEvents = allEvents.filter(e => e.event_type === 'NON_TECH');
+  useEffect(() => {
+    const unsub = store.subscribe(() => {
+      setEvents(store.getEvents());
+    });
+    store.syncFromSupabase();
+    return () => unsub();
+  }, []);
+
+  const techEvents = events.filter(e => e.event_type === 'TECH');
+  const nonTechEvents = events.filter(e => e.event_type === 'NON_TECH');
 
   const currentEvents = activeTab === 'TECH' ? techEvents : nonTechEvents;
 

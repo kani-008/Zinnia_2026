@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { audioManager } from '../core/AudioManager';
 import ultronImg from '../../assets/ultron.svg';
 import { MissMinutesCompanion } from '../components/MissMinutesCompanion';
+import { store } from '../../services/store';
+import { EventMission } from '@packages/types/src';
+import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award } from 'lucide-react';
 
 // 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
 const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
@@ -133,6 +137,8 @@ const MagneticElement: React.FC<{
 };
 
 export const WebsiteHomePage: React.FC = () => {
+  const navigate = useNavigate();
+
   // Real-time ticking countdown to September 17, 2026
   const [timeLeft, setTimeLeft] = useState({
     days: '12',
@@ -142,6 +148,33 @@ export const WebsiteHomePage: React.FC = () => {
   });
 
   const [interactiveSoundText, setInteractiveSoundText] = useState<string | null>(null);
+
+  // Tab State for Events (TECHNICAL vs NON-TECHNICAL)
+  const [eventTab, setEventTab] = useState<'TECH' | 'NON_TECH'>('TECH');
+
+  // Live Events Sync from Supabase DB / Store
+  const [events, setEvents] = useState<EventMission[]>(() => store.getEvents());
+
+  useEffect(() => {
+    const unsub = store.subscribe(() => {
+      setEvents(store.getEvents());
+    });
+    // Trigger real-time sync from Supabase DB
+    store.syncFromSupabase();
+    return () => unsub();
+  }, []);
+
+  const techEvents = events.filter((e) => e.event_type === 'TECH');
+  const nonTechEvents = events.filter((e) => e.event_type === 'NON_TECH');
+  const displayedEvents = eventTab === 'TECH' ? techEvents : nonTechEvents;
+
+  const triggerComicFX = (soundText: string) => {
+    setInteractiveSoundText(soundText);
+    audioManager.playNodeEngage();
+    setTimeout(() => {
+      setInteractiveSoundText(null);
+    }, 900);
+  };
 
   // Lusion Signature Cursor Trail Position
   const [mousePos, setMousePos] = useState({ x: -250, y: -250 });
@@ -259,7 +292,15 @@ export const WebsiteHomePage: React.FC = () => {
         </div>
 
         {/* Center/Right Comic Navigation Tabs with Magnetic Pull */}
-        <nav className="flex items-center gap-2 sm:gap-4">
+        <nav className="flex items-center gap-2 sm:gap-3">
+          {/* EVENTS TAB */}
+          <MagneticElement strength={0.3} onClick={() => scrollToSection('events', 'EVENTS!')}>
+            <button className="px-3.5 sm:px-4 py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#3CE7FF] hover:text-[#3CE7FF] text-[#F2F2F0] border-[2px] border-[#3A3A3E] shadow-[3px_3px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1.5">
+              <span className="text-[#3CE7FF]">⚡</span>
+              <span>EVENTS</span>
+            </button>
+          </MagneticElement>
+
           <MagneticElement strength={0.3} onClick={() => scrollToSection('about', 'ABOUT!')}>
             <button className="px-3.5 sm:px-4 py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#EAEAEA] hover:text-[#FFFFFF] text-[#F2F2F0] border-[2px] border-[#3A3A3E] shadow-[3px_3px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
               ABOUT
@@ -273,7 +314,7 @@ export const WebsiteHomePage: React.FC = () => {
           </MagneticElement>
 
           {/* Register Navbar Magnetic Button (Cyan Accent + Cyan Shadow) */}
-          <MagneticElement strength={0.35} onClick={() => triggerComicFX('POW!')}>
+          <MagneticElement strength={0.35} onClick={() => { triggerComicFX('POW!'); navigate('/register'); }}>
             <button className="px-4 sm:px-6 py-1.5 bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[2.5px] border-[#3CE7FF] hover:border-[#F5D90A] shadow-[3.5px_3.5px_0px_#1E8FA3] hover:shadow-[3.5px_3.5px_0px_#8A7400] font-display text-xs sm:text-sm tracking-wider uppercase cursor-pointer transition-all">
               REGISTER
             </button>
@@ -536,7 +577,180 @@ export const WebsiteHomePage: React.FC = () => {
       </main>
 
       {/* =========================================================================
-          8. ABOUT SECTION / CHAPTER 02 (Scroll-Triggered Neubrutalist Comic Story)
+          EVENTS SECTION / CHAPTER 02 (Interactive 2D Comic Battlegrounds from DB)
+          ========================================================================= */}
+      <section
+        id="events"
+        className="relative z-30 max-w-6xl mx-auto w-full py-10 sm:py-16 px-2 my-4 sm:my-8 overflow-visible"
+      >
+        {/* Section Header & Tab Controls */}
+        <ScrollReveal delayMs={0} className="relative mb-6 sm:mb-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <div
+                onClick={() => triggerComicFX('BATTLEGROUNDS!')}
+                className="inline-block cursor-pointer bg-[#F5D90A] text-[#0D0D0F] border-[2.5px] border-[#F5D90A] shadow-[3.5px_3.5px_0px_#8A7400] px-3.5 sm:px-5 py-1 -rotate-1 sticker-pop mb-3"
+              >
+                <span className="font-comic text-xs sm:text-sm uppercase tracking-wider font-black">
+                  CHAPTER 02: THE 9 BATTLEGROUNDS
+                </span>
+              </div>
+
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#F2F2F0] uppercase tracking-tight">
+                CHOOSE YOUR ARENA.
+              </h2>
+              <p className="font-comic text-xs sm:text-sm md:text-base text-[#A8A8AC] max-w-2xl mt-1 font-medium">
+                Live missions synchronized directly with the Zinnia database. Compete for cash rewards and national recognition.
+              </p>
+            </div>
+
+            {/* Tactical 2D Comic Tabs (TECHNICAL vs NON-TECHNICAL) */}
+            <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0">
+              <MagneticElement strength={0.25}>
+                <button
+                  onClick={() => {
+                    setEventTab('TECH');
+                    triggerComicFX('TECH!');
+                  }}
+                  className={`px-4 sm:px-5 py-2 font-comic text-xs sm:text-sm uppercase tracking-wider font-extrabold cursor-pointer transition-all border-[2.5px] flex items-center gap-2 ${
+                    eventTab === 'TECH'
+                      ? 'bg-[#3CE7FF] text-[#0D0D0F] border-[#3CE7FF] shadow-[4px_4px_0px_#1E8FA3] -rotate-1'
+                      : 'bg-[#1A1A1D] text-[#A8A8AC] hover:text-[#FFFFFF] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000]'
+                  }`}
+                >
+                  <span>⚡ TECHNICAL</span>
+                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-black ${
+                    eventTab === 'TECH' ? 'bg-[#0D0D0F] text-[#3CE7FF]' : 'bg-[#2A2A2E] text-[#F2F2F0]'
+                  }`}>
+                    {techEvents.length}
+                  </span>
+                </button>
+              </MagneticElement>
+
+              <MagneticElement strength={0.25}>
+                <button
+                  onClick={() => {
+                    setEventTab('NON_TECH');
+                    triggerComicFX('NON-TECH!');
+                  }}
+                  className={`px-4 sm:px-5 py-2 font-comic text-xs sm:text-sm uppercase tracking-wider font-extrabold cursor-pointer transition-all border-[2.5px] flex items-center gap-2 ${
+                    eventTab === 'NON_TECH'
+                      ? 'bg-[#FF3366] text-white border-[#FF3366] shadow-[4px_4px_0px_#B01F45] rotate-1'
+                      : 'bg-[#1A1A1D] text-[#A8A8AC] hover:text-[#FFFFFF] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000]'
+                  }`}
+                >
+                  <span>🎮 NON-TECHNICAL</span>
+                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-black ${
+                    eventTab === 'NON_TECH' ? 'bg-white text-[#FF3366]' : 'bg-[#2A2A2E] text-[#F2F2F0]'
+                  }`}>
+                    {nonTechEvents.length}
+                  </span>
+                </button>
+              </MagneticElement>
+            </div>
+          </div>
+        </ScrollReveal>
+
+        {/* Dynamic Database Event Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 overflow-visible">
+          {displayedEvents.map((e, idx) => {
+            const isTech = e.event_type === 'TECH';
+            const accentBorder = isTech ? 'border-[#3CE7FF] hover:shadow-[6px_6px_0px_#1E8FA3]' : 'border-[#FF3366] hover:shadow-[6px_6px_0px_#B01F45]';
+            const badgeBg = isTech ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white';
+
+            return (
+              <ScrollReveal key={e.id} delayMs={idx * 60} className="h-full">
+                <div
+                  className={`h-full group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] ${accentBorder} shadow-[4.5px_4.5px_0px_#000000] transition-all duration-200 hover:-translate-y-1.5 flex flex-col justify-between`}
+                >
+                  {/* Top Bar: Code Badge + Team Size Badge */}
+                  <div>
+                    <div className="flex items-center justify-between gap-2 pb-3">
+                      <div className={`px-2.5 py-0.5 font-mono text-[11px] font-black uppercase tracking-wider border border-black shadow-[2px_2px_0px_#000000] ${badgeBg}`}>
+                        {e.code}
+                      </div>
+
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#141417] border border-[#3A3A3E] text-[10px] font-mono text-[#A8A8AC]">
+                        <Users className="w-3 h-3 text-[#F5D90A]" />
+                        <span>Team: {e.team_size_min}{e.team_size_min !== e.team_size_max ? `-${e.team_size_max}` : ''}</span>
+                      </div>
+                    </div>
+
+                    {/* Mission Name & Event Subtitle */}
+                    <div className="space-y-1 pt-1">
+                      <h3 className="font-display text-lg sm:text-xl text-[#F2F2F0] uppercase tracking-wide group-hover:text-[#F5D90A] transition-colors leading-snug">
+                        {e.mission_name}
+                      </h3>
+                      <div className={`font-comic text-xs font-bold uppercase tracking-wider ${isTech ? 'text-[#3CE7FF]' : 'text-[#FF3366]'}`}>
+                        {e.title}
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="font-comic text-xs text-[#A8A8AC] leading-relaxed pt-2.5 pb-3">
+                      {e.description}
+                    </p>
+
+                    {/* Rules Preview Tags */}
+                    {e.rules && e.rules.length > 0 && (
+                      <div className="space-y-1 pb-3">
+                        <div className="text-[9px] font-mono text-[#F5D90A] uppercase tracking-widest font-bold">
+                          // MISSION CONSTRAINTS
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {e.rules.slice(0, 2).map((rule, rIdx) => (
+                            <span
+                              key={rIdx}
+                              className="inline-block px-2 py-0.5 bg-[#141417] border border-[#3A3A3E]/80 text-[10px] font-comic text-[#D0D0D4] truncate max-w-full"
+                            >
+                              • {rule}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bottom Meta & Action */}
+                  <div className="pt-3 border-t border-[#3A3A3E]/80 space-y-3">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-[#A8A8AC]">
+                      <div className="flex items-center gap-1 truncate max-w-[55%]">
+                        <MapPin className="w-3 h-3 text-[#3CE7FF] shrink-0" />
+                        <span className="truncate">{e.venue}</span>
+                      </div>
+                      <div className="flex items-center gap-1 truncate">
+                        <Clock className="w-3 h-3 text-[#F5D90A] shrink-0" />
+                        <span className="truncate">{e.schedule_time}</span>
+                      </div>
+                    </div>
+
+                    {/* Register Button */}
+                    <MagneticElement strength={0.2} className="w-full">
+                      <button
+                        onClick={() => {
+                          triggerComicFX('DEPLOY!');
+                          navigate(`/register?mission=${e.id}`);
+                        }}
+                        className={`w-full py-2 px-3 font-display text-xs tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] flex items-center justify-center gap-2 shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 ${
+                          isTech
+                            ? 'bg-[#141417] text-[#3CE7FF] border-[#3CE7FF] hover:bg-[#3CE7FF] hover:text-[#0D0D0F]'
+                            : 'bg-[#141417] text-[#FF3366] border-[#FF3366] hover:bg-[#FF3366] hover:text-white'
+                        }`}
+                      >
+                        <span>REGISTER FOR {e.code}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </MagneticElement>
+                  </div>
+                </div>
+              </ScrollReveal>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* =========================================================================
+          8. ABOUT SECTION / CHAPTER 03 (Scroll-Triggered Neubrutalist Comic Story)
           ========================================================================= */}
       <section
         id="about"
@@ -545,11 +759,11 @@ export const WebsiteHomePage: React.FC = () => {
         {/* Top Floating Badge & Heading with ScrollReveal */}
         <ScrollReveal delayMs={0} className="relative mb-6 sm:mb-8">
           <div
-            onClick={() => triggerComicFX('CHAPTER 02!')}
+            onClick={() => triggerComicFX('CHAPTER 03!')}
             className="inline-block cursor-pointer bg-[#3CE7FF] text-[#0D0D0F] border-[2.5px] border-[#3CE7FF] shadow-[3.5px_3.5px_0px_#1E8FA3] px-3.5 sm:px-5 py-1.5 -rotate-1 sticker-pop"
           >
             <span className="font-comic text-xs sm:text-sm uppercase tracking-wider font-black">
-              CHAPTER 02: THE GENESIS OF ZINNIA
+              CHAPTER 03: THE GENESIS OF ZINNIA
             </span>
           </div>
 
@@ -721,6 +935,12 @@ export const WebsiteHomePage: React.FC = () => {
 
           {/* Right Links & Socials with Magnetic Pull */}
           <div className="flex items-center gap-3.5 text-[#A8A8AC] uppercase font-black">
+            <MagneticElement strength={0.2} onClick={() => scrollToSection('events', 'EVENTS!')}>
+              <button className="hover:text-[#3CE7FF] hover:underline transition-colors cursor-pointer">
+                EVENTS
+              </button>
+            </MagneticElement>
+            <span>&bull;</span>
             <MagneticElement strength={0.2} onClick={() => scrollToSection('about', 'ABOUT!')}>
               <button className="hover:text-[#3CE7FF] hover:underline transition-colors cursor-pointer">
                 ABOUT
@@ -747,6 +967,7 @@ export const WebsiteHomePage: React.FC = () => {
           </div>
         </div>
       </footer>
+
     </div>
   );
 };

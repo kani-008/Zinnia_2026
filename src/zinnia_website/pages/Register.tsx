@@ -128,7 +128,7 @@ export const WebsiteRegisterPage: React.FC = () => {
         ];
 
         const registeredTeam = await store.registerTeam(teamPayload, allMemberPayloads);
-        navigate(`/passport?id=${registeredTeam.team_id}`);
+        navigate(`/payment?id=${registeredTeam.team_id}`);
       } catch (err: any) {
         setError(err.message || 'Registration failed.');
         setIsSubmitting(false);
@@ -146,7 +146,7 @@ export const WebsiteRegisterPage: React.FC = () => {
         </div>
         <h1 className="text-3xl font-black text-white font-mono">TEAM & PARTICIPANT ENROLLMENT</h1>
         <p className="text-xs text-slate-400 font-light">
-          Register your team details. Each individual member will receive their own digital pass and gate wristband.
+          Register your team details. Each individual member will receive their own Digital Passport QR code for campus entry, event check-in, and lunch token.
         </p>
       </div>
 

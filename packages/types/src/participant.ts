@@ -6,13 +6,29 @@ export interface TeamMember {
   phone: string;
   is_leader: boolean;
   
-  // Physical wristband QR code assigned to this member
+  // Secure Passport Token (encoded inside QR code)
+  passport_token: string;
+  passport_issued_at?: string;
+  passport_sent_at?: string;
+  
+  // Legacy / optional fallback during transition
   band_id?: string;
   
   // Individual food token claim status
   food_collected?: boolean;
   food_collected_at?: string;
   
+  created_at: string;
+}
+
+export interface PassportDispatchRecord {
+  id: string;
+  member_id: string;
+  channel: 'EMAIL' | 'WHATSAPP' | 'SMS';
+  status: 'PENDING' | 'SENT' | 'FAILED';
+  provider_ref?: string;
+  error_message?: string;
+  sent_at?: string;
   created_at: string;
 }
 
@@ -37,6 +53,7 @@ export type Participant = Team & {
   name?: string;
   email?: string;
   phone?: string;
+  passport_token?: string;
   band_id?: string;
   food_collected?: boolean;
   food_collected_at?: string;
@@ -48,3 +65,4 @@ export interface HandBand {
   team_id: string; // Team ID Reference
   assigned_at: string;
 }
+

@@ -5,6 +5,7 @@ export interface AttendanceRecord {
   team_id: string;
   member_id?: string;
   agent_id?: string; // alias for team_id / member_id
+  passport_token_used?: string;
   band_id?: string;
   participant_name: string;
   college: string;
