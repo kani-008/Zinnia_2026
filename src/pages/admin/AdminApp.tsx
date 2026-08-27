@@ -1,6 +1,5 @@
 import React from 'react';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
-import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { AdminDashboardPage } from './AdminDashboard';
 import { ParticipantsListPage } from './ParticipantsList';
