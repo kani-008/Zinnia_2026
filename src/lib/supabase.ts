@@ -6,9 +6,25 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishabl
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const isSupabaseConfigured = () => {
-  return Boolean(
-    import.meta.env.VITE_SUPABASE_URL && 
-    import.meta.env.VITE_SUPABASE_ANON_KEY &&
-    !import.meta.env.VITE_SUPABASE_URL.includes('your-project')
-  );
+  const url = import.meta.env.VITE_SUPABASE_URL || '';
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+  if (!url || !key) return false;
+
+  const lowerUrl = url.toLowerCase();
+  const lowerKey = key.toLowerCase();
+
+  if (
+    lowerUrl.includes('your_project') ||
+    lowerUrl.includes('your-project') ||
+    lowerUrl.includes('your_supabase') ||
+    lowerUrl.includes('placeholder') ||
+    lowerKey.includes('your_supabase') ||
+    lowerKey.includes('your_project') ||
+    lowerKey.includes('placeholder')
+  ) {
+    return false;
+  }
+
+  return true;
 };

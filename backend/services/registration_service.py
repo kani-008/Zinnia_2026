@@ -1,14 +1,16 @@
 """
-Zinnia 2026 — Registration Service Layer
-Implements secure server-side team creation, event validation, payment calculation,
-and member enrollment using Supabase REST.
+Zinnia 2026 — Team Registration Service Layer
+Strictly writes all registrations directly into Supabase database tables:
+teams, team_members, event_registrations, team_payments.
+No temporary local storage fallbacks used.
 """
 
 import os
 import random
 import secrets
+import datetime
 import requests
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 from services.passport_service import get_headers, SUPABASE_URL
 
 OFFICIAL_EVENT_REGISTRY = {
@@ -23,234 +25,241 @@ OFFICIAL_EVENT_REGISTRY = {
     "msn-riddle-sphere": {"id": "msn-riddle-sphere", "code": "MSN-09", "mission_name": "Operation: Riddle Sphere", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Hall B2", "schedule_time": "10:30 AM - 11:30 AM"}
 }
 
+# Default Symposium Events Registry
+FALLBACK_EVENTS = {
+    **OFFICIAL_EVENT_REGISTRY,
+    "msn-mission-control": {"id": "msn-mission-control", "mission_name": "Operation: Mission Control", "team_size_min": 1, "team_size_max": 2, "registration_fee": 150, "is_single_event_only": True, "status": "AVAILABLE"},
+    "msn-borderland-gce": {"id": "msn-borderland-gce", "mission_name": "Borderland at GCE", "team_size_min": 2, "team_size_max": 4, "registration_fee": 200, "status": "AVAILABLE"},
+    "msn-think-strike-win": {"id": "msn-think-strike-win", "mission_name": "Think, Strike and Win", "team_size_min": 2, "team_size_max": 3, "registration_fee": 150, "status": "AVAILABLE"},
+    "msn-plot-twist": {"id": "msn-plot-twist", "mission_name": "Plot Twist", "team_size_min": 1, "team_size_max": 2, "registration_fee": 100, "status": "AVAILABLE"},
+    "msn-short-film": {"id": "msn-short-film", "mission_name": "Short Film", "team_size_min": 1, "team_size_max": 5, "registration_fee": 150, "status": "AVAILABLE"}
+}
+}
+
 def generate_team_id() -> str:
     """Generate a unique human-friendly team ID in format ZIN-2026-XXXX."""
     num = random.randint(1000, 9999)
     return f"ZIN-2026-{num}"
 
+def safe_supabase_get(url: str, headers: dict) -> Tuple[bool, Any]:
+    try:
+        r = requests.get(url, headers=headers, timeout=4)
+        if r.status_code == 200:
+            return True, r.json()
+        return False, []
+    except Exception as e:
+        print(f"[Supabase REST Notice] GET failed ({url}): {e}")
+        return False, []
+
+def safe_supabase_post(url: str, headers: dict, json_data: Any) -> Tuple[bool, Any]:
+    try:
+        req_headers = dict(headers)
+        req_headers["Prefer"] = "return=representation"
+        r = requests.post(url, headers=req_headers, json=json_data, timeout=5)
+        if r.status_code in (200, 201):
+            return True, r.json() if r.text else {}
+        print(f"[Supabase POST Error] HTTP {r.status_code}: {r.text}")
+        return False, {"status_code": r.status_code, "text": r.text}
+    except Exception as e:
+        print(f"[Supabase POST Exception] {e}")
+        return False, {"error": str(e)}
+
 def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Executes the secure 6-step registration flow:
-    1. Generate Team ID
-    2. Validate Events (Availability, Team Size, Single-Event rules, Duplicates)
-    3. Calculate Server-Side Expected Amount from public.events
-    4. Create public.teams & public.team_payments
-    5. Create public.event_registrations & public.team_members
-    6. Return response (Do NOT generate/dispatch QR passport at this step)
+    Executes team registration flow, strictly writing records into Supabase DB.
     """
-    headers = get_headers()
-    
-    # -------------------------------------------------------------
-    # 0. Basic Payload Validation
-    # -------------------------------------------------------------
-    team_name = data.get("team_name", "").strip()
-    college = data.get("college", "").strip()
-    department = data.get("department", "CSE").strip()
-    year = str(data.get("year", "III")).strip()
-    selected_event_ids = data.get("selected_event_ids", [])
-    members = data.get("members", [])
+    try:
+        headers = get_headers()
+        
+        # 0. Basic Payload Validation
+        team_name = data.get("team_name", "").strip()
+        college = data.get("college", "").strip()
+        department = data.get("department", "CSE").strip()
+        year = str(data.get("year", "III")).strip()
+        selected_event_ids = data.get("selected_event_ids", [])
+        members = data.get("members", [])
 
-    if not team_name:
-        return {"success": False, "error_code": "INVALID_TEAM_NAME", "message": "Team name is required."}
-    if not college:
-        return {"success": False, "error_code": "INVALID_COLLEGE", "message": "College name is required."}
-    if not members or not isinstance(members, list) or len(members) == 0:
-        return {"success": False, "error_code": "INVALID_TEAM_SIZE", "message": "At least one team member is required."}
-    if not selected_event_ids or not isinstance(selected_event_ids, list):
-        return {"success": False, "error_code": "EVENT_NOT_FOUND", "message": "At least one event must be selected."}
+        if not team_name:
+            return {"success": False, "error_code": "INVALID_TEAM_NAME", "message": "Team name is required."}
+        if not college:
+            return {"success": False, "error_code": "INVALID_COLLEGE", "message": "College name is required."}
+        if not members or not isinstance(members, list) or len(members) == 0:
+            return {"success": False, "error_code": "INVALID_TEAM_SIZE", "message": "At least one team member is required."}
+        if not selected_event_ids or not isinstance(selected_event_ids, list):
+            return {"success": False, "error_code": "EVENT_NOT_FOUND", "message": "At least one event must be selected."}
 
-    # Check for duplicate events in payload
-    if len(selected_event_ids) != len(set(selected_event_ids)):
-        return {"success": False, "error_code": "DUPLICATE_EVENT", "message": "Duplicate events selected in registration."}
+        if len(selected_event_ids) != len(set(selected_event_ids)):
+            return {"success": False, "error_code": "DUPLICATE_EVENT", "message": "Duplicate events selected in registration."}
 
-    # Check for duplicate emails in payload
-    member_emails = [m.get("email", "").strip().lower() for m in members if m.get("email")]
-    if len(member_emails) != len(set(member_emails)):
-        return {"success": False, "error_code": "DUPLICATE_EMAIL", "message": "Duplicate email addresses in member list."}
+        member_emails = [m.get("email", "").strip().lower() for m in members if m.get("email")]
+        if len(member_emails) != len(set(member_emails)):
+            return {"success": False, "error_code": "DUPLICATE_EMAIL", "message": "Duplicate email addresses in member list."}
 
-    # -------------------------------------------------------------
-    # STEP 2 — VALIDATE EVENTS & CALCULATE PAYMENT (Server-Side)
-    # -------------------------------------------------------------
-    expected_amount = 0
-    validated_events = []
-    has_single_event_only = False
+        events_dict = FALLBACK_EVENTS.copy()
+        ok_ev, db_evs = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/events?select=*", headers)
+        if ok_ev and isinstance(db_evs, list) and len(db_evs) > 0:
+            events_dict.update({ev["id"]: ev for ev in db_evs if "id" in ev})
 
-    for ev_id in selected_event_ids:
-        event_obj = None
-        r = requests.get(f"{SUPABASE_URL}/rest/v1/events?id=eq.{ev_id}&select=*", headers=headers)
-        if r.status_code == 200 and r.json():
-            event_obj = r.json()[0]
-        elif ev_id in OFFICIAL_EVENT_REGISTRY:
-            event_obj = OFFICIAL_EVENT_REGISTRY[ev_id]
+        expected_amount = 0
+        validated_events = []
+        has_single_event_only = False
 
-        if not event_obj:
+        for ev_id in selected_event_ids:
+            event_obj = events_dict.get(ev_id)
+            if not event_obj:
+                return {
+                    "success": False,
+                    "error_code": "EVENT_NOT_FOUND",
+                    "message": f"Event '{ev_id}' does not exist in symposium registry."
+                }
+            status = str(event_obj.get("status", "AVAILABLE")).upper()
+            if status == "FULL":
+                return {
+                    "success": False,
+                    "error_code": "EVENT_FULL",
+                    "message": f"Registration for '{event_obj.get('mission_name')}' is full."
+                }
+            if status != "AVAILABLE":
+                return {
+                    "success": False,
+                    "error_code": "EVENT_NOT_AVAILABLE",
+                    "message": f"Event '{event_obj.get('mission_name')}' is currently {status} and not open for registration."
+                }
+
+            min_size = int(event_obj.get("team_size_min", 1))
+            max_size = int(event_obj.get("team_size_max", 10))
+            member_count = len(members)
+            if member_count < min_size or member_count > max_size:
+                return {
+                    "success": False,
+                    "error_code": "INVALID_TEAM_SIZE",
+                    "message": f"Event '{event_obj.get('mission_name')}' requires team size between {min_size} and {max_size} (provided: {member_count})."
+                }
+
+            if event_obj.get("is_single_event_only"):
+                has_single_event_only = True
+
+            reg_fee = int(event_obj.get("registration_fee", 0) or 0)
+            expected_amount += reg_fee
+            validated_events.append(event_obj)
+
+        if has_single_event_only and len(selected_event_ids) > 1:
             return {
                 "success": False,
-                "error_code": "EVENT_NOT_FOUND",
-                "message": f"Event '{ev_id}' does not exist in symposium registry."
+                "error_code": "SINGLE_EVENT_RESTRICTION",
+                "message": "One of the selected events is restricted to single-event participation only."
             }
-        status = event_obj.get("status", "AVAILABLE").upper()
-        if status != "AVAILABLE":
+
+        for email in member_emails:
+            ok, res = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/team_members?email=eq.{email}&select=id,name", headers)
+            if ok and isinstance(res, list) and len(res) > 0:
+                existing = res[0]
+                return {
+                    "success": False,
+                    "error_code": "DUPLICATE_EMAIL",
+                    "message": f"Email '{email}' is already registered by attendee '{existing.get('name')}'."
+                }
+
+        team_id = generate_team_id()
+        team_row = {
+            "team_id": team_id,
+            "team_name": team_name,
+            "college": college,
+            "department": department,
+            "year": year,
+            "registered_events": selected_event_ids,
+            "payment_status": "AWAITING_PAYMENT"
+        }
+        ok_t, res_t = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/teams", headers, team_row)
+        if not ok_t:
+            err_text = res_t.get("text", "") if isinstance(res_t, dict) else str(res_t)
+            print(f"[Supabase DB Write Error] Team registration failed for {team_id}: {err_text}")
+            if "row-level security" in err_text.lower() or "42501" in err_text:
+                return {
+                    "success": False,
+                    "error_code": "RLS_POLICY_ERROR",
+                    "message": "Database write blocked by Row Level Security (RLS). Please run fix_supabase_schema_and_rls.sql in Supabase SQL Editor or disable RLS on tables."
+                }
             return {
                 "success": False,
-                "error_code": "EVENT_NOT_AVAILABLE",
-                "message": f"Event '{event_obj.get('mission_name')}' is currently {status} and not open for registration."
+                "error_code": "DB_INSERTION_FAILED",
+                "message": f"Failed to store registration in database: {err_text}"
             }
 
-        # Check team size limits
-        min_size = int(event_obj.get("team_size_min", 1))
-        max_size = int(event_obj.get("team_size_max", 10))
-        member_count = len(members)
-        if member_count < min_size or member_count > max_size:
-            return {
-                "success": False,
-                "error_code": "INVALID_TEAM_SIZE",
-                "message": f"Event '{event_obj.get('mission_name')}' requires team size between {min_size} and {max_size} (provided: {member_count})."
+        payment_row = {
+            "team_id": team_id,
+            "expected_amount": expected_amount,
+            "submitted_amount": None,
+            "utr_number": None,
+            "payment_status": "AWAITING_PAYMENT"
+        }
+        safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_payments", headers, payment_row)
+
+        event_reg_rows = [
+            {
+                "team_id": team_id,
+                "event_id": ev["id"],
+                "team_name": team_name
             }
+            for ev in validated_events
+        ]
+        if event_reg_rows:
+            safe_supabase_post(f"{SUPABASE_URL}/rest/v1/event_registrations", headers, event_reg_rows)
 
-        # Check is_single_event_only
-        if event_obj.get("is_single_event_only"):
-            has_single_event_only = True
+        created_members = []
+        leader_assigned = False
 
-        # Calculate price from database (Never trust frontend price)
-        reg_fee = int(event_obj.get("registration_fee", 0) or 0)
-        expected_amount += reg_fee
-        validated_events.append(event_obj)
+        for idx, m in enumerate(members):
+            m_id = f"ATT-{team_id[-4:]}-{idx+1}"
+            m_name = m.get("name", "").strip()
+            m_email = m.get("email", "").strip().lower()
+            m_phone = m.get("phone", "").strip()
+            
+            is_leader = False
+            if not leader_assigned:
+                if m.get("is_leader") or idx == 0:
+                    is_leader = True
+                    leader_assigned = True
 
-    # If an event is single-event only, no other events can be selected
-    if has_single_event_only and len(selected_event_ids) > 1:
+            passport_token = secrets.token_hex(16)
+            member_row = {
+                "id": m_id,
+                "team_id": team_id,
+                "name": m_name,
+                "email": m_email,
+                "phone": m_phone,
+                "is_leader": is_leader,
+                "passport_token": passport_token
+            }
+            created_members.append(member_row)
+
+        safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, created_members)
+
+        dispatch_result = None
+        if expected_amount == 0:
+            try:
+                from services.passport_service import trigger_passport_dispatch
+                requests.patch(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}", headers=headers, json={"payment_status": "VERIFIED"})
+                requests.patch(f"{SUPABASE_URL}/rest/v1/team_payments?team_id=eq.{team_id}", headers=headers, json={"payment_status": "VERIFIED"})
+                dispatch_result = trigger_passport_dispatch(team_id)
+            except Exception as e:
+                print(f"[Registration Dispatch Notice] Free auto-dispatch notice: {e}")
+
+        return {
+            "success": True,
+            "team_id": team_id,
+            "team_name": team_name,
+            "members": created_members,
+            "registered_events": selected_event_ids,
+            "expected_amount": expected_amount,
+            "payment_status": "AWAITING_PAYMENT" if expected_amount > 0 else "VERIFIED",
+            "dispatch_status": bool(dispatch_result)
+        }
+
+    except Exception as e:
+        print(f"[Registration Controller Error] {e}")
         return {
             "success": False,
-            "error_code": "SINGLE_EVENT_RESTRICTION",
-            "message": "One of the selected events is restricted to single-event participation only."
+            "error_code": "INTERNAL_SERVER_ERROR",
+            "message": f"Server encountered an unexpected error: {str(e)}"
         }
-
-    # Check if any member email already exists in DB
-    for email in member_emails:
-        er = requests.get(f"{SUPABASE_URL}/rest/v1/team_members?email=eq.{email}&select=id,name", headers=headers)
-        if er.status_code == 200 and er.json():
-            existing = er.json()[0]
-            return {
-                "success": False,
-                "error_code": "DUPLICATE_EMAIL",
-                "message": f"Email '{email}' is already registered by attendee '{existing.get('name')}'."
-            }
-
-    # -------------------------------------------------------------
-    # STEP 1 — CREATE TEAM
-    # -------------------------------------------------------------
-    # Ensure team_id is unique
-    team_id = generate_team_id()
-    for _ in range(5):
-        tr = requests.get(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}&select=team_id", headers=headers)
-        if tr.status_code == 200 and not tr.json():
-            break
-        team_id = generate_team_id()
-
-    team_row = {
-        "team_id": team_id,
-        "team_name": team_name,
-        "college": college,
-        "department": department,
-        "year": year,
-        "registered_events": selected_event_ids,
-        "payment_status": "AWAITING_PAYMENT"
-    }
-
-    try:
-        t_res = requests.post(f"{SUPABASE_URL}/rest/v1/teams", headers=headers, json=team_row)
-        if t_res.status_code not in [200, 201]:
-            print(f"[Registration Notice] Remote Supabase insert notice: {t_res.text}")
-    except Exception as e:
-        print(f"[Registration Notice] Supabase connection notice: {e}")
-
-
-    # -------------------------------------------------------------
-    # STEP 3 — INSERT TEAM PAYMENTS
-    # -------------------------------------------------------------
-    payment_row = {
-        "team_id": team_id,
-        "expected_amount": expected_amount,
-        "submitted_amount": None,
-        "utr_number": None,
-        "payment_status": "AWAITING_PAYMENT"
-    }
-    requests.post(f"{SUPABASE_URL}/rest/v1/team_payments", headers=headers, json=payment_row)
-
-    # -------------------------------------------------------------
-    # STEP 4 — CREATE EVENT REGISTRATIONS
-    # -------------------------------------------------------------
-    event_reg_rows = [
-        {
-            "team_id": team_id,
-            "event_id": ev["id"],
-            "team_name": team_name
-        }
-        for ev in validated_events
-    ]
-    if event_reg_rows:
-        requests.post(f"{SUPABASE_URL}/rest/v1/event_registrations", headers=headers, json=event_reg_rows)
-
-    # -------------------------------------------------------------
-    # STEP 5 — CREATE TEAM MEMBERS
-    # -------------------------------------------------------------
-    created_members = []
-    leader_assigned = False
-
-    for idx, m in enumerate(members):
-        m_id = f"ATT-{team_id[-4:]}-{idx+1}"
-        m_name = m.get("name", "").strip()
-        m_email = m.get("email", "").strip().lower()
-        m_phone = m.get("phone", "").strip()
-        
-        # Only one team member may be the leader
-        is_leader = False
-        if not leader_assigned:
-            if m.get("is_leader") or idx == 0:
-                is_leader = True
-                leader_assigned = True
-
-        passport_token = secrets.token_hex(16)
-        member_row = {
-            "id": m_id,
-            "team_id": team_id,
-            "name": m_name,
-            "email": m_email,
-            "phone": m_phone,
-            "is_leader": is_leader,
-            "passport_token": passport_token
-        }
-        created_members.append(member_row)
-
-    requests.post(f"{SUPABASE_URL}/rest/v1/team_members", headers=headers, json=created_members)
-
-    # -------------------------------------------------------------
-    # STEP 6 — CONDITIONAL DISPATCH (Only auto-dispatch if event is FREE)
-    # For paid tracks, QR passes are generated and emailed ONLY AFTER
-    # admin verifies the submitted payment UTR.
-    # -------------------------------------------------------------
-    dispatch_result = None
-    if expected_amount == 0:
-        try:
-            from services.passport_service import trigger_passport_dispatch
-            # Auto-mark payment as verified for free tracks
-            requests.patch(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}", headers=headers, json={"payment_status": "VERIFIED"})
-            requests.patch(f"{SUPABASE_URL}/rest/v1/team_payments?team_id=eq.{team_id}", headers=headers, json={"payment_status": "VERIFIED"})
-            dispatch_result = trigger_passport_dispatch(team_id)
-        except Exception as e:
-            print(f"[Registration Dispatch Notice] Free auto-dispatch notice: {e}")
-
-    # -------------------------------------------------------------
-    # STEP 7 — RETURN REGISTRATION RESULT
-    # -------------------------------------------------------------
-    return {
-        "success": True,
-        "team_id": team_id,
-        "team_name": team_name,
-        "members": created_members,
-        "registered_events": selected_event_ids,
-        "expected_amount": expected_amount,
-        "payment_status": "AWAITING_PAYMENT" if expected_amount > 0 else "VERIFIED",
-        "dispatch_status": dispatch_result.get("success") if dispatch_result else False
-    }
-
