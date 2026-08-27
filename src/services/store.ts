@@ -12,7 +12,7 @@ import {
 } from '@packages/types/src';
 import { OFFICIAL_MISSIONS } from '@packages/config/src/events';
 import { generateTeamId, generateMemberId } from '@packages/utils/src/participant-id';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, isRealtimeEnabled } from '../lib/supabase';
 
 const STORAGE_KEYS = {
   TEAMS: 'zin26_live_teams_v2',
@@ -57,16 +57,23 @@ class ZinniaStore {
   }
 
   private setupRealtimeSubscription() {
-    if (!isSupabaseConfigured()) return;
+    if (!isRealtimeEnabled()) return;
     try {
-      supabase
+      const channel = supabase
         .channel('public_team_db_sync')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'event_registrations' }, () => this.syncFromSupabase())
-        .subscribe();
+        .subscribe((status, err) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            console.warn('[Supabase Realtime] WebSocket connection closed or error. Cleaning channel to prevent retry loops:', err || status);
+            try {
+              supabase.removeChannel(channel);
+            } catch (e) {}
+          }
+        });
     } catch (e) {
       console.warn('Realtime subscription notice:', e);
     }

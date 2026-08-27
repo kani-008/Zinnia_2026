@@ -3,7 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://aiefrwricgwchvapinlc.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_jP4KLIgOGvI-QIWVEBzznA_5b_FJvOL';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  realtime: {
+    timeout: 5000
+  }
+});
 
 export const isSupabaseConfigured = () => {
   const url = import.meta.env.VITE_SUPABASE_URL || supabaseUrl;
@@ -26,5 +30,11 @@ export const isSupabaseConfigured = () => {
     return false;
   }
 
+  return true;
+};
+
+export const isRealtimeEnabled = () => {
+  if (!isSupabaseConfigured()) return false;
+  if (import.meta.env.VITE_SUPABASE_DISABLE_REALTIME === 'true') return false;
   return true;
 };
