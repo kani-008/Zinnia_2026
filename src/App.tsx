@@ -1,20 +1,35 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { WebsiteApp } from './zinnia_website/WebsiteApp';
+import { Routes, Route } from 'react-router-dom';
+import { WebsiteHomePage } from './pages/Home';
+import { WebsiteEventsPage } from './pages/Events';
+import { WebsiteRegisterPage } from './pages/Register';
+import { WebsitePaymentPage } from './pages/Payment';
+import { WebsitePassportPage } from './pages/Passport';
+import { WebsiteAssistantPage } from './pages/Assistant';
+import { WebsiteStoryPage } from './pages/Story';
+import { LiquidGlassHover } from './components/canvas/LiquidGlassHover';
 
 /**
- * Zinnia 2026 &mdash; Public Participant Web Application
- * Admin portal has been separated to standalone repository `zinnia-admin`.
+ * Zinnia 2026 &mdash; Official Symposium Application Router
  */
 export function App() {
   return (
-    <BrowserRouter>
+    <div className="relative w-screen min-h-screen overflow-x-hidden bg-[#0D0D0F] scroll-smooth">
+      {/* Liquid Glass Fluid Hover Effect Background */}
+      <LiquidGlassHover />
+
+      {/* 2D Neubrutalist Comic Interface with Scrollable Story Sections */}
       <Routes>
-        <Route path="/*" element={<WebsiteApp />} />
+        <Route path="/" element={<WebsiteHomePage />} />
+        <Route path="/events" element={<WebsiteEventsPage />} />
+        <Route path="/register" element={<WebsiteRegisterPage />} />
+        <Route path="/payment" element={<WebsitePaymentPage />} />
+        <Route path="/passport" element={<WebsitePassportPage />} />
+        <Route path="/assistant" element={<WebsiteAssistantPage />} />
+        <Route path="/story" element={<WebsiteStoryPage />} />
       </Routes>
-    </BrowserRouter>
+    </div>
   );
 }
 
 export default App;
-
