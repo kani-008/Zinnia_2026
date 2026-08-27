@@ -100,39 +100,7 @@ class ZinniaStore {
         membersToStore = dbMembers;
       }
 
-      // If database has participants table but not teams yet (seamless transition)
-      if (teamsToStore.length === 0 && membersToStore.length === 0) {
-        const { data: legacyParts } = await supabase.from('participants').select('*');
-        if (legacyParts && legacyParts.length > 0) {
-          legacyParts.forEach(p => {
-            const teamId = p.agent_id;
-            const teamObj: Team = {
-              team_id: teamId,
-              team_name: p.name,
-              college: p.college,
-              department: p.department,
-              year: p.year,
-              registered_events: p.registered_events || [],
-              payment: p.payment || false,
-              created_at: p.created_at
-            };
-            const memberObj: TeamMember = {
-              id: `${teamId}-M1`,
-              team_id: teamId,
-              name: p.name,
-              email: p.email,
-              phone: p.phone,
-              is_leader: true,
-              band_id: p.band_id || undefined,
-              food_collected: p.food_collected || false,
-              food_collected_at: p.food_collected_at,
-              created_at: p.created_at
-            };
-            teamsToStore.push(teamObj);
-            membersToStore.push(memberObj);
-          });
-        }
-      }
+
 
       this.setStorage(STORAGE_KEYS.TEAMS, teamsToStore);
       this.setStorage(STORAGE_KEYS.MEMBERS, membersToStore);
@@ -381,12 +349,30 @@ class ZinniaStore {
       throw new Error('A team must contain at least one member.');
     }
 
-    // Check duplicate emails
-    const existingMembers = this.getTeamMembers();
+    // Check duplicate emails against Supabase DB if available, fallback to local
     for (const m of members) {
-      const exists = existingMembers.find(em => em.email.toLowerCase() === m.email.toLowerCase());
-      if (exists) {
-        throw new Error(`Email "${m.email}" is already registered.`);
+      const emailLower = m.email.trim().toLowerCase();
+      if (isSupabaseConfigured()) {
+        try {
+          const { data: existingDb } = await supabase
+            .from('team_members')
+            .select('id, email, name')
+            .eq('email', emailLower);
+
+          if (existingDb && existingDb.length > 0) {
+            throw new Error(`Email "${m.email}" is already registered by ${existingDb[0].name || 'another participant'}.`);
+          }
+        } catch (dbErr: any) {
+          if (dbErr.message && dbErr.message.includes('already registered')) {
+            throw dbErr;
+          }
+        }
+      } else {
+        const existingMembers = this.getTeamMembers();
+        const exists = existingMembers.find(em => em.email.toLowerCase() === emailLower);
+        if (exists) {
+          throw new Error(`Email "${m.email}" is already registered.`);
+        }
       }
     }
 
@@ -503,16 +489,23 @@ class ZinniaStore {
 
     if (isSupabaseConfigured()) {
       try {
-        await supabase.from('teams').insert([{
+        const { error: tErr } = await supabase.from('teams').insert([{
           team_id: newTeam.team_id,
           team_name: newTeam.team_name,
           college: newTeam.college,
           department: newTeam.department,
           year: newTeam.year,
           registered_events: newTeam.registered_events,
-          payment: false,
           payment_status: 'AWAITING_PAYMENT'
         }]);
+
+        if (tErr) {
+          console.error('Supabase team insert error:', tErr);
+          if (tErr.message && (tErr.message.includes('row-level security') || tErr.code === '42501')) {
+            throw new Error('Database write blocked by Row Level Security (RLS). Please run fix_supabase_schema_and_rls.sql in Supabase SQL Editor.');
+          }
+          throw new Error(`Database error: ${tErr.message}`);
+        }
 
         const memberRows = newMembers.map(m => ({
           id: m.id,
@@ -521,23 +514,26 @@ class ZinniaStore {
           email: m.email,
           phone: m.phone,
           is_leader: m.is_leader,
-          passport_token: m.passport_token,
-          passport_issued_at: m.passport_issued_at,
-          food_collected: false
+          passport_token: m.passport_token
         }));
-        await supabase.from('team_members').insert(memberRows);
+        const { error: mErr } = await supabase.from('team_members').insert(memberRows);
+        if (mErr) {
+          console.error('Supabase team_members insert error:', mErr);
+        }
 
         if (teamData.registered_events.length > 0) {
           const regRows = teamData.registered_events.map(eventId => ({
             team_id: newTeam.team_id,
             event_id: eventId,
-            team_name: newTeam.team_name,
-            registered_at: now
+            team_name: newTeam.team_name
           }));
           await supabase.from('event_registrations').insert(regRows);
         }
-      } catch (e) {
+      } catch (e: any) {
         console.warn('Supabase team registration error:', e);
+        if (e.message && e.message.includes('Row Level Security')) {
+          throw e;
+        }
       }
     }
 

@@ -23,8 +23,7 @@ class PaymentController:
             return jsonify({"success": False, "error_code": "TEAM_NOT_FOUND", "message": "Missing team_id parameter."}), 400
 
         result = get_payment_status_service(team_id)
-        status_code = 200 if result.get("success") else 404
-        return jsonify(result), status_code
+        return jsonify(result), 200
 
     @staticmethod
     def submit_payment():

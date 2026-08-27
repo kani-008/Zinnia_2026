@@ -23,6 +23,13 @@ class RegistrationController:
         if not data or not isinstance(data, dict):
             return jsonify({"success": False, "error_code": "INVALID_BODY", "message": "Invalid JSON body."}), 400
 
-        result = register_team_service(data)
-        status_code = 201 if result.get("success") else 400
-        return jsonify(result), status_code
+        try:
+            result = register_team_service(data)
+            return jsonify(result), 200
+        except Exception as e:
+            print(f"[Registration Error] Exception during registration endpoint: {e}")
+            return jsonify({
+                "success": False,
+                "error_code": "REGISTRATION_ERROR",
+                "message": f"Server encountered an error processing registration: {str(e)}"
+            }), 200
