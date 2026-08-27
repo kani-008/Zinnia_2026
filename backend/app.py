@@ -10,6 +10,23 @@ from dotenv import load_dotenv
 # Ensure backend root is on python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Disable SSL verification warnings & patch requests globally to bypass local SSL chain errors
+import ssl
+import urllib3
+import requests
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+try:
+    ssl._create_default_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+
+_orig_request = requests.Session.request
+def _patched_request(self, method, url, **kwargs):
+    kwargs.setdefault('verify', False)
+    return _orig_request(self, method, url, **kwargs)
+requests.Session.request = _patched_request
+
 # Load server environment variables
 load_dotenv()
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))

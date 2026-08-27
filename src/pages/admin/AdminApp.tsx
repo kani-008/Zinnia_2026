@@ -1,24 +1,27 @@
 import React from 'react';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
-import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminSidebar } from '../../components/admin/AdminSidebar';
 import { AdminDashboardPage } from './AdminDashboard';
 import { ParticipantsListPage } from './ParticipantsList';
+import { PaymentVerificationPage } from './PaymentVerification';
+import { EntryCheckinPage } from './EntryCheckin';
+import { FoodCheckinPage } from './FoodCheckin';
+import { EventCheckinPage } from './EventCheckin';
 import { QRScannerPage } from './QRScanner';
+import { CertificateAdminPage } from './CertificateAdmin';
+import { ReportsExportPage } from './ReportsExport';
 import { CheckInHistoryPage } from './CheckInHistory';
 import { store } from '../../services/store';
-import { Shield, Zap, Lock } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
   const [password, setPassword] = React.useState('');
   const [role, setRole] = React.useState(store.getAdminRole());
   const [error, setError] = React.useState('');
-  const [isAuthenticated, setIsAuthenticated] = React.useState(true);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     store.setAdminRole(role as any);
-    setIsAuthenticated(true);
   };
 
   return (
@@ -79,7 +82,7 @@ export const AdminLoginPage: React.FC = () => {
 
         <div className="text-center pt-2">
           <Link to="/" className="text-slate-500 hover:text-slate-300 text-[11px] font-mono">
-            ← Return to Public Website
+            Return to Public Website
           </Link>
         </div>
       </div>
@@ -90,21 +93,24 @@ export const AdminLoginPage: React.FC = () => {
 export const AdminApp: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#040711] text-slate-100 flex flex-col font-mono">
-      {/* Top Sticky Admin Navigation Bar */}
       <AdminSidebar />
-
-      {/* Admin Content View */}
       <main className="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-6">
         <Routes>
           <Route path="/" element={<AdminDashboardPage />} />
           <Route path="/dashboard" element={<AdminDashboardPage />} />
           <Route path="/participants" element={<ParticipantsListPage />} />
+          <Route path="/payments" element={<PaymentVerificationPage />} />
+          <Route path="/entry" element={<EntryCheckinPage />} />
+          <Route path="/food" element={<FoodCheckinPage />} />
+          <Route path="/events" element={<EventCheckinPage />} />
           <Route path="/scan" element={<QRScannerPage />} />
           <Route path="/scanner" element={<QRScannerPage />} />
+          <Route path="/certificates" element={<CertificateAdminPage />} />
+          <Route path="/reports" element={<ReportsExportPage />} />
           <Route path="/check-ins" element={<CheckInHistoryPage />} />
           <Route path="/history" element={<CheckInHistoryPage />} />
           <Route path="/login" element={<AdminLoginPage />} />
-          <Route path="*" element={<Navigate to="/admin" replace />} />
+          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Routes>
       </main>
     </div>

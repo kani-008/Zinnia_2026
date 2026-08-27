@@ -1,23 +1,9 @@
 -- ==============================================================================
--- ZINNIA 2026 — SUPABASE DATABASE SCHEMA & RLS FIX
+-- ZINNIA 2026 — SUPABASE DATABASE SCHEMA, RLS & FOREIGN KEY CASCADE FIX
 -- Run this script in your Supabase SQL Editor (https://supabase.com/dashboard)
--- to create all required tables and disable RLS blocking policies.
 -- ==============================================================================
 
--- 1. DISABLE ROW LEVEL SECURITY (RLS) ON ALL TABLES
--- (This permits direct API inserts, updates, and selects from anon & backend keys)
-
-ALTER TABLE IF EXISTS public.teams DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.team_members DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.event_registrations DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.team_payments DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.attendance DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.events DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.admin_profiles DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.hand_bands DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.passport_dispatch DISABLE ROW LEVEL SECURITY;
-
--- 2. CREATE / VERIFY ALL REQUIRED TABLES
+-- 1. CREATE / VERIFY ALL REQUIRED TABLES WITH CASCADE CONSTRAINTS
 
 CREATE TABLE IF NOT EXISTS public.teams (
     team_id VARCHAR(64) PRIMARY KEY,
@@ -102,28 +88,59 @@ CREATE TABLE IF NOT EXISTS public.passport_dispatch (
     sent_at TIMESTAMPTZ
 );
 
--- 3. PERMISSIVE RLS POLICIES (FALLBACK IF RLS RE-ENABLED)
+-- 2. ENSURE ON DELETE CASCADE CONSTRAINTS ON EXISTING TABLES
 
-DO $$ 
+DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'teams') THEN
-        DROP POLICY IF EXISTS "Allow public all teams" ON public.teams;
-        CREATE POLICY "Allow public all teams" ON public.teams FOR ALL USING (true) WITH CHECK (true);
+    -- Update team_members foreign key
+    IF EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'team_members_team_id_fkey') THEN
+        ALTER TABLE public.team_members DROP CONSTRAINT team_members_team_id_fkey;
     END IF;
-    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'team_members') THEN
-        DROP POLICY IF EXISTS "Allow public all team_members" ON public.team_members;
-        CREATE POLICY "Allow public all team_members" ON public.team_members FOR ALL USING (true) WITH CHECK (true);
+    ALTER TABLE public.team_members ADD CONSTRAINT team_members_team_id_fkey 
+        FOREIGN KEY (team_id) REFERENCES public.teams(team_id) ON DELETE CASCADE;
+
+    -- Update event_registrations foreign key
+    IF EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'event_registrations_team_id_fkey') THEN
+        ALTER TABLE public.event_registrations DROP CONSTRAINT event_registrations_team_id_fkey;
     END IF;
-    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'event_registrations') THEN
-        DROP POLICY IF EXISTS "Allow public all event_registrations" ON public.event_registrations;
-        CREATE POLICY "Allow public all event_registrations" ON public.event_registrations FOR ALL USING (true) WITH CHECK (true);
+    ALTER TABLE public.event_registrations ADD CONSTRAINT event_registrations_team_id_fkey 
+        FOREIGN KEY (team_id) REFERENCES public.teams(team_id) ON DELETE CASCADE;
+
+    -- Update team_payments foreign key
+    IF EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'team_payments_team_id_fkey') THEN
+        ALTER TABLE public.team_payments DROP CONSTRAINT team_payments_team_id_fkey;
     END IF;
-    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'team_payments') THEN
-        DROP POLICY IF EXISTS "Allow public all team_payments" ON public.team_payments;
-        CREATE POLICY "Allow public all team_payments" ON public.team_payments FOR ALL USING (true) WITH CHECK (true);
-    END IF;
-    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'attendance') THEN
-        DROP POLICY IF EXISTS "Allow public all attendance" ON public.attendance;
-        CREATE POLICY "Allow public all attendance" ON public.attendance FOR ALL USING (true) WITH CHECK (true);
-    END IF;
+    ALTER TABLE public.team_payments ADD CONSTRAINT team_payments_team_id_fkey 
+        FOREIGN KEY (team_id) REFERENCES public.teams(team_id) ON DELETE CASCADE;
 END $$;
+
+-- 3. PERMISSIVE RLS POLICIES FOR ALL OPERATIONS (SELECT, INSERT, UPDATE, DELETE)
+
+ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.event_registrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.team_payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.hand_bands ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public all teams" ON public.teams;
+CREATE POLICY "Allow public all teams" ON public.teams FOR ALL TO public USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public all team_members" ON public.team_members;
+CREATE POLICY "Allow public all team_members" ON public.team_members FOR ALL TO public USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public all event_registrations" ON public.event_registrations;
+CREATE POLICY "Allow public all event_registrations" ON public.event_registrations FOR ALL TO public USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public all team_payments" ON public.team_payments;
+CREATE POLICY "Allow public all team_payments" ON public.team_payments FOR ALL TO public USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public all attendance" ON public.attendance;
+CREATE POLICY "Allow public all attendance" ON public.attendance FOR ALL TO public USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public all hand_bands" ON public.hand_bands;
+CREATE POLICY "Allow public all hand_bands" ON public.hand_bands FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- Grant full table access permissions to anon, authenticated, and service_role
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, postgres, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, postgres, service_role;

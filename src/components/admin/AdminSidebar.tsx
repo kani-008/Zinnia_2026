@@ -3,17 +3,20 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { store } from '../../services/store';
 import { AdminRole } from '@packages/types/src';
 import { 
-  LayoutDashboard, 
   Users, 
   QrCode, 
   History, 
   LogOut, 
   ArrowLeft, 
   Zap, 
-  ShieldCheck, 
-  ChevronRight,
   Menu,
-  X
+  X,
+  LayoutDashboard,
+  CreditCard,
+  DoorOpen,
+  Utensils,
+  Award,
+  FileSpreadsheet
 } from 'lucide-react';
 
 export const AdminSidebar: React.FC = () => {
@@ -33,11 +36,22 @@ export const AdminSidebar: React.FC = () => {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-    { name: 'Participants', path: '/admin/participants', icon: Users },
-    { name: 'Scan QR', path: '/admin/scan', icon: QrCode },
-    { name: 'Check-In History', path: '/admin/check-ins', icon: History }
+    { name: 'Dashboard', path: '/admin/dashboard', aliases: ['/admin'], icon: LayoutDashboard },
+    { name: 'Payments', path: '/admin/payments', aliases: [], icon: CreditCard },
+    { name: 'Gate Entry', path: '/admin/entry', aliases: [], icon: DoorOpen },
+    { name: 'Food Counter', path: '/admin/food', aliases: [], icon: Utensils },
+    { name: 'Events', path: '/admin/events', aliases: [], icon: Zap },
+    { name: 'Participants', path: '/admin/participants', aliases: [], icon: Users },
+    { name: 'Scan QR', path: '/admin/scan', aliases: ['/admin/scanner'], icon: QrCode },
+    { name: 'Certs & Prizes', path: '/admin/certificates', aliases: [], icon: Award },
+    { name: 'Reports', path: '/admin/reports', aliases: [], icon: FileSpreadsheet }
   ];
+
+  const isActive = (itemPath: string, aliases: string[]) => {
+    if (location.pathname === itemPath) return true;
+    if (aliases.includes(location.pathname)) return true;
+    return false;
+  };
 
   return (
     <header className="bg-[#050914] border-b border-slate-800 sticky top-0 z-50 font-mono text-xs shadow-xl">
@@ -68,17 +82,17 @@ export const AdminSidebar: React.FC = () => {
         </div>
 
         {/* Desktop Controls: Role Selector & Navigation & Logout */}
-        <div className="hidden lg:flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-3">
           {/* Main Navigation Links */}
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center gap-1 overflow-x-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const active = location.pathname === item.path || (item.path === '/admin' && location.pathname === '/admin/dashboard');
+              const active = isActive(item.path, item.aliases);
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-3 py-1.5 rounded flex items-center gap-2 font-bold transition-all ${
+                  className={`px-2.5 py-1.5 rounded flex items-center gap-1.5 font-bold transition-all whitespace-nowrap ${
                     active
                       ? 'bg-cyan-950 text-cyan-300 border border-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.2)]'
                       : 'text-slate-400 hover:text-white hover:bg-slate-900 border border-transparent'
@@ -91,15 +105,15 @@ export const AdminSidebar: React.FC = () => {
             })}
           </nav>
 
-          <div className="h-5 w-px bg-slate-800" />
+          <div className="h-5 w-px bg-slate-800 shrink-0" />
 
           {/* Role Selector */}
-          <div className="flex items-center gap-2 font-mono text-xs">
-            <span className="text-slate-400 font-bold">ROLE:</span>
+          <div className="flex items-center gap-2 font-mono text-xs shrink-0">
+            <span className="text-slate-400 font-bold hidden xl:inline">ROLE:</span>
             <select
               value={role}
               onChange={(e) => handleRoleChange(e.target.value as AdminRole)}
-              className="bg-[#040711] border border-cyan-500/60 text-cyan-300 font-bold px-2.5 py-1 rounded focus:outline-none focus:border-cyan-400 text-xs"
+              className="bg-[#040711] border border-cyan-500/60 text-cyan-300 font-bold px-2 py-1 rounded focus:outline-none focus:border-cyan-400 text-xs cursor-pointer"
             >
               <option value="SUPER_ADMIN">SUPER_ADMIN</option>
               <option value="ENTRY_STAFF">ENTRY_STAFF</option>
@@ -111,18 +125,18 @@ export const AdminSidebar: React.FC = () => {
 
           <button
             onClick={handleLogout}
-            className="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900 transition-colors flex items-center gap-1 font-bold"
+            className="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900 transition-colors flex items-center gap-1 font-bold shrink-0 cursor-pointer"
             title="Logout Admin Session"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>LOGOUT</span>
+            <span className="hidden xl:inline">LOGOUT</span>
           </button>
         </div>
 
         {/* Mobile Toggle Button */}
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="lg:hidden p-2 rounded bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
+          className="lg:hidden p-2 rounded bg-slate-900 border border-slate-800 text-slate-300 hover:text-white cursor-pointer"
         >
           {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -134,7 +148,7 @@ export const AdminSidebar: React.FC = () => {
           <div className="flex flex-col gap-1.5">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const active = location.pathname === item.path || (item.path === '/admin' && location.pathname === '/admin/dashboard');
+              const active = isActive(item.path, item.aliases);
               return (
                 <Link
                   key={item.path}
@@ -179,3 +193,5 @@ export const AdminSidebar: React.FC = () => {
     </header>
   );
 };
+
+export default AdminSidebar;

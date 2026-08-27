@@ -43,9 +43,9 @@ export const ParticipantsListPage: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to remove participant ${name}?`)) {
-      store.deleteParticipant(id);
+      await store.deleteParticipant(id);
       loadParticipants();
     }
   };
