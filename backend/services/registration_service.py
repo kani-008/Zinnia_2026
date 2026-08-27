@@ -13,12 +13,21 @@ import requests
 from typing import Dict, Any, List, Tuple
 from services.passport_service import get_headers, SUPABASE_URL
 
+OFFICIAL_EVENT_REGISTRY = {
+    "msn-sys-recovery": {"id": "msn-sys-recovery", "code": "MSN-01", "mission_name": "Operation: System Recovery", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Cyber Lab 01 (Newton Hall)", "schedule_time": "10:00 AM - 10:45 AM"},
+    "msn-oracle": {"id": "msn-oracle", "code": "MSN-02", "mission_name": "Operation: ORACLE", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "AI Research Arena", "schedule_time": "11:15 AM - 12:15 PM"},
+    "msn-broken-records": {"id": "msn-broken-records", "code": "MSN-03", "mission_name": "Operation: Broken Records", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Database Systems Lab", "schedule_time": "12:30 PM - 01:30 PM"},
+    "msn-infinity-protocol": {"id": "msn-infinity-protocol", "code": "MSN-04", "mission_name": "Operation: Infinity Protocol", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Main Auditorium Stage", "schedule_time": "02:00 PM - 03:30 PM", "is_single_event_only": True},
+    "msn-paper-presentation": {"id": "msn-paper-presentation", "code": "MSN-05", "mission_name": "Operation: Paper Matrix", "team_size_min": 1, "team_size_max": 3, "status": "AVAILABLE", "registration_fee": 150, "venue": "Seminar Hall A", "schedule_time": "10:00 AM - 01:00 PM"},
+    "msn-web-nexus": {"id": "msn-web-nexus", "code": "MSN-06", "mission_name": "Operation: Web Nexus", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Web Technology Lab", "schedule_time": "11:00 AM - 12:30 PM"},
+    "msn-time-heist": {"id": "msn-time-heist", "code": "MSN-07", "mission_name": "Operation: Time Heist", "team_size_min": 2, "team_size_max": 3, "status": "AVAILABLE", "registration_fee": 150, "venue": "Campus Central Grounds", "schedule_time": "01:30 PM - 03:00 PM"},
+    "msn-game-grid": {"id": "msn-game-grid", "code": "MSN-08", "mission_name": "Operation: Game Grid", "team_size_min": 1, "team_size_max": 4, "status": "AVAILABLE", "registration_fee": 150, "venue": "eSports Lounge", "schedule_time": "02:00 PM - 04:00 PM"},
+    "msn-riddle-sphere": {"id": "msn-riddle-sphere", "code": "MSN-09", "mission_name": "Operation: Riddle Sphere", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Hall B2", "schedule_time": "10:30 AM - 11:30 AM"}
+}
+
 # Default Symposium Events Registry
 FALLBACK_EVENTS = {
-    "msn-sys-recovery": {"id": "msn-sys-recovery", "mission_name": "Operation: System Recovery", "team_size_min": 1, "team_size_max": 2, "registration_fee": 150, "status": "AVAILABLE"},
-    "msn-oracle": {"id": "msn-oracle", "mission_name": "Operation: ORACLE", "team_size_min": 1, "team_size_max": 2, "registration_fee": 150, "status": "AVAILABLE"},
-    "msn-broken-records": {"id": "msn-broken-records", "mission_name": "Operation: Broken Records", "team_size_min": 1, "team_size_max": 2, "registration_fee": 150, "status": "AVAILABLE"},
-    "msn-infinity-protocol": {"id": "msn-infinity-protocol", "mission_name": "Operation: Infinity Protocol", "team_size_min": 2, "team_size_max": 3, "registration_fee": 300, "is_single_event_only": True, "status": "AVAILABLE"},
+    **OFFICIAL_EVENT_REGISTRY,
     "msn-mission-control": {"id": "msn-mission-control", "mission_name": "Operation: Mission Control", "team_size_min": 1, "team_size_max": 2, "registration_fee": 150, "is_single_event_only": True, "status": "AVAILABLE"},
     "msn-borderland-gce": {"id": "msn-borderland-gce", "mission_name": "Borderland at GCE", "team_size_min": 2, "team_size_max": 4, "registration_fee": 200, "status": "AVAILABLE"},
     "msn-think-strike-win": {"id": "msn-think-strike-win", "mission_name": "Think, Strike and Win", "team_size_min": 2, "team_size_max": 3, "registration_fee": 150, "status": "AVAILABLE"},
@@ -64,45 +73,68 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
         # 0. Basic Payload Validation
         team_name = data.get("team_name", "").strip()
         college = data.get("college", "").strip()
-        department = data.get("department", "").strip()
-        year = data.get("year", "").strip()
+        department = data.get("department", "CSE").strip()
+        year = str(data.get("year", "III")).strip()
         selected_event_ids = data.get("selected_event_ids", [])
         members = data.get("members", [])
 
         if not team_name:
-            return {"success": False, "error_code": "MISSING_PARAM", "message": "Team name is required."}
+            return {"success": False, "error_code": "INVALID_TEAM_NAME", "message": "Team name is required."}
         if not college:
-            return {"success": False, "error_code": "MISSING_PARAM", "message": "College / Institution name is required."}
-        if not selected_event_ids or len(selected_event_ids) == 0:
-            return {"success": False, "error_code": "MISSING_PARAM", "message": "At least one symposium event must be selected."}
-        if not members or len(members) == 0:
-            return {"success": False, "error_code": "MISSING_PARAM", "message": "At least one team member is required."}
+            return {"success": False, "error_code": "INVALID_COLLEGE", "message": "College name is required."}
+        if not members or not isinstance(members, list) or len(members) == 0:
+            return {"success": False, "error_code": "INVALID_TEAM_SIZE", "message": "At least one team member is required."}
+        if not selected_event_ids or not isinstance(selected_event_ids, list):
+            return {"success": False, "error_code": "EVENT_NOT_FOUND", "message": "At least one event must be selected."}
 
-        # Check Event constraints
-        events_dict = FALLBACK_EVENTS
+        if len(selected_event_ids) != len(set(selected_event_ids)):
+            return {"success": False, "error_code": "DUPLICATE_EVENT", "message": "Duplicate events selected in registration."}
+
+        member_emails = [m.get("email", "").strip().lower() for m in members if m.get("email")]
+        if len(member_emails) != len(set(member_emails)):
+            return {"success": False, "error_code": "DUPLICATE_EMAIL", "message": "Duplicate email addresses in member list."}
+
+        events_dict = FALLBACK_EVENTS.copy()
         ok_ev, db_evs = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/events?select=*", headers)
         if ok_ev and isinstance(db_evs, list) and len(db_evs) > 0:
-            events_dict = {ev["id"]: ev for ev in db_evs if "id" in ev}
+            events_dict.update({ev["id"]: ev for ev in db_evs if "id" in ev})
 
+        expected_amount = 0
         validated_events = []
         has_single_event_only = False
-        expected_amount = 0
 
-        for event_id in selected_event_ids:
-            event_obj = events_dict.get(event_id)
+        for ev_id in selected_event_ids:
+            event_obj = events_dict.get(ev_id)
             if not event_obj:
                 return {
                     "success": False,
-                    "error_code": "INVALID_EVENT",
-                    "message": f"Event '{event_id}' does not exist or is currently unavailable."
+                    "error_code": "EVENT_NOT_FOUND",
+                    "message": f"Event '{ev_id}' does not exist in symposium registry."
                 }
-            if event_obj.get("status") == "FULL":
+            status = str(event_obj.get("status", "AVAILABLE")).upper()
+            if status == "FULL":
                 return {
                     "success": False,
                     "error_code": "EVENT_FULL",
                     "message": f"Registration for '{event_obj.get('mission_name')}' is full."
                 }
-            
+            if status != "AVAILABLE":
+                return {
+                    "success": False,
+                    "error_code": "EVENT_NOT_AVAILABLE",
+                    "message": f"Event '{event_obj.get('mission_name')}' is currently {status} and not open for registration."
+                }
+
+            min_size = int(event_obj.get("team_size_min", 1))
+            max_size = int(event_obj.get("team_size_max", 10))
+            member_count = len(members)
+            if member_count < min_size or member_count > max_size:
+                return {
+                    "success": False,
+                    "error_code": "INVALID_TEAM_SIZE",
+                    "message": f"Event '{event_obj.get('mission_name')}' requires team size between {min_size} and {max_size} (provided: {member_count})."
+                }
+
             if event_obj.get("is_single_event_only"):
                 has_single_event_only = True
 
@@ -117,8 +149,6 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
                 "message": "One of the selected events is restricted to single-event participation only."
             }
 
-        # Check member emails and duplicate checks
-        member_emails = [m.get("email", "").strip().lower() for m in members if m.get("email")]
         for email in member_emails:
             ok, res = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/team_members?email=eq.{email}&select=id,name", headers)
             if ok and isinstance(res, list) and len(res) > 0:
@@ -129,7 +159,6 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
                     "message": f"Email '{email}' is already registered by attendee '{existing.get('name')}'."
                 }
 
-        # STEP 1 — CREATE TEAM IN SUPABASE DB
         team_id = generate_team_id()
         team_row = {
             "team_id": team_id,
@@ -156,7 +185,6 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
                 "message": f"Failed to store registration in database: {err_text}"
             }
 
-        # STEP 2 — INSERT TEAM PAYMENTS IN SUPABASE DB
         payment_row = {
             "team_id": team_id,
             "expected_amount": expected_amount,
@@ -166,7 +194,6 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
         }
         safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_payments", headers, payment_row)
 
-        # STEP 3 — CREATE EVENT REGISTRATIONS IN SUPABASE DB
         event_reg_rows = [
             {
                 "team_id": team_id,
@@ -178,7 +205,6 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
         if event_reg_rows:
             safe_supabase_post(f"{SUPABASE_URL}/rest/v1/event_registrations", headers, event_reg_rows)
 
-        # STEP 4 — CREATE TEAM MEMBERS IN SUPABASE DB
         created_members = []
         leader_assigned = False
 
@@ -208,13 +234,15 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
 
         safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, created_members)
 
-        # STEP 5 — AUTO DISPATCH PASSPORTS IF CONFIGURED
         dispatch_result = None
-        try:
-            from services.passport_service import trigger_passport_dispatch
-            dispatch_result = trigger_passport_dispatch(team_id)
-        except Exception as e:
-            print(f"[Passport Dispatch Warning] {e}")
+        if expected_amount == 0:
+            try:
+                from services.passport_service import trigger_passport_dispatch
+                requests.patch(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}", headers=headers, json={"payment_status": "VERIFIED"})
+                requests.patch(f"{SUPABASE_URL}/rest/v1/team_payments?team_id=eq.{team_id}", headers=headers, json={"payment_status": "VERIFIED"})
+                dispatch_result = trigger_passport_dispatch(team_id)
+            except Exception as e:
+                print(f"[Registration Dispatch Notice] Free auto-dispatch notice: {e}")
 
         return {
             "success": True,
@@ -223,7 +251,7 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
             "members": created_members,
             "registered_events": selected_event_ids,
             "expected_amount": expected_amount,
-            "payment_status": "AWAITING_PAYMENT",
+            "payment_status": "AWAITING_PAYMENT" if expected_amount > 0 else "VERIFIED",
             "dispatch_status": bool(dispatch_result)
         }
 
