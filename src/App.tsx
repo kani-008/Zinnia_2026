@@ -1,6 +1,5 @@
 import React from 'react';
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { WebsiteHomePage } from './pages/Home';
 import { WebsiteEventsPage } from './pages/Events';
 import { WebsiteRegisterPage } from './pages/Register';
@@ -8,10 +7,9 @@ import { WebsitePaymentPage } from './pages/Payment';
 import { WebsitePassportPage } from './pages/Passport';
 import { WebsiteAssistantPage } from './pages/Assistant';
 import { WebsiteStoryPage } from './pages/Story';
-import { WebsiteApp } from './zinnia_website/WebsiteApp';
 import { AdminApp } from './pages/admin/AdminApp';
 import { LiquidGlassHover } from './components/canvas/LiquidGlassHover';
- */
+
 export function App() {
   return (
     <div className="relative w-screen min-h-screen overflow-x-hidden bg-[#0D0D0F] scroll-smooth">
@@ -28,7 +26,6 @@ export function App() {
         <Route path="/passport" element={<WebsitePassportPage />} />
         <Route path="/assistant" element={<WebsiteAssistantPage />} />
         <Route path="/story" element={<WebsiteStoryPage />} />
-        <Route path="/*" element={<WebsiteApp />} />
       </Routes>
     </div>
   );

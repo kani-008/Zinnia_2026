@@ -34,7 +34,6 @@ FALLBACK_EVENTS = {
     "msn-plot-twist": {"id": "msn-plot-twist", "mission_name": "Plot Twist", "team_size_min": 1, "team_size_max": 2, "registration_fee": 100, "status": "AVAILABLE"},
     "msn-short-film": {"id": "msn-short-film", "mission_name": "Short Film", "team_size_min": 1, "team_size_max": 5, "registration_fee": 150, "status": "AVAILABLE"}
 }
-}
 
 def generate_team_id() -> str:
     """Generate a unique human-friendly team ID in format ZIN-2026-XXXX."""
