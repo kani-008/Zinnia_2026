@@ -14,7 +14,10 @@ import {
   Cpu, 
   Sparkles,
   Phone,
-  Mail
+  Mail,
+  Building2,
+  GraduationCap,
+  Calendar
 } from 'lucide-react';
 
 interface MemberInput {
@@ -22,6 +25,76 @@ interface MemberInput {
   email: string;
   phone: string;
 }
+
+interface SpiderIconProps {
+  isFilled?: boolean;
+  color?: string;
+}
+
+const SpiderIcon: React.FC<SpiderIconProps> = ({ isFilled, color }) => {
+  const iconColor = color || (isFilled ? '#3CE7FF' : undefined);
+  return (
+    <div
+      className={`absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-all flex items-center justify-center z-20 ${
+        isFilled
+          ? 'opacity-95'
+          : 'opacity-65 group-focus-within:opacity-100 group-focus-within:text-[#3CE7FF] text-[#A8A8AC]'
+      }`}
+      style={{ color: iconColor }}
+    >
+      <div className="animate-spider-always-move">
+        <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="2" x2="12" y2="7" strokeWidth="1.5" strokeDasharray="1 1" />
+          <circle cx="12" cy="10" r="2.2" fill="currentColor" fillOpacity="0.3" />
+          <circle cx="12" cy="15" r="3.2" fill="currentColor" fillOpacity="0.3" />
+          <path d="M10 9L5 6" />
+          <path d="M14 9l5-3" />
+          <path d="M9.5 11L4 11" />
+          <path d="M14.5 11l5.5 0" />
+          <path d="M9.5 13L4.5 15.5" />
+          <path d="M14.5 13l5 2.5" />
+          <path d="M10 17l-3 4" />
+          <path d="M14 17l3 4" />
+        </svg>
+      </div>
+    </div>
+  );
+};
+
+interface SpiderWebOverlayProps {
+  color?: string;
+}
+
+const SpiderWebOverlay: React.FC<SpiderWebOverlayProps> = ({ color = '#3CE7FF' }) => (
+  <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden animate-web-shoot-left opacity-100 drop-shadow-[0_0_8px_rgba(60,231,255,0.4)]" style={{ color }}>
+    <svg className="w-full h-full" viewBox="0 0 400 50" preserveAspectRatio="none" fill="none" stroke="currentColor">
+      {/* Straight Radial Spokes radiating from Right Spider (380, 25) */}
+      <line x1="380" y1="25" x2="0" y2="-15" strokeWidth="3.2" stroke="currentColor" className="animate-web-flow-fast" />
+      <line x1="380" y1="25" x2="0" y2="5" strokeWidth="2.8" stroke="currentColor" />
+      <line x1="380" y1="25" x2="0" y2="25" strokeWidth="3.6" stroke="currentColor" className="animate-web-flow-fast" />
+      <line x1="380" y1="25" x2="0" y2="45" strokeWidth="2.8" stroke="currentColor" />
+      <line x1="380" y1="25" x2="0" y2="65" strokeWidth="3.2" stroke="currentColor" className="animate-web-flow-fast" />
+      <line x1="380" y1="25" x2="180" y2="-15" strokeWidth="2.5" stroke="currentColor" />
+      <line x1="380" y1="25" x2="180" y2="65" strokeWidth="2.5" stroke="currentColor" />
+
+      {/* Concentric Scalloped Silk Arcs sagging inward toward (380, 25) */}
+      <path d="M 345,18 Q 355,22 345,25 Q 355,28 345,32" strokeWidth="2.8" stroke="currentColor" />
+      <path d="M 300,10 Q 320,18 300,25 Q 320,32 300,40" strokeWidth="3.2" stroke="currentColor" className="animate-web-flow-fast" />
+      <path d="M 240,0 Q 268,12 240,25 Q 268,38 240,50" strokeWidth="3.2" stroke="currentColor" />
+      <path d="M 170,-10 Q 205,8 170,25 Q 205,42 170,60" strokeWidth="3.4" stroke="currentColor" className="animate-web-flow-fast" />
+      <path d="M 90,-15 Q 135,5 90,25 Q 135,45 90,65" strokeWidth="3.4" stroke="currentColor" />
+      <path d="M 10,-15 Q 60,5 10,25 Q 60,45 10,65" strokeWidth="3.6" stroke="currentColor" className="animate-web-flow-fast" />
+
+      {/* Intersecting Scalloped Web Joints */}
+      <circle cx="345" cy="25" r="3.2" fill="currentColor" />
+      <circle cx="300" cy="25" r="3.2" fill="currentColor" />
+      <circle cx="240" cy="25" r="3.2" fill="currentColor" />
+      <circle cx="170" cy="25" r="3.2" fill="currentColor" />
+      <circle cx="90" cy="25" r="3.2" fill="currentColor" />
+      <circle cx="10" cy="25" r="3.2" fill="currentColor" />
+    </svg>
+  </div>
+);
 
 export const WebsiteRegisterPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -169,11 +242,11 @@ export const WebsiteRegisterPage: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-transparent text-[#F2F2F0]">
-      {/* 2D Neubrutalist Comic Top Navigation Bar (Theme 2 Header) */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3 bg-[#0D0D0F]/80 backdrop-blur-md border-b-2 border-[#3A3A3E]">
+      {/* 2D Neubrutalist Comic Top Floating Header (Background Displayed Across Entire Area) */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-4 bg-transparent border-none pointer-events-none">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           {/* Left: Illustrated ZINNIA '26 Comic Logo Badge matching Theme 2 */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pointer-events-auto">
             <Link
               to="/"
               onClick={() => audioManager.playNodeEngage()}
@@ -204,7 +277,7 @@ export const WebsiteRegisterPage: React.FC = () => {
           <Link
             to="/"
             onClick={() => audioManager.playNodeEngage()}
-            className="px-3.5 py-1.5 sm:px-5 sm:py-2 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] border-[2.5px] border-[#F5D90A] shadow-[3.5px_3.5px_0px_#8A7400] hover:shadow-[4.5px_4.5px_0px_#8A7400] font-comic font-black text-xs sm:text-sm tracking-wider uppercase transition-all flex items-center gap-2 active:translate-x-0.5 active:translate-y-0.5 cursor-pointer rounded-none"
+            className="pointer-events-auto px-3.5 py-1.5 sm:px-5 sm:py-2 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] border-[2.5px] border-[#F5D90A] shadow-[3.5px_3.5px_0px_#8A7400] hover:shadow-[4.5px_4.5px_0px_#8A7400] font-comic font-black text-xs sm:text-sm tracking-wider uppercase transition-all flex items-center gap-2 active:translate-x-0.5 active:translate-y-0.5 cursor-pointer rounded-none"
           >
             <ArrowLeft className="w-4 h-4 stroke-[3]" />
             <span>BACK TO HOME</span>
@@ -270,9 +343,9 @@ export const WebsiteRegisterPage: React.FC = () => {
           {/* Technical Events Subsection */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-[#3CE7FF] font-black uppercase text-xs tracking-wider">
-              <Cpu className="w-4 h-4" />
+              <Cpu className="w-4 h-4 text-[#3CE7FF]" />
               <span>TECHNICAL EVENTS</span>
-              <span className="text-[10px] text-[#A8A8AC] font-mono">({techEvents.length} MISSIONS)</span>
+              <span className="text-[10px] text-[#3CE7FF]/80 font-mono">({techEvents.length} MISSIONS)</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {techEvents.map((e) => {
@@ -306,10 +379,10 @@ export const WebsiteRegisterPage: React.FC = () => {
 
           {/* Non-Technical Events Subsection */}
           <div className="space-y-3 pt-2">
-            <div className="flex items-center gap-2 text-[#F5D90A] font-black uppercase text-xs tracking-wider">
-              <Sparkles className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-[#FF3366] font-black uppercase text-xs tracking-wider">
+              <Sparkles className="w-4 h-4 text-[#FF3366]" />
               <span>NON-TECHNICAL EVENTS</span>
-              <span className="text-[10px] text-[#A8A8AC] font-mono">({nonTechEvents.length} MISSIONS)</span>
+              <span className="text-[10px] text-[#FF3366]/80 font-mono">({nonTechEvents.length} MISSIONS)</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {nonTechEvents.map((e) => {
@@ -320,19 +393,19 @@ export const WebsiteRegisterPage: React.FC = () => {
                     onClick={() => handleToggleEvent(e.id)}
                     className={`p-3.5 rounded-2xl border-[2.5px] cursor-pointer flex items-center justify-between gap-2.5 transition-all select-none backdrop-blur-md ${
                       isChecked
-                        ? 'bg-[#F5D90A] border-[#0D0D0F] text-[#0D0D0F] shadow-[4px_4px_0px_#8A7400] font-bold -translate-y-0.5'
-                        : 'bg-[#16161C]/65 border-[#3A3A3E] text-[#F2F2F0] hover:border-[#F5D90A] shadow-[3px_3px_0px_#000000]'
+                        ? 'bg-[#FF3366] border-[#0D0D0F] text-white shadow-[4px_4px_0px_#8A0022] font-bold -translate-y-0.5'
+                        : 'bg-[#16161C]/65 border-[#3A3A3E] text-[#F2F2F0] hover:border-[#FF3366] shadow-[3px_3px_0px_#000000]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
-                      <div className={`w-4 h-4 border-[2px] border-[#0D0D0F] rounded shrink-0 flex items-center justify-center font-black text-[10px] ${isChecked ? 'bg-[#0D0D0F] text-[#F5D90A]' : 'bg-[#1A1A1D]'}`}>
+                      <div className={`w-4 h-4 border-[2px] border-[#0D0D0F] rounded shrink-0 flex items-center justify-center font-black text-[10px] ${isChecked ? 'bg-[#0D0D0F] text-[#FF3366]' : 'bg-[#1A1A1D]'}`}>
                         {isChecked ? '✓' : ''}
                       </div>
                       <span className="truncate text-xs font-mono">
-                        <strong className={isChecked ? 'text-[#0D0D0F] font-black' : 'text-[#F5D90A]'}>[{e.code}]</strong> {e.mission_name}
+                        <strong className={isChecked ? 'text-white font-black' : 'text-[#FF3366]'}>[{e.code}]</strong> {e.mission_name}
                       </span>
                     </div>
-                    <span className={`text-[10px] px-2 py-0.5 border font-mono font-bold shrink-0 rounded ${isChecked ? 'bg-[#0D0D0F] text-[#F5D90A] border-[#0D0D0F]' : 'bg-[#1A1A1D] text-[#A8A8AC] border-[#3A3A3E]'}`}>
+                    <span className={`text-[10px] px-2 py-0.5 border font-mono font-bold shrink-0 rounded ${isChecked ? 'bg-[#0D0D0F] text-[#FF3366] border-[#0D0D0F]' : 'bg-[#1A1A1D] text-[#A8A8AC] border-[#3A3A3E]'}`}>
                       {e.team_size_min}-{e.team_size_max}P
                     </span>
                   </div>
@@ -352,54 +425,110 @@ export const WebsiteRegisterPage: React.FC = () => {
             <label className="block text-[#F2F2F0] font-bold uppercase text-xs">
               TEAM NAME / SQUAD TITLE <span className="text-[#A8A8AC] font-normal">(Optional for solo)</span>
             </label>
-            <input
-              type="text"
-              value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
-              placeholder="e.g. Neural Vanguard / Cyber Phantoms"
-              className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
-            />
+            {(() => {
+              const isFilled = Boolean(teamName && teamName.trim().length > 0);
+              return (
+                <div className="relative group overflow-hidden rounded-xl">
+                  <Users className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none z-20 transition-all ${isFilled ? 'text-[#3CE7FF]' : 'text-[#A8A8AC] group-focus-within:text-[#3CE7FF]'}`} />
+                  {isFilled && <SpiderWebOverlay color="#3CE7FF" />}
+                  <input
+                    type="text"
+                    value={teamName}
+                    onChange={(e) => setTeamName(e.target.value)}
+                    placeholder="e.g. Neural Vanguard / Cyber Phantoms"
+                    className={`w-full pl-10 pr-10 py-3 rounded-xl relative z-10 bg-[#0D0D0F]/90 font-mono font-bold text-xs transition-all outline-none ${
+                      isFilled
+                        ? 'border-[2.5px] border-[#3CE7FF] text-[#3CE7FF] shadow-[3px_3px_0px_#1E8FA3]'
+                        : 'border-[2.5px] border-[#3A3A3E] text-[#F2F2F0] placeholder:text-[#66666E] shadow-[3px_3px_0px_#000000]'
+                    } focus:border-[#3CE7FF] focus:text-[#3CE7FF] focus:shadow-[4.5px_4.5px_0px_#1E8FA3]`}
+                  />
+                  <SpiderIcon isFilled={isFilled} color="#3CE7FF" />
+                </div>
+              );
+            })()}
           </div>
 
           <div className="space-y-1.5">
             <label className="block text-[#F2F2F0] font-bold uppercase text-xs">
               COLLEGE / INSTITUTION NAME <span className="text-[#FF3366]">*</span>
             </label>
-            <input
-              type="text"
-              value={college}
-              onChange={(e) => setCollege(e.target.value)}
-              placeholder="e.g. Government College of Engineering, Erode"
-              className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
-              required
-            />
+            {(() => {
+              const isFilled = Boolean(college && college.trim().length > 0);
+              return (
+                <div className="relative group overflow-hidden rounded-xl">
+                  <Building2 className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none z-20 transition-all ${isFilled ? 'text-[#3CE7FF]' : 'text-[#A8A8AC] group-focus-within:text-[#3CE7FF]'}`} />
+                  {isFilled && <SpiderWebOverlay color="#3CE7FF" />}
+                  <input
+                    type="text"
+                    value={college}
+                    onChange={(e) => setCollege(e.target.value)}
+                    placeholder="e.g. Government College of Engineering, Erode"
+                    className={`w-full pl-10 pr-10 py-3 rounded-xl relative z-10 bg-[#0D0D0F]/90 font-mono font-bold text-xs transition-all outline-none ${
+                      isFilled
+                        ? 'border-[2.5px] border-[#3CE7FF] text-[#3CE7FF] shadow-[3px_3px_0px_#1E8FA3]'
+                        : 'border-[2.5px] border-[#3A3A3E] text-[#F2F2F0] placeholder:text-[#66666E] shadow-[3px_3px_0px_#000000]'
+                    } focus:border-[#3CE7FF] focus:text-[#3CE7FF] focus:shadow-[4.5px_4.5px_0px_#1E8FA3]`}
+                    required
+                  />
+                  <SpiderIcon isFilled={isFilled} color="#3CE7FF" />
+                </div>
+              );
+            })()}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="block text-[#F2F2F0] font-bold uppercase text-xs">DEPARTMENT</label>
-              <input
-                type="text"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
-                required
-              />
+              {(() => {
+                const isFilled = Boolean(department && department.trim().length > 0);
+                return (
+                  <div className="relative group overflow-hidden rounded-xl">
+                    <GraduationCap className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none z-20 transition-all ${isFilled ? 'text-[#3CE7FF]' : 'text-[#A8A8AC] group-focus-within:text-[#3CE7FF]'}`} />
+                    {isFilled && <SpiderWebOverlay color="#3CE7FF" />}
+                    <input
+                      type="text"
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      className={`w-full pl-10 pr-10 py-3 rounded-xl relative z-10 bg-[#0D0D0F]/90 font-mono font-bold text-xs transition-all outline-none ${
+                        isFilled
+                          ? 'border-[2.5px] border-[#3CE7FF] text-[#3CE7FF] shadow-[3px_3px_0px_#1E8FA3]'
+                          : 'border-[2.5px] border-[#3A3A3E] text-[#F2F2F0] placeholder:text-[#66666E] shadow-[3px_3px_0px_#000000]'
+                      } focus:border-[#3CE7FF] focus:text-[#3CE7FF] focus:shadow-[4.5px_4.5px_0px_#1E8FA3]`}
+                      required
+                    />
+                    <SpiderIcon isFilled={isFilled} color="#3CE7FF" />
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="space-y-1.5">
               <label className="block text-[#F2F2F0] font-bold uppercase text-xs">ACADEMIC YEAR</label>
-              <select
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all cursor-pointer"
-              >
-                <option value="I">1st Year</option>
-                <option value="II">2nd Year</option>
-                <option value="III">3rd Year</option>
-                <option value="IV">4th Year</option>
-                <option value="PG">Postgraduate</option>
-              </select>
+              {(() => {
+                const isFilled = Boolean(year && year.trim().length > 0);
+                return (
+                  <div className="relative group overflow-hidden rounded-xl">
+                    <Calendar className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none z-20 transition-all ${isFilled ? 'text-[#3CE7FF]' : 'text-[#A8A8AC] group-focus-within:text-[#3CE7FF]'}`} />
+                    {isFilled && <SpiderWebOverlay color="#3CE7FF" />}
+                    <select
+                      value={year}
+                      onChange={(e) => setYear(e.target.value)}
+                      className={`w-full pl-10 pr-10 py-3 rounded-xl relative z-10 bg-[#0D0D0F]/90 font-mono font-bold text-xs transition-all cursor-pointer appearance-none outline-none ${
+                        isFilled
+                          ? 'border-[2.5px] border-[#3CE7FF] text-[#3CE7FF] shadow-[3px_3px_0px_#1E8FA3]'
+                          : 'border-[2.5px] border-[#3A3A3E] text-[#F2F2F0] shadow-[3px_3px_0px_#000000]'
+                      } focus:border-[#3CE7FF] focus:text-[#3CE7FF] focus:shadow-[4.5px_4.5px_0px_#1E8FA3]`}
+                    >
+                      <option value="I" className="bg-[#0D0D0F] text-white font-bold">1st Year</option>
+                      <option value="II" className="bg-[#0D0D0F] text-white font-bold">2nd Year</option>
+                      <option value="III" className="bg-[#0D0D0F] text-white font-bold">3rd Year</option>
+                      <option value="IV" className="bg-[#0D0D0F] text-white font-bold">4th Year</option>
+                      <option value="PG" className="bg-[#0D0D0F] text-white font-bold">Postgraduate</option>
+                    </select>
+                    <SpiderIcon isFilled={isFilled} color="#3CE7FF" />
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -419,47 +548,89 @@ export const WebsiteRegisterPage: React.FC = () => {
             <label className="block text-[#F2F2F0] font-bold uppercase text-xs">
               LEADER FULL NAME <span className="text-[#FF3366]">*</span>
             </label>
-            <input
-              type="text"
-              value={leader.name}
-              onChange={(e) => setLeader({ ...leader, name: e.target.value })}
-              placeholder="e.g. Alex Mercer"
-              className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
-              required
-            />
+            {(() => {
+              const isFilled = Boolean(leader.name && leader.name.trim().length > 0);
+              return (
+                <div className="relative group overflow-hidden rounded-xl">
+                  <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none z-20 transition-all ${isFilled ? 'text-[#FF3366]' : 'text-[#A8A8AC] group-focus-within:text-[#FF3366]'}`} />
+                  {isFilled && <SpiderWebOverlay color="#FF3366" />}
+                  <input
+                    type="text"
+                    value={leader.name}
+                    onChange={(e) => setLeader({ ...leader, name: e.target.value })}
+                    placeholder="e.g. Alex Mercer"
+                    className={`w-full pl-10 pr-10 py-3 rounded-xl relative z-10 bg-[#0D0D0F]/90 font-mono font-bold text-xs transition-all outline-none ${
+                      isFilled
+                        ? 'border-[2.5px] border-[#FF3366] text-[#FF3366] shadow-[3px_3px_0px_#8A0022]'
+                        : 'border-[2.5px] border-[#3A3A3E] text-[#F2F2F0] placeholder:text-[#66666E] shadow-[3px_3px_0px_#000000]'
+                    } focus:border-[#FF3366] focus:text-[#FF3366] focus:shadow-[4.5px_4.5px_0px_#8A0022]`}
+                    required
+                  />
+                  <SpiderIcon isFilled={isFilled} color="#FF3366" />
+                </div>
+              );
+            })()}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="block text-[#F2F2F0] font-bold uppercase text-xs flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-[#3CE7FF]" />
+                <Mail className="w-3.5 h-3.5 text-[#FF3366]" />
                 <span>LEADER EMAIL</span>
                 <span className="text-[#FF3366]">*</span>
               </label>
-              <input
-                type="email"
-                value={leader.email}
-                onChange={(e) => setLeader({ ...leader, email: e.target.value })}
-                placeholder="leader@institution.edu"
-                className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
-                required
-              />
+              {(() => {
+                const isFilled = Boolean(leader.email && leader.email.trim().length > 0);
+                return (
+                  <div className="relative group overflow-hidden rounded-xl">
+                    <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none z-20 transition-all ${isFilled ? 'text-[#FF3366]' : 'text-[#A8A8AC] group-focus-within:text-[#FF3366]'}`} />
+                    {isFilled && <SpiderWebOverlay color="#FF3366" />}
+                    <input
+                      type="email"
+                      value={leader.email}
+                      onChange={(e) => setLeader({ ...leader, email: e.target.value })}
+                      placeholder="leader@institution.edu"
+                      className={`w-full pl-10 pr-10 py-3 rounded-xl relative z-10 bg-[#0D0D0F]/90 font-mono font-bold text-xs transition-all outline-none ${
+                        isFilled
+                          ? 'border-[2.5px] border-[#FF3366] text-[#FF3366] shadow-[3px_3px_0px_#8A0022]'
+                          : 'border-[2.5px] border-[#3A3A3E] text-[#F2F2F0] placeholder:text-[#66666E] shadow-[3px_3px_0px_#000000]'
+                      } focus:border-[#FF3366] focus:text-[#FF3366] focus:shadow-[4.5px_4.5px_0px_#8A0022]`}
+                      required
+                    />
+                    <SpiderIcon isFilled={isFilled} color="#FF3366" />
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="space-y-1.5">
               <label className="block text-[#F2F2F0] font-bold uppercase text-xs flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-[#3CE7FF]" />
+                <Phone className="w-3.5 h-3.5 text-[#FF3366]" />
                 <span>LEADER PHONE NUMBER</span>
                 <span className="text-[#FF3366]">*</span>
               </label>
-              <input
-                type="tel"
-                value={leader.phone}
-                onChange={(e) => setLeader({ ...leader, phone: e.target.value })}
-                placeholder="+91 98401 23456"
-                className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
-                required
-              />
+              {(() => {
+                const isFilled = Boolean(leader.phone && leader.phone.trim().length > 0);
+                return (
+                  <div className="relative group overflow-hidden rounded-xl">
+                    <Phone className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none z-20 transition-all ${isFilled ? 'text-[#FF3366]' : 'text-[#A8A8AC] group-focus-within:text-[#FF3366]'}`} />
+                    {isFilled && <SpiderWebOverlay color="#FF3366" />}
+                    <input
+                      type="tel"
+                      value={leader.phone}
+                      onChange={(e) => setLeader({ ...leader, phone: e.target.value })}
+                      placeholder="+91 98401 23456"
+                      className={`w-full pl-10 pr-10 py-3 rounded-xl relative z-10 bg-[#0D0D0F]/90 font-mono font-bold text-xs transition-all outline-none ${
+                        isFilled
+                          ? 'border-[2.5px] border-[#FF3366] text-[#FF3366] shadow-[3px_3px_0px_#8A0022]'
+                          : 'border-[2.5px] border-[#3A3A3E] text-[#F2F2F0] placeholder:text-[#66666E] shadow-[3px_3px_0px_#000000]'
+                      } focus:border-[#FF3366] focus:text-[#FF3366] focus:shadow-[4.5px_4.5px_0px_#8A0022]`}
+                      required
+                    />
+                    <SpiderIcon isFilled={isFilled} color="#FF3366" />
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -513,46 +684,88 @@ export const WebsiteRegisterPage: React.FC = () => {
                   <label className="block text-[11px] text-[#F2F2F0] font-bold uppercase">
                     MEMBER {idx + 2} FULL NAME <span className="text-[#FF3366]">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={member.name}
-                    onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
-                    placeholder={`e.g. Member ${idx + 2} Full Name`}
-                    className="w-full px-3 py-2 rounded-xl bg-[#0D0D0F]/80 border border-[#3A3A3E] text-white text-xs focus:border-[#F5D90A] focus:outline-none font-mono"
-                    required
-                  />
+                  {(() => {
+                    const isFilled = Boolean(member.name && member.name.trim().length > 0);
+                    return (
+                      <div className="relative group overflow-hidden rounded-xl">
+                        <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none z-20 transition-all ${isFilled ? 'text-[#FF3366]' : 'text-[#A8A8AC] group-focus-within:text-[#FF3366]'}`} />
+                        {isFilled && <SpiderWebOverlay color="#FF3366" />}
+                        <input
+                          type="text"
+                          value={member.name}
+                          onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
+                          placeholder={`e.g. Member ${idx + 2} Full Name`}
+                          className={`w-full pl-9 pr-10 py-2 rounded-xl relative z-10 bg-[#0D0D0F]/90 font-mono font-bold text-xs transition-all outline-none ${
+                            isFilled
+                              ? 'border-[2.5px] border-[#FF3366] text-[#FF3366] shadow-[3px_3px_0px_#8A0022]'
+                              : 'border-[2.5px] border-[#3A3A3E] text-[#F2F2F0] placeholder:text-[#66666E] shadow-[3px_3px_0px_#000000]'
+                          } focus:border-[#FF3366] focus:text-[#FF3366] focus:shadow-[3.5px_3.5px_0px_#8A0022]`}
+                          required
+                        />
+                        <SpiderIcon isFilled={isFilled} color="#FF3366" />
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block text-[11px] text-[#F2F2F0] font-bold uppercase flex items-center gap-1">
-                      <Mail className="w-3 h-3 text-[#3CE7FF]" />
+                      <Mail className="w-3 h-3 text-[#FF3366]" />
                       <span>MEMBER {idx + 2} EMAIL</span>
                       <span className="text-[#FF3366]">*</span>
                     </label>
-                    <input
-                      type="email"
-                      value={member.email}
-                      onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
-                      placeholder={`member${idx + 2}@institution.edu`}
-                      className="w-full px-3 py-2 rounded-xl bg-[#0D0D0F]/80 border border-[#3A3A3E] text-white text-xs focus:border-[#F5D90A] focus:outline-none font-mono"
-                      required
-                    />
+                    {(() => {
+                      const isFilled = Boolean(member.email && member.email.trim().length > 0);
+                      return (
+                        <div className="relative group overflow-hidden rounded-xl">
+                          <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none z-20 transition-all ${isFilled ? 'text-[#FF3366]' : 'text-[#A8A8AC] group-focus-within:text-[#FF3366]'}`} />
+                          {isFilled && <SpiderWebOverlay color="#FF3366" />}
+                          <input
+                            type="email"
+                            value={member.email}
+                            onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
+                            placeholder={`member${idx + 2}@institution.edu`}
+                            className={`w-full pl-9 pr-10 py-2 rounded-xl relative z-10 bg-[#0D0D0F]/90 font-mono font-bold text-xs transition-all outline-none ${
+                              isFilled
+                                ? 'border-[2.5px] border-[#FF3366] text-[#FF3366] shadow-[3px_3px_0px_#8A0022]'
+                                : 'border-[2.5px] border-[#3A3A3E] text-[#F2F2F0] placeholder:text-[#66666E] shadow-[3px_3px_0px_#000000]'
+                            } focus:border-[#FF3366] focus:text-[#FF3366] focus:shadow-[3.5px_3.5px_0px_#8A0022]`}
+                            required
+                          />
+                          <SpiderIcon isFilled={isFilled} color="#FF3366" />
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="space-y-1">
                     <label className="block text-[11px] text-[#F2F2F0] font-bold uppercase flex items-center gap-1">
-                      <Phone className="w-3 h-3 text-[#3CE7FF]" />
+                      <Phone className="w-3 h-3 text-[#FF3366]" />
                       <span>MEMBER {idx + 2} PHONE NUMBER</span>
                       <span className="text-[#FF3366]">*</span>
                     </label>
-                    <input
-                      type="tel"
-                      value={member.phone}
-                      onChange={(e) => handleMemberChange(idx, 'phone', e.target.value)}
-                      placeholder={`+91 98401 23456`}
-                      className="w-full px-3 py-2 rounded-xl bg-[#0D0D0F]/80 border border-[#3A3A3E] text-white text-xs focus:border-[#F5D90A] focus:outline-none font-mono"
-                      required
-                    />
+                    {(() => {
+                      const isFilled = Boolean(member.phone && member.phone.trim().length > 0);
+                      return (
+                        <div className="relative group overflow-hidden rounded-xl">
+                          <Phone className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none z-20 transition-all ${isFilled ? 'text-[#FF3366]' : 'text-[#A8A8AC] group-focus-within:text-[#FF3366]'}`} />
+                          {isFilled && <SpiderWebOverlay color="#FF3366" />}
+                          <input
+                            type="tel"
+                            value={member.phone}
+                            onChange={(e) => handleMemberChange(idx, 'phone', e.target.value)}
+                            placeholder={`+91 98401 23456`}
+                            className={`w-full pl-9 pr-10 py-2 rounded-xl relative z-10 bg-[#0D0D0F]/90 font-mono font-bold text-xs transition-all outline-none ${
+                              isFilled
+                                ? 'border-[2.5px] border-[#FF3366] text-[#FF3366] shadow-[3px_3px_0px_#8A0022]'
+                                : 'border-[2.5px] border-[#3A3A3E] text-[#F2F2F0] placeholder:text-[#66666E] shadow-[3px_3px_0px_#000000]'
+                            } focus:border-[#FF3366] focus:text-[#FF3366] focus:shadow-[3.5px_3.5px_0px_#8A0022]`}
+                            required
+                          />
+                          <SpiderIcon isFilled={isFilled} color="#FF3366" />
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

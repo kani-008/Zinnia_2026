@@ -228,3 +228,127 @@ body {
 .comic-panel-skew-2 {
   clip-path: polygon(0.8% 0.4%, 99.5% 1.2%, 98.8% 99.5%, 0.4% 99.1%);
 }
+
+/* Animated Web Spider Horizontal Crawling Across Input Field */
+@keyframes spiderTraverse {
+  0% {
+    left: 12px;
+    transform: translateY(-50%) scaleX(1) rotate(0deg);
+  }
+  24% {
+    transform: translateY(-56%) scaleX(1) rotate(6deg);
+  }
+  48% {
+    left: calc(100% - 30px);
+    transform: translateY(-50%) scaleX(1) rotate(0deg);
+  }
+  50% {
+    left: calc(100% - 30px);
+    transform: translateY(-50%) scaleX(-1) rotate(0deg);
+  }
+  74% {
+    transform: translateY(-56%) scaleX(-1) rotate(-6deg);
+  }
+  98% {
+    left: 12px;
+    transform: translateY(-50%) scaleX(-1) rotate(0deg);
+  }
+  100% {
+    left: 12px;
+    transform: translateY(-50%) scaleX(1) rotate(0deg);
+  }
+}
+
+.animate-spider-traverse {
+  animation: spiderTraverse 7s ease-in-out infinite;
+}
+
+.animate-spider-traverse-fast {
+  animation: spiderTraverse 3.5s ease-in-out infinite;
+}
+
+/* Eye-Catching Continuous Spider Movement */
+@keyframes spiderActiveMove {
+  0% {
+    transform: translateY(0px) rotate(-8deg) scale(1);
+  }
+  20% {
+    transform: translateY(-4px) rotate(10deg) scale(1.12);
+  }
+  40% {
+    transform: translateY(3px) rotate(-12deg) scale(0.95);
+  }
+  60% {
+    transform: translateY(-5px) rotate(8deg) scale(1.08);
+  }
+  80% {
+    transform: translateY(2px) rotate(-6deg) scale(1.02);
+  }
+  100% {
+    transform: translateY(0px) rotate(-8deg) scale(1);
+  }
+}
+
+.animate-spider-always-move {
+  animation: spiderActiveMove 2.2s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* Animated Web Shooting from Right Spider to Left Side */
+@keyframes webShootFromRight {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+    transform-origin: right center;
+  }
+  60% {
+    transform: scaleX(1.04);
+    opacity: 0.85;
+    transform-origin: right center;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.7;
+    transform-origin: right center;
+  }
+}
+
+.animate-web-shoot-left {
+  animation: webShootFromRight 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: right center;
+}
+
+/* Continuous Electric Silk Flow Animation */
+@keyframes webSilkFlow {
+  0% {
+    stroke-dashoffset: 72;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-web-flow {
+  stroke-dasharray: 14 6;
+  animation: webSilkFlow 0.8s linear infinite;
+}
+
+.animate-web-flow-fast {
+  stroke-dasharray: 14 6;
+  animation: webSilkFlow 0.5s linear infinite;
+}
+
+/* 100px Silk Light Flow Animation */
+@keyframes webSilkFlow100 {
+  0% {
+    stroke-dashoffset: 140;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-web-flow-100 {
+  stroke-dasharray: 100 40;
+  animation: webSilkFlow100 0.6s linear infinite;
+}
