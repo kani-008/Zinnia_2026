@@ -417,7 +417,7 @@ export const WebsiteRegisterPage: React.FC = () => {
 
         {/* Section 2: Team & Institutional Details */}
         <div className="space-y-4 pt-4 border-t-2 border-[#3A3A3E]">
-          <div className="inline-block px-3.5 py-1 bg-[#3CE7FF] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3px_3px_0px_#000000] font-comic font-black text-xs sm:text-sm uppercase tracking-wider rotate-1 rounded-md">
+          <div className="inline-block px-3.5 py-1 bg-[#F5D90A] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3px_3px_0px_#000000] font-comic font-black text-xs sm:text-sm uppercase tracking-wider rotate-1 rounded-md">
             STEP 02 // SQUAD & COLLEGE CREDENTIALS
           </div>
 
@@ -536,7 +536,7 @@ export const WebsiteRegisterPage: React.FC = () => {
         {/* Section 3: Team Leader (Member 1) */}
         <div className="space-y-4 pt-4 border-t-2 border-[#3A3A3E]">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="inline-block px-3.5 py-1 bg-[#FF3366] text-white border-[2.5px] border-[#0D0D0F] shadow-[3px_3px_0px_#000000] font-comic font-black text-xs sm:text-sm uppercase tracking-wider -rotate-1 rounded-md">
+            <div className="inline-block px-3.5 py-1 bg-[#F5D90A] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3px_3px_0px_#000000] font-comic font-black text-xs sm:text-sm uppercase tracking-wider -rotate-1 rounded-md">
               STEP 03 // TEAM LEADER (COMMANDER)
             </div>
             <span className="px-2.5 py-0.5 bg-[#F5D90A] text-[#0D0D0F] border border-[#0D0D0F] shadow-[2px_2px_0px_#000000] font-mono text-[10px] font-black uppercase rounded-md">
