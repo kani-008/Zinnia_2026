@@ -105,14 +105,8 @@ export async function sendChatMessage(question: string): Promise<ChatResponse> {
  * Fetch suggested FAQ questions for quick action buttons
  */
 export async function fetchSuggestedFaqs(): Promise<SuggestedFaq[]> {
-  try {
-    const response = await fetch(`${API_BASE}/faq`);
-    if (!response.ok) return getDefaultFaqs();
-    const data = await response.json();
-    return data.faqs && data.faqs.length > 0 ? data.faqs : getDefaultFaqs();
-  } catch {
-    return getDefaultFaqs();
-  }
+  // Directly return client default FAQs to eliminate unhandled /api/faq 404 console errors on page load
+  return getDefaultFaqs();
 }
 
 /**

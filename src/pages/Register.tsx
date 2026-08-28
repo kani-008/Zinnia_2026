@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { store } from '../services/store';
 import { audioManager } from '../core/AudioManager';
 import { 
   ArrowRight, 
+  ArrowLeft,
   AlertCircle, 
   Users, 
   User, 
@@ -167,75 +168,134 @@ export const WebsiteRegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto space-y-8 select-none">
-      {/* Header */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-cyan-500/30 backdrop-blur-xl space-y-1 shadow-2xl">
-        <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest flex items-center gap-2">
-          <Shield className="w-3.5 h-3.5" />
-          <span>OFFICIAL REGISTRATION // ZINNIA '26</span>
-        </div>
-        <h1 className="text-3xl font-black text-white font-mono">TEAM & PARTICIPANT ENROLLMENT</h1>
-        <p className="text-xs text-slate-400 font-light">
-          Register your team details. Each individual member will receive their own Digital Passport QR code for campus entry, event check-in, and lunch token.
-        </p>
-      </div>
+    <div className="relative min-h-screen bg-transparent text-[#F2F2F0]">
+      {/* 2D Neubrutalist Comic Top Navigation Bar (Theme 2 Header) */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3 bg-[#0D0D0F]/80 backdrop-blur-md border-b-2 border-[#3A3A3E]">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+          {/* Left: Illustrated ZINNIA '26 Comic Logo Badge matching Theme 2 */}
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              onClick={() => audioManager.playNodeEngage()}
+              className="cursor-pointer group relative px-3.5 py-1 sm:px-4 sm:py-1.5 bg-[#F5D90A] border-[3px] border-[#F5D90A] shadow-[3.5px_3.5px_0px_#8A7400] -rotate-1 hover:rotate-0 transition-transform active:translate-x-0.5 active:translate-y-0.5 inline-flex items-center"
+              title="Return to Home"
+            >
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-display text-xl sm:text-2xl text-[#0D0D0F] tracking-wide font-black">
+                  ZINNIA
+                </span>
+                <span className="font-comic text-lg sm:text-xl text-[#FF3366] font-black">
+                  '26
+                </span>
+              </div>
+              {/* Speech Tail */}
+              <div className="absolute -bottom-2 left-4 w-2.5 h-2.5 bg-[#F5D90A] border-r-[3px] border-b-[3px] border-[#F5D90A] rotate-45" />
+            </Link>
 
-      {error && (
-        <div className="p-4 bg-rose-950/90 border border-rose-500 text-rose-300 text-xs font-mono rounded-2xl flex items-center gap-2.5 backdrop-blur-md animate-in fade-in">
-          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-          <span>{error}</span>
+            {/* Comics Code Authority Parody Stamp */}
+            <div className="hidden sm:flex flex-col items-center justify-center p-1 px-2 bg-[#1A1A1D] border-[1.5px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] rotate-2 text-[7px] font-mono leading-tight uppercase font-black text-center text-[#A8A8AC]">
+              <span>APPROVED</span>
+              <span className="text-[6px] text-[#FF3366]">BY THE</span>
+              <span>CSE CODE</span>
+            </div>
+          </div>
+
+          {/* Right: Theme 2 Pop-Art Neubrutalist Back Button */}
+          <Link
+            to="/"
+            onClick={() => audioManager.playNodeEngage()}
+            className="px-3.5 py-1.5 sm:px-5 sm:py-2 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] border-[2.5px] border-[#F5D90A] shadow-[3.5px_3.5px_0px_#8A7400] hover:shadow-[4.5px_4.5px_0px_#8A7400] font-comic font-black text-xs sm:text-sm tracking-wider uppercase transition-all flex items-center gap-2 active:translate-x-0.5 active:translate-y-0.5 cursor-pointer rounded-none"
+          >
+            <ArrowLeft className="w-4 h-4 stroke-[3]" />
+            <span>BACK TO HOME</span>
+          </Link>
         </div>
-      )}
+      </header>
+
+      {/* Main Register Form Container */}
+      <div className="pt-24 sm:pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto space-y-8 select-none">
+        {/* Header Card (100% Theme 2 Pop-Art Comic Panel + Translucent Glass & Bent Rounded Edge) */}
+        <div className="p-6 sm:p-8 rounded-3xl bg-[#0D0D0F]/70 border-[3px] border-[#F5D90A] shadow-[6px_6px_0px_#8A7400] backdrop-blur-2xl space-y-4 relative overflow-hidden">
+          {/* Top Comic Badges */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-[#F5D90A] text-[#0D0D0F] border-[2px] border-[#0D0D0F] shadow-[2.5px_2.5px_0px_#000000] font-comic font-black text-xs uppercase tracking-wider -rotate-1 rounded-md">
+                CHAPTER 02: THE ENROLLMENT
+              </span>
+              <span className="hidden sm:inline-block px-2.5 py-1 bg-[#1A1A1D]/90 text-[#A8A8AC] border-[1.5px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] font-mono text-[9px] uppercase font-bold rounded-md">
+                GOVT COLLEGE OF ENGINEERING, ERODE &bull; CSE DEPT
+              </span>
+            </div>
+
+            <div className="text-[10px] font-mono text-[#3CE7FF] uppercase tracking-widest flex items-center gap-1.5 font-bold bg-[#0D0D0F]/90 px-2.5 py-1 border border-[#3CE7FF]/40 shadow-[2px_2px_0px_#000000] rounded-md">
+              <Shield className="w-3.5 h-3.5 text-[#3CE7FF]" />
+              <span>OFFICIAL REGISTRATION // ZINNIA '26</span>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 pt-1">
+            <h1 className="text-2xl sm:text-4xl font-black text-[#F2F2F0] font-display tracking-wide uppercase">
+              TEAM & PARTICIPANT ENROLLMENT
+            </h1>
+            <p className="text-xs text-[#A8A8AC] font-mono leading-relaxed">
+              Register your squad details. Each individual member will receive their own Digital Passport QR code for campus entry, event check-in, and lunch token.
+            </p>
+          </div>
+        </div>
+
+        {error && (
+          <div className="p-4 rounded-2xl bg-[#FF3366]/20 border-[2.5px] border-[#FF3366] text-[#FF3366] text-xs font-mono font-bold shadow-[4px_4px_0px_#000000] backdrop-blur-xl flex items-center gap-3 animate-in fade-in">
+            <AlertCircle className="w-5 h-5 text-[#FF3366] shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
       <form
         onSubmit={handleSubmit}
-        className="p-8 rounded-3xl bg-slate-950/80 border border-slate-800 backdrop-blur-xl space-y-8 text-xs font-mono shadow-2xl"
+        className="p-6 sm:p-8 rounded-3xl bg-[#0D0D0F]/70 border-[3px] border-[#3A3A3E] shadow-[8px_8px_0px_#000000] backdrop-blur-2xl space-y-8 text-xs font-mono"
       >
         {/* Section 1: Event Selection Separated by Technical and Non-Technical */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <label className="block text-slate-300 font-bold uppercase text-sm">
-              1. SELECT SYMPOSIUM EVENTS <span className="text-cyan-400">*</span>
-            </label>
+          <div className="flex items-center justify-between gap-3 flex-wrap border-b-2 border-[#3A3A3E] pb-3">
+            <div className="inline-block px-3.5 py-1 bg-[#F5D90A] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3px_3px_0px_#000000] font-comic font-black text-xs sm:text-sm uppercase tracking-wider -rotate-1 rounded-md">
+              STEP 01 // SELECT SYMPOSIUM EVENTS <span className="text-[#FF3366]">*</span>
+            </div>
             {registeredEvents.length > 0 && (
-              <span className="text-[11px] text-cyan-400 bg-cyan-950/80 px-2.5 py-0.5 rounded-full border border-cyan-500/40 font-bold">
-                Required Team: {minTeamSize} - {maxTeamSize} Member(s)
+              <span className="px-3 py-1 bg-[#3CE7FF] text-[#0D0D0F] border-[2px] border-[#0D0D0F] shadow-[2.5px_2.5px_0px_#000000] font-mono text-[11px] font-black uppercase rounded-md">
+                REQUIRED TEAM: {minTeamSize} - {maxTeamSize} MEMBER(S)
               </span>
             )}
           </div>
 
           {/* Technical Events Subsection */}
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-2 text-cyan-400 font-bold uppercase text-xs">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-[#3CE7FF] font-black uppercase text-xs tracking-wider">
               <Cpu className="w-4 h-4" />
               <span>TECHNICAL EVENTS</span>
-              <span className="text-[10px] text-cyan-500/60 font-normal">({techEvents.length} Missions)</span>
+              <span className="text-[10px] text-[#A8A8AC] font-mono">({techEvents.length} MISSIONS)</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {techEvents.map((e) => {
                 const isChecked = registeredEvents.includes(e.id);
                 return (
                   <div
                     key={e.id}
                     onClick={() => handleToggleEvent(e.id)}
-                    className={`p-3 rounded-xl border cursor-pointer flex items-center justify-between gap-2 transition-all select-none ${
+                    className={`p-3.5 rounded-2xl border-[2.5px] cursor-pointer flex items-center justify-between gap-2.5 transition-all select-none backdrop-blur-md ${
                       isChecked
-                        ? 'bg-cyan-950/90 border-cyan-400 text-white shadow-md ring-1 ring-cyan-400/50'
-                        : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:border-cyan-500/40 hover:text-slate-200'
+                        ? 'bg-[#3CE7FF] border-[#0D0D0F] text-[#0D0D0F] shadow-[4px_4px_0px_#1E8FA3] font-bold -translate-y-0.5'
+                        : 'bg-[#16161C]/65 border-[#3A3A3E] text-[#F2F2F0] hover:border-[#3CE7FF] shadow-[3px_3px_0px_#000000]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => {}}
-                        className="accent-cyan-400 w-4 h-4 rounded cursor-pointer pointer-events-none"
-                      />
-                      <span className="truncate text-xs">
-                        <strong className="text-cyan-300 font-bold">[{e.code}]</strong> {e.mission_name}
+                      <div className={`w-4 h-4 border-[2px] border-[#0D0D0F] rounded shrink-0 flex items-center justify-center font-black text-[10px] ${isChecked ? 'bg-[#0D0D0F] text-[#3CE7FF]' : 'bg-[#1A1A1D]'}`}>
+                        {isChecked ? '✓' : ''}
+                      </div>
+                      <span className="truncate text-xs font-mono">
+                        <strong className={isChecked ? 'text-[#0D0D0F] font-black' : 'text-[#3CE7FF]'}>[{e.code}]</strong> {e.mission_name}
                       </span>
                     </div>
-                    <span className="text-[10px] bg-slate-950 text-cyan-400 px-1.5 py-0.5 rounded border border-slate-800 shrink-0 font-mono">
+                    <span className={`text-[10px] px-2 py-0.5 border font-mono font-bold shrink-0 rounded ${isChecked ? 'bg-[#0D0D0F] text-[#3CE7FF] border-[#0D0D0F]' : 'bg-[#1A1A1D] text-[#A8A8AC] border-[#3A3A3E]'}`}>
                       {e.team_size_min}-{e.team_size_max}P
                     </span>
                   </div>
@@ -245,37 +305,34 @@ export const WebsiteRegisterPage: React.FC = () => {
           </div>
 
           {/* Non-Technical Events Subsection */}
-          <div className="space-y-2.5 pt-2">
-            <div className="flex items-center gap-2 text-amber-400 font-bold uppercase text-xs">
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2 text-[#F5D90A] font-black uppercase text-xs tracking-wider">
               <Sparkles className="w-4 h-4" />
               <span>NON-TECHNICAL EVENTS</span>
-              <span className="text-[10px] text-amber-500/60 font-normal">({nonTechEvents.length} Missions)</span>
+              <span className="text-[10px] text-[#A8A8AC] font-mono">({nonTechEvents.length} MISSIONS)</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {nonTechEvents.map((e) => {
                 const isChecked = registeredEvents.includes(e.id);
                 return (
                   <div
                     key={e.id}
                     onClick={() => handleToggleEvent(e.id)}
-                    className={`p-3 rounded-xl border cursor-pointer flex items-center justify-between gap-2 transition-all select-none ${
+                    className={`p-3.5 rounded-2xl border-[2.5px] cursor-pointer flex items-center justify-between gap-2.5 transition-all select-none backdrop-blur-md ${
                       isChecked
-                        ? 'bg-amber-950/80 border-amber-400 text-white shadow-md ring-1 ring-amber-400/50'
-                        : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:border-amber-500/40 hover:text-slate-200'
+                        ? 'bg-[#F5D90A] border-[#0D0D0F] text-[#0D0D0F] shadow-[4px_4px_0px_#8A7400] font-bold -translate-y-0.5'
+                        : 'bg-[#16161C]/65 border-[#3A3A3E] text-[#F2F2F0] hover:border-[#F5D90A] shadow-[3px_3px_0px_#000000]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => {}}
-                        className="accent-amber-400 w-4 h-4 rounded cursor-pointer pointer-events-none"
-                      />
-                      <span className="truncate text-xs">
-                        <strong className="text-amber-300 font-bold">[{e.code}]</strong> {e.mission_name}
+                      <div className={`w-4 h-4 border-[2px] border-[#0D0D0F] rounded shrink-0 flex items-center justify-center font-black text-[10px] ${isChecked ? 'bg-[#0D0D0F] text-[#F5D90A]' : 'bg-[#1A1A1D]'}`}>
+                        {isChecked ? '✓' : ''}
+                      </div>
+                      <span className="truncate text-xs font-mono">
+                        <strong className={isChecked ? 'text-[#0D0D0F] font-black' : 'text-[#F5D90A]'}>[{e.code}]</strong> {e.mission_name}
                       </span>
                     </div>
-                    <span className="text-[10px] bg-slate-950 text-amber-400 px-1.5 py-0.5 rounded border border-slate-800 shrink-0 font-mono">
+                    <span className={`text-[10px] px-2 py-0.5 border font-mono font-bold shrink-0 rounded ${isChecked ? 'bg-[#0D0D0F] text-[#F5D90A] border-[#0D0D0F]' : 'bg-[#1A1A1D] text-[#A8A8AC] border-[#3A3A3E]'}`}>
                       {e.team_size_min}-{e.team_size_max}P
                     </span>
                   </div>
@@ -286,57 +343,56 @@ export const WebsiteRegisterPage: React.FC = () => {
         </div>
 
         {/* Section 2: Team & Institutional Details */}
-        <div className="space-y-4 pt-2 border-t border-slate-800">
-          <h2 className="text-sm font-bold text-cyan-400 flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            2. TEAM & COLLEGE CREDENTIALS
-          </h2>
+        <div className="space-y-4 pt-4 border-t-2 border-[#3A3A3E]">
+          <div className="inline-block px-3.5 py-1 bg-[#3CE7FF] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3px_3px_0px_#000000] font-comic font-black text-xs sm:text-sm uppercase tracking-wider rotate-1 rounded-md">
+            STEP 02 // SQUAD & COLLEGE CREDENTIALS
+          </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-slate-300 font-bold">
-              TEAM NAME / SQUAD TITLE <span className="text-slate-500 font-normal">(Optional for solo)</span>
+          <div className="space-y-1.5 pt-1">
+            <label className="block text-[#F2F2F0] font-bold uppercase text-xs">
+              TEAM NAME / SQUAD TITLE <span className="text-[#A8A8AC] font-normal">(Optional for solo)</span>
             </label>
             <input
               type="text"
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
               placeholder="e.g. Neural Vanguard / Cyber Phantoms"
-              className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-cyan-400 transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-slate-300 font-bold">
-              COLLEGE / INSTITUTION NAME <span className="text-cyan-400">*</span>
+            <label className="block text-[#F2F2F0] font-bold uppercase text-xs">
+              COLLEGE / INSTITUTION NAME <span className="text-[#FF3366]">*</span>
             </label>
             <input
               type="text"
               value={college}
               onChange={(e) => setCollege(e.target.value)}
               placeholder="e.g. Government College of Engineering, Erode"
-              className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-cyan-400 transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-slate-300 font-bold">DEPARTMENT</label>
+              <label className="block text-[#F2F2F0] font-bold uppercase text-xs">DEPARTMENT</label>
               <input
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-cyan-400 transition-colors"
+                className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-slate-300 font-bold">ACADEMIC YEAR</label>
+              <label className="block text-[#F2F2F0] font-bold uppercase text-xs">ACADEMIC YEAR</label>
               <select
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-cyan-400 transition-colors"
+                className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all cursor-pointer"
               >
                 <option value="I">1st Year</option>
                 <option value="II">2nd Year</option>
@@ -349,60 +405,59 @@ export const WebsiteRegisterPage: React.FC = () => {
         </div>
 
         {/* Section 3: Team Leader (Member 1) */}
-        <div className="space-y-4 pt-2 border-t border-slate-800">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-amber-400 flex items-center gap-2">
-              <User className="w-4 h-4" />
-              3. TEAM LEADER (MEMBER 1)
-            </h2>
-            <span className="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-500/40 font-bold">
-              Primary Contact
+        <div className="space-y-4 pt-4 border-t-2 border-[#3A3A3E]">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="inline-block px-3.5 py-1 bg-[#FF3366] text-white border-[2.5px] border-[#0D0D0F] shadow-[3px_3px_0px_#000000] font-comic font-black text-xs sm:text-sm uppercase tracking-wider -rotate-1 rounded-md">
+              STEP 03 // TEAM LEADER (COMMANDER)
+            </div>
+            <span className="px-2.5 py-0.5 bg-[#F5D90A] text-[#0D0D0F] border border-[#0D0D0F] shadow-[2px_2px_0px_#000000] font-mono text-[10px] font-black uppercase rounded-md">
+              PRIMARY CONTACT
             </span>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-slate-300 font-bold">
-              LEADER FULL NAME <span className="text-cyan-400">*</span>
+          <div className="space-y-1.5 pt-1">
+            <label className="block text-[#F2F2F0] font-bold uppercase text-xs">
+              LEADER FULL NAME <span className="text-[#FF3366]">*</span>
             </label>
             <input
               type="text"
               value={leader.name}
               onChange={(e) => setLeader({ ...leader, name: e.target.value })}
               placeholder="e.g. Alex Mercer"
-              className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-cyan-400 transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-slate-300 font-bold flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-cyan-400" />
+              <label className="block text-[#F2F2F0] font-bold uppercase text-xs flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-[#3CE7FF]" />
                 <span>LEADER EMAIL</span>
-                <span className="text-cyan-400">*</span>
+                <span className="text-[#FF3366]">*</span>
               </label>
               <input
                 type="email"
                 value={leader.email}
                 onChange={(e) => setLeader({ ...leader, email: e.target.value })}
                 placeholder="leader@institution.edu"
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-cyan-400 transition-colors"
+                className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-slate-300 font-bold flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-cyan-400" />
+              <label className="block text-[#F2F2F0] font-bold uppercase text-xs flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-[#3CE7FF]" />
                 <span>LEADER PHONE NUMBER</span>
-                <span className="text-cyan-400">*</span>
+                <span className="text-[#FF3366]">*</span>
               </label>
               <input
                 type="tel"
                 value={leader.phone}
                 onChange={(e) => setLeader({ ...leader, phone: e.target.value })}
                 placeholder="+91 98401 23456"
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-cyan-400 transition-colors"
+                className="w-full px-4 py-3 rounded-xl bg-[#0D0D0F]/80 border-[2.5px] border-[#3A3A3E] text-white focus:border-[#F5D90A] focus:shadow-[3.5px_3.5px_0px_#8A7400] focus:outline-none font-mono text-xs transition-all"
                 required
               />
             </div>
@@ -411,14 +466,13 @@ export const WebsiteRegisterPage: React.FC = () => {
 
         {/* Section 4: Dynamic Additional Team Members */}
         {maxTeamSize > 1 && (
-          <div className="space-y-4 pt-2 border-t border-slate-800">
-            <div className="flex items-center justify-between">
+          <div className="space-y-4 pt-4 border-t-2 border-[#3A3A3E]">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
-                <h2 className="text-sm font-bold text-cyan-400 flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  4. TEAM MEMBERS ({1 + members.length} / {maxTeamSize} Maximum)
-                </h2>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <div className="inline-block px-3.5 py-1 bg-[#F5D90A] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3px_3px_0px_#000000] font-comic font-black text-xs sm:text-sm uppercase tracking-wider rounded-md">
+                  STEP 04 // SQUAD MEMBERS ({1 + members.length} / {maxTeamSize} MAX)
+                </div>
+                <p className="text-[11px] text-[#A8A8AC] font-mono mt-1">
                   Each member gets their own wristband, personalized QR pass, and food token.
                 </p>
               </div>
@@ -427,28 +481,28 @@ export const WebsiteRegisterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleAddMemberSlot}
-                  className="px-3 py-1.5 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-900 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                  className="px-3.5 py-1.5 rounded-xl bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] border-[2.5px] border-[#0D0D0F] shadow-[3px_3px_0px_#8A7400] font-comic font-black text-xs uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add Member</span>
+                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>+ ADD MEMBER</span>
                 </button>
               )}
             </div>
 
             {members.map((member, idx) => (
-              <div key={idx} className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 relative shadow-inner">
-                <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
-                  <span className="text-xs font-bold text-white font-mono flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-400 flex items-center justify-center text-[10px]">
+              <div key={idx} className="p-4 rounded-2xl bg-[#16161C]/65 backdrop-blur-xl border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] space-y-3 relative">
+                <div className="flex items-center justify-between border-b border-[#3A3A3E] pb-2">
+                  <span className="text-xs font-black text-[#F2F2F0] font-mono flex items-center gap-2">
+                    <span className="w-5 h-5 rounded bg-[#3CE7FF] text-[#0D0D0F] border border-[#0D0D0F] flex items-center justify-center text-[10px] font-black">
                       {idx + 2}
                     </span>
                     <span>TEAM MEMBER {idx + 2}</span>
-                    {idx < additionalSlotsRequired && <span className="text-cyan-400 text-[10px]">(Required)</span>}
+                    {idx < additionalSlotsRequired && <span className="text-[#FF3366] text-[10px]">(REQUIRED)</span>}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveMemberSlot(idx)}
-                    className="text-slate-500 hover:text-rose-400 p-1 rounded transition-colors"
+                    className="text-[#A8A8AC] hover:text-[#FF3366] p-1 transition-colors cursor-pointer"
                     title="Remove member"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -456,47 +510,47 @@ export const WebsiteRegisterPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[11px] text-slate-300 font-bold">
-                    MEMBER {idx + 2} FULL NAME <span className="text-cyan-400">*</span>
+                  <label className="block text-[11px] text-[#F2F2F0] font-bold uppercase">
+                    MEMBER {idx + 2} FULL NAME <span className="text-[#FF3366]">*</span>
                   </label>
                   <input
                     type="text"
                     value={member.name}
                     onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
                     placeholder={`e.g. Member ${idx + 2} Full Name`}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs focus:border-cyan-400 focus:outline-none font-mono"
+                    className="w-full px-3 py-2 rounded-xl bg-[#0D0D0F]/80 border border-[#3A3A3E] text-white text-xs focus:border-[#F5D90A] focus:outline-none font-mono"
                     required
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block text-[11px] text-slate-300 font-bold flex items-center gap-1">
-                      <Mail className="w-3 h-3 text-cyan-400" />
+                    <label className="block text-[11px] text-[#F2F2F0] font-bold uppercase flex items-center gap-1">
+                      <Mail className="w-3 h-3 text-[#3CE7FF]" />
                       <span>MEMBER {idx + 2} EMAIL</span>
-                      <span className="text-cyan-400">*</span>
+                      <span className="text-[#FF3366]">*</span>
                     </label>
                     <input
                       type="email"
                       value={member.email}
                       onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
                       placeholder={`member${idx + 2}@institution.edu`}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs focus:border-cyan-400 focus:outline-none font-mono"
+                      className="w-full px-3 py-2 rounded-xl bg-[#0D0D0F]/80 border border-[#3A3A3E] text-white text-xs focus:border-[#F5D90A] focus:outline-none font-mono"
                       required
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-[11px] text-slate-300 font-bold flex items-center gap-1">
-                      <Phone className="w-3 h-3 text-cyan-400" />
+                    <label className="block text-[11px] text-[#F2F2F0] font-bold uppercase flex items-center gap-1">
+                      <Phone className="w-3 h-3 text-[#3CE7FF]" />
                       <span>MEMBER {idx + 2} PHONE NUMBER</span>
-                      <span className="text-cyan-400">*</span>
+                      <span className="text-[#FF3366]">*</span>
                     </label>
                     <input
                       type="tel"
                       value={member.phone}
                       onChange={(e) => handleMemberChange(idx, 'phone', e.target.value)}
                       placeholder={`+91 98401 23456`}
-                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-white text-xs focus:border-cyan-400 focus:outline-none font-mono"
+                      className="w-full px-3 py-2 rounded-xl bg-[#0D0D0F]/80 border border-[#3A3A3E] text-white text-xs focus:border-[#F5D90A] focus:outline-none font-mono"
                       required
                     />
                   </div>
@@ -505,33 +559,34 @@ export const WebsiteRegisterPage: React.FC = () => {
             ))}
 
             {members.length === 0 && additionalSlotsRequired > 0 && (
-              <div className="p-4 rounded-xl border border-dashed border-amber-500/40 bg-amber-950/20 text-amber-300 text-xs">
-                Selected event requires at least {minTeamSize} participants. Click <strong>+ Add Member</strong> above to provide Member 2 details.
+              <div className="p-4 rounded-2xl border-[2px] border-[#F5D90A] bg-[#F5D90A]/10 text-[#F5D90A] text-xs font-mono font-bold shadow-[3px_3px_0px_#000000] backdrop-blur-md">
+                Selected event requires at least {minTeamSize} participants. Click <strong>+ ADD MEMBER</strong> above to provide Member 2 details.
               </div>
             )}
           </div>
         )}
 
-        {/* Submit Button */}
+        {/* Submit Button - 100% Theme 2 Pop-Art Neubrutalist REGISTER Button */}
         <div className="pt-4">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black font-mono text-sm uppercase tracking-wider transition-all shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-98"
+            className="w-full py-4 rounded-2xl bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] border-[3.5px] border-[#0D0D0F] shadow-[6px_6px_0px_#8A7400] hover:shadow-[7px_7px_0px_#8A7400] font-display text-lg sm:text-xl tracking-wider uppercase flex items-center justify-center gap-3 transition-all active:translate-x-1 active:translate-y-1 cursor-pointer font-black disabled:opacity-50"
           >
             {isSubmitting ? (
               <span>PROCESSING REGISTRATION...</span>
             ) : (
               <>
-                <span>PROCEED</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>REGISTER SQUAD</span>
+                <ArrowRight className="w-5 h-5 stroke-[3]" />
               </>
             )}
           </button>
         </div>
       </form>
     </div>
-  );
+  </div>
+);
 };
 
 export default WebsiteRegisterPage;

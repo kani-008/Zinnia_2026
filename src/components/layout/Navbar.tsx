@@ -31,15 +31,22 @@ export const WebsiteNavbar: React.FC = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-30 px-4 sm:px-6 py-4 bg-black/50 backdrop-blur-md border-b border-[#3A3A3E]">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        {/* Brand */}
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#3CE7FF] animate-pulse" />
-          <span className="font-mono font-black text-base tracking-wider text-white group-hover:text-[#3CE7FF] transition-colors">
-            ZINNIA <span className="text-[#3CE7FF]">2026</span>
-          </span>
-          <span className="text-[11px] font-mono text-[#A8A8AC] uppercase tracking-widest hidden md:inline">
-            // GCE ERODE CSE
-          </span>
+        {/* Brand Logo - Theme 2 Pop-Art Comic Style */}
+        <Link
+          to="/"
+          onClick={() => audioManager.playNodeEngage()}
+          className="cursor-pointer group relative px-3 py-1 bg-[#F5D90A] border-[2.5px] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400] -rotate-1 hover:rotate-0 transition-transform active:translate-x-0.5 active:translate-y-0.5 inline-flex items-center gap-1.5"
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="font-display text-lg sm:text-xl text-[#0D0D0F] tracking-wide font-black">
+              ZINNIA
+            </span>
+            <span className="font-comic text-base sm:text-lg text-[#FF3366] font-black">
+              '26
+            </span>
+          </div>
+          {/* Speech Tail */}
+          <div className="absolute -bottom-1.5 left-3 w-2 h-2 bg-[#F5D90A] border-r-[2px] border-b-[2px] border-[#F5D90A] rotate-45" />
         </Link>
 
         {/* Clean Flat Navigation */}

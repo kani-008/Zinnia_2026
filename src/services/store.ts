@@ -28,6 +28,7 @@ const STORAGE_KEYS = {
 class ZinniaStore {
   private listeners: Set<() => void> = new Set();
   private isSyncing = false;
+  private realTimeChannel: any = null;
 
   constructor() {
     this.cleanLegacyStorage();
@@ -58,22 +59,37 @@ class ZinniaStore {
 
   private setupRealtimeSubscription() {
     if (!isRealtimeEnabled()) return;
+    if (this.realTimeChannel) return;
+
     try {
-      const channel = supabase
-        .channel('public_team_db_sync')
+      let isCleaningUp = false;
+      const channel = supabase.channel('public_team_db_sync');
+
+      channel
         .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'event_registrations' }, () => this.syncFromSupabase())
         .subscribe((status, err) => {
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-            console.warn('[Supabase Realtime] WebSocket connection closed or error. Cleaning channel to prevent retry loops:', err || status);
-            try {
-              supabase.removeChannel(channel);
-            } catch (e) {}
+          if (status === 'SUBSCRIBED') {
+            return;
+          }
+          if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') && !isCleaningUp) {
+            isCleaningUp = true;
+            console.warn('[Supabase Realtime] WebSocket connection closed or error:', err || status);
+            setTimeout(() => {
+              try {
+                supabase.removeChannel(channel);
+              } catch (e) {}
+              if (this.realTimeChannel === channel) {
+                this.realTimeChannel = null;
+              }
+            }, 0);
           }
         });
+
+      this.realTimeChannel = channel;
     } catch (e) {
       console.warn('Realtime subscription notice:', e);
     }
