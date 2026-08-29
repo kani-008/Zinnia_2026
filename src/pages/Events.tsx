@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
-import { EventMission } from '@packages/types/src';
+import { EventMission } from '@/types';
 import { audioManager } from '../core/AudioManager';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { 
@@ -74,7 +74,7 @@ export const WebsiteEventsPage: React.FC = () => {
               {e.mission_name}
             </h3>
             <div className={`font-comic text-xs font-bold uppercase tracking-wider pt-0.5 ${isTech ? 'text-[#3CE7FF]' : 'text-[#FF3366]'}`}>
-              {e.title}
+              {e.tagline || e.title}
             </div>
           </div>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Participant } from '@packages/types/src';
+import { Participant } from '@/types';
 import { ShieldCheck, ShieldAlert, CheckCircle2, XCircle, AlertTriangle, User, Building2, Calendar, Lock } from 'lucide-react';
 
 export interface VerificationResult {

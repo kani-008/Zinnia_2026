@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { store } from '../../services/store';
-import { AdminRole } from '@packages/types/src';
+import { AdminRole } from '@/types';
 import { 
   Users, 
   QrCode, 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { EventMission } from '@packages/types/src';
+import { EventMission } from '@/types';
 import { Clock, Users, ArrowUpRight, Trophy, Sparkles, Code2, Cpu } from 'lucide-react';
 import { sound } from '../../services/sound';
 

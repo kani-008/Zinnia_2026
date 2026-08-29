@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { store } from '../../services/store';
-import { Participant, EventMission } from '@packages/types/src';
-import { parseQRPayload } from '@packages/utils/src/qr';
+import { Participant, EventMission } from '@/types';
+import { parseQRPayload } from '@/utils/qr';
 import { QRVerificationCard, VerificationResult } from '../../components/admin/QRVerificationCard';
 import { 
   QrCode, 

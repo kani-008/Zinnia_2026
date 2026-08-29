@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useParams } from 'react-router-dom';
 import { store } from '../services/store';
 import { QRCodeSVG } from 'qrcode.react';
-import { Team, TeamMember } from '@packages/types/src';
+import { Team, TeamMember } from '@/types';
 import { 
   QrCode, 
   Users, 
@@ -126,7 +126,7 @@ export const WebsitePassportPage: React.FC = () => {
     
     // Format text
     const message = encodeURIComponent(
-      `⚡ *ZINNIA 2026 — DIGITAL PASSPORT*\n\n` +
+      `*ZINNIA 2026 — DIGITAL PASSPORT*\n\n` +
       `Hello ${member.name}! Here is your official Gate Pass & QR Token for Zinnia '26:\n\n` +
       `🔗 *Access Pass:* ${memberPassLink}\n` +
       `🛡️ *Pass ID:* ${member.id}\n` +

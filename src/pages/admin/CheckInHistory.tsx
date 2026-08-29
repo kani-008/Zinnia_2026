@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { store } from '../../services/store';
-import { AttendanceRecord } from '@packages/types/src';
+import { AttendanceRecord } from '@/types';
 import { History, Search, Filter, Calendar, Clock, User, Shield, CheckCircle2, DoorOpen, Utensils, Zap } from 'lucide-react';
 
 export const CheckInHistoryPage: React.FC = () => {

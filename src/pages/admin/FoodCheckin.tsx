@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { store } from '../../services/store';
-import { TeamMember, Team } from '@packages/types/src';
+import { TeamMember, Team } from '@/types';
 import { CameraQRScannerModal } from '../../components/CameraQRScannerModal';
 import { 
   Utensils, 

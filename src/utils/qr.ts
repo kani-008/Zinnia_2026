@@ -1,4 +1,4 @@
-import { QRScanPayload } from '../../types/src';
+import { QRScanPayload } from '../types';
 
 export function createQRPayload(agent_id: string, token: string): string {
   const payload: QRScanPayload = {

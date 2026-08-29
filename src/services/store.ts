@@ -9,15 +9,15 @@ import {
   PrizePosition,
   EventType,
   HandBand
-} from '@packages/types/src';
-import { OFFICIAL_MISSIONS } from '@packages/config/src/events';
-import { generateTeamId, generateMemberId } from '@packages/utils/src/participant-id';
+} from '@/types';
+import { OFFICIAL_MISSIONS } from '@/config/events';
+import { generateTeamId, generateMemberId } from '@/utils/participant-id';
 import { supabase, isSupabaseConfigured, isRealtimeEnabled } from '../lib/supabase';
 
 const STORAGE_KEYS = {
   TEAMS: 'zin26_live_teams_v2',
   MEMBERS: 'zin26_live_members_v2',
-  EVENTS: 'zin26_live_events_v2',
+  EVENTS: 'zin26_live_events_v6',
   REGISTRATIONS: 'zin26_live_registrations_v2',
   ATTENDANCE: 'zin26_live_attendance_v2',
   HAND_BANDS: 'zin26_live_hand_bands_v2',
@@ -38,7 +38,7 @@ class ZinniaStore {
 
   private cleanLegacyStorage() {
     try {
-      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1'].forEach(k => {
+      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1', 'zin26_live_events_v2', 'zin26_live_events_v3', 'zin26_live_events_v4', 'zin26_live_events_v5'].forEach(k => {
         localStorage.removeItem(k);
       });
     } catch {}
@@ -149,14 +149,39 @@ class ZinniaStore {
       this.setStorage(STORAGE_KEYS.TEAMS, mergedTeams);
       this.setStorage(STORAGE_KEYS.MEMBERS, mergedMembers);
 
-      // 3. Fetch live events
+      // 3. Fetch live events from Supabase backend
       const { data: dbEvents, error: eErr } = await supabase
         .from('events')
         .select('*')
         .order('code', { ascending: true });
 
       if (!eErr && dbEvents && dbEvents.length > 0) {
-        this.setStorage(STORAGE_KEYS.EVENTS, dbEvents);
+        // Merge Supabase event names and updates with the baseline configuration
+        const currentEvents = this.getStorage<EventMission[]>(STORAGE_KEYS.EVENTS, OFFICIAL_MISSIONS);
+        const mergedEvents = currentEvents.map(base => {
+          const matched = dbEvents.find(db => 
+            (db.code && db.code.toString().padStart(2, '0') === base.code) ||
+            (db.id && db.id.toLowerCase() === base.id.toLowerCase()) ||
+            (db.mission_name && db.mission_name.toLowerCase() === base.mission_name.toLowerCase()) ||
+            (db.title && db.title.toLowerCase() === base.title.toLowerCase())
+          );
+
+          if (matched) {
+            return {
+              ...base,
+              mission_name: matched.mission_name || matched.title || matched.name || base.mission_name,
+              title: matched.title || matched.mission_name || matched.name || base.title,
+              venue: matched.venue || base.venue,
+              schedule_time: matched.schedule_time || base.schedule_time,
+              status: matched.status || base.status,
+              description: matched.description || base.description,
+            };
+          }
+          return base;
+        });
+
+        this.setStorage(STORAGE_KEYS.EVENTS, mergedEvents);
+        this.notifySubscribers();
       }
 
       // 4. Fetch live event registrations
@@ -1194,7 +1219,12 @@ class ZinniaStore {
 
   // --- EVENTS ---
   getEvents(filterType?: EventType): EventMission[] {
-    const events = this.getStorage<EventMission[]>(STORAGE_KEYS.EVENTS, OFFICIAL_MISSIONS);
+    let events = this.getStorage<EventMission[]>(STORAGE_KEYS.EVENTS, OFFICIAL_MISSIONS);
+    // If the cache contains legacy data (not 9 events or missing 'debugging'), refresh from OFFICIAL_MISSIONS
+    if (!events || events.length !== 9 || !events.some(e => e.id === 'debugging')) {
+      events = OFFICIAL_MISSIONS;
+      this.setStorage(STORAGE_KEYS.EVENTS, events);
+    }
     if (filterType) {
       return events.filter(e => e.event_type === filterType);
     }

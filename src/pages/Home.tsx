@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { audioManager } from '../core/AudioManager';
-import ultronImg from '../assets/ultron.svg';
-import { MissMinutesCompanion } from '../components/ai/MissMinutesCompanion';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
-import { EventMission } from '@packages/types/src';
-import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award } from 'lucide-react';
+import { WebsiteFooter } from '../components/layout/Footer';
+import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award, X, Phone, CheckCircle2, Mail, Send } from 'lucide-react';
 
 // 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
 const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
@@ -150,11 +148,20 @@ export const WebsiteHomePage: React.FC = () => {
 
   const [interactiveSoundText, setInteractiveSoundText] = useState<string | null>(null);
 
-  // Tab State for Events (TECHNICAL vs NON-TECHNICAL)
-  const [eventTab, setEventTab] = useState<'TECH' | 'NON_TECH'>('TECH');
+  // Selected Event Modal State
+  const [selectedEvent, setSelectedEvent] = useState<EventMission | null>(null);
 
   // Live Events Sync from Supabase DB / Store
   const [events, setEvents] = useState<EventMission[]>(() => store.getEvents());
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newsletterEmail) {
+      triggerComicFX('SUBSCRIBED!');
+      setNewsletterEmail('');
+    }
+  };
 
   useEffect(() => {
     const unsub = store.subscribe(() => {
@@ -167,7 +174,6 @@ export const WebsiteHomePage: React.FC = () => {
 
   const techEvents = events.filter((e) => e.event_type === 'TECH');
   const nonTechEvents = events.filter((e) => e.event_type === 'NON_TECH');
-  const displayedEvents = eventTab === 'TECH' ? techEvents : nonTechEvents;
 
   const triggerComicFX = (soundText: string) => {
     setInteractiveSoundText(soundText);
@@ -189,7 +195,7 @@ export const WebsiteHomePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date('2026-09-17T09:00:00+05:30').getTime();
+    const targetDate = new Date('2026-09-24T09:00:00+05:30').getTime();
 
     const updateTimer = () => {
       const now = new Date().getTime();
@@ -234,33 +240,7 @@ export const WebsiteHomePage: React.FC = () => {
         </div>
       )}
 
-      {/* =========================================================================
-          7. INFINITE MARQUEE TICKER (Smooth 2D Horizontal Scroll)
-          ========================================================================= */}
-      <div className="max-w-6xl mx-auto w-full overflow-hidden whitespace-nowrap text-[9px] sm:text-[11px] font-mono tracking-widest text-[#A8A8AC] uppercase z-10 px-2 py-0.5 border-b border-[#3A3A3E]/60">
-        <div className="animate-marquee gap-8">
-          <div className="flex items-center gap-6 shrink-0">
-            <span>VOL. 2026 &bull; ISSUE #01 &bull; SPECIAL EDITION &bull; GCE ERODE CSE</span>
-            <span className="text-[#FF3366] font-bold">&bull;&bull;&bull;</span>
-            <span>ALL-NEW 2D SYMPO EXPERIENCE &bull; 17 SEPTEMBER 2026</span>
-            <span className="text-[#3CE7FF] font-bold">&bull;&bull;&bull;</span>
-            <span>NATIONAL LEVEL TECHNICAL SYMPOSIUM &bull; 9 BATTLEGROUNDS</span>
-            <span className="text-[#F5D90A] font-bold">&bull;&bull;&bull;</span>
-            <span>ANNA UNIVERSITY VERIFIED &bull; CASH PRIZE ₹25,000+</span>
-            <span className="text-[#A8A8AC]/40 font-bold">&bull;&bull;&bull;</span>
-          </div>
-          <div className="flex items-center gap-6 shrink-0" aria-hidden="true">
-            <span>VOL. 2026 &bull; ISSUE #01 &bull; SPECIAL EDITION &bull; GCE ERODE CSE</span>
-            <span className="text-[#FF3366] font-bold">&bull;&bull;&bull;</span>
-            <span>ALL-NEW 2D SYMPO EXPERIENCE &bull; 17 SEPTEMBER 2026</span>
-            <span className="text-[#3CE7FF] font-bold">&bull;&bull;&bull;</span>
-            <span>NATIONAL LEVEL TECHNICAL SYMPOSIUM &bull; 9 BATTLEGROUNDS</span>
-            <span className="text-[#F5D90A] font-bold">&bull;&bull;&bull;</span>
-            <span>ANNA UNIVERSITY VERIFIED &bull; CASH PRIZE ₹25,000+</span>
-            <span className="text-[#A8A8AC]/40 font-bold">&bull;&bull;&bull;</span>
-          </div>
-        </div>
-      </div>
+
 
       {/* =========================================================================
           1. TOP NAVBAR (100% 2D Illustrated Comic Style with Magnetic Buttons)
@@ -297,20 +277,17 @@ export const WebsiteHomePage: React.FC = () => {
           {/* EVENTS TAB */}
           <MagneticElement strength={0.3} onClick={() => scrollToSection('events', 'EVENTS!')}>
             <button className="px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#3CE7FF] hover:text-[#3CE7FF] text-[#F2F2F0] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] font-comic text-[11px] sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
-              <span className="text-[#3CE7FF]">⚡</span>
               <span>EVENTS</span>
             </button>
           </MagneticElement>
 
-          <MagneticElement strength={0.3} onClick={() => scrollToSection('about', 'ABOUT!')}>
-            <button className="px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#EAEAEA] hover:text-[#FFFFFF] text-[#F2F2F0] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] font-comic text-[11px] sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
-              ABOUT
-            </button>
-          </MagneticElement>
-
-          <MagneticElement strength={0.3} onClick={() => triggerComicFX('HELLO!')}>
-            <button className="hidden xs:inline-block px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#F5D90A] hover:text-[#F5D90A] text-[#F2F2F0] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] font-comic text-[11px] sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
-              CONTACT
+          {/* CONTACT TAB */}
+          <MagneticElement strength={0.3} onClick={() => {
+            triggerComicFX('CONTACT!');
+            navigate('/contact');
+          }}>
+            <button className="px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#00E5FF] hover:text-[#00E5FF] text-[#F2F2F0] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] font-comic text-[11px] sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
+              <span>CONTACT</span>
             </button>
           </MagneticElement>
 
@@ -326,649 +303,761 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
           2. CENTER HERO: LARGE COMIC PANEL (Main Visual Focus)
           ========================================================================= */}
-      <main className="relative z-30 max-w-6xl mx-auto w-full py-4 sm:py-6 px-2 min-h-[calc(100vh-140px)] flex flex-col justify-center">
+      <main className="relative z-30 max-w-7xl mx-auto w-full pt-1 sm:pt-2 pb-2 sm:pb-4 px-1 sm:px-3 flex flex-col items-center">
         {/* Outer unclipped wrapper for top floating badges */}
         <div className="relative w-full">
-          {/* Top-Left Panel Narration Box (Yellow Badge + Gold Shadow) */}
-          <div
-            onClick={() => triggerComicFX('CHAPTER 01!')}
-            className="cursor-pointer absolute -top-3 sm:-top-3.5 left-1.5 sm:left-6 z-50 bg-[#F5D90A] text-[#0D0D0F] border-[2px] sm:border-[2.5px] border-[#F5D90A] shadow-[2.5px_2.5px_0px_#8A7400] sm:shadow-[3.5px_3.5px_0px_#8A7400] px-2 sm:px-4 py-0.5 sm:py-1 -rotate-2 sticker-pop"
-          >
-            <span className="font-comic text-[9px] sm:text-xs md:text-sm uppercase tracking-wider font-extrabold">
-              CHAPTER 01: THE AWAKENING
-            </span>
-          </div>
 
-          {/* Top-Right Prize Starburst Sticker (Pink Badge + Magenta Shadow) */}
-          <div
-            onClick={() => triggerComicFX('KACHING!')}
-            className="cursor-pointer absolute -top-3.5 sm:-top-4 right-1.5 sm:right-6 z-50 bg-[#FF3366] border-[2px] sm:border-[2.5px] border-[#FF3366] shadow-[2.5px_2.5px_0px_#B01F45] sm:shadow-[3.5px_3.5px_0px_#B01F45] px-2.5 sm:px-5 py-1 sm:py-1.5 rotate-4 sticker-pop-alt"
-          >
-            <div className="flex flex-col items-center justify-center leading-none text-center">
-              <span className="font-display text-xs sm:text-base md:text-lg text-white font-extrabold tracking-wide">
-                ₹25,000+
-              </span>
-              <span className="font-comic text-[7px] sm:text-[10px] text-[#F5D90A] tracking-wider uppercase mt-0.5 font-black">
-                PRIZE POOL!
-              </span>
-            </div>
-          </div>
 
-          {/* Main Comic Panel Frame (Subtle Dark Border + Soft Ambient Glow + Deep 2D Drop Shadow) */}
-          <div className="relative w-full bg-[#1A1A1D] border-[2.5px] sm:border-[3.5px] border-[#3A3A3E] shadow-[0_0_35px_rgba(245,217,10,0.07),_0_0_70px_rgba(60,231,255,0.04),_4px_4px_0px_#000000] sm:shadow-[6px_6px_0px_#000000] p-3 sm:p-6 md:p-8 pt-5 sm:pt-7">
+
+          {/* Main Hero Banner Container (Transparent, Borderless, Moved Up) */}
+          <div className="relative w-full bg-transparent p-1 xs:p-2 sm:p-4 pt-0 xs:pt-1 sm:pt-1 pb-1 xs:pb-2 sm:pb-3 overflow-hidden">
             {/* -------------------------------------------------------------
-                HERO CONTENT GRID INSIDE THE COMIC PANEL
+                HERO CONTENT INSIDE THE COMIC PANEL (EXTRA-LARGE HERO BANNER)
                 ------------------------------------------------------------- */}
-            <div className="relative z-20 grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-6 items-center">
-              {/* Left Column (7 cols): Comic Title, Narrative & Speech Bubble */}
-              <div className="md:col-span-7 space-y-2 sm:space-y-3 text-left">
-                {/* Event Subtitle Badge: High Contrast Yellow Outline Tag */}
-                <div className="inline-block max-w-full px-2 sm:px-2.5 py-0.5 bg-[#1A1A1D] text-[#F5D90A] border-[1.5px] border-[#F5D90A] shadow-[2px_2px_0px_#8A7400] font-comic text-[9px] sm:text-[11px] md:text-xs uppercase tracking-widest rotate-1 font-bold sticker-pop cursor-pointer leading-normal">
-                  GOVT COLLEGE OF ENGINEERING, ERODE &bull; CSE DEPT
-                </div>
+            <div className="relative z-20 flex flex-col items-center justify-center text-center space-y-2 xs:space-y-2.5 sm:space-y-3.5 w-full">
+              {/* Institution & Department Header */}
+              <div className="flex flex-col items-center justify-center text-center w-full px-1 sm:px-4 space-y-1 sm:space-y-1.5">
+                {/* College Name: Large, bold, stretching end-to-end */}
+                <h3 className="w-full text-center font-comic font-black text-[#F5D90A] uppercase whitespace-normal sm:whitespace-nowrap text-lg xs:text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl tracking-wide xs:tracking-wider sm:tracking-[0.22em] md:tracking-[0.28em] lg:tracking-[0.34em] leading-snug sm:leading-tight select-none">
+                  GOVERNMENT COLLEGE OF ENGINEERING, ERODE
+                </h3>
+                {/* Department Name: Slightly smaller than college */}
+                <p className="w-full text-center font-comic font-extrabold text-[#3CE7FF] uppercase whitespace-normal sm:whitespace-nowrap text-sm xs:text-base sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl tracking-normal xs:tracking-wide sm:tracking-[0.12em] md:tracking-[0.16em] lg:tracking-[0.2em] leading-snug sm:leading-tight select-none">
+                  DEPARTMENT OF COMPUTER SCIENCE &amp; ENGINEERING
+                </p>
+              </div>
 
-                {/* Giant Comic Title */}
-                <div className="space-y-0.5">
-                  <h1 className="font-display text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F2F2F0] tracking-tight leading-none uppercase">
+              {/* Giant Comic Title with '26 (tight gap to dept name) */}
+              <div className="flex flex-col items-center justify-center text-center w-full pt-0">
+                <div className="relative inline-flex items-start justify-center max-w-full">
+                  <h1 className="font-display text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-[#F2F2F0] tracking-tight leading-none uppercase select-none">
                     ZINNIA
                   </h1>
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-0.5">
-                    <span className="font-comic text-xl sm:text-3xl md:text-4xl text-[#3CE7FF] font-black">
-                      2026
-                    </span>
-                    <span className="px-2 sm:px-2.5 py-0.5 bg-[#FF3366] text-white border-[1.5px] border-[#FF3366] font-bungee text-[9px] sm:text-xs -rotate-2 sticker-pop-alt cursor-pointer shadow-[2px_2px_0px_#B01F45]">
-                      NATIONAL LEVEL
-                    </span>
-                  </div>
+                  <span className="font-comic text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#3CE7FF] font-black leading-none translate-y-1 sm:translate-y-2 md:translate-y-3 ml-1.5 sm:ml-2.5 select-none">
+                    '26
+                  </span>
                 </div>
 
-                {/* Comic Speech Bubble / Narrative Box: Neutral Dark with Subtle Border */}
-                <div className="relative p-2 sm:p-3.5 bg-[#141417] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000]">
-                  <p className="font-comic text-[11px] sm:text-sm md:text-[15px] text-[#F2F2F0] leading-snug font-medium">
-                    "A TIMELINE WAS BROKEN. SOMETHING EMERGED FROM IT. NINE BATTLEGROUNDS AWAIT THE BOLDEST MINDS IN COMPUTATION!"
-                  </p>
-                  {/* Speech Arrow */}
-                  <div className="absolute -bottom-2.5 left-5 sm:left-6 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-[#141417] border-r-[1.5px] sm:border-r-[2px] border-b-[1.5px] sm:border-b-[2px] border-[#3A3A3E] rotate-45" />
-                </div>
-
-                {/* 9 Battlegrounds Dark Themed Sticker Chips */}
-                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
+                {/* Subtitle Badges & Chips */}
+                <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 pt-3 xs:pt-3.5 sm:pt-4 max-w-full">
+                  <span className="px-3.5 sm:px-5 py-1.5 sm:py-2 bg-[#FF3366] text-white border-[2px] sm:border-[2.5px] border-[#FF3366] font-bungee text-[11px] sm:text-sm -rotate-2 sticker-pop-alt cursor-pointer shadow-[3px_3px_0px_#B01F45]">
+                    NATIONAL LEVEL
+                  </span>
                   <span
                     onClick={() => triggerComicFX('9 BATTLES!')}
-                    className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-[#123B3E] text-[#3CE7FF] border-[1.5px] sm:border-[2px] border-[#3CE7FF] font-mono text-[9px] sm:text-xs font-black shadow-[2px_2px_0px_#1E8FA3] sticker-pop cursor-pointer"
+                    className="px-3.5 sm:px-5 py-1.5 sm:py-2 bg-[#123B3E] text-[#3CE7FF] border-[2px] sm:border-[2.5px] border-[#3CE7FF] font-mono text-[11px] sm:text-sm font-black shadow-[2.5px_2.5px_0px_#1E8FA3] sticker-pop cursor-pointer"
                   >
-                    ⚡ 9 ACTIVE EVENTS
+                    9 ACTIVE EVENTS
                   </span>
                   <span
                     onClick={() => triggerComicFX('VERIFIED!')}
-                    className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-[#2B2408] text-[#F5D90A] border-[1.5px] sm:border-[2px] border-[#F5D90A] font-mono text-[9px] sm:text-xs font-black shadow-[2px_2px_0px_#8A7400] sticker-pop-alt cursor-pointer"
+                    className="px-3.5 sm:px-5 py-1.5 sm:py-2 bg-[#2B2408] text-[#F5D90A] border-[2px] sm:border-[2.5px] border-[#F5D90A] font-mono text-[11px] sm:text-sm font-black shadow-[2.5px_2.5px_0px_#8A7400] sticker-pop-alt cursor-pointer"
                   >
-                    ⚡ ANNA UNIV VERIFIED
+                    ANNA UNIV VERIFIED
                   </span>
                 </div>
               </div>
 
-              {/* Right Column (5 cols): 2D Hand-Drawn Illustrated Hero Art with Ultron SVG */}
-              <div className="md:col-span-5 relative flex items-center justify-center pt-2 md:pt-0">
-                <div className="relative w-36 h-36 sm:w-52 sm:h-52 md:w-60 md:h-60 lg:w-68 lg:h-68 flex items-center justify-center">
-                  {/* 2D Comic Illustrated Ultron Character with Dark Yellow-Tinted Glowing Backdrop */}
-                  <svg
-                    viewBox="0 0 200 200"
-                    className="relative z-30 w-full h-full max-w-full overflow-visible hover:scale-105 transition-transform duration-200"
-                  >
-                    <defs>
-                      {/* Dark Yellow Radial Gradient Disc Glow */}
-                      <radialGradient id="robotGlowBackdrop" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stopColor="#F5D90A" stopOpacity="0.45" />
-                        <stop offset="65%" stopColor="#8A7400" stopOpacity="0.22" />
-                        <stop offset="100%" stopColor="#3A2F00" stopOpacity="0.05" />
-                      </radialGradient>
-
-                      {/* Pop-Out Clip Path: Open at top so head breaks above circle, curved at bottom to match circle */}
-                      <clipPath id="ultronPopOutClip">
-                        <path
-                          d="M -50 -100
-                             L 250 -100
-                             L 250 115
-                             C 220 154, 175 192, 142 192
-                             C 114 198, 81 194, 56 182
-                             C 28 170, -5 143, -15 115
-                             Z"
-                        />
-                      </clipPath>
-                    </defs>
-
-                    {/* Hand-Drawn Glowing Cyber-Amber Background Silhouette */}
-                    <path
-                      d="M 102 14
-                         C 130 13, 158 24, 175 46
-                         C 191 66, 194 96, 191 123
-                         C 188 152, 169 178, 142 188
-                         C 114 197, 81 193, 56 181
-                         C 31 169, 14 143, 11 116
-                         C 8 86, 21 54, 46 34
-                         C 62 21, 82 14, 102 14 Z"
-                      fill="url(#robotGlowBackdrop)"
-                      stroke="#F5D90A"
-                      strokeWidth="3.5"
-                      strokeLinejoin="round"
-                      strokeLinecap="round"
-                    />
-
-                    {/* Comic Speed Lines Behind & Framing Ultron (Gold Tint) */}
-                    <line x1="15" y1="50" x2="60" y2="70" stroke="#F5D90A" strokeOpacity="0.5" strokeWidth="4.5" strokeLinecap="round" />
-                    <line x1="25" y1="35" x2="65" y2="60" stroke="#F5D90A" strokeOpacity="0.4" strokeWidth="3" strokeLinecap="round" />
-                    <line x1="10" y1="100" x2="45" y2="100" stroke="#F5D90A" strokeOpacity="0.5" strokeWidth="4" strokeLinecap="round" />
-                    <line x1="12" y1="108" x2="38" y2="108" stroke="#F5D90A" strokeOpacity="0.4" strokeWidth="3" strokeLinecap="round" />
-                    <line x1="20" y1="160" x2="55" y2="145" stroke="#F5D90A" strokeOpacity="0.5" strokeWidth="4.5" strokeLinecap="round" />
-
-                    <line x1="185" y1="50" x2="140" y2="70" stroke="#F5D90A" strokeOpacity="0.5" strokeWidth="4.5" strokeLinecap="round" />
-                    <line x1="175" y1="35" x2="135" y2="60" stroke="#F5D90A" strokeOpacity="0.4" strokeWidth="3" strokeLinecap="round" />
-                    <line x1="190" y1="100" x2="155" y2="100" stroke="#F5D90A" strokeOpacity="0.5" strokeWidth="4" strokeLinecap="round" />
-                    <line x1="188" y1="108" x2="162" y2="108" stroke="#F5D90A" strokeOpacity="0.4" strokeWidth="3" strokeLinecap="round" />
-                    <line x1="180" y1="160" x2="145" y2="145" stroke="#F5D90A" strokeOpacity="0.5" strokeWidth="4.5" strokeLinecap="round" />
-
-                    {/* Ultron Vector Art: Enlarged with top half of head extending above circle, bottom cropped to circle */}
-                    <image
-                      href={ultronImg}
-                      x="-8"
-                      y="-28"
-                      width="216"
-                      height="216"
-                      clipPath="url(#ultronPopOutClip)"
-                      preserveAspectRatio="xMidYMin slice"
-                    />
-                  </svg>
-
-                  {/* "⚡ CRACKLE!" Sound Effect Overlay Sticker with Gold Shadow */}
-                  <div
-                    onClick={() => triggerComicFX('ZAP!')}
-                    className="cursor-pointer absolute -bottom-2 -left-3 sm:-bottom-3 sm:-left-6 z-40 bg-[#F5D90A] border-[2px] sm:border-[2.5px] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400] sm:shadow-[4px_4px_0px_#8A7400] px-2.5 sm:px-3 py-0.5 sm:py-1 -rotate-12 sticker-pop-alt active:translate-x-0.5 active:translate-y-0.5"
-                  >
-                    <span className="font-display text-[10px] sm:text-sm md:text-base text-[#FF3366] font-black tracking-wide">
-                      ⚡ CRACKLE!
-                    </span>
-                  </div>
-                </div>
+              {/* Center Register CTA Button */}
+              <div className="pt-2 sm:pt-3 flex justify-center w-full max-w-md">
+                <MagneticElement strength={0.35} onClick={() => { triggerComicFX('POW!'); registerNav.trigger('/register'); }} className="w-full sm:w-auto">
+                  <button className="w-full sm:w-auto px-6 xs:px-8 sm:px-10 md:px-12 py-2.5 sm:py-3 bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[2px] sm:border-[2.5px] border-[#3CE7FF] hover:border-[#F5D90A] shadow-[3px_3px_0px_#1E8FA3] sm:shadow-[4px_4px_0px_#1E8FA3] hover:shadow-[4px_4px_0px_#8A7400] font-display text-xs xs:text-sm sm:text-base md:text-lg tracking-wider uppercase cursor-pointer transition-all active:translate-x-1 active:translate-y-1 flex items-center justify-center gap-2 sm:gap-2.5 group">
+                    <span>REGISTER FOR ZINNIA</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform shrink-0" />
+                  </button>
+                </MagneticElement>
               </div>
             </div>
           </div>
         </div>
 
         {/* =========================================================================
-            3. COUNTDOWN & 4. REGISTER CTA (Directly Below Artwork with Magnetic Pull)
+            3. COUNTDOWN (Centered Below Comic Panel)
             ========================================================================= */}
-        <div className="relative z-30 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-6 pt-3 sm:pt-4 w-full">
+        <div className="relative z-30 flex flex-col items-center justify-center pt-2 sm:pt-4 w-full">
           {/* Illustrated Comic Countdown Module */}
-          <div className="flex flex-col items-center sm:items-start">
+          <div className="flex flex-col items-center max-w-full px-1">
             {/* Caption Header */}
-            <div className="px-2.5 py-0.5 bg-[#1A1A1D] text-[#A8A8AC] font-comic text-[10px] sm:text-xs uppercase tracking-widest border border-[#3A3A3E] -rotate-1 font-bold sticker-pop cursor-pointer">
-              REGISTRATION OPENS IN
+            <div className="px-3 sm:px-4 py-0.5 sm:py-1 bg-[#1A1A1D] text-[#A8A8AC] font-comic text-[10px] sm:text-xs uppercase tracking-widest border border-[#3A3A3E] -rotate-1 font-bold sticker-pop cursor-pointer mb-2">
+              SYMPOSIUM COMMENCES IN
             </div>
 
-            {/* Countdown Comic Number Boxes: Neutral Dark Days/Hrs/Min + Vibrant Pink Seconds */}
-            <div className="flex items-center gap-1.5 sm:gap-2 pt-1">
+            {/* Countdown Comic Number Boxes */}
+            <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3">
               {/* Days */}
-              <div className="flex flex-col items-center p-1 sm:p-1.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[3.5px_3.5px_0px_#000000] min-w-[40px] sm:min-w-[56px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
+              <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.days}
-                  className="font-display text-lg sm:text-2xl md:text-3xl text-[#F2F2F0]"
+                  className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-[#F2F2F0]"
                 />
-                <span className="font-comic text-[7px] sm:text-[9px] text-[#A8A8AC] font-bold uppercase mt-0.5">
+                <span className="font-comic text-[7px] sm:text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">
                   DAYS
                 </span>
               </div>
 
-              <span className="font-display text-lg sm:text-xl text-[#3A3A3E] font-bold animate-pulse">:</span>
+              <span className="font-display text-base sm:text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
 
               {/* Hours */}
-              <div className="flex flex-col items-center p-1 sm:p-1.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[3.5px_3.5px_0px_#000000] min-w-[40px] sm:min-w-[56px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
+              <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.hours}
-                  className="font-display text-lg sm:text-2xl md:text-3xl text-[#F2F2F0]"
+                  className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-[#F2F2F0]"
                 />
-                <span className="font-comic text-[7px] sm:text-[9px] text-[#A8A8AC] font-bold uppercase mt-0.5">
+                <span className="font-comic text-[7px] sm:text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">
                   HRS
                 </span>
               </div>
 
-              <span className="font-display text-lg sm:text-xl text-[#3A3A3E] font-bold animate-pulse">:</span>
+              <span className="font-display text-base sm:text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
 
               {/* Minutes */}
-              <div className="flex flex-col items-center p-1 sm:p-1.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[3.5px_3.5px_0px_#000000] min-w-[40px] sm:min-w-[56px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
+              <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.minutes}
-                  className="font-display text-lg sm:text-2xl md:text-3xl text-[#F2F2F0]"
+                  className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-[#F2F2F0]"
                 />
-                <span className="font-comic text-[7px] sm:text-[9px] text-[#A8A8AC] font-bold uppercase mt-0.5">
+                <span className="font-comic text-[7px] sm:text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">
                   MIN
                 </span>
               </div>
 
-              <span className="font-display text-lg sm:text-xl text-[#3A3A3E] font-bold animate-pulse">:</span>
+              <span className="font-display text-base sm:text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
 
-              {/* Seconds (Pink Accent Card + Magenta Shadow) */}
-              <div className="flex flex-col items-center p-1 sm:p-1.5 bg-[#FF3366] border-[1.5px] sm:border-[2px] border-[#FF3366] shadow-[2.5px_2.5px_0px_#B01F45] sm:shadow-[3.5px_3.5px_0px_#B01F45] min-w-[40px] sm:min-w-[56px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#B01F45] transition-all cursor-pointer">
+              {/* Seconds */}
+              <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#FF3366] border-[1.5px] sm:border-[2px] border-[#FF3366] shadow-[2.5px_2.5px_0px_#B01F45] sm:shadow-[4px_4px_0px_#B01F45] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#B01F45] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.seconds}
-                  className="font-display text-lg sm:text-2xl md:text-3xl text-white font-black"
+                  className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-white font-black"
                 />
-                <span className="font-comic text-[7px] sm:text-[9px] text-[#F5D90A] font-extrabold uppercase mt-0.5">
+                <span className="font-comic text-[7px] sm:text-[10px] text-[#F5D90A] font-extrabold uppercase mt-0.5">
                   SEC
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* Timeline Status Callout (Bottom-Right of Hero) */}
-          <div className="hidden sm:flex items-center gap-3">
+            {/* Timeline Status Callout */}
             <div 
               onClick={() => triggerComicFX('TIMELINE!')}
-              className="px-3.5 py-1.5 bg-[#1A1A1D] border-[2px] border-[#FF8C00] shadow-[3.5px_3.5px_0px_#8A5500] rotate-1 sticker-pop cursor-pointer"
+              className="mt-3 sm:mt-4 px-3 sm:px-4 py-1 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#FF8C00] shadow-[2.5px_2.5px_0px_#8A5500] rotate-1 sticker-pop cursor-pointer max-w-full text-center"
             >
-              <span className="font-comic text-xs uppercase text-[#FF8C00] font-bold tracking-wider">
-                ⏰ TIMELINE MONITORED &bull; GCE ERODE CSE
+              <span className="font-comic text-[10px] sm:text-xs uppercase text-[#FF8C00] font-bold tracking-wider">
+                ⏰ TIMELINE MONITORED &bull; 24 SEPTEMBER 2026 &bull; GCE ERODE CSE
               </span>
             </div>
           </div>
 
-          {/* Miss Minutes Living Mascot (Fixed to bottom edge of browser viewport) */}
-          <MissMinutesCompanion />
         </div>
       </main>
 
       {/* =========================================================================
-          EVENTS SECTION / CHAPTER 02 (Interactive 2D Comic Battlegrounds from DB)
+          EVENTS SECTION (100% Pixel-Faithful to Reference Design)
           ========================================================================= */}
       <section
         id="events"
-        className="relative z-30 max-w-6xl mx-auto w-full py-10 sm:py-16 px-2 my-4 sm:my-8 overflow-visible"
+        className="relative z-30 max-w-7xl mx-auto w-full py-8 sm:py-14 px-2 sm:px-4 my-2 sm:my-6 overflow-visible"
       >
-        {/* Section Header & Tab Controls */}
-        <ScrollReveal delayMs={0} className="relative mb-6 sm:mb-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <div
-                onClick={() => triggerComicFX('BATTLEGROUNDS!')}
-                className="inline-block cursor-pointer bg-[#F5D90A] text-[#0D0D0F] border-[2.5px] border-[#F5D90A] shadow-[3.5px_3.5px_0px_#8A7400] px-3.5 sm:px-5 py-1 -rotate-1 sticker-pop mb-3"
-              >
-                <span className="font-comic text-xs sm:text-sm uppercase tracking-wider font-black">
-                  CHAPTER 02: THE 9 BATTLEGROUNDS
-                </span>
-              </div>
+        {/* Section Header: —·····— ⚡ EVENTS ⚡ —·····— */}
+        <div className="flex items-center justify-center gap-3 sm:gap-6 mb-8 sm:mb-12">
+          <div className="flex items-center gap-1.5 text-zinc-600">
+            <span className="h-[1px] w-8 sm:w-28 bg-zinc-600" />
+            <span className="w-1 h-1 rounded-full bg-zinc-500" />
+            <span className="w-1 h-1 rounded-full bg-zinc-500" />
+            <span className="w-1 h-1 rounded-full bg-zinc-500" />
+            <span className="h-[1px] w-4 sm:w-16 bg-zinc-600" />
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-[#F5D90A] text-2xl sm:text-4xl font-black select-none">⚡</span>
+            <h2 className="font-display italic text-3xl xs:text-4xl sm:text-5xl md:text-6xl text-white tracking-widest uppercase select-none">
+              EVENTS
+            </h2>
+            <span className="text-[#F5D90A] text-2xl sm:text-4xl font-black select-none">⚡</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-zinc-600">
+            <span className="h-[1px] w-4 sm:w-16 bg-zinc-600" />
+            <span className="w-1 h-1 rounded-full bg-zinc-500" />
+            <span className="w-1 h-1 rounded-full bg-zinc-500" />
+            <span className="w-1 h-1 rounded-full bg-zinc-500" />
+            <span className="h-[1px] w-8 sm:w-28 bg-zinc-600" />
+          </div>
+        </div>
 
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#F2F2F0] uppercase tracking-tight">
-                CHOOSE YOUR ARENA.
-              </h2>
-              <p className="font-comic text-xs sm:text-sm md:text-base text-[#A8A8AC] max-w-2xl mt-1 font-medium">
-                Live missions synchronized directly with the Zinnia database. Compete for cash rewards and national recognition.
+        {/* -------------------------------------------------------------
+            1. TECHNICAL EVENTS ROW (01 - 06) [NEON CYAN]
+            ------------------------------------------------------------- */}
+        <div className="mb-10 sm:mb-16">
+          {/* Subheading: → TECHNICAL EVENTS ───□ */}
+          <div className="flex items-center gap-2 mb-4 sm:mb-6">
+            <span className="font-mono font-bold text-sm xs:text-base sm:text-lg text-[#00E5FF] tracking-wider flex items-center gap-2">
+              <span>→</span>
+              <span>TECHNICAL EVENTS</span>
+              <span className="inline-block w-8 sm:w-12 h-[1.5px] bg-[#00E5FF]" />
+              <span className="inline-block w-2.5 h-2.5 border-[1.5px] border-[#00E5FF]" />
+            </span>
+          </div>
+
+          {/* 5 Technical Cards Row (5 Columns) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+            {techEvents.map((e) => (
+              <div
+                key={e.id}
+                onClick={() => {
+                  triggerComicFX('ARENA!');
+                  setSelectedEvent(e);
+                }}
+                className="group relative bg-[#040608] border-[1.5px] border-[#00E5FF] rounded-xl p-3.5 sm:p-4 pt-8 sm:pt-9 flex flex-col items-center text-center justify-between min-h-[260px] sm:min-h-[295px] cursor-pointer shadow-[0_0_15px_rgba(0,229,255,0.07)] hover:shadow-[0_0_25px_rgba(0,229,255,0.35),_3px_3px_0px_#00A8C6] hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200"
+              >
+                {/* --- COMIC SCRABBLING & CORNER MARKS --- */}
+                {/* Top-Left Ribbon Badge */}
+                <div className="absolute -top-[1.5px] -left-[1.5px] z-10">
+                  <div 
+                    className="relative bg-[#00E5FF] text-[#000000] font-mono font-black text-xs px-3 py-0.5 shadow-sm flex items-center justify-center rounded-tl-xl"
+                    style={{
+                      clipPath: 'polygon(0 0, 100% 0, 80% 100%, 0 100%)',
+                      paddingRight: '14px',
+                    }}
+                  >
+                    <span>{e.code}</span>
+                    {/* Ribbon top stitch tick */}
+                    <span className="absolute -top-0.5 right-2.5 w-1 h-1.5 bg-black/60 rotate-12" />
+                  </div>
+                  {/* Scratch tick mark right under ribbon */}
+                  <span className="absolute -bottom-2 left-0 w-[1.5px] h-2 bg-[#00E5FF] opacity-90" />
+                </div>
+
+                {/* Top-Right Corner Scratch Tick */}
+                <svg className="absolute -top-1 -right-1 w-4 h-4 pointer-events-none" viewBox="0 0 16 16" fill="none">
+                  <line x1="14" y1="2" x2="14" y2="8" stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1="15" y1="7" x2="12" y2="12" stroke="#00E5FF" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+
+                {/* Bottom-Left Corner Scratch Tick */}
+                <svg className="absolute -bottom-1 -left-1 w-4 h-4 pointer-events-none" viewBox="0 0 16 16" fill="none">
+                  <line x1="2" y1="8" x2="2" y2="14" stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1="1" y1="11" x2="5" y2="15" stroke="#00E5FF" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+
+                {/* Bottom-Right Corner Scrabbling Marks (//) */}
+                <svg className="absolute -bottom-1 -right-1 w-5 h-5 pointer-events-none" viewBox="0 0 20 20" fill="none">
+                  <line x1="18" y1="8" x2="18" y2="18" stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1="13" y1="11" x2="9" y2="19" stroke="#00E5FF" strokeWidth="1.2" strokeLinecap="round" />
+                  <line x1="18" y1="12" x2="14" y2="20" stroke="#00E5FF" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+
+                {/* Subtle comic halftone screen-tone at top */}
+                <div 
+                  className="absolute inset-x-0 top-0 h-24 pointer-events-none opacity-15 rounded-t-xl"
+                  style={{
+                    backgroundImage: 'radial-gradient(#00E5FF 1px, transparent 1px)',
+                    backgroundSize: '7px 7px',
+                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1), transparent)'
+                  }}
+                />
+
+                {/* Centered Large Line-Art Icon */}
+                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-[#00E5FF] group-hover:scale-110 transition-transform my-auto">
+                  {e.id.includes('debug') && (
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00E5FF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 28C22 22 26 18 32 18C38 18 42 22 42 28V36C42 42 38 46 32 46C26 46 22 42 22 36V28Z" />
+                      <path d="M32 18V12M28 12H36" />
+                      <path d="M14 26L22 30M12 36H22M14 46L22 42" />
+                      <path d="M50 26L42 30M52 36H42M50 46L42 42" />
+                      <circle cx="32" cy="32" r="3" fill="#00E5FF" />
+                    </svg>
+                  )}
+                  {e.id.includes('signal') && (
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00E5FF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="32" cy="46" r="4" fill="#00E5FF" />
+                      <path d="M32 42V28" strokeWidth="2.8" />
+                      <path d="M24 38C20 34 20 28 24 24" />
+                      <path d="M40 38C44 34 44 28 40 24" />
+                      <path d="M18 44C12 36 12 24 18 16" />
+                      <path d="M46 44C52 36 52 24 46 16" />
+                      <path d="M26 52L32 46L38 52" />
+                    </svg>
+                  )}
+                  {e.id.includes('sql') && (
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00E5FF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <ellipse cx="32" cy="18" rx="18" ry="6" />
+                      <path d="M14 18V32C14 35.3 22 38 32 38C42 38 50 35.3 50 32V18" />
+                      <path d="M14 32V46C14 49.3 22 52 32 52C42 52 50 49.3 50 46V32" />
+                      <circle cx="24" cy="32" r="2" fill="#00E5FF" />
+                      <circle cx="24" cy="46" r="2" fill="#00E5FF" />
+                    </svg>
+                  )}
+                  {e.id.includes('gadget') && (
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00E5FF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="19" y="19" width="26" height="26" rx="4" />
+                      <rect x="26" y="26" width="12" height="12" rx="2" fill="#00E5FF" fillOpacity="0.2" />
+                      <path d="M24 9V19M32 9V19M40 9V19" />
+                      <path d="M24 45V55M32 45V55M40 45V55" />
+                      <path d="M9 24H19M9 32H19M9 40H19" />
+                      <path d="M45 24H55M45 32H55M45 40H55" />
+                    </svg>
+                  )}
+                  {e.id.includes('paper') && (
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00E5FF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 14H52" strokeWidth="3" />
+                      <rect x="14" y="16" width="36" height="24" rx="2" />
+                      <path d="M20 32L28 24L36 28L44 18" strokeWidth="2.2" />
+                      <circle cx="44" cy="18" r="2.5" fill="#00E5FF" />
+                      <path d="M32 40V52M22 52L32 40L42 52" strokeWidth="2.5" />
+                    </svg>
+                  )}
+                </div>
+
+                {/* Event Title (Stacked Lines) & Tagline */}
+                <div className="w-full mt-auto">
+                  <h3 className="font-sans font-black text-sm xs:text-base sm:text-lg text-white uppercase tracking-wider group-hover:text-[#00E5FF] transition-colors leading-tight">
+                    {e.mission_name.toLowerCase().includes('gadget') ? (
+                      <>
+                        <span>GADGET CODES</span>
+                        <br />
+                        <span className="text-[10px] sm:text-xs text-amber-400 font-mono tracking-normal normal-case block mt-0.5">(Single event)</span>
+                      </>
+                    ) : e.mission_name.toLowerCase().includes('the last signal') ? (
+                      <>
+                        <span>THE LAST</span>
+                        <br />
+                        <span>SIGNAL</span>
+                      </>
+                    ) : e.mission_name.toLowerCase().includes('lost at sql') ? (
+                      <>
+                        <span>LOST AT</span>
+                        <br />
+                        <span>SQL</span>
+                      </>
+                    ) : e.mission_name.toLowerCase().includes('paper presentation') ? (
+                      <>
+                        <span>PAPER</span>
+                        <br />
+                        <span>PRESENTATION</span>
+                      </>
+                    ) : (
+                      <span>{e.mission_name}</span>
+                    )}
+                  </h3>
+                  <p className="font-mono text-[10px] sm:text-[11px] text-[#A1A1AA] mt-2 leading-tight whitespace-pre-line">
+                    {e.tagline || e.title}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* -------------------------------------------------------------
+            2. NON-TECHNICAL EVENTS ROW (06 - 09) [NEON PINK] + DOODLES
+            ------------------------------------------------------------- */}
+        <div className="relative mb-6 sm:mb-10">
+          {/* Subheading: ✦ NON - TECHNICAL EVENTS ───□ */}
+          <div className="flex items-center gap-2 mb-4 sm:mb-6">
+            <span className="font-mono font-bold text-sm xs:text-base sm:text-lg text-[#FF2E63] tracking-wider flex items-center gap-2">
+              <span>✦</span>
+              <span>NON - TECHNICAL EVENTS</span>
+              <span className="inline-block w-8 sm:w-12 h-[1.5px] bg-[#FF2E63]" />
+              <span className="inline-block w-2.5 h-2.5 border-[1.5px] border-[#FF2E63]" />
+            </span>
+          </div>
+
+          {/* 6 Columns Grid:
+              Col 1: Cloud & Star Doodle (underneath Debugging 01)
+              Col 2: 06 BORDERLAND @ GCEE (underneath The Last Signal 02)
+              Col 3: 07 THINK, STRIKE AND WIN (underneath Lost at SQL 03)
+              Col 4: 08 PLOT TWIST (underneath Gadget Codes 04)
+              Col 5: 09 SHORT FLIM (underneath Paper Presentation 05)
+              Col 6: Flying Paper Airplane Doodle
+          */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4 items-center">
+            
+            {/* Column 1 on Desktop: Detailed Comic Cloud Sketch & Star */}
+            <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex flex-col items-center justify-center relative select-none pointer-events-none min-h-[220px] sm:min-h-[295px] pr-2">
+              <div className="relative w-full max-w-[190px] h-[170px] flex items-center justify-center">
+                {/* Comic Hatching Cumulus Cloud */}
+                <svg className="w-full h-full" viewBox="0 0 160 140" fill="none">
+                  {/* Outer Cloud Outline with White Puff Top and Ink Border */}
+                  <path
+                    d="M20 112C10 112 3 102 3 88C3 74 15 64 28 64C28 42 46 26 68 30C78 16 102 18 112 36C124 36 138 48 138 66C138 84 126 94 112 96C108 96 88 102 64 108C40 112 28 112 20 112Z"
+                    fill="#E4E4E7"
+                    stroke="#FFFFFF"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Dense Bottom & Left Hatching Shading (Comic Inking) */}
+                  <g stroke="#18181B" strokeWidth="1.8">
+                    <line x1="8" y1="92" x2="26" y2="74" />
+                    <line x1="12" y1="98" x2="34" y2="76" />
+                    <line x1="18" y1="104" x2="44" y2="78" />
+                    <line x1="26" y1="108" x2="56" y2="78" />
+                    <line x1="36" y1="110" x2="68" y2="78" />
+                    <line x1="46" y1="110" x2="80" y2="76" />
+                    <line x1="56" y1="108" x2="90" y2="76" />
+                    <line x1="68" y1="106" x2="102" y2="76" />
+                    <line x1="80" y1="102" x2="114" y2="78" />
+                    <line x1="92" y1="98" x2="122" y2="78" />
+                    <line x1="104" y1="94" x2="130" y2="76" />
+                    {/* Cross-hatch accent lines */}
+                    <line x1="16" y1="78" x2="38" y2="102" />
+                    <line x1="28" y1="78" x2="52" y2="104" />
+                    <line x1="42" y1="78" x2="68" y2="106" />
+                    <line x1="58" y1="76" x2="84" y2="104" />
+                  </g>
+
+                  {/* Billowing cumulus puff lobe curves */}
+                  <path
+                    d="M28 64C32 54 40 46 50 42C60 38 70 40 78 46C86 36 100 34 110 40C120 46 126 56 126 66"
+                    stroke="#A1A1AA"
+                    strokeWidth="2.2"
+                    fill="none"
+                  />
+                  <path
+                    d="M48 64C54 56 64 52 74 54C82 56 88 62 92 70"
+                    stroke="#A1A1AA"
+                    strokeWidth="1.8"
+                    fill="none"
+                  />
+                </svg>
+
+                {/* Comic 4-Point Star Doodle Floating on Cloud */}
+                <div className="absolute top-7 right-1">
+                  <svg className="w-8 h-8 animate-pulse" viewBox="0 0 32 32" fill="none">
+                    <path
+                      d="M16 2L18.5 12.5L29 16L18.5 19.5L16 30L13.5 19.5L3 16L13.5 12.5L16 2Z"
+                      fill="none"
+                      stroke="#F5D90A"
+                      strokeWidth="2.2"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Columns 2 to 5: The 4 Non-Technical Cards (06, 07, 08, 09) */}
+            {nonTechEvents.map((e) => (
+              <div
+                key={e.id}
+                onClick={() => {
+                  triggerComicFX('ARENA!');
+                  setSelectedEvent(e);
+                }}
+                className="group relative bg-[#080406] border-[1.5px] border-[#FF2E63] rounded-xl p-3.5 sm:p-4 pt-8 sm:pt-9 flex flex-col items-center text-center justify-between min-h-[260px] sm:min-h-[295px] cursor-pointer shadow-[0_0_15px_rgba(255,46,99,0.07)] hover:shadow-[0_0_25px_rgba(255,46,99,0.35),_3px_3px_0px_#C41E45] hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200"
+              >
+                {/* --- COMIC SCRABBLING & CORNER MARKS (EXACT MATCH TO CROP) --- */}
+                {/* Top-Left Ribbon Badge with Notch & Stitch */}
+                <div className="absolute -top-[1.5px] -left-[1.5px] z-10">
+                  <div 
+                    className="relative bg-[#FF2E63] text-white font-mono font-black text-xs px-3 py-0.5 shadow-sm flex items-center justify-center rounded-tl-xl"
+                    style={{
+                      clipPath: 'polygon(0 0, 100% 0, 80% 100%, 0 100%)',
+                      paddingRight: '14px',
+                    }}
+                  >
+                    <span>{e.code}</span>
+                    {/* Ribbon top stitch tick */}
+                    <span className="absolute -top-0.5 right-2.5 w-1 h-1.5 bg-black/60 rotate-12" />
+                  </div>
+                  {/* Scratch tick mark right under ribbon */}
+                  <span className="absolute -bottom-2 left-0 w-[1.5px] h-2 bg-[#FF2E63] opacity-90" />
+                </div>
+
+                {/* Top-Right Corner Scratch Tick */}
+                <svg className="absolute -top-1 -right-1 w-4 h-4 pointer-events-none" viewBox="0 0 16 16" fill="none">
+                  <line x1="14" y1="2" x2="14" y2="8" stroke="#FF2E63" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1="15" y1="7" x2="12" y2="12" stroke="#FF2E63" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+
+                {/* Bottom-Left Corner Scratch Tick */}
+                <svg className="absolute -bottom-1 -left-1 w-4 h-4 pointer-events-none" viewBox="0 0 16 16" fill="none">
+                  <line x1="2" y1="8" x2="2" y2="14" stroke="#FF2E63" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1="1" y1="11" x2="5" y2="15" stroke="#FF2E63" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+
+                {/* Bottom-Right Corner Scrabbling Marks (//) */}
+                <svg className="absolute -bottom-1 -right-1 w-5 h-5 pointer-events-none" viewBox="0 0 20 20" fill="none">
+                  <line x1="18" y1="8" x2="18" y2="18" stroke="#FF2E63" strokeWidth="1.5" strokeLinecap="round" />
+                  <line x1="13" y1="11" x2="9" y2="19" stroke="#FF2E63" strokeWidth="1.2" strokeLinecap="round" />
+                  <line x1="18" y1="12" x2="14" y2="20" stroke="#FF2E63" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+
+                {/* Subtle comic halftone screen-tone at top */}
+                <div 
+                  className="absolute inset-x-0 top-0 h-24 pointer-events-none opacity-15 rounded-t-xl"
+                  style={{
+                    backgroundImage: 'radial-gradient(#FF2E63 1px, transparent 1px)',
+                    backgroundSize: '7px 7px',
+                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1), transparent)'
+                  }}
+                />
+
+                {/* Centered Large Line-Art Icon */}
+                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-[#FF2E63] group-hover:scale-110 transition-transform my-auto">
+                  {e.id.includes('borderland') && (
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#FF2E63" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M32 10L48 18V32C48 42 41 50 32 54C23 50 16 42 16 32V18L32 10Z" />
+                      <circle cx="32" cy="30" r="7" />
+                      <path d="M32 23V37M25 30H39" />
+                    </svg>
+                  )}
+                  {e.id.includes('strike') && (
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#FF2E63" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="32" cy="32" r="20" />
+                      <circle cx="32" cy="32" r="13" />
+                      <circle cx="32" cy="32" r="6" fill="#FF2E63" />
+                      <path d="M32 6V12M32 52V58M6 32H12M52 32H58" />
+                    </svg>
+                  )}
+                  {e.id.includes('twist') && (
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#FF2E63" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="14" y="16" width="36" height="32" rx="6" />
+                      <path d="M22 28C22 26 25 24 28 26" />
+                      <path d="M36 26C39 24 42 26 42 28" />
+                      <path d="M22 38C26 42 38 42 42 38" />
+                      <circle cx="25" cy="27" r="2" fill="#FF2E63" />
+                      <circle cx="39" cy="27" r="2" fill="#FF2E63" />
+                    </svg>
+                  )}
+                  {e.id.includes('flim') && (
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#FF2E63" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="10" y="20" width="34" height="28" rx="5" />
+                      <path d="M44 28L54 22V46L44 40V28Z" />
+                      <circle cx="27" cy="34" r="6" />
+                      <circle cx="27" cy="34" r="3" fill="#FF2E63" />
+                      <path d="M18 14L22 20M30 14L34 20" />
+                    </svg>
+                  )}
+                </div>
+
+                {/* Event Title (Stacked Lines) & Tagline */}
+                <div className="w-full mt-auto">
+                  <h3 className="font-sans font-black text-sm xs:text-base sm:text-lg text-white uppercase tracking-wider group-hover:text-[#FF2E63] transition-colors leading-tight">
+                    {e.mission_name.toLowerCase().includes('borderland') ? (
+                      <>
+                        <span>BORDERLAND</span>
+                        <br />
+                        <span className="text-xs sm:text-sm">@ GCEE</span>
+                      </>
+                    ) : e.mission_name.toLowerCase().includes('strike') ? (
+                      <>
+                        <span>THINK, STRIKE</span>
+                        <br />
+                        <span>AND WIN</span>
+                      </>
+                    ) : e.mission_name.toLowerCase().includes('plot') ? (
+                      <>
+                        <span>PLOT</span>
+                        <br />
+                        <span>TWIST</span>
+                      </>
+                    ) : e.mission_name.toLowerCase().includes('flim') || e.mission_name.toLowerCase().includes('film') ? (
+                      <>
+                        <span>SHORT</span>
+                        <br />
+                        <span>FLIM</span>
+                      </>
+                    ) : (
+                      <span>{e.mission_name}</span>
+                    )}
+                  </h3>
+                  <p className="font-mono text-[10px] sm:text-[11px] text-[#A1A1AA] mt-2 leading-tight whitespace-pre-line">
+                    {e.tagline || e.title}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            {/* Column 6 on Desktop: Flying Paper Airplane Doodle with Looped Trail */}
+            <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex items-center justify-center relative pointer-events-none select-none min-h-[220px] sm:min-h-[295px]">
+              <svg className="w-full h-full max-w-[200px] max-h-[190px]" viewBox="0 0 200 190" fill="none">
+                {/* Dashed flight loop */}
+                <path 
+                  d="M15 155C45 185 70 120 55 95C40 70 30 120 75 110C120 100 145 60 175 30" 
+                  stroke="#FF2E63" 
+                  strokeWidth="2" 
+                  strokeDasharray="5 5" 
+                  fill="none" 
+                />
+                {/* Flying Paper Airplane */}
+                <g transform="translate(150, 10) rotate(12)">
+                  <path d="M0 30L42 0L30 42L18 30L0 30Z" fill="#141417" stroke="#FF2E63" strokeWidth="2.2" strokeLinejoin="round" />
+                  <path d="M42 0L18 30" stroke="#FF2E63" strokeWidth="1.8" />
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          EVENT DETAILS INTERACTIVE MODAL
+          ========================================================================= */}
+      {selectedEvent && (
+        <div 
+          onClick={() => setSelectedEvent(null)}
+          className="fixed inset-0 z-100 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#141417] border-[3px] ${
+              selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
+            } shadow-[8px_8px_0px_#000000] p-5 sm:p-7 rounded-2xl space-y-5 select-text`}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-[#2A2A2E] pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${
+                    selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
+                  }`}>
+                    {selectedEvent.code}
+                  </span>
+                  <span className="font-mono text-xs text-[#A8A8AC] uppercase">
+                    {selectedEvent.category}
+                  </span>
+                </div>
+                <h3 className="font-display text-2xl sm:text-3xl text-white uppercase tracking-wide">
+                  {selectedEvent.mission_name}
+                </h3>
+                <p className={`font-comic text-xs sm:text-sm font-bold ${
+                  selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
+                }`}>
+                  {selectedEvent.tagline || selectedEvent.title}
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedEvent(null)}
+                className="p-1.5 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Meta Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
+              <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                  <Users className="w-3 h-3 text-[#F5D90A]" /> TEAM SIZE
+                </div>
+                <div className="text-white font-bold mt-0.5">
+                  {selectedEvent.team_size_min}{selectedEvent.team_size_min !== selectedEvent.team_size_max ? ` - ${selectedEvent.team_size_max}` : ''} Members
+                </div>
+              </div>
+              <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
+                </div>
+                <div className="text-white font-bold mt-0.5 truncate">
+                  {selectedEvent.schedule_time}
+                </div>
+              </div>
+              <div className="col-span-2 sm:col-span-1 p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-[#3CE7FF]" /> VENUE
+                </div>
+                <div className="text-white font-bold mt-0.5 truncate">
+                  {selectedEvent.venue}
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-1.5">
+              <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
+                // BRIEFING
+              </h4>
+              <p className="font-comic text-sm text-[#D0D0D4] leading-relaxed">
+                {selectedEvent.description}
               </p>
             </div>
 
-            {/* Tactical 2D Comic Tabs (TECHNICAL vs NON-TECHNICAL) */}
-            <div className="flex flex-wrap items-center gap-2 pt-2 md:pt-0">
-              <MagneticElement strength={0.25}>
-                <button
-                  onClick={() => {
-                    setEventTab('TECH');
-                    triggerComicFX('TECH!');
-                  }}
-                  className={`px-4 sm:px-5 py-2 font-comic text-xs sm:text-sm uppercase tracking-wider font-extrabold cursor-pointer transition-all border-[2.5px] flex items-center gap-2 ${
-                    eventTab === 'TECH'
-                      ? 'bg-[#3CE7FF] text-[#0D0D0F] border-[#3CE7FF] shadow-[4px_4px_0px_#1E8FA3] -rotate-1'
-                      : 'bg-[#1A1A1D] text-[#A8A8AC] hover:text-[#FFFFFF] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000]'
-                  }`}
-                >
-                  <span>⚡ TECHNICAL</span>
-                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-black ${
-                    eventTab === 'TECH' ? 'bg-[#0D0D0F] text-[#3CE7FF]' : 'bg-[#2A2A2E] text-[#F2F2F0]'
-                  }`}>
-                    {techEvents.length}
-                  </span>
-                </button>
-              </MagneticElement>
+            {/* Rules */}
+            {selectedEvent.rules && selectedEvent.rules.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
+                  // RULES & GUIDELINES
+                </h4>
+                <ul className="space-y-1.5">
+                  {selectedEvent.rules.map((rule, rIdx) => (
+                    <li key={rIdx} className="flex items-start gap-2 text-xs font-comic text-[#C0C0C5]">
+                      <span className="text-[#3CE7FF] shrink-0 font-bold">•</span>
+                      <span>{rule}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-              <MagneticElement strength={0.25}>
-                <button
-                  onClick={() => {
-                    setEventTab('NON_TECH');
-                    triggerComicFX('NON-TECH!');
-                  }}
-                  className={`px-4 sm:px-5 py-2 font-comic text-xs sm:text-sm uppercase tracking-wider font-extrabold cursor-pointer transition-all border-[2.5px] flex items-center gap-2 ${
-                    eventTab === 'NON_TECH'
-                      ? 'bg-[#FF3366] text-white border-[#FF3366] shadow-[4px_4px_0px_#B01F45] rotate-1'
-                      : 'bg-[#1A1A1D] text-[#A8A8AC] hover:text-[#FFFFFF] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000]'
-                  }`}
-                >
-                  <span>🎮 NON-TECHNICAL</span>
-                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono font-black ${
-                    eventTab === 'NON_TECH' ? 'bg-white text-[#FF3366]' : 'bg-[#2A2A2E] text-[#F2F2F0]'
-                  }`}>
-                    {nonTechEvents.length}
-                  </span>
-                </button>
-              </MagneticElement>
-            </div>
-          </div>
-        </ScrollReveal>
-
-        {/* Dynamic Database Event Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 overflow-visible">
-          {displayedEvents.map((e, idx) => {
-            const isTech = e.event_type === 'TECH';
-            const accentBorder = isTech ? 'border-[#3CE7FF] hover:shadow-[6px_6px_0px_#1E8FA3]' : 'border-[#FF3366] hover:shadow-[6px_6px_0px_#B01F45]';
-            const badgeBg = isTech ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white';
-
-            return (
-              <ScrollReveal key={e.id} delayMs={idx * 60} className="h-full">
-                <div
-                  className={`h-full group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] ${accentBorder} shadow-[4.5px_4.5px_0px_#000000] transition-all duration-200 hover:-translate-y-1.5 flex flex-col justify-between`}
-                >
-                  {/* Top Bar: Code Badge + Team Size Badge */}
-                  <div>
-                    <div className="flex items-center justify-between gap-2 pb-3">
-                      <div className={`px-2.5 py-0.5 font-mono text-[11px] font-black uppercase tracking-wider border border-black shadow-[2px_2px_0px_#000000] ${badgeBg}`}>
-                        {e.code}
-                      </div>
-
-                      <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#141417] border border-[#3A3A3E] text-[10px] font-mono text-[#A8A8AC]">
-                        <Users className="w-3 h-3 text-[#F5D90A]" />
-                        <span>Team: {e.team_size_min}{e.team_size_min !== e.team_size_max ? `-${e.team_size_max}` : ''}</span>
-                      </div>
-                    </div>
-
-                    {/* Mission Name & Event Subtitle */}
-                    <div className="space-y-1 pt-1">
-                      <h3 className="font-display text-lg sm:text-xl text-[#F2F2F0] uppercase tracking-wide group-hover:text-[#F5D90A] transition-colors leading-snug">
-                        {e.mission_name}
-                      </h3>
-                      <div className={`font-comic text-xs font-bold uppercase tracking-wider ${isTech ? 'text-[#3CE7FF]' : 'text-[#FF3366]'}`}>
-                        {e.title}
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <p className="font-comic text-xs text-[#A8A8AC] leading-relaxed pt-2.5 pb-3">
-                      {e.description}
-                    </p>
-
-                    {/* Rules Preview Tags */}
-                    {e.rules && e.rules.length > 0 && (
-                      <div className="space-y-1 pb-3">
-                        <div className="text-[9px] font-mono text-[#F5D90A] uppercase tracking-widest font-bold">
-                          // MISSION CONSTRAINTS
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {e.rules.slice(0, 2).map((rule, rIdx) => (
-                            <span
-                              key={rIdx}
-                              className="inline-block px-2 py-0.5 bg-[#141417] border border-[#3A3A3E]/80 text-[10px] font-comic text-[#D0D0D4] truncate max-w-full"
-                            >
-                              • {rule}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+            {/* Cash Prizes */}
+            {selectedEvent.prizes && (
+              <div className="p-3 bg-[#1A1A1E] border border-[#2E2E33] rounded-xl space-y-2">
+                <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
+                  <Trophy className="w-3.5 h-3.5 text-[#F5D90A]" /> PRIZE REWARDS
+                </h4>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[10px] text-[#A8A8AC]">1ST PRIZE</div>
+                    <div className="text-[#F5D90A] font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.first}</div>
                   </div>
-
-                  {/* Bottom Meta & Action */}
-                  <div className="pt-3 border-t border-[#3A3A3E]/80 space-y-3">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-[#A8A8AC]">
-                      <div className="flex items-center gap-1 truncate max-w-[55%]">
-                        <MapPin className="w-3 h-3 text-[#3CE7FF] shrink-0" />
-                        <span className="truncate">{e.venue}</span>
-                      </div>
-                      <div className="flex items-center gap-1 truncate">
-                        <Clock className="w-3 h-3 text-[#F5D90A] shrink-0" />
-                        <span className="truncate">{e.schedule_time}</span>
-                      </div>
-                    </div>
-
-                    {/* Register Button */}
-                    <MagneticElement strength={0.2} className="w-full">
-                      <button
-                        onClick={() => {
-                          triggerComicFX('DEPLOY!');
-                          registerNav.trigger(`/register?mission=${e.id}`);
-                        }}
-                        className={`w-full py-2 px-3 font-display text-xs tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] flex items-center justify-center gap-2 shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 ${
-                          isTech
-                            ? 'bg-[#141417] text-[#3CE7FF] border-[#3CE7FF] hover:bg-[#3CE7FF] hover:text-[#0D0D0F]'
-                            : 'bg-[#141417] text-[#FF3366] border-[#FF3366] hover:bg-[#FF3366] hover:text-white'
-                        }`}
-                      >
-                        <span>REGISTER FOR {e.code}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </MagneticElement>
+                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[10px] text-[#A8A8AC]">2ND PRIZE</div>
+                    <div className="text-white font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.second}</div>
+                  </div>
+                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[10px] text-[#A8A8AC]">3RD PRIZE</div>
+                    <div className="text-[#A8A8AC] font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.third}</div>
                   </div>
                 </div>
-              </ScrollReveal>
-            );
-          })}
+              </div>
+            )}
+
+            {/* Coordinators */}
+            {selectedEvent.coordinators && selectedEvent.coordinators.length > 0 && (
+              <div className="space-y-1.5">
+                <h4 className="font-mono text-xs text-[#A8A8AC] uppercase tracking-wider font-bold">
+                  // HELPLINE & COORDINATORS
+                </h4>
+                <div className="flex flex-wrap gap-3">
+                  {selectedEvent.coordinators.map((c, cIdx) => (
+                    <div key={cIdx} className="text-xs font-mono text-[#D0D0D4] flex items-center gap-1.5 bg-[#1A1A1E] px-2.5 py-1 rounded border border-[#2E2E33]">
+                      <span>{c.name} ({c.role}):</span>
+                      {c.phone && (
+                        <a href={`tel:${c.phone}`} className="text-[#3CE7FF] hover:underline font-bold">
+                          {c.phone}
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Modal Register CTA Button */}
+            <div className="pt-2">
+              <button
+                onClick={() => {
+                  triggerComicFX('DEPLOY!');
+                  navigate(`/register?mission=${selectedEvent.id}`);
+                }}
+                className={`w-full py-3 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
+                  selectedEvent.event_type === 'TECH'
+                    ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
+                    : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
+                }`}
+              >
+                <span>REGISTER FOR {selectedEvent.mission_name}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
-      </section>
+      )}
+
 
       {/* =========================================================================
-          8. ABOUT SECTION / CHAPTER 03 (Scroll-Triggered Neubrutalist Comic Story)
+          5. FOOTER COMPONENT
           ========================================================================= */}
-      <section
-        id="about"
-        className="relative z-30 max-w-6xl mx-auto w-full py-12 sm:py-16 md:py-20 px-2 my-6 sm:my-10 overflow-visible"
-      >
-        {/* Top Floating Badge & Heading with ScrollReveal */}
-        <ScrollReveal delayMs={0} className="relative mb-6 sm:mb-8">
-          <div
-            onClick={() => triggerComicFX('CHAPTER 03!')}
-            className="inline-block cursor-pointer bg-[#3CE7FF] text-[#0D0D0F] border-[2.5px] border-[#3CE7FF] shadow-[3.5px_3.5px_0px_#1E8FA3] px-3.5 sm:px-5 py-1.5 -rotate-1 sticker-pop"
-          >
-            <span className="font-comic text-xs sm:text-sm uppercase tracking-wider font-black">
-              CHAPTER 03: THE GENESIS OF ZINNIA
-            </span>
-          </div>
-
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#F2F2F0] uppercase tracking-tight mt-3">
-            BORN FROM CODE. DRIVEN BY GLORY.
-          </h2>
-          <p className="font-comic text-sm sm:text-base md:text-lg text-[#A8A8AC] max-w-3xl mt-2 font-medium">
-            ZINNIA '26 is the flagship National-Level Technical Symposium hosted by the
-            Department of Computer Science & Engineering at Government College of Engineering, Erode.
-          </p>
-        </ScrollReveal>
-
-        {/* 3 Comic Panels Grid with Staggered ScrollReveal (80-120ms intervals) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 pt-2 overflow-visible">
-          {/* Card 1: The Lore / Chronos Protocol */}
-          <ScrollReveal delayMs={0} className="h-full">
-            <div
-              onClick={() => triggerComicFX('LORE!')}
-              className="h-full group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#F5D90A] shadow-[5px_5px_0px_#8A7400] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#8A7400] cursor-pointer flex flex-col justify-between"
-            >
-              {/* Corner Badge */}
-              <div className="absolute -top-3.5 left-4 bg-[#F5D90A] text-[#0D0D0F] px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
-                01 &bull; THE LORE
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <div className="w-10 h-10 bg-[#F5D90A]/15 border-[2px] border-[#F5D90A] flex items-center justify-center text-xl text-[#F5D90A]">
-                  ⚡
-                </div>
-                <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
-                  THE CHRONOS TIMELINE
-                </h3>
-                <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
-                  When a catastrophic glitch fractured the digital space-time continuum, 9 isolated battlegrounds
-                  emerged. Only coders with absolute algorithmic mastery can restore the central core.
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#F5D90A] font-bold">
-                <span>9 BATTLEGROUNDS</span>
-                <span>&rarr;</span>
-              </div>
-            </div>
-          </ScrollReveal>
-
-          {/* Card 2: The Department & College Legacy */}
-          <ScrollReveal delayMs={100} className="h-full">
-            <div
-              onClick={() => triggerComicFX('LEGACY!')}
-              className="h-full group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#3CE7FF] shadow-[5px_5px_0px_#1E8FA3] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#1E8FA3] cursor-pointer flex flex-col justify-between"
-            >
-              {/* Corner Badge */}
-              <div className="absolute -top-3.5 left-4 bg-[#3CE7FF] text-[#0D0D0F] px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
-                02 &bull; GCE ERODE
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <div className="w-10 h-10 bg-[#3CE7FF]/15 border-[2px] border-[#3CE7FF] flex items-center justify-center text-xl text-[#3CE7FF]">
-                  🏛️
-                </div>
-                <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
-                  CSE EXCELLENCE
-                </h3>
-                <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
-                  Organized with precision by the Computer Science & Engineering department of Govt College of Engineering,
-                  Erode. Celebrating innovation, competitive coding, machine intelligence, and web supremacy.
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#3CE7FF] font-bold">
-                <span>ANNA UNIV AFFILIATED</span>
-                <span>&rarr;</span>
-              </div>
-            </div>
-          </ScrollReveal>
-
-          {/* Card 3: Cash Prizes & National Recognition */}
-          <ScrollReveal delayMs={200} className="h-full">
-            <div
-              onClick={() => triggerComicFX('REWARDS!')}
-              className="h-full group relative p-5 sm:p-6 bg-[#1A1A1D] border-[3px] border-[#FF3366] shadow-[5px_5px_0px_#B01F45] transition-all hover:-translate-y-1.5 hover:shadow-[7px_7px_0px_#B01F45] cursor-pointer flex flex-col justify-between"
-            >
-              {/* Corner Badge */}
-              <div className="absolute -top-3.5 left-4 bg-[#FF3366] text-white px-2.5 py-0.5 border border-black font-bungee text-[9px] uppercase tracking-wider">
-                03 &bull; THE SPOILS
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <div className="w-10 h-10 bg-[#FF3366]/15 border-[2px] border-[#FF3366] flex items-center justify-center text-xl text-[#FF3366]">
-                  🏆
-                </div>
-                <h3 className="font-display text-xl sm:text-2xl text-[#F2F2F0] uppercase">
-                  ₹25,000+ CASH POOL
-                </h3>
-                <p className="font-comic text-xs sm:text-sm text-[#A8A8AC] leading-relaxed">
-                  High-stakes competitive rewards, verified certificates signed by academic authorities,
-                  exclusive winner memorabilia, and direct networking with top tech talent across the nation.
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-[#3A3A3E]/80 flex items-center justify-between text-[11px] font-mono text-[#FF3366] font-bold">
-                <span>MERIT CERTIFICATES</span>
-                <span>&rarr;</span>
-              </div>
-            </div>
-          </ScrollReveal>
-        </div>
-
-        {/* 4-Stat Strip with Staggered Cascading ScrollReveal */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-8 pt-4 overflow-visible">
-          <ScrollReveal delayMs={0}>
-            <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
-              <span className="font-display text-2xl sm:text-3xl text-[#F5D90A] block">9</span>
-              <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
-                BATTLEGROUNDS
-              </span>
-            </div>
-          </ScrollReveal>
-
-          <ScrollReveal delayMs={80}>
-            <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
-              <span className="font-display text-2xl sm:text-3xl text-[#FF3366] block">₹25,000+</span>
-              <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
-                PRIZE POOL
-              </span>
-            </div>
-          </ScrollReveal>
-
-          <ScrollReveal delayMs={160}>
-            <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
-              <span className="font-display text-2xl sm:text-3xl text-[#3CE7FF] block">50+</span>
-              <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
-                COLLEGES
-              </span>
-            </div>
-          </ScrollReveal>
-
-          <ScrollReveal delayMs={240}>
-            <div className="p-4 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] text-center sticker-pop">
-              <span className="font-display text-2xl sm:text-3xl text-[#F2F2F0] block">500+</span>
-              <span className="font-comic text-[10px] sm:text-xs text-[#A8A8AC] uppercase font-bold tracking-wider">
-                WARRIORS
-              </span>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          5. FOOTER (Hand-Drawn Divider + Comic Stamp Footer with Magnetic Links)
-          ========================================================================= */}
-      <footer className="relative z-30 max-w-6xl mx-auto w-full pt-6 pb-2 px-2">
-        {/* Hand-Drawn Ink Divider (Dark Charcoal Line) */}
-        <div className="w-full h-[2px] bg-[#3A3A3E] mb-2.5 relative">
-          <div className="absolute -top-1 left-1/4 w-2.5 h-2.5 bg-[#3A3A3E] rotate-45" />
-          <div className="absolute -top-1 right-1/4 w-2.5 h-2.5 bg-[#3A3A3E] rotate-45" />
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] sm:text-xs font-comic tracking-wider text-[#A8A8AC]">
-          {/* Left Copyright */}
-          <div className="flex items-center gap-2">
-            <span className="bg-[#1A1A1D] text-[#F5D90A] border border-[#8A7400] shadow-[2px_2px_0px_#000000] px-2 py-0.5 text-[9px] sm:text-[10px] font-bold sticker-pop cursor-pointer">
-              ZINNIA &copy; 2026
-            </span>
-            <span className="text-[#A8A8AC] hidden md:inline font-bold">
-              DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING
-            </span>
-          </div>
-
-          {/* Right Links & Socials with Magnetic Pull */}
-          <div className="flex items-center gap-3.5 text-[#A8A8AC] uppercase font-black">
-            <MagneticElement strength={0.2} onClick={() => scrollToSection('events', 'EVENTS!')}>
-              <button className="hover:text-[#3CE7FF] hover:underline transition-colors cursor-pointer">
-                EVENTS
-              </button>
-            </MagneticElement>
-            <span>&bull;</span>
-            <MagneticElement strength={0.2} onClick={() => scrollToSection('about', 'ABOUT!')}>
-              <button className="hover:text-[#3CE7FF] hover:underline transition-colors cursor-pointer">
-                ABOUT
-              </button>
-            </MagneticElement>
-            <span>&bull;</span>
-            <MagneticElement strength={0.2} onClick={() => triggerComicFX('CONTACT')}>
-              <button className="hover:text-[#3CE7FF] hover:underline transition-colors cursor-pointer">
-                CONTACT
-              </button>
-            </MagneticElement>
-            <span>&bull;</span>
-            <MagneticElement strength={0.2} onClick={() => triggerComicFX('INSTA')}>
-              <button className="hover:text-[#FF3366] hover:underline transition-colors cursor-pointer">
-                INSTAGRAM
-              </button>
-            </MagneticElement>
-            <span>&bull;</span>
-            <MagneticElement strength={0.2} onClick={() => triggerComicFX('EMAIL')}>
-              <button className="hover:text-[#F5D90A] hover:underline transition-colors cursor-pointer">
-                EMAIL
-              </button>
-            </MagneticElement>
-          </div>
-        </div>
-      </footer>
-
+      <WebsiteFooter />
     </div>
   );
 };

@@ -19,6 +19,8 @@ export interface EventMission {
   duration: string;
   venue: string;
   description: string;
+  tagline?: string;
+  icon_name?: string;
   rules: string[];
   status: EventStatus;
   

@@ -62,7 +62,7 @@ def check_greeting_intent(query: str) -> Optional[Dict[str, Any]]:
                 "answer": (
                     "Hey y'all! I'm **Miss Minutes**, your official temporal guide for **ZINNIA 2026** at Government College of Engineering, Erode! ⏰✨\n\n"
                     "I'm here to help you navigate our symposium timeline! You can ask me about:\n"
-                    "• ⚡ **9 Battlegrounds** (Technical & Non-Technical competitions)\n"
+                    "• **9 Battlegrounds** (Technical & Non-Technical competitions)\n"
                     "• 🎟️ **Registration & Pass** (₹150 fee, on-spot & online details)\n"
                     "• 🏆 **₹30,000+ Prize Pool** (Cash awards & Anna University certificates)\n"
                     "• 🏛️ **Venue & Schedule** (GCE Erode campus, timing, buffet lunch)\n"

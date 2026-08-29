@@ -4,7 +4,7 @@ import {
   CertificateTemplateConfig,
   EventMission, 
   Participant 
-} from '@packages/types/src';
+} from '@/types';
 import { store } from './store';
 
 export const DEFAULT_TEMPLATES: Record<CertificateType, CertificateTemplateConfig> = {

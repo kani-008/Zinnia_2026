@@ -20,7 +20,7 @@ interface Message {
 
 // Local offline RAG Knowledge Engine
 const SYMPOSIUM_KNOWLEDGE: Record<string, string> = {
-  greeting: "Hey y'all! I'm **Miss Minutes**, your official temporal guide for **ZINNIA 2026** at Government College of Engineering, Erode! ⏰✨\n\nI can help you navigate our symposium timeline:\n• ⚡ **9 Battlegrounds** (Technical & Non-Technical competitions)\n• 🎟️ **Registration & Pass** (₹150 fee, on-spot & online details)\n• 🏆 **₹30,000+ Prize Pool** (Cash awards & Anna University certificates)\n• 🏛️ **Venue & Schedule** (GCE Erode campus, timing, buffet lunch)\n• 📞 **Event Coordinators** (Helpline numbers & contacts)\n\nWhat would you like to explore first?",
+  greeting: "Hey y'all! I'm **Miss Minutes**, your official temporal guide for **ZINNIA 2026** at Government College of Engineering, Erode! ⏰✨\n\nI can help you navigate our symposium timeline:\n• **9 Battlegrounds** (Technical & Non-Technical competitions)\n• 🎟️ **Registration & Pass** (₹150 fee, on-spot & online details)\n• 🏆 **₹30,000+ Prize Pool** (Cash awards & Anna University certificates)\n• 🏛️ **Venue & Schedule** (GCE Erode campus, timing, buffet lunch)\n• 📞 **Event Coordinators** (Helpline numbers & contacts)\n\nWhat would you like to explore first?",
   identity: "Well howdy! I'm **Miss Minutes**, the Temporal AI Core for **ZINNIA 2026** — the National Level Technical Symposium organized by the Department of Computer Science & Engineering at **Government College of Engineering, Erode**.\n\nMy job is keeping our timeline running smoothly and giving you instant, verified information on event rules, prize pools, venues, schedules, and registration!",
   help: "Glad you asked, sugar! Here is what I can do for you:\n\n1. 🎯 **Event Details & Rules**: Ask about *Operation System Recovery*, *ORACLE AI*, *Broken Records SQL*, *Infinity Protocol*, *Short Film*, and more!\n2. 🎟️ **Registration**: Learn about fees, eligibility (UG/PG), and how to obtain your digital Agent ID pass.\n3. 🏆 **Prizes & Rewards**: Details on our ₹30,000+ cash prize pool and merit certificates.\n4. 📍 **Location & Logistics**: Directions to GCE Erode, timings, food tokens, and hostel accommodation.\n5. 📞 **Organizer Contact**: Direct phone numbers for student and faculty coordinators.",
   thanks: "You're mighty welcome! It's my absolute pleasure to help. ⏰✨\n\nIf any more questions pop up on your timeline, just holler. Best of luck on the battlegrounds!",
@@ -686,7 +686,7 @@ export const MissMinutesCompanion: React.FC = () => {
               onClick={() => handleSend("What events are available?")}
               className="whitespace-nowrap px-2.5 py-1 bg-[#26262B] hover:bg-[#FF8C00] hover:text-[#0D0D0F] border border-[#FF8C00]/60 text-[10px] font-mono text-[#FF8C00] font-bold transition-colors cursor-pointer"
             >
-              ⚡ 9 BATTLEGROUNDS
+              9 BATTLEGROUNDS
             </button>
             <button
               onClick={() => handleSend("Where is the venue?")}

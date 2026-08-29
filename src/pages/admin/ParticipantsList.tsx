@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { store } from '../../services/store';
 import { ParticipantTable } from '../../components/admin/ParticipantTable';
-import { Participant } from '@packages/types/src';
+import { Participant } from '@/types';
 import { Users, FileSpreadsheet, RefreshCw } from 'lucide-react';
 import { exportParticipantsExcel } from '../../services/exportService';
 

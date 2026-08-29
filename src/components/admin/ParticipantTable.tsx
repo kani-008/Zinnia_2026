@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Participant } from '@packages/types/src';
+import { Participant } from '@/types';
 import { Search, Filter, Eye, CheckCircle2, Clock, XCircle, Building2, Mail, Phone, Calendar, User, Shield } from 'lucide-react';
 
 interface ParticipantTableProps {
