@@ -10,11 +10,16 @@ import { WebsiteStoryPage } from './pages/Story';
 import { AdminApp } from './pages/admin/AdminApp';
 import { LiquidGlassHover } from './components/canvas/LiquidGlassHover';
 
+import { RegisterGeneratingModal } from './components/ui/RegisterGeneratingModal';
+
 export function App() {
   return (
     <div className="relative w-screen min-h-screen overflow-x-hidden bg-[#0D0D0F] scroll-smooth">
       {/* Liquid Glass Fluid Hover Effect Background */}
       <LiquidGlassHover />
+
+      {/* Register Generating Modal Overlay */}
+      <RegisterGeneratingModal />
 
       {/* 2D Neubrutalist Comic Interface with Scrollable Story Sections */}
       <Routes>

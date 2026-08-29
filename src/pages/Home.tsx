@@ -4,6 +4,7 @@ import { audioManager } from '../core/AudioManager';
 import ultronImg from '../assets/ultron.svg';
 import { MissMinutesCompanion } from '../components/ai/MissMinutesCompanion';
 import { store } from '../services/store';
+import { registerNav } from '../services/registerNavigation';
 import { EventMission } from '@packages/types/src';
 import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award } from 'lucide-react';
 
@@ -314,7 +315,7 @@ export const WebsiteHomePage: React.FC = () => {
           </MagneticElement>
 
           {/* Register Navbar Magnetic Button (Cyan Accent + Cyan Shadow) */}
-          <MagneticElement strength={0.35} onClick={() => { triggerComicFX('POW!'); navigate('/register'); }}>
+          <MagneticElement strength={0.35} onClick={() => { triggerComicFX('POW!'); registerNav.trigger('/register'); }}>
             <button className="px-3 sm:px-6 py-1 sm:py-1.5 bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[2px] sm:border-[2.5px] border-[#3CE7FF] hover:border-[#F5D90A] shadow-[2.5px_2.5px_0px_#1E8FA3] sm:shadow-[3.5px_3.5px_0px_#1E8FA3] hover:shadow-[3.5px_3.5px_0px_#8A7400] font-display text-[11px] sm:text-sm tracking-wider uppercase cursor-pointer transition-all shrink-0">
               REGISTER
             </button>
@@ -729,7 +730,7 @@ export const WebsiteHomePage: React.FC = () => {
                       <button
                         onClick={() => {
                           triggerComicFX('DEPLOY!');
-                          navigate(`/register?mission=${e.id}`);
+                          registerNav.trigger(`/register?mission=${e.id}`);
                         }}
                         className={`w-full py-2 px-3 font-display text-xs tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] flex items-center justify-center gap-2 shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 ${
                           isTech

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
+import { registerNav } from '../services/registerNavigation';
 import { EventMission } from '@packages/types/src';
 import { audioManager } from '../core/AudioManager';
 import { WebsiteNavbar } from '../components/layout/Navbar';
@@ -121,10 +122,12 @@ export const WebsiteEventsPage: React.FC = () => {
             </div>
           </div>
 
-          <Link
-            to={`/register?mission=${e.id}`}
-            onClick={() => audioManager.playNodeEngage()}
-            className={`w-full py-2.5 px-3 font-display text-xs tracking-wider uppercase font-bold flex items-center justify-center gap-2 border-[2px] transition-all shadow-[3px_3px_0px_#000000] rounded-lg active:translate-x-0.5 active:translate-y-0.5 ${
+          <button
+            onClick={() => {
+              audioManager.playNodeEngage();
+              registerNav.trigger(`/register?mission=${e.id}`);
+            }}
+            className={`w-full py-2.5 px-3 font-display text-xs tracking-wider uppercase font-bold flex items-center justify-center gap-2 border-[2px] transition-all shadow-[3px_3px_0px_#000000] rounded-lg active:translate-x-0.5 active:translate-y-0.5 cursor-pointer ${
               isTech
                 ? 'bg-[#141417] text-[#3CE7FF] border-[#3CE7FF] hover:bg-[#3CE7FF] hover:text-[#0D0D0F]'
                 : 'bg-[#141417] text-[#FF3366] border-[#FF3366] hover:bg-[#FF3366] hover:text-white'
@@ -132,7 +135,7 @@ export const WebsiteEventsPage: React.FC = () => {
           >
             <span>REGISTER FOR {e.code}</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          </button>
         </div>
       </div>
     );

@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { Sparkles, ArrowRight, Volume2, VolumeX } from 'lucide-react';
 import { audioManager } from '../../core/AudioManager';
 
+import { registerNav } from '../../services/registerNavigation';
+
 export const WebsiteNavbar: React.FC = () => {
   const location = useLocation();
   const [muted, setMuted] = useState(true);
@@ -79,13 +81,13 @@ export const WebsiteNavbar: React.FC = () => {
             {muted ? <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#3CE7FF]" />}
           </button>
 
-          <Link
-            to="/register"
-            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] font-comic font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 border-[2px] border-[#F5D90A] shadow-[2px_2px_0px_#8A7400] sm:shadow-[2.5px_2.5px_0px_#8A7400] flex items-center gap-1 sm:gap-1.5 active:translate-x-0.5 active:translate-y-0.5 shrink-0"
+          <button
+            onClick={() => registerNav.trigger('/register')}
+            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] font-comic font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 border-[2px] border-[#F5D90A] shadow-[2px_2px_0px_#8A7400] sm:shadow-[2.5px_2.5px_0px_#8A7400] flex items-center gap-1 sm:gap-1.5 active:translate-x-0.5 active:translate-y-0.5 shrink-0 cursor-pointer"
           >
             <span>REGISTER</span>
             <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          </Link>
+          </button>
         </div>
       </div>
     </header>

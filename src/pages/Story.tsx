@@ -1,6 +1,7 @@
 import React from 'react';
 import { Building2, Cpu, ShieldCheck, Mail, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { registerNav } from '../services/registerNavigation';
 
 export const WebsiteStoryPage: React.FC = () => {
   return (
@@ -46,12 +47,12 @@ export const WebsiteStoryPage: React.FC = () => {
         </p>
 
         <div className="pt-4">
-          <Link
-            to="/register"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-mono font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 active:scale-95"
+          <button
+            onClick={() => registerNav.trigger('/register')}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-mono font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20 active:scale-95 cursor-pointer"
           >
             REGISTER FOR ZINNIA 2026 ↗
-          </Link>
+          </button>
         </div>
       </div>
     </div>
