@@ -243,30 +243,30 @@ export const WebsiteRegisterPage: React.FC = () => {
   return (
     <div className="relative min-h-screen bg-transparent text-[#F2F2F0]">
       {/* 2D Neubrutalist Comic Top Floating Header (Background Displayed Across Entire Area) */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-4 bg-transparent border-none pointer-events-none">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+      <header className="fixed top-0 left-0 right-0 z-50 px-2.5 sm:px-8 py-2.5 sm:py-4 bg-transparent border-none pointer-events-none">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
           {/* Left: Illustrated ZINNIA '26 Comic Logo Badge matching Theme 2 */}
-          <div className="flex items-center gap-3 pointer-events-auto">
+          <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto">
             <Link
               to="/"
               onClick={() => audioManager.playNodeEngage()}
-              className="cursor-pointer group relative px-3.5 py-1 sm:px-4 sm:py-1.5 bg-[#F5D90A] border-[3px] border-[#F5D90A] shadow-[3.5px_3.5px_0px_#8A7400] -rotate-1 hover:rotate-0 transition-transform active:translate-x-0.5 active:translate-y-0.5 inline-flex items-center"
+              className="cursor-pointer group relative px-2.5 py-1 sm:px-4 sm:py-1.5 bg-[#F5D90A] border-[2.5px] sm:border-[3px] border-[#F5D90A] shadow-[2.5px_2.5px_0px_#8A7400] sm:shadow-[3.5px_3.5px_0px_#8A7400] -rotate-1 hover:rotate-0 transition-transform active:translate-x-0.5 active:translate-y-0.5 inline-flex items-center"
               title="Return to Home"
             >
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-display text-xl sm:text-2xl text-[#0D0D0F] tracking-wide font-black">
+                <span className="font-display text-lg sm:text-2xl text-[#0D0D0F] tracking-wide font-black">
                   ZINNIA
                 </span>
-                <span className="font-comic text-lg sm:text-xl text-[#FF3366] font-black">
+                <span className="font-comic text-base sm:text-xl text-[#FF3366] font-black">
                   '26
                 </span>
               </div>
               {/* Speech Tail */}
-              <div className="absolute -bottom-2 left-4 w-2.5 h-2.5 bg-[#F5D90A] border-r-[3px] border-b-[3px] border-[#F5D90A] rotate-45" />
+              <div className="absolute -bottom-2 left-3.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#F5D90A] border-r-[2.5px] sm:border-r-[3px] border-b-[2.5px] sm:border-b-[3px] border-[#F5D90A] rotate-45" />
             </Link>
 
             {/* Comics Code Authority Parody Stamp */}
-            <div className="hidden sm:flex flex-col items-center justify-center p-1 px-2 bg-[#1A1A1D] border-[1.5px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] rotate-2 text-[7px] font-mono leading-tight uppercase font-black text-center text-[#A8A8AC]">
+            <div className="hidden md:flex flex-col items-center justify-center p-1 px-2 bg-[#1A1A1D] border-[1.5px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] rotate-2 text-[7px] font-mono leading-tight uppercase font-black text-center text-[#A8A8AC]">
               <span>APPROVED</span>
               <span className="text-[6px] text-[#FF3366]">BY THE</span>
               <span>CSE CODE</span>
@@ -277,9 +277,9 @@ export const WebsiteRegisterPage: React.FC = () => {
           <Link
             to="/"
             onClick={() => audioManager.playNodeEngage()}
-            className="pointer-events-auto px-3.5 py-1.5 sm:px-5 sm:py-2 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] border-[2.5px] border-[#F5D90A] shadow-[3.5px_3.5px_0px_#8A7400] hover:shadow-[4.5px_4.5px_0px_#8A7400] font-comic font-black text-xs sm:text-sm tracking-wider uppercase transition-all flex items-center gap-2 active:translate-x-0.5 active:translate-y-0.5 cursor-pointer rounded-none"
+            className="pointer-events-auto px-2.5 py-1 sm:px-5 sm:py-2 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] border-[2px] sm:border-[2.5px] border-[#F5D90A] shadow-[2.5px_2.5px_0px_#8A7400] sm:shadow-[3.5px_3.5px_0px_#8A7400] hover:shadow-[4.5px_4.5px_0px_#8A7400] font-comic font-black text-[11px] sm:text-sm tracking-wider uppercase transition-all flex items-center gap-1.5 sm:gap-2 active:translate-x-0.5 active:translate-y-0.5 cursor-pointer rounded-none shrink-0"
           >
-            <ArrowLeft className="w-4 h-4 stroke-[3]" />
+            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
             <span>BACK TO HOME</span>
           </Link>
         </div>

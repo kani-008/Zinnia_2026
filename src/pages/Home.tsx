@@ -264,27 +264,27 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
           1. TOP NAVBAR (100% 2D Illustrated Comic Style with Magnetic Buttons)
           ========================================================================= */}
-      <header className="relative z-60 max-w-6xl mx-auto w-full flex items-center justify-between gap-4 pt-1 px-2">
+      <header className="relative z-60 max-w-6xl mx-auto w-full flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 pt-1 px-1.5 sm:px-2">
         {/* Left: Illustrated ZINNIA Comic Logo with Magnetic Pull */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Magnetic Logo Badge (Rich Gold Shadow) */}
           <MagneticElement strength={0.25} onClick={() => triggerComicFX('BOOM!')}>
-            <div className="cursor-pointer group relative px-4 py-1.5 bg-[#F5D90A] border-[3px] border-[#F5D90A] shadow-[4px_4px_0px_#8A7400] -rotate-1 hover:rotate-0 transition-transform active:translate-x-1 active:translate-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-display text-2xl sm:text-3xl text-[#0D0D0F] tracking-wide">
+            <div className="cursor-pointer group relative px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#F5D90A] border-[2.5px] sm:border-[3px] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400] sm:shadow-[4px_4px_0px_#8A7400] -rotate-1 hover:rotate-0 transition-transform active:translate-x-1 active:translate-y-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-display text-xl sm:text-3xl text-[#0D0D0F] tracking-wide">
                   ZINNIA
                 </span>
-                <span className="font-comic text-xl sm:text-2xl text-[#FF3366] font-black">
+                <span className="font-comic text-lg sm:text-2xl text-[#FF3366] font-black">
                   '26
                 </span>
               </div>
               {/* Speech Tail */}
-              <div className="absolute -bottom-2.5 left-5 w-3 h-3 bg-[#F5D90A] border-r-[3px] border-b-[3px] border-[#F5D90A] rotate-45" />
+              <div className="absolute -bottom-2 sm:-bottom-2.5 left-3 sm:left-5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-[#F5D90A] border-r-[2.5px] sm:border-r-[3px] border-b-[2.5px] sm:border-b-[3px] border-[#F5D90A] rotate-45" />
             </div>
           </MagneticElement>
 
           {/* Comics Code Authority Parody Stamp (Neutral Dark Box) */}
-          <div className="hidden sm:flex flex-col items-center justify-center p-1 px-2 bg-[#1A1A1D] border-[1.5px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] rotate-2 text-[7px] font-mono leading-tight uppercase font-black text-center sticker-pop-alt cursor-pointer text-[#A8A8AC]">
+          <div className="hidden md:flex flex-col items-center justify-center p-1 px-2 bg-[#1A1A1D] border-[1.5px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] rotate-2 text-[7px] font-mono leading-tight uppercase font-black text-center sticker-pop-alt cursor-pointer text-[#A8A8AC]">
             <span>APPROVED</span>
             <span className="text-[6px] text-[#FF3366]">BY THE</span>
             <span>CSE CODE</span>
@@ -292,30 +292,30 @@ export const WebsiteHomePage: React.FC = () => {
         </div>
 
         {/* Center/Right Comic Navigation Tabs with Magnetic Pull */}
-        <nav className="flex items-center gap-2 sm:gap-3">
+        <nav className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-end">
           {/* EVENTS TAB */}
           <MagneticElement strength={0.3} onClick={() => scrollToSection('events', 'EVENTS!')}>
-            <button className="px-3.5 sm:px-4 py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#3CE7FF] hover:text-[#3CE7FF] text-[#F2F2F0] border-[2px] border-[#3A3A3E] shadow-[3px_3px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1.5">
+            <button className="px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#3CE7FF] hover:text-[#3CE7FF] text-[#F2F2F0] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] font-comic text-[11px] sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
               <span className="text-[#3CE7FF]">⚡</span>
               <span>EVENTS</span>
             </button>
           </MagneticElement>
 
           <MagneticElement strength={0.3} onClick={() => scrollToSection('about', 'ABOUT!')}>
-            <button className="px-3.5 sm:px-4 py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#EAEAEA] hover:text-[#FFFFFF] text-[#F2F2F0] border-[2px] border-[#3A3A3E] shadow-[3px_3px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
+            <button className="px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#EAEAEA] hover:text-[#FFFFFF] text-[#F2F2F0] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] font-comic text-[11px] sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
               ABOUT
             </button>
           </MagneticElement>
 
           <MagneticElement strength={0.3} onClick={() => triggerComicFX('HELLO!')}>
-            <button className="px-3.5 sm:px-4 py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#F5D90A] hover:text-[#F5D90A] text-[#F2F2F0] border-[2px] border-[#3A3A3E] shadow-[3px_3px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
+            <button className="hidden xs:inline-block px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#F5D90A] hover:text-[#F5D90A] text-[#F2F2F0] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] font-comic text-[11px] sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
               CONTACT
             </button>
           </MagneticElement>
 
           {/* Register Navbar Magnetic Button (Cyan Accent + Cyan Shadow) */}
           <MagneticElement strength={0.35} onClick={() => { triggerComicFX('POW!'); navigate('/register'); }}>
-            <button className="px-4 sm:px-6 py-1.5 bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[2.5px] border-[#3CE7FF] hover:border-[#F5D90A] shadow-[3.5px_3.5px_0px_#1E8FA3] hover:shadow-[3.5px_3.5px_0px_#8A7400] font-display text-xs sm:text-sm tracking-wider uppercase cursor-pointer transition-all">
+            <button className="px-3 sm:px-6 py-1 sm:py-1.5 bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[2px] sm:border-[2.5px] border-[#3CE7FF] hover:border-[#F5D90A] shadow-[2.5px_2.5px_0px_#1E8FA3] sm:shadow-[3.5px_3.5px_0px_#1E8FA3] hover:shadow-[3.5px_3.5px_0px_#8A7400] font-display text-[11px] sm:text-sm tracking-wider uppercase cursor-pointer transition-all shrink-0">
               REGISTER
             </button>
           </MagneticElement>
@@ -331,9 +331,9 @@ export const WebsiteHomePage: React.FC = () => {
           {/* Top-Left Panel Narration Box (Yellow Badge + Gold Shadow) */}
           <div
             onClick={() => triggerComicFX('CHAPTER 01!')}
-            className="cursor-pointer absolute -top-3.5 left-3 sm:left-6 z-50 bg-[#F5D90A] text-[#0D0D0F] border-[2.5px] border-[#F5D90A] shadow-[3.5px_3.5px_0px_#8A7400] px-3 sm:px-4 py-1 -rotate-2 sticker-pop"
+            className="cursor-pointer absolute -top-3 sm:-top-3.5 left-1.5 sm:left-6 z-50 bg-[#F5D90A] text-[#0D0D0F] border-[2px] sm:border-[2.5px] border-[#F5D90A] shadow-[2.5px_2.5px_0px_#8A7400] sm:shadow-[3.5px_3.5px_0px_#8A7400] px-2 sm:px-4 py-0.5 sm:py-1 -rotate-2 sticker-pop"
           >
-            <span className="font-comic text-[11px] sm:text-xs md:text-sm uppercase tracking-wider font-extrabold">
+            <span className="font-comic text-[9px] sm:text-xs md:text-sm uppercase tracking-wider font-extrabold">
               CHAPTER 01: THE AWAKENING
             </span>
           </div>
@@ -341,66 +341,66 @@ export const WebsiteHomePage: React.FC = () => {
           {/* Top-Right Prize Starburst Sticker (Pink Badge + Magenta Shadow) */}
           <div
             onClick={() => triggerComicFX('KACHING!')}
-            className="cursor-pointer absolute -top-4 right-3 sm:right-6 z-50 bg-[#FF3366] border-[2.5px] border-[#FF3366] shadow-[3.5px_3.5px_0px_#B01F45] px-3.5 sm:px-5 py-1.5 rotate-4 sticker-pop-alt"
+            className="cursor-pointer absolute -top-3.5 sm:-top-4 right-1.5 sm:right-6 z-50 bg-[#FF3366] border-[2px] sm:border-[2.5px] border-[#FF3366] shadow-[2.5px_2.5px_0px_#B01F45] sm:shadow-[3.5px_3.5px_0px_#B01F45] px-2.5 sm:px-5 py-1 sm:py-1.5 rotate-4 sticker-pop-alt"
           >
             <div className="flex flex-col items-center justify-center leading-none text-center">
-              <span className="font-display text-sm sm:text-base md:text-lg text-white font-extrabold tracking-wide">
+              <span className="font-display text-xs sm:text-base md:text-lg text-white font-extrabold tracking-wide">
                 ₹25,000+
               </span>
-              <span className="font-comic text-[8px] sm:text-[10px] text-[#F5D90A] tracking-wider uppercase mt-0.5 font-black">
+              <span className="font-comic text-[7px] sm:text-[10px] text-[#F5D90A] tracking-wider uppercase mt-0.5 font-black">
                 PRIZE POOL!
               </span>
             </div>
           </div>
 
           {/* Main Comic Panel Frame (Subtle Dark Border + Soft Ambient Glow + Deep 2D Drop Shadow) */}
-          <div className="relative w-full bg-[#1A1A1D] border-[3px] sm:border-[3.5px] border-[#3A3A3E] shadow-[0_0_35px_rgba(245,217,10,0.07),_0_0_70px_rgba(60,231,255,0.04),_6px_6px_0px_#000000] p-4 sm:p-6 md:p-8 pt-6 sm:pt-7">
+          <div className="relative w-full bg-[#1A1A1D] border-[2.5px] sm:border-[3.5px] border-[#3A3A3E] shadow-[0_0_35px_rgba(245,217,10,0.07),_0_0_70px_rgba(60,231,255,0.04),_4px_4px_0px_#000000] sm:shadow-[6px_6px_0px_#000000] p-3 sm:p-6 md:p-8 pt-5 sm:pt-7">
             {/* -------------------------------------------------------------
                 HERO CONTENT GRID INSIDE THE COMIC PANEL
                 ------------------------------------------------------------- */}
-            <div className="relative z-20 grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-center">
+            <div className="relative z-20 grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-6 items-center">
               {/* Left Column (7 cols): Comic Title, Narrative & Speech Bubble */}
               <div className="md:col-span-7 space-y-2 sm:space-y-3 text-left">
                 {/* Event Subtitle Badge: High Contrast Yellow Outline Tag */}
-                <div className="inline-block px-2.5 py-0.5 bg-[#1A1A1D] text-[#F5D90A] border-[1.5px] border-[#F5D90A] shadow-[2px_2px_0px_#8A7400] font-comic text-[10px] sm:text-[11px] md:text-xs uppercase tracking-widest rotate-1 font-bold sticker-pop cursor-pointer">
+                <div className="inline-block max-w-full px-2 sm:px-2.5 py-0.5 bg-[#1A1A1D] text-[#F5D90A] border-[1.5px] border-[#F5D90A] shadow-[2px_2px_0px_#8A7400] font-comic text-[9px] sm:text-[11px] md:text-xs uppercase tracking-widest rotate-1 font-bold sticker-pop cursor-pointer leading-normal">
                   GOVT COLLEGE OF ENGINEERING, ERODE &bull; CSE DEPT
                 </div>
 
                 {/* Giant Comic Title */}
                 <div className="space-y-0.5">
-                  <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F2F2F0] tracking-tight leading-none uppercase">
+                  <h1 className="font-display text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-[#F2F2F0] tracking-tight leading-none uppercase">
                     ZINNIA
                   </h1>
-                  <div className="flex items-center gap-3 pt-0.5">
-                    <span className="font-comic text-2xl sm:text-3xl md:text-4xl text-[#3CE7FF] font-black">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-0.5">
+                    <span className="font-comic text-xl sm:text-3xl md:text-4xl text-[#3CE7FF] font-black">
                       2026
                     </span>
-                    <span className="px-2.5 py-0.5 bg-[#FF3366] text-white border-[1.5px] border-[#FF3366] font-bungee text-[10px] sm:text-xs -rotate-2 sticker-pop-alt cursor-pointer shadow-[2px_2px_0px_#B01F45]">
+                    <span className="px-2 sm:px-2.5 py-0.5 bg-[#FF3366] text-white border-[1.5px] border-[#FF3366] font-bungee text-[9px] sm:text-xs -rotate-2 sticker-pop-alt cursor-pointer shadow-[2px_2px_0px_#B01F45]">
                       NATIONAL LEVEL
                     </span>
                   </div>
                 </div>
 
                 {/* Comic Speech Bubble / Narrative Box: Neutral Dark with Subtle Border */}
-                <div className="relative p-2.5 sm:p-3.5 bg-[#141417] border-[2px] border-[#3A3A3E] shadow-[4px_4px_0px_#000000]">
-                  <p className="font-comic text-xs sm:text-sm md:text-[15px] text-[#F2F2F0] leading-snug font-medium">
+                <div className="relative p-2 sm:p-3.5 bg-[#141417] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000]">
+                  <p className="font-comic text-[11px] sm:text-sm md:text-[15px] text-[#F2F2F0] leading-snug font-medium">
                     "A TIMELINE WAS BROKEN. SOMETHING EMERGED FROM IT. NINE BATTLEGROUNDS AWAIT THE BOLDEST MINDS IN COMPUTATION!"
                   </p>
                   {/* Speech Arrow */}
-                  <div className="absolute -bottom-2.5 left-6 w-3 h-3 bg-[#141417] border-r-[2px] border-b-[2px] border-[#3A3A3E] rotate-45" />
+                  <div className="absolute -bottom-2.5 left-5 sm:left-6 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-[#141417] border-r-[1.5px] sm:border-r-[2px] border-b-[1.5px] sm:border-b-[2px] border-[#3A3A3E] rotate-45" />
                 </div>
 
                 {/* 9 Battlegrounds Dark Themed Sticker Chips */}
-                <div className="flex flex-wrap items-center gap-2 pt-1">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
                   <span
                     onClick={() => triggerComicFX('9 BATTLES!')}
-                    className="px-2.5 py-1 bg-[#123B3E] text-[#3CE7FF] border-[2px] border-[#3CE7FF] font-mono text-[10px] sm:text-xs font-black shadow-[2px_2px_0px_#1E8FA3] sticker-pop cursor-pointer"
+                    className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-[#123B3E] text-[#3CE7FF] border-[1.5px] sm:border-[2px] border-[#3CE7FF] font-mono text-[9px] sm:text-xs font-black shadow-[2px_2px_0px_#1E8FA3] sticker-pop cursor-pointer"
                   >
                     ⚡ 9 ACTIVE EVENTS
                   </span>
                   <span
                     onClick={() => triggerComicFX('VERIFIED!')}
-                    className="px-2.5 py-1 bg-[#2B2408] text-[#F5D90A] border-[2px] border-[#F5D90A] font-mono text-[10px] sm:text-xs font-black shadow-[2px_2px_0px_#8A7400] sticker-pop-alt cursor-pointer"
+                    className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-[#2B2408] text-[#F5D90A] border-[1.5px] sm:border-[2px] border-[#F5D90A] font-mono text-[9px] sm:text-xs font-black shadow-[2px_2px_0px_#8A7400] sticker-pop-alt cursor-pointer"
                   >
                     ⚡ ANNA UNIV VERIFIED
                   </span>
@@ -408,12 +408,12 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
 
               {/* Right Column (5 cols): 2D Hand-Drawn Illustrated Hero Art with Ultron SVG */}
-              <div className="md:col-span-5 relative flex items-center justify-center">
-                <div className="relative w-44 h-44 sm:w-52 sm:h-52 md:w-60 md:h-60 lg:w-68 lg:h-68 flex items-center justify-center">
+              <div className="md:col-span-5 relative flex items-center justify-center pt-2 md:pt-0">
+                <div className="relative w-36 h-36 sm:w-52 sm:h-52 md:w-60 md:h-60 lg:w-68 lg:h-68 flex items-center justify-center">
                   {/* 2D Comic Illustrated Ultron Character with Dark Yellow-Tinted Glowing Backdrop */}
                   <svg
                     viewBox="0 0 200 200"
-                    className="relative z-30 w-full h-full overflow-visible hover:scale-105 transition-transform duration-200"
+                    className="relative z-30 w-full h-full max-w-full overflow-visible hover:scale-105 transition-transform duration-200"
                   >
                     <defs>
                       {/* Dark Yellow Radial Gradient Disc Glow */}
@@ -482,9 +482,9 @@ export const WebsiteHomePage: React.FC = () => {
                   {/* "⚡ CRACKLE!" Sound Effect Overlay Sticker with Gold Shadow */}
                   <div
                     onClick={() => triggerComicFX('ZAP!')}
-                    className="cursor-pointer absolute -bottom-2 -left-4 sm:-bottom-3 sm:-left-6 z-40 bg-[#F5D90A] border-[2.5px] border-[#F5D90A] shadow-[4px_4px_0px_#8A7400] px-3 py-1 -rotate-12 sticker-pop-alt active:translate-x-0.5 active:translate-y-0.5"
+                    className="cursor-pointer absolute -bottom-2 -left-3 sm:-bottom-3 sm:-left-6 z-40 bg-[#F5D90A] border-[2px] sm:border-[2.5px] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400] sm:shadow-[4px_4px_0px_#8A7400] px-2.5 sm:px-3 py-0.5 sm:py-1 -rotate-12 sticker-pop-alt active:translate-x-0.5 active:translate-y-0.5"
                   >
-                    <span className="font-display text-xs sm:text-sm md:text-base text-[#FF3366] font-black tracking-wide">
+                    <span className="font-display text-[10px] sm:text-sm md:text-base text-[#FF3366] font-black tracking-wide">
                       ⚡ CRACKLE!
                     </span>
                   </div>
@@ -506,53 +506,53 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
 
             {/* Countdown Comic Number Boxes: Neutral Dark Days/Hrs/Min + Vibrant Pink Seconds */}
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 pt-1">
               {/* Days */}
-              <div className="flex flex-col items-center p-1.5 bg-[#1A1A1D] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] min-w-[48px] sm:min-w-[56px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
+              <div className="flex flex-col items-center p-1 sm:p-1.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[3.5px_3.5px_0px_#000000] min-w-[40px] sm:min-w-[56px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.days}
-                  className="font-display text-xl sm:text-2xl md:text-3xl text-[#F2F2F0]"
+                  className="font-display text-lg sm:text-2xl md:text-3xl text-[#F2F2F0]"
                 />
-                <span className="font-comic text-[8px] sm:text-[9px] text-[#A8A8AC] font-bold uppercase mt-0.5">
+                <span className="font-comic text-[7px] sm:text-[9px] text-[#A8A8AC] font-bold uppercase mt-0.5">
                   DAYS
                 </span>
               </div>
 
-              <span className="font-display text-xl text-[#3A3A3E] font-bold animate-pulse">:</span>
+              <span className="font-display text-lg sm:text-xl text-[#3A3A3E] font-bold animate-pulse">:</span>
 
               {/* Hours */}
-              <div className="flex flex-col items-center p-1.5 bg-[#1A1A1D] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] min-w-[48px] sm:min-w-[56px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
+              <div className="flex flex-col items-center p-1 sm:p-1.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[3.5px_3.5px_0px_#000000] min-w-[40px] sm:min-w-[56px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.hours}
-                  className="font-display text-xl sm:text-2xl md:text-3xl text-[#F2F2F0]"
+                  className="font-display text-lg sm:text-2xl md:text-3xl text-[#F2F2F0]"
                 />
-                <span className="font-comic text-[8px] sm:text-[9px] text-[#A8A8AC] font-bold uppercase mt-0.5">
+                <span className="font-comic text-[7px] sm:text-[9px] text-[#A8A8AC] font-bold uppercase mt-0.5">
                   HRS
                 </span>
               </div>
 
-              <span className="font-display text-xl text-[#3A3A3E] font-bold animate-pulse">:</span>
+              <span className="font-display text-lg sm:text-xl text-[#3A3A3E] font-bold animate-pulse">:</span>
 
               {/* Minutes */}
-              <div className="flex flex-col items-center p-1.5 bg-[#1A1A1D] border-[2px] border-[#3A3A3E] shadow-[3.5px_3.5px_0px_#000000] min-w-[48px] sm:min-w-[56px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
+              <div className="flex flex-col items-center p-1 sm:p-1.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[3.5px_3.5px_0px_#000000] min-w-[40px] sm:min-w-[56px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.minutes}
-                  className="font-display text-xl sm:text-2xl md:text-3xl text-[#F2F2F0]"
+                  className="font-display text-lg sm:text-2xl md:text-3xl text-[#F2F2F0]"
                 />
-                <span className="font-comic text-[8px] sm:text-[9px] text-[#A8A8AC] font-bold uppercase mt-0.5">
+                <span className="font-comic text-[7px] sm:text-[9px] text-[#A8A8AC] font-bold uppercase mt-0.5">
                   MIN
                 </span>
               </div>
 
-              <span className="font-display text-xl text-[#3A3A3E] font-bold animate-pulse">:</span>
+              <span className="font-display text-lg sm:text-xl text-[#3A3A3E] font-bold animate-pulse">:</span>
 
               {/* Seconds (Pink Accent Card + Magenta Shadow) */}
-              <div className="flex flex-col items-center p-1.5 bg-[#FF3366] border-[2px] border-[#FF3366] shadow-[3.5px_3.5px_0px_#B01F45] min-w-[48px] sm:min-w-[56px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#B01F45] transition-all cursor-pointer">
+              <div className="flex flex-col items-center p-1 sm:p-1.5 bg-[#FF3366] border-[1.5px] sm:border-[2px] border-[#FF3366] shadow-[2.5px_2.5px_0px_#B01F45] sm:shadow-[3.5px_3.5px_0px_#B01F45] min-w-[40px] sm:min-w-[56px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#B01F45] transition-all cursor-pointer">
                 <FlipNumber
                   value={timeLeft.seconds}
-                  className="font-display text-xl sm:text-2xl md:text-3xl text-white font-black"
+                  className="font-display text-lg sm:text-2xl md:text-3xl text-white font-black"
                 />
-                <span className="font-comic text-[8px] sm:text-[9px] text-[#F5D90A] font-extrabold uppercase mt-0.5">
+                <span className="font-comic text-[7px] sm:text-[9px] text-[#F5D90A] font-extrabold uppercase mt-0.5">
                   SEC
                 </span>
               </div>
