@@ -19,7 +19,6 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import { audioManager } from '../core/AudioManager';
 
 export const WebsitePassportPage: React.FC = () => {
   const [searchParams] = useSearchParams();

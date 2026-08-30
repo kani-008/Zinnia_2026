@@ -4,7 +4,6 @@ export const SITE_CONFIG = {
   date: '24 September 2026',
   time: '09:00 AM - 04:30 PM',
   venue: 'Department of Computer Science & Engineering, Campus Quadrangle',
-  primaryEmail: 'chronos.zinnia2026@gmail.com',
-  websiteUrl: 'https://zinnia.in',
-  adminUrl: 'https://admin.zinnia.in'
+  primaryEmail: 'zinnia2026@gcee.ac.in',
+
 };

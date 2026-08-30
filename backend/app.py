@@ -34,14 +34,10 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 from flask import Flask
 from flask_cors import CORS
 
-from routes.chat_routes import chat_bp
 from routes.passport_routes import passport_bp
 from routes.registration_routes import registration_bp
 from routes.payment_routes import payment_bp
-from routes.admin_routes import admin_bp
 from middleware.error_handler import register_error_handlers
-from rag.ingest import run_ingestion
-from rag.retriever import get_retriever
 
 def check_db_connection():
     """Verify database connection status and table permissions on server startup."""
@@ -84,24 +80,12 @@ def create_app() -> Flask:
     register_error_handlers(app)
 
     # 3. Register Modular Route Blueprints
-    app.register_blueprint(chat_bp)
     app.register_blueprint(passport_bp)
     app.register_blueprint(registration_bp)
     app.register_blueprint(payment_bp)
-    app.register_blueprint(admin_bp)
 
     # 4. Check DB Connection
     check_db_connection()
-
-    # 5. Initial RAG Ingestion Check
-    with app.app_context():
-        try:
-            retriever = get_retriever()
-            if retriever.count() == 0:
-                print("[Backend Init] ChromaDB collection is empty. Performing initial ingestion...")
-                run_ingestion()
-        except Exception as e:
-            print(f"[Backend Init Warning] Ingestion check notice: {e}")
 
     return app
 

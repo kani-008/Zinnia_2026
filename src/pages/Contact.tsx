@@ -1,276 +1,449 @@
 import React, { useState } from 'react';
-import { WebsiteNavbar } from '../components/layout/Navbar';
+import { useNavigate } from 'react-router-dom';
 import { WebsiteFooter } from '../components/layout/Footer';
-import { audioManager } from '../core/AudioManager';
-import { Phone, Mail, MapPin, Send, CheckCircle2, Navigation, MessageSquare, Clock } from 'lucide-react';
+import { registerNav } from '../services/registerNavigation';
+import { Phone, Mail, MapPin, Navigation, Calendar, Copy, Check, ExternalLink, Bus, Train, ArrowRight } from 'lucide-react';
 
-export const WebsiteContactPage: React.FC = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: 'General Inquiry',
-    message: ''
-  });
-  const [submitted, setSubmitted] = useState(false);
+// 2D-only Magnetic Interaction Component (Matching Home page)
+const MagneticElement: React.FC<{
+  children: React.ReactNode;
+  strength?: number;
+  className?: string;
+  onClick?: (e: React.MouseEvent) => void;
+}> = ({ children, strength = 0.25, className = '', onClick }) => {
+  const elementRef = React.useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    audioManager.playBlip();
-    setSubmitted(true);
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!elementRef.current) return;
+    const rect = elementRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    setPosition({ x: x * strength, y: y * strength });
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setPosition({ x: 0, y: 0 });
   };
 
   return (
-    <div className="relative w-screen min-h-screen overflow-x-hidden bg-[#0D0D0F] text-[#F2F2F0] font-sans flex flex-col justify-between">
-      {/* Top Navbar */}
-      <WebsiteNavbar />
+    <div
+      ref={elementRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      style={{
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        transition: isHovered ? 'transform 0.08s ease-out' : 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}
+      className={`inline-block will-change-transform ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
 
-      <main className="relative z-20 max-w-7xl mx-auto w-full pt-28 pb-16 px-4 sm:px-6 lg:px-8 flex-1">
-        {/* Page Header */}
-        <div className="text-center space-y-3 mb-12">
-          <div className="inline-block relative">
-            <span className="px-4 py-1 bg-[#F5D90A] text-black font-sans font-black text-xs sm:text-sm uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_#000000] -rotate-1 inline-block">
-              COMMUNICATION HUB
+export const WebsiteContactPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
+  const [interactiveSoundText, setInteractiveSoundText] = useState<string | null>(null);
+
+  const triggerComicFX = (soundText: string) => {
+    setInteractiveSoundText(soundText);
+    setTimeout(() => {
+      setInteractiveSoundText(null);
+    }, 900);
+  };
+
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText('zinnia2026@gcee.ac.in');
+    setCopied(true);
+    triggerComicFX('COPIED!');
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  return (
+    <div className="relative w-full min-h-screen bg-[#0A0A0D] text-[#ECECED] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none scroll-smooth">
+      {/* Floating Interactive Comic Sound FX Pop */}
+      {interactiveSoundText && (
+        <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
+          <div className="px-6 py-2.5 bg-[#F5D90A] border-[2.5px] border-[#0A0A0D] shadow-[5px_5px_0px_#8A7400] rotate-3 sticker-pop">
+            <span className="font-display text-3xl sm:text-5xl text-[#0A0A0D] tracking-wider font-black">
+              {interactiveSoundText}
             </span>
           </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          1. TOP NAVBAR (Exact Match to Home Page Layout & Structure)
+          ========================================================================= */}
+      <header className="relative z-60 max-w-6xl mx-auto w-full flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 pt-1 px-1.5 sm:px-2">
+        {/* Left: Illustrated ZINNIA Comic Logo with Magnetic Pull */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <MagneticElement
+            strength={0.25}
+            onClick={() => {
+              triggerComicFX('HOME!');
+              navigate('/');
+            }}
+          >
+            <div className="cursor-pointer group relative px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#F5D90A] border-[2.5px] sm:border-[3px] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400] sm:shadow-[4px_4px_0px_#8A7400] -rotate-1 hover:rotate-0 transition-transform active:translate-x-1 active:translate-y-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-display text-xl sm:text-3xl text-[#0D0D0F] tracking-wide">
+                  ZINNIA
+                </span>
+                <span className="font-comic text-lg sm:text-2xl text-[#FF3366] font-black">
+                  '26
+                </span>
+              </div>
+              {/* Speech Tail */}
+              <div className="absolute -bottom-2 sm:-bottom-2.5 left-3 sm:left-5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-[#F5D90A] border-r-[2.5px] sm:border-r-[3px] border-b-[2.5px] sm:border-b-[3px] border-[#F5D90A] rotate-45" />
+            </div>
+          </MagneticElement>
+
+          {/* Comics Code Authority Parody Stamp */}
+          <div className="hidden md:flex flex-col items-center justify-center p-1 px-2 bg-[#15151A] border border-[#2E2E38] shadow-[2px_2px_0px_#000000] rotate-2 text-[7px] font-mono leading-tight uppercase font-bold text-center text-[#8E8E98]">
+            <span>APPROVED</span>
+            <span className="text-[6px] text-[#F5D90A]">BY THE</span>
+            <span>CSE CODE</span>
+          </div>
+        </div>
+
+        {/* Center/Right Navigation Tabs */}
+        <nav className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap justify-end">
+          {/* HOME TAB */}
+          <MagneticElement
+            strength={0.3}
+            onClick={() => {
+              triggerComicFX('HOME!');
+              navigate('/');
+            }}
+          >
+            <button className="px-3 sm:px-4 py-1 sm:py-1.5 bg-[#15151A] hover:bg-[#202028] text-zinc-300 hover:text-white border border-[#2E2E38] hover:border-zinc-500 shadow-[2px_2px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
+              <span>HOME</span>
+            </button>
+          </MagneticElement>
+
+          {/* EVENTS TAB */}
+          <MagneticElement
+            strength={0.3}
+            onClick={() => {
+              triggerComicFX('EVENTS!');
+              navigate('/events');
+            }}
+          >
+            <button className="px-3 sm:px-4 py-1 sm:py-1.5 bg-[#15151A] hover:bg-[#202028] text-zinc-300 hover:text-white border border-[#2E2E38] hover:border-zinc-500 shadow-[2px_2px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
+              <span>EVENTS</span>
+            </button>
+          </MagneticElement>
+
+          {/* CONTACT TAB (Active) */}
+          <MagneticElement
+            strength={0.3}
+            onClick={() => {
+              triggerComicFX('CONTACT!');
+            }}
+          >
+            <button className="px-3 sm:px-4 py-1 sm:py-1.5 bg-[#1F1F28] text-[#F5D90A] border-2 border-[#F5D90A]/80 shadow-[2px_2px_0px_#8A7400] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
+              <span>CONTACT</span>
+            </button>
+          </MagneticElement>
+
+          {/* REGISTER Button */}
+          <MagneticElement
+            strength={0.35}
+            onClick={() => {
+              navigate('/register');
+            }}
+          >
+            <button className="px-3.5 sm:px-5 py-1 sm:py-1.5 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] border-2 border-[#F5D90A] shadow-[2.5px_2.5px_0px_#8A7400] font-display text-xs sm:text-sm tracking-wider uppercase font-black cursor-pointer transition-all shrink-0 active:translate-x-0.5 active:translate-y-0.5">
+              REGISTER
+            </button>
+          </MagneticElement>
+        </nav>
+      </header>
+
+      {/* =========================================================================
+          2. MAIN CONTENT AREA (Harmonious, Modern Dark Theme)
+          ========================================================================= */}
+      <main className="relative z-20 max-w-6xl mx-auto w-full pt-10 sm:pt-14 pb-16 px-2 sm:px-4 flex-1">
+        {/* Page Header */}
+        <div className="text-center space-y-3 mb-10 sm:mb-12">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#181820] border border-[#2E2E3A] text-zinc-400 font-mono text-xs uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-[#F5D90A] animate-pulse" />
+            <span>COMMUNICATION DESK</span>
+          </div>
+
           <h1 className="font-display text-4xl sm:text-6xl md:text-7xl uppercase tracking-tight text-white">
-            CONTACT <span className="text-[#00E5FF]">US</span>
+            CONTACT <span className="text-[#F5D90A]">US</span>
           </h1>
-          <p className="font-mono text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto">
-            Got questions about ZINNIA '26 event rules, schedule, registrations, or campus directions? Reach out to the organizing team!
+
+          <p className="font-mono text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto leading-relaxed">
+            Have questions about event guidelines, accommodation, schedule, or registrations? We are here to help.
           </p>
         </div>
 
-        {/* 2-Column Comic Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Contact Information Grid - 2x2 Clean Balanced Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-stretch">
           
-          {/* LEFT: Contact Coordinates & Team (7 Cols) */}
-          <div className="lg:col-span-7 space-y-6">
-            
-            {/* Campus & Institution Info Card */}
-            <div className="bg-[#121217] border-2 border-[#2E2E38] rounded-xl p-6 shadow-[4px_4px_0px_#000000] relative overflow-hidden">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-[#F5D90A] text-black flex items-center justify-center font-black">
+          {/* CARD 1: Official Email & Helplines */}
+          <div className="bg-[#121217] border border-[#252530] rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#000000] flex flex-col justify-between relative">
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-lg bg-[#1A1A22] border border-[#2E2E3C] text-[#F5D90A] flex items-center justify-center shrink-0">
+                  <Mail className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-comic font-black text-lg text-white uppercase tracking-wide">
+                    OFFICIAL CORRESPONDENCE
+                  </h3>
+                  <p className="font-mono text-xs text-zinc-400">Direct inquiries &amp; verification desk</p>
+                </div>
+              </div>
+
+              {/* Primary Email Box */}
+              <div className="bg-[#181820] border border-[#2A2A36] rounded-xl p-4 sm:p-5 mb-5 group hover:border-zinc-500 transition-colors">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 font-bold mb-1.5">
+                  DEPARTMENT EMAIL ID
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <a
+                    href="mailto:zinnia2026@gcee.ac.in"
+                    className="font-mono text-base sm:text-lg font-bold text-white hover:text-[#F5D90A] transition-colors tracking-wide select-all"
+                  >
+                    zinnia2026@gcee.ac.in
+                  </a>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={handleCopyEmail}
+                      className="px-3 py-1.5 bg-[#22222C] hover:bg-[#2C2C38] border border-[#383846] text-xs font-mono font-medium rounded-lg flex items-center gap-1.5 text-zinc-300 hover:text-white transition-all cursor-pointer"
+                      title="Copy email to clipboard"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-[#F5D90A]" />
+                          <span className="text-[#F5D90A]">COPIED</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>COPY</span>
+                        </>
+                      )}
+                    </button>
+                    <a
+                      href="mailto:zinnia2026@gcee.ac.in"
+                      className="px-3 py-1.5 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] font-comic font-bold text-xs rounded-lg border border-[#F5D90A] shadow-[2px_2px_0px_#000000] flex items-center gap-1.5 transition-all"
+                    >
+                      <span>MAIL</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Helpline Rows */}
+              <div className="space-y-2.5 font-mono text-xs">
+                <div className="p-3 bg-[#181820] border border-[#242430] rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-md bg-[#20202A] text-zinc-300 flex items-center justify-center shrink-0">
+                      <Phone className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-zinc-500 uppercase">General Helpline</p>
+                      <p className="font-bold text-zinc-200">+91 94451 98765</p>
+                    </div>
+                  </div>
+                  <a
+                    href="tel:+919445198765"
+                    className="text-[11px] text-zinc-300 hover:text-white hover:border-zinc-500 font-semibold px-2.5 py-1 bg-[#22222C] border border-[#30303E] rounded transition-colors"
+                  >
+                    CALL
+                  </a>
+                </div>
+
+                <div className="p-3 bg-[#181820] border border-[#242430] rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-md bg-[#20202A] text-zinc-300 flex items-center justify-center shrink-0">
+                      <Phone className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-zinc-500 uppercase">Event Desk &amp; Registration</p>
+                      <p className="font-bold text-zinc-200">+91 98401 23456</p>
+                    </div>
+                  </div>
+                  <a
+                    href="tel:+919840123456"
+                    className="text-[11px] text-zinc-300 hover:text-white hover:border-zinc-500 font-semibold px-2.5 py-1 bg-[#22222C] border border-[#30303E] rounded transition-colors"
+                  >
+                    CALL
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 pt-3.5 border-t border-[#20202A] text-zinc-500 text-xs font-mono flex items-center justify-between">
+              <span>Operational Hours: 9:00 AM – 6:00 PM</span>
+              <span className="text-zinc-400 font-medium flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                ONLINE DESK
+              </span>
+            </div>
+          </div>
+
+          {/* CARD 2: Campus Headquarters & Location */}
+          <div className="bg-[#121217] border border-[#252530] rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#000000] flex flex-col justify-between relative">
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-lg bg-[#1A1A22] border border-[#2E2E3C] text-[#F5D90A] flex items-center justify-center shrink-0">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-comic font-black text-lg text-white uppercase tracking-wide">
                     CAMPUS HEADQUARTERS
                   </h3>
-                  <p className="font-mono text-xs text-[#00E5FF]">Government College of Engineering, Erode</p>
+                  <p className="font-mono text-xs text-zinc-400">Government College of Engineering, Erode</p>
                 </div>
               </div>
 
-              <div className="space-y-2 text-xs font-mono text-zinc-300 leading-relaxed border-t border-[#27272A] pt-4">
-                <p className="font-bold text-white">Department of Computer Science &amp; Engineering</p>
-                <p>NH-544 (Salem-Cochin National Highway), Chithode,</p>
-                <p>Erode - 638316, Tamil Nadu, India</p>
+              <div className="space-y-1.5 text-xs font-mono text-zinc-300 leading-relaxed bg-[#181820] border border-[#2A2A36] rounded-xl p-4 mb-4">
+                <p className="font-bold text-white text-sm">Department of Computer Science &amp; Engineering</p>
+                <p className="text-zinc-400">NH-544 (Salem - Cochin National Highway), Chithode,</p>
+                <p className="text-zinc-400">Erode - 638316, Tamil Nadu, India</p>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-[#27272A] grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-                <div className="flex items-center gap-2 text-zinc-300">
-                  <Clock className="w-4 h-4 text-[#F5D90A] shrink-0" />
-                  <span>Symposium Date: Sep 24, 2026</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-mono mb-4">
+                <div className="p-3 bg-[#181820] border border-[#242430] rounded-lg flex items-center gap-2.5">
+                  <Calendar className="w-4 h-4 text-zinc-400 shrink-0" />
+                  <div>
+                    <div className="text-[10px] text-zinc-500 uppercase">SYMPOSIUM DATE</div>
+                    <div className="font-bold text-white">Sep 24, 2026</div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-zinc-300">
-                  <Navigation className="w-4 h-4 text-[#00E5FF] shrink-0" />
-                  <span>~14 km from Erode Central Bus Stand</span>
+                <div className="p-3 bg-[#181820] border border-[#242430] rounded-lg flex items-center gap-2.5">
+                  <Navigation className="w-4 h-4 text-zinc-400 shrink-0" />
+                  <div>
+                    <div className="text-[10px] text-zinc-500 uppercase">TRANSIT DISTANCE</div>
+                    <div className="font-bold text-white">~14 km from Erode Bus Stand</div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Coordinators Hotline Card */}
-            <div className="bg-[#121217] border-2 border-[#2E2E38] rounded-xl p-6 shadow-[4px_4px_0px_#000000]">
-              <h3 className="font-comic font-black text-lg text-white uppercase tracking-wide mb-4 flex items-center gap-2">
-                <span className="text-[#FF2E63]">⚡</span>
-                <span>ORGANIZING COMMITTEE</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
-                {/* Staff Lead */}
-                <div className="p-4 bg-[#181820] border border-[#33333E] rounded-lg space-y-1.5">
-                  <span className="text-[10px] text-[#F5D90A] font-bold tracking-widest uppercase">
-                    STAFF CONVENER
-                  </span>
-                  <h4 className="font-bold text-sm text-white">Dr. A. Senthil Kumar</h4>
-                  <p className="text-zinc-400 text-[11px]">Professor &amp; Head, Dept of CSE</p>
-                  <a href="tel:+919840123456" className="inline-flex items-center gap-1.5 text-[#00E5FF] hover:underline pt-1">
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>+91 98401 23456</span>
-                  </a>
-                </div>
-
-                {/* Student Convener */}
-                <div className="p-4 bg-[#181820] border border-[#33333E] rounded-lg space-y-1.5">
-                  <span className="text-[10px] text-[#00E5FF] font-bold tracking-widest uppercase">
-                    STUDENT CONVENER
-                  </span>
-                  <h4 className="font-bold text-sm text-white">R. Kanishkar</h4>
-                  <p className="text-zinc-400 text-[11px]">Final Year CSE &bull; Student Lead</p>
-                  <a href="tel:+919445198765" className="inline-flex items-center gap-1.5 text-[#00E5FF] hover:underline pt-1">
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>+91 94451 98765</span>
-                  </a>
-                </div>
-              </div>
-
-              {/* Direct Mail & Helpline */}
-              <div className="mt-4 pt-4 border-t border-[#27272A] flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
-                <a 
-                  href="mailto:zinnia26@gceerode.ac.in" 
-                  className="flex items-center gap-2 text-zinc-300 hover:text-white transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-[#1E1E28] border border-[#33333E] flex items-center justify-center text-[#FF2E63]">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-zinc-500 uppercase">Official Inquiries</p>
-                    <p className="font-bold text-[#FF2E63]">zinnia26@gceerode.ac.in</p>
-                  </div>
-                </a>
-
-                <a 
-                  href="tel:+911234567890" 
-                  className="flex items-center gap-2 text-zinc-300 hover:text-white transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-[#1E1E28] border border-[#33333E] flex items-center justify-center text-[#00E5FF]">
-                    <Phone className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-zinc-500 uppercase">General Helpline</p>
-                    <p className="font-bold text-[#00E5FF]">+91 12345 67890</p>
-                  </div>
-                </a>
-              </div>
+            <div className="pt-3.5 border-t border-[#20202A]">
+              <a
+                href="https://maps.google.com/?q=Government+College+of+Engineering+Erode"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2.5 bg-[#181820] hover:bg-[#22222C] border border-[#30303E] hover:border-zinc-500 text-zinc-200 hover:text-white font-mono text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 transition-all shadow-[2px_2px_0px_#000000] cursor-pointer"
+              >
+                <MapPin className="w-4 h-4 text-[#F5D90A]" />
+                <span>OPEN IN GOOGLE MAPS</span>
+                <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+              </a>
             </div>
-
           </div>
 
-          {/* RIGHT: Transmission Form (5 Cols) */}
-          <div className="lg:col-span-5">
-            <div className="bg-[#121217] border-2 border-[#2E2E38] rounded-xl p-6 shadow-[5px_5px_0px_#000000] relative">
-              <div className="flex items-center justify-between border-b border-[#27272A] pb-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-[#00E5FF]" />
-                  <h3 className="font-comic font-black text-lg text-white uppercase tracking-wide">
-                    SEND A MESSAGE
-                  </h3>
-                </div>
-                <span className="font-mono text-[10px] text-[#F5D90A] uppercase px-2 py-0.5 rounded bg-[#F5D90A]/10 border border-[#F5D90A]/30">
-                  FAST DISPATCH
+          {/* CARD 3: Organizing Committee */}
+          <div className="bg-[#121217] border border-[#252530] rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#000000]">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-lg bg-[#1A1A22] border border-[#2E2E3C] text-[#F5D90A] flex items-center justify-center shrink-0">
+                <span className="font-black text-sm">CSE</span>
+              </div>
+              <div>
+                <h3 className="font-comic font-black text-lg text-white uppercase tracking-wide">
+                  ORGANIZING COMMITTEE
+                </h3>
+                <p className="font-mono text-xs text-zinc-400">Symposium leadership &amp; coordinators</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs font-mono">
+              {/* Staff Convener */}
+              <div className="p-4 bg-[#181820] border border-[#2A2A36] rounded-lg space-y-1.5 hover:border-zinc-500 transition-colors">
+                <span className="text-[10px] text-[#F5D90A] font-bold tracking-widest uppercase">
+                  STAFF CONVENER
                 </span>
+                <h4 className="font-bold text-sm text-white">Dr. A. Senthil Kumar</h4>
+                <p className="text-zinc-400 text-[11px]">Professor &amp; Head, Dept of CSE</p>
+                <a
+                  href="tel:+919840123456"
+                  className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#F5D90A] transition-colors pt-1"
+                >
+                  <Phone className="w-3 h-3 text-[#F5D90A]" />
+                  <span>+91 98401 23456</span>
+                </a>
               </div>
 
-              {submitted ? (
-                <div className="py-12 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-[#00E5FF]/20 text-[#00E5FF] flex items-center justify-center mx-auto border-2 border-[#00E5FF]">
-                    <CheckCircle2 className="w-8 h-8" />
+              {/* Student Convener */}
+              <div className="p-4 bg-[#181820] border border-[#2A2A36] rounded-lg space-y-1.5 hover:border-zinc-500 transition-colors">
+                <span className="text-[10px] text-[#F5D90A] font-bold tracking-widest uppercase">
+                  STUDENT CONVENER
+                </span>
+                <h4 className="font-bold text-sm text-white">R. Kanishkar</h4>
+                <p className="text-zinc-400 text-[11px]">Final Year CSE &bull; Student Lead</p>
+                <a
+                  href="tel:+919445198765"
+                  className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#F5D90A] transition-colors pt-1"
+                >
+                  <Phone className="w-3 h-3 text-[#F5D90A]" />
+                  <span>+91 94451 98765</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* CARD 4: Transit & Arrival Guide */}
+          <div className="bg-[#121217] border border-[#252530] rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#000000]">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-lg bg-[#1A1A22] border border-[#2E2E3C] text-[#F5D90A] flex items-center justify-center shrink-0">
+                <Navigation className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-comic font-black text-lg text-white uppercase tracking-wide">
+                  HOW TO REACH THE VENUE
+                </h3>
+                <p className="font-mono text-xs text-zinc-400">Campus transit &amp; connectivity details</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs font-mono text-zinc-300">
+              <div className="p-3.5 bg-[#181820] border border-[#242430] rounded-lg flex items-start gap-3">
+                <Bus className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-white">By Bus</div>
+                  <div className="text-zinc-400 text-[11px] mt-0.5 leading-relaxed">
+                    Frequent town &amp; mofussil buses operate from Erode Central Bus Stand towards Bhavani / Chithode route. Alight at the IRTT / GCEE main arch stop.
                   </div>
-                  <h4 className="font-comic font-black text-2xl text-white">TRANSMISSION RECEIVED!</h4>
-                  <p className="font-mono text-xs text-zinc-400 max-w-xs mx-auto">
-                    Thank you, {formData.name || 'Agent'}! The ZINNIA '26 organizing desk will reply to your inquiry shortly.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setSubmitted(false);
-                      setFormData({ name: '', email: '', phone: '', subject: 'General Inquiry', message: '' });
-                    }}
-                    className="px-5 py-2 bg-[#00E5FF] text-black font-mono font-bold text-xs uppercase rounded hover:bg-[#00B4D8] transition-colors"
-                  >
-                    SEND ANOTHER QUERY
-                  </button>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block font-mono text-xs uppercase text-zinc-400 mb-1">
-                      Full Name <span className="text-[#FF2E63]">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Alex Hunter"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-[#1A1A22] border border-[#33333E] rounded-lg px-3.5 py-2 text-xs font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-[#00E5FF] transition-colors"
-                    />
-                  </div>
+              </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-mono text-xs uppercase text-zinc-400 mb-1">
-                        Email Address <span className="text-[#FF2E63]">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        placeholder="you@college.edu"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full bg-[#1A1A22] border border-[#33333E] rounded-lg px-3.5 py-2 text-xs font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-[#00E5FF] transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-mono text-xs uppercase text-zinc-400 mb-1">
-                        Mobile Number
-                      </label>
-                      <input
-                        type="tel"
-                        placeholder="+91 98765 43210"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full bg-[#1A1A22] border border-[#33333E] rounded-lg px-3.5 py-2 text-xs font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-[#00E5FF] transition-colors"
-                      />
-                    </div>
+              <div className="p-3.5 bg-[#181820] border border-[#242430] rounded-lg flex items-start gap-3">
+                <Train className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-white">By Train</div>
+                  <div className="text-zinc-400 text-[11px] mt-0.5 leading-relaxed">
+                    Erode Junction (ED) is well connected across all major routes. The campus is ~15 km from the station; autorickshaws and buses operate round the clock.
                   </div>
-
-                  <div>
-                    <label className="block font-mono text-xs uppercase text-zinc-400 mb-1">
-                      Inquiry Category
-                    </label>
-                    <select
-                      value={formData.subject}
-                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="w-full bg-[#1A1A22] border border-[#33333E] rounded-lg px-3.5 py-2 text-xs font-mono text-white focus:outline-none focus:border-[#00E5FF] transition-colors"
-                    >
-                      <option value="General Inquiry">General Symposium Inquiry</option>
-                      <option value="Event Rules">Event Specific Guidelines</option>
-                      <option value="Paper Presentation">Paper Presentation Submission</option>
-                      <option value="Registration & Pass">Registration &amp; Event Pass</option>
-                      <option value="Accommodation">Hospitality &amp; Campus Access</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-mono text-xs uppercase text-zinc-400 mb-1">
-                      Your Message / Query <span className="text-[#FF2E63]">*</span>
-                    </label>
-                    <textarea
-                      required
-                      rows={4}
-                      placeholder="Write your question or request here..."
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      className="w-full bg-[#1A1A22] border border-[#33333E] rounded-lg px-3.5 py-2 text-xs font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-[#00E5FF] transition-colors resize-none"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-3 bg-[#00E5FF] hover:bg-[#F5D90A] text-black border-2 border-black shadow-[3px_3px_0px_#000000] font-sans font-black text-xs sm:text-sm uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5"
-                  >
-                    <span>TRANSMIT MESSAGE</span>
-                    <Send className="w-4 h-4 fill-current" />
-                  </button>
-                </form>
-              )}
+                </div>
+              </div>
             </div>
           </div>
 
         </div>
       </main>
 
-      {/* Bottom Footer */}
+      {/* =========================================================================
+          3. FOOTER COMPONENT
+          ========================================================================= */}
       <WebsiteFooter />
     </div>
   );

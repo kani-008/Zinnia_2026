@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { audioManager } from '../core/AudioManager';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
 import { WebsiteFooter } from '../components/layout/Footer';
@@ -177,7 +176,6 @@ export const WebsiteHomePage: React.FC = () => {
 
   const triggerComicFX = (soundText: string) => {
     setInteractiveSoundText(soundText);
-    audioManager.playNodeEngage();
     setTimeout(() => {
       setInteractiveSoundText(null);
     }, 900);
@@ -292,7 +290,7 @@ export const WebsiteHomePage: React.FC = () => {
           </MagneticElement>
 
           {/* Register Navbar Magnetic Button (Cyan Accent + Cyan Shadow) */}
-          <MagneticElement strength={0.35} onClick={() => { triggerComicFX('POW!'); registerNav.trigger('/register'); }}>
+          <MagneticElement strength={0.35} onClick={() => navigate('/register')}>
             <button className="px-3 sm:px-6 py-1 sm:py-1.5 bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[2px] sm:border-[2.5px] border-[#3CE7FF] hover:border-[#F5D90A] shadow-[2.5px_2.5px_0px_#1E8FA3] sm:shadow-[3.5px_3.5px_0px_#1E8FA3] hover:shadow-[3.5px_3.5px_0px_#8A7400] font-display text-[11px] sm:text-sm tracking-wider uppercase cursor-pointer transition-all shrink-0">
               REGISTER
             </button>
@@ -360,7 +358,7 @@ export const WebsiteHomePage: React.FC = () => {
 
               {/* Center Register CTA Button */}
               <div className="pt-2 sm:pt-3 flex justify-center w-full max-w-md">
-                <MagneticElement strength={0.35} onClick={() => { triggerComicFX('POW!'); registerNav.trigger('/register'); }} className="w-full sm:w-auto">
+                <MagneticElement strength={0.35} onClick={() => navigate('/register')} className="w-full sm:w-auto">
                   <button className="w-full sm:w-auto px-6 xs:px-8 sm:px-10 md:px-12 py-2.5 sm:py-3 bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[2px] sm:border-[2.5px] border-[#3CE7FF] hover:border-[#F5D90A] shadow-[3px_3px_0px_#1E8FA3] sm:shadow-[4px_4px_0px_#1E8FA3] hover:shadow-[4px_4px_0px_#8A7400] font-display text-xs xs:text-sm sm:text-base md:text-lg tracking-wider uppercase cursor-pointer transition-all active:translate-x-1 active:translate-y-1 flex items-center justify-center gap-2 sm:gap-2.5 group">
                     <span>REGISTER FOR ZINNIA</span>
                     <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform shrink-0" />

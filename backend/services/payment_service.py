@@ -118,73 +118,6 @@ def submit_payment_service(team_id: str, utr_number: str, submitted_amount: floa
         "submitted_amount": submitted_amount,
         "expected_amount": payment.get("expected_amount", submitted_amount) if payment else submitted_amount
     }
-
-def verify_admin_payment_service(team_id: str, admin_id: str = "ADMIN") -> Dict[str, Any]:
-    """
-    Admin verification of a pending payment.
-    Marks team payment as VERIFIED and triggers pass generation & email dispatch to all team members!
-    """
-    headers = get_headers()
-    payment = get_payment_record(team_id) or {"team_id": team_id, "payment_status": "PENDING_VERIFICATION"}
-
-    if payment.get("payment_status") == "VERIFIED":
-        return {"success": True, "message": "Payment is already verified.", "payment_status": "VERIFIED"}
-
-    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    
-    safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/team_payments?team_id=eq.{team_id}", headers, {
-        "payment_status": "VERIFIED",
-        "payment_verified_at": now_iso,
-        "verified_by": admin_id,
-        "rejection_reason": None,
-        "updated_at": now_iso
-    })
-
-    safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}", headers, {
-        "payment_status": "VERIFIED"
-    })
-
-    dispatch_res = None
-    try:
-        from services.passport_service import trigger_passport_dispatch
-        dispatch_res = trigger_passport_dispatch(team_id)
-    except Exception as e:
-        print(f"[Dispatch Notice] {e}")
-
-    return {
-        "success": True,
-        "message": f"Payment verified for team '{team_id}'. QR Digital Passes generated and dispatched to participant email(s).",
-        "payment_status": "VERIFIED",
-        "dispatch": dispatch_res
-    }
-
-def reject_admin_payment_service(team_id: str, admin_id: str, rejection_reason: str) -> Dict[str, Any]:
-    """
-    Admin rejection of a pending/invalid payment.
-    Resets status to REJECTED with reason so participant can resubmit a valid UTR.
-    """
-    headers = get_headers()
-    reason = rejection_reason.strip() if rejection_reason else "Payment verification failed. Incorrect UTR or amount."
-    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-    safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/team_payments?team_id=eq.{team_id}", headers, {
-        "payment_status": "REJECTED",
-        "rejection_reason": reason,
-        "verified_by": admin_id,
-        "updated_at": now_iso
-    })
-
-    safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}", headers, {
-        "payment_status": "REJECTED"
-    })
-
-    return {
-        "success": True,
-        "message": f"Payment for team '{team_id}' has been marked as REJECTED.",
-        "payment_status": "REJECTED",
-        "rejection_reason": reason
-    }
-
 def get_payment_status_service(team_id: str) -> Dict[str, Any]:
     """Fetch live payment status, expected amount, UTR, and rejection details with fallback."""
     headers = get_headers()
@@ -209,15 +142,3 @@ def get_payment_status_service(team_id: str) -> Dict[str, Any]:
         "payment_submitted_at": payment.get("payment_submitted_at"),
         "payment_verified_at": payment.get("payment_verified_at")
     }
-
-def list_all_payments_service(status_filter: Optional[str] = None) -> List[Dict[str, Any]]:
-    """List all team payments with joined team details for admin verification dashboard."""
-    headers = get_headers()
-    url = f"{SUPABASE_URL}/rest/v1/team_payments?select=*,teams(team_name,college,department,year,registered_events)"
-    if status_filter:
-        url += f"&payment_status=eq.{status_filter.upper()}"
-    
-    ok, res = safe_supabase_get(url, headers)
-    if ok and isinstance(res, list):
-        return res
-    return []

@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
 import { EventMission } from '@/types';
-import { audioManager } from '../core/AudioManager';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { 
   Users, 
@@ -124,8 +123,7 @@ export const WebsiteEventsPage: React.FC = () => {
 
           <button
             onClick={() => {
-              audioManager.playNodeEngage();
-              registerNav.trigger(`/register?mission=${e.id}`);
+              navigate(`/register?mission=${e.id}`);
             }}
             className={`w-full py-2.5 px-3 font-display text-xs tracking-wider uppercase font-bold flex items-center justify-center gap-2 border-[2px] transition-all shadow-[3px_3px_0px_#000000] rounded-lg active:translate-x-0.5 active:translate-y-0.5 cursor-pointer ${
               isTech
@@ -151,7 +149,6 @@ export const WebsiteEventsPage: React.FC = () => {
         <div>
           <Link
             to="/"
-            onClick={() => audioManager.playNodeEngage()}
             className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#1A1A1D] border border-[#3A3A3E] text-xs font-mono text-[#A8A8AC] hover:text-white hover:border-[#F5D90A] transition-all shadow-[2px_2px_0px_#000000] rounded"
           >
             <ArrowLeft className="w-3.5 h-3.5" />

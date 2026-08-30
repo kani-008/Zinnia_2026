@@ -1,23 +1,16 @@
-type RegisterListener = (targetPath: string) => void;
-
 class RegisterNavigationService {
-  private listeners: Set<RegisterListener> = new Set();
+  private handler: ((path: string) => void) | null = null;
 
-  subscribe(listener: RegisterListener): () => void {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
+  setNavigator(handler: (path: string) => void) {
+    this.handler = handler;
   }
 
   trigger(targetPath: string = '/register') {
-    this.listeners.forEach((fn) => {
-      try {
-        fn(targetPath);
-      } catch (e) {
-        console.error('Error triggering register animation:', e);
-      }
-    });
+    if (this.handler) {
+      this.handler(targetPath);
+    } else {
+      window.location.assign(targetPath);
+    }
   }
 }
 

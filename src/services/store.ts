@@ -4,7 +4,6 @@ import {
   Participant, 
   EventMission, 
   AttendanceRecord, 
-  AdminRole,
   EventRegistration,
   PrizePosition,
   EventType,
@@ -21,8 +20,7 @@ const STORAGE_KEYS = {
   REGISTRATIONS: 'zin26_live_registrations_v2',
   ATTENDANCE: 'zin26_live_attendance_v2',
   HAND_BANDS: 'zin26_live_hand_bands_v2',
-  CURRENT_TEAM: 'zin26_current_team_v2',
-  ADMIN_ROLE: 'zin26_admin_role_v2'
+  CURRENT_TEAM: 'zin26_current_team_v2'
 };
 
 class ZinniaStore {
@@ -1126,96 +1124,6 @@ class ZinniaStore {
     };
   }
 
-  async verifyAdminPaymentApi(teamId: string, adminId: string = 'admin_lead'): Promise<{
-    success: boolean;
-    message?: string;
-    payment_status?: string;
-  }> {
-    const teams = this.getStorage<Team[]>(STORAGE_KEYS.TEAMS, []);
-    const team = teams.find(t => t.team_id === teamId || t.team_id.toUpperCase() === teamId.toUpperCase());
-    if (team) {
-      team.payment = true;
-      team.payment_status = 'VERIFIED';
-      this.setStorage(STORAGE_KEYS.TEAMS, teams);
-      this.notifySubscribers();
-    }
-
-    const data = await this.fetchJson('/api/admin/payment/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ team_id: teamId, admin_id: adminId })
-    });
-
-    if (data && data.success) {
-      await this.syncFromSupabase();
-      return data;
-    }
-
-    return {
-      success: true,
-      message: `Verified payment for team ${teamId}`,
-      payment_status: 'VERIFIED'
-    };
-  }
-
-  async rejectAdminPaymentApi(teamId: string, rejectionReason: string, adminId: string = 'admin_lead'): Promise<{
-    success: boolean;
-    message?: string;
-    payment_status?: string;
-  }> {
-    const teams = this.getStorage<Team[]>(STORAGE_KEYS.TEAMS, []);
-    const team = teams.find(t => t.team_id === teamId || t.team_id.toUpperCase() === teamId.toUpperCase());
-    if (team) {
-      team.payment = false;
-      team.payment_status = 'REJECTED';
-      this.setStorage(STORAGE_KEYS.TEAMS, teams);
-      this.notifySubscribers();
-    }
-
-    const data = await this.fetchJson('/api/admin/payment/reject', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ team_id: teamId, admin_id: adminId, rejection_reason: rejectionReason })
-    });
-
-    if (data && data.success) {
-      await this.syncFromSupabase();
-      return data;
-    }
-
-    return {
-      success: true,
-      message: `Payment rejected for team ${teamId}`,
-      payment_status: 'REJECTED'
-    };
-  }
-
-  async listAdminPaymentsApi(statusFilter?: string): Promise<any[]> {
-    const url = statusFilter ? `/api/admin/payments/list?status=${statusFilter}` : '/api/admin/payments/list';
-    const data = await this.fetchJson(url);
-    if (data && Array.isArray(data.payments) && data.payments.length > 0) {
-      return data.payments;
-    }
-
-    // Local fallback for admin payments list
-    const teams = this.getTeams();
-    let payments = teams.map(t => {
-      const expectedAmount = Math.max(150, (t.registered_events?.length || 1) * 150);
-      return {
-        team_id: t.team_id,
-        payment_status: t.payment_status || (t.payment ? 'VERIFIED' : 'AWAITING_PAYMENT'),
-        expected_amount: expectedAmount,
-        submitted_amount: expectedAmount,
-        utr_number: t.utr_number || '',
-        teams: t
-      };
-    });
-
-    if (statusFilter && statusFilter !== 'ALL') {
-      payments = payments.filter(p => p.payment_status === statusFilter);
-    }
-    return payments;
-  }
 
   // --- EVENTS ---
   getEvents(filterType?: EventType): EventMission[] {
@@ -1273,21 +1181,13 @@ class ZinniaStore {
     this.notifySubscribers();
   }
 
-  // --- CURRENT USER & ADMIN ROLE ---
+  // --- CURRENT USER ---
   getCurrentTeam(): Team | null {
     return this.getStorage(STORAGE_KEYS.CURRENT_TEAM, null);
   }
 
   setCurrentTeam(team: Team | null): void {
     this.setStorage(STORAGE_KEYS.CURRENT_TEAM, team);
-  }
-
-  getAdminRole(): AdminRole {
-    return this.getStorage(STORAGE_KEYS.ADMIN_ROLE, 'SUPER_ADMIN');
-  }
-
-  setAdminRole(role: AdminRole): void {
-    this.setStorage(STORAGE_KEYS.ADMIN_ROLE, role);
   }
 }
 

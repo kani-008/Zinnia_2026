@@ -1,4 +1,9 @@
-import { QRScanPayload } from '../types';
+export interface QRScanPayload {
+  v: number;
+  agent_id: string;
+  token: string;
+  ts: number;
+}
 
 export function createQRPayload(agent_id: string, token: string): string {
   const payload: QRScanPayload = {
