@@ -732,7 +732,7 @@ export const WebsiteHomePage: React.FC = () => {
           ========================================================================= */}
       <section
         id="events"
-        className="relative z-30 max-w-7xl mx-auto w-full py-8 sm:py-14 px-2 sm:px-4 my-2 sm:my-6 overflow-visible"
+        className="relative z-30 max-w-7xl mx-auto w-full pt-6 sm:pt-10 pb-0 px-2 sm:px-4 mt-2 sm:mt-4 mb-0 overflow-visible"
       >
         {/* Section Header: —·····— ⚡ EVENTS ⚡ —·····— */}
         <div className="flex items-center justify-center gap-3 sm:gap-6 mb-8 sm:mb-12">
@@ -880,7 +880,7 @@ export const WebsiteHomePage: React.FC = () => {
         {/* -------------------------------------------------------------
             2. NON-TECHNICAL EVENTS ROW (06 - 09) [NEON PINK] + DOODLES
             ------------------------------------------------------------- */}
-        <div className="relative mb-6 sm:mb-10">
+        <div className="relative mb-2 sm:mb-4">
           {/* Subheading: ✦ NON - TECHNICAL EVENTS ───□ */}
           <div className="flex items-center gap-2 mb-4 sm:mb-6">
             <span className="font-mono font-bold text-sm xs:text-base sm:text-lg text-[#FF2E63] tracking-wider flex items-center gap-2">
