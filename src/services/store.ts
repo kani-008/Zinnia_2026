@@ -1124,6 +1124,37 @@ class ZinniaStore {
     };
   }
 
+  async getPaymentStatus(teamId: string): Promise<{
+    success: boolean;
+    team_id?: string;
+    team_name?: string;
+    payment?: boolean;
+    payment_status?: string;
+    expected_amount?: number;
+    submitted_amount?: number;
+    utr_number?: string;
+    rejection_reason?: string;
+    message?: string;
+  } | null> {
+    const res = await this.getPaymentStatusApi(teamId);
+    if (res && res.success) {
+      return res;
+    }
+    return null;
+  }
+
+  async submitPaymentProof(
+    teamId: string,
+    payload: { utr_number: string; amount_paid: number }
+  ): Promise<{
+    success: boolean;
+    message?: string;
+    payment_status?: string;
+    error_code?: string;
+  }> {
+    return this.submitPaymentApi(teamId, payload.utr_number, payload.amount_paid);
+  }
+
 
   // --- EVENTS ---
   getEvents(filterType?: EventType): EventMission[] {
