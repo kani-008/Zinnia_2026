@@ -1069,7 +1069,7 @@ class ZinniaStore {
     // Fallback: Local Team state lookup
     const team = this.getTeamById(teamId);
     if (team) {
-      const expectedAmount = Math.max(150, (team.registered_events?.length || 1) * 150);
+      const expectedAmount = Math.max(250, (team.members?.length || 1) * 250);
       return {
         success: true,
         team_id: team.team_id,

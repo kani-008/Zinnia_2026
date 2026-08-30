@@ -18,7 +18,7 @@ SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASS = os.getenv("SMTP_PASS", "") or os.getenv("SMTP_PASSWORD", "")
-SMTP_FROM = os.getenv("SMTP_FROM", "Zinnia 2026 <no-reply@zinnia2026.edu>")
+SMTP_FROM = os.getenv("SMTP_FROM", "Zinnia 2026 <zinnia2026@gcee.ac.in>")
 APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:5173").rstrip("/")
 
 def generate_qr_base64(data: str) -> str:

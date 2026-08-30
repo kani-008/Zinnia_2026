@@ -138,9 +138,10 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
             if event_obj.get("is_single_event_only"):
                 has_single_event_only = True
 
-            reg_fee = int(event_obj.get("registration_fee", 0) or 0)
-            expected_amount += reg_fee
             validated_events.append(event_obj)
+
+        # Flat registration fee: ₹250 per participant (each should be 250 rupees)
+        expected_amount = max(250, len(members) * 250)
 
         if has_single_event_only and len(selected_event_ids) > 1:
             return {

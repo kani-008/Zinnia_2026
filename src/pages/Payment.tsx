@@ -184,17 +184,37 @@ export const WebsitePaymentPage: React.FC = () => {
               <div className="text-3xl font-black text-white font-mono text-emerald-400">
                 ₹{expectedAmount}
               </div>
+              <div className="text-[11px] font-mono text-cyan-400 font-semibold">
+                ₹250 PER PARTICIPANT {paymentInfo.members?.length ? `(${paymentInfo.members.length} × ₹250)` : ''}
+              </div>
               <div className="text-[10px] font-mono text-slate-500 uppercase">OFFICIAL REGISTRATION TOTAL</div>
             </div>
 
-            {/* QR Code */}
-            <div className="p-4 bg-white rounded-2xl shadow-inner border border-slate-200">
-              <QRCodeSVG
-                value={upiUrl}
-                size={180}
-                level="H"
-                includeMargin={false}
-              />
+            {/* Official Payment QR Code */}
+            <div className="w-full flex flex-col items-center space-y-2">
+              <div className="p-3.5 bg-white rounded-2xl shadow-inner border border-slate-200 relative group flex items-center justify-center min-w-[200px] min-h-[200px]">
+                {/* Check for custom QR image, fallback to generated UPI SVG */}
+                <img 
+                  src="/payment-qr.png" 
+                  alt="Official Payment QR" 
+                  className="w-[180px] h-[180px] object-contain rounded-lg"
+                  onError={(e) => {
+                    // If custom static image not yet added, hide image and show dynamic SVG
+                    (e.target as HTMLElement).style.display = 'none';
+                    const fallbackSvg = document.getElementById('upi-qr-fallback');
+                    if (fallbackSvg) fallbackSvg.style.display = 'block';
+                  }} 
+                />
+                <div id="upi-qr-fallback" style={{ display: 'none' }}>
+                  <QRCodeSVG
+                    value={upiUrl}
+                    size={180}
+                    level="H"
+                    includeMargin={false}
+                  />
+                </div>
+              </div>
+              <span className="text-[10px] font-mono text-slate-400">Scan via Google Pay / PhonePe / Paytm / Any UPI</span>
             </div>
 
             {/* UPI ID Pill */}
@@ -215,11 +235,12 @@ export const WebsitePaymentPage: React.FC = () => {
 
             {/* Step Instructions */}
             <div className="w-full text-left space-y-2 text-[11px] text-slate-400 font-sans border-t border-slate-800 pt-3">
-              <div className="font-mono text-[10px] text-cyan-400 font-bold">PAYMENT STEPS:</div>
-              <p>1. Scan the QR with Google Pay, PhonePe, or Paytm.</p>
-              <p>2. Pay exact amount: <strong className="text-white">₹{expectedAmount}</strong>.</p>
-              <p>3. Note down the 12-digit <strong className="text-white">UTR / Ref No</strong>.</p>
-              <p>4. Enter details in the form on the right and submit.</p>
+              <div className="font-mono text-[10px] text-cyan-400 font-bold">HOW TO PAY & VERIFY:</div>
+              <p>1. Scan the QR code above with any UPI app.</p>
+              <p>2. Pay the exact registration total: <strong className="text-emerald-400 font-mono">₹{expectedAmount}</strong> (₹250 per participant).</p>
+              <p>3. Note the 12-digit <strong className="text-white">UTR / Transaction ID</strong> from your payment receipt.</p>
+              <p>4. Enter the UTR number in the form on the right and submit.</p>
+              <p>5. The symposium Treasurer will verify the receipt and dispatch your official entry passes with QR to your email.</p>
             </div>
           </div>
 
@@ -248,7 +269,7 @@ export const WebsitePaymentPage: React.FC = () => {
                       'text-cyan-300'
                     }`}>
                       {isVerified && 'PAYMENT VERIFIED & APPROVED'}
-                      {isPending && 'PENDING ADMIN VERIFICATION'}
+                      {isPending && 'PENDING TREASURER VERIFICATION'}
                       {isRejected && 'PAYMENT REJECTED'}
                       {!isVerified && !isPending && !isRejected && 'AWAITING PAYMENT SUBMISSION'}
                     </div>
@@ -264,10 +285,20 @@ export const WebsitePaymentPage: React.FC = () => {
                 </button>
               </div>
 
+              {/* Pending Note */}
+              {isPending && (
+                <div className="mt-4 p-3 bg-amber-950/60 border border-amber-500/40 rounded-xl text-xs text-amber-200 font-sans space-y-1">
+                  <p className="font-semibold">Your transaction number has been recorded!</p>
+                  <p className="text-[11px] text-amber-300/80">
+                    The Treasurer will cross-reference your UTR ({paymentInfo.utr_number}) against the bank statement. Once approved, the official QR entry passes will be sent to your registered email from <strong>zinnia2026@gcee.ac.in</strong>.
+                  </p>
+                </div>
+              )}
+
               {/* Rejection Note */}
               {isRejected && paymentInfo.rejection_reason && (
                 <div className="mt-4 p-3 bg-rose-950 border border-rose-500/40 rounded-xl text-xs text-rose-300 font-sans">
-                  <strong>Reason from Admin:</strong> {paymentInfo.rejection_reason}
+                  <strong>Reason from Treasurer:</strong> {paymentInfo.rejection_reason}
                   <p className="text-[11px] text-rose-400/80 mt-1">Please verify your transaction statement and re-submit the correct UTR.</p>
                 </div>
               )}
@@ -276,14 +307,14 @@ export const WebsitePaymentPage: React.FC = () => {
               {isVerified && (
                 <div className="mt-5 space-y-3">
                   <p className="text-xs text-emerald-200">
-                    Your team payment has been verified by the symposium committee. Your digital QR passports have been issued!
+                    Your payment was verified by the Treasurer! Digital QR passes have been sent to your registered email from <strong>zinnia2026@gcee.ac.in</strong>. You can also view and download them below:
                   </p>
                   <button
                     type="button"
                     onClick={() => navigate(`/passport?id=${teamId}`)}
                     className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold font-mono text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg"
                   >
-                    <span>VIEW DIGITAL PASSPORT PASSES</span>
+                    <span>VIEW DIGITAL ENTRY QR PASSES</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>

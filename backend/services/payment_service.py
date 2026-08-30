@@ -135,7 +135,7 @@ def get_payment_status_service(team_id: str) -> Dict[str, Any]:
         "team_name": team.get("team_name", f"Team {team_id}"),
         "payment": is_verified,
         "payment_status": p_status,
-        "expected_amount": payment.get("expected_amount", 150),
+        "expected_amount": payment.get("expected_amount", 250),
         "submitted_amount": payment.get("submitted_amount"),
         "utr_number": payment.get("utr_number"),
         "rejection_reason": payment.get("rejection_reason"),
