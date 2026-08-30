@@ -3,6 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
 import { WebsiteFooter } from '../components/layout/Footer';
+import robotMascot from '../assets/1.svg';
+import megaphoneSvg from '../assets/megaphone.svg';
+import zinniaSvg from '../assets/zinnia.svg';
+import nationalBadge from '../assets/national.svg';
+import evenBadge from '../assets/even.svg';
+import annBadge from '../assets/ann.svg';
+import cloudSvg from '../assets/cloud.svg';
+import priceSvg from '../assets/price.svg';
+import regSvg from '../assets/reg.svg';
 import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award, X, Phone, CheckCircle2, Mail, Send } from 'lucide-react';
 
 // 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
@@ -226,7 +235,7 @@ export const WebsiteHomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-transparent text-[#F2F2F0] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none scroll-smooth">
+    <div className="relative w-full min-h-screen bg-transparent text-[#F2F2F0] flex flex-col justify-between px-2 sm:px-4 md:px-6 pt-1 pb-4 select-none scroll-smooth">
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
@@ -238,214 +247,485 @@ export const WebsiteHomePage: React.FC = () => {
         </div>
       )}
 
-
-
       {/* =========================================================================
           1. TOP NAVBAR (100% 2D Illustrated Comic Style with Magnetic Buttons)
           ========================================================================= */}
-      <header className="relative z-60 max-w-6xl mx-auto w-full flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 pt-1 px-1.5 sm:px-2">
+      <header className="relative z-60 max-w-7xl mx-auto w-full flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 pt-1 px-1 sm:px-3">
         {/* Left: Illustrated ZINNIA Comic Logo with Magnetic Pull */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Magnetic Logo Badge (Rich Gold Shadow) */}
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+          {/* Magnetic Logo Badge (ZINNIA '26 SVG Asset) */}
           <MagneticElement strength={0.25} onClick={() => triggerComicFX('BOOM!')}>
-            <div className="cursor-pointer group relative px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#F5D90A] border-[2.5px] sm:border-[3px] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400] sm:shadow-[4px_4px_0px_#8A7400] -rotate-1 hover:rotate-0 transition-transform active:translate-x-1 active:translate-y-1">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-display text-xl sm:text-3xl text-[#0D0D0F] tracking-wide">
-                  ZINNIA
-                </span>
-                <span className="font-comic text-lg sm:text-2xl text-[#FF3366] font-black">
-                  '26
-                </span>
-              </div>
-              {/* Speech Tail */}
-              <div className="absolute -bottom-2 sm:-bottom-2.5 left-3 sm:left-5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-[#F5D90A] border-r-[2.5px] sm:border-r-[3px] border-b-[2.5px] sm:border-b-[3px] border-[#F5D90A] rotate-45" />
+            <div className="cursor-pointer group relative -rotate-2 hover:rotate-0 transition-transform active:translate-x-1 active:translate-y-1 flex items-center">
+              <img
+                src={zinniaSvg}
+                alt="ZINNIA '26 Logo"
+                className="h-12 sm:h-15 md:h-18 lg:h-20 w-auto object-contain select-none pointer-events-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]"
+              />
             </div>
           </MagneticElement>
 
-          {/* Comics Code Authority Parody Stamp (Neutral Dark Box) */}
-          <div className="hidden md:flex flex-col items-center justify-center p-1 px-2 bg-[#1A1A1D] border-[1.5px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] rotate-2 text-[7px] font-mono leading-tight uppercase font-black text-center sticker-pop-alt cursor-pointer text-[#A8A8AC]">
-            <span>APPROVED</span>
-            <span className="text-[6px] text-[#FF3366]">BY THE</span>
-            <span>CSE CODE</span>
+          {/* Comics Code Authority Parody Stamp ("APPROVED BY THE CSE CODE") */}
+          <div
+            onClick={() => triggerComicFX('CODE APPROVED!')}
+            className="hidden sm:flex flex-col items-center justify-center relative p-1.5 sm:p-2 bg-black border-[2px] border-white/80 shadow-[3px_3px_0px_#000000] rotate-2 cursor-pointer hover:rotate-0 transition-transform active:scale-95 select-none group"
+          >
+            {/* Outer Sketched Frame Accent */}
+            <div className="absolute -bottom-1 -left-1 inset-0 border border-white/40 pointer-events-none" />
+            <span className="font-comic font-black text-white text-[10px] sm:text-xs tracking-wider leading-none">
+              APPROVED
+            </span>
+            <span className="font-comic font-black text-[#E81C65] text-[8px] sm:text-[10px] italic tracking-wide leading-tight my-0.5">
+              BY THE
+            </span>
+            <span className="font-comic font-black text-white text-[10px] sm:text-xs tracking-wider leading-none">
+              CSE CODE
+            </span>
           </div>
         </div>
 
         {/* Center/Right Comic Navigation Tabs with Magnetic Pull */}
-        <nav className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-end">
+        <nav className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
           {/* EVENTS TAB */}
           <MagneticElement strength={0.3} onClick={() => scrollToSection('events', 'EVENTS!')}>
-            <button className="px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#3CE7FF] hover:text-[#3CE7FF] text-[#F2F2F0] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] font-comic text-[11px] sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
-              <span>EVENTS</span>
+            <button className="comic-button" type="button">
+              {/* FIXED BOTTOM BOX */}
+              <span className="back-box" />
+              {/* MOVING TOP BOX */}
+              <span className="front-box">
+                <span className="lightning">⚡</span>
+                <span>EVENTS</span>
+              </span>
             </button>
           </MagneticElement>
 
-          {/* CONTACT TAB */}
-          <MagneticElement strength={0.3} onClick={() => {
-            triggerComicFX('CONTACT!');
-            navigate('/contact');
-          }}>
-            <button className="px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#1A1A1D] hover:bg-[#2A2A2E] hover:border-[#00E5FF] hover:text-[#00E5FF] text-[#F2F2F0] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2px_2px_0px_#000000] sm:shadow-[3px_3px_0px_#000000] font-comic text-[11px] sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
-              <span>CONTACT</span>
+          {/* ABOUT TAB */}
+          <MagneticElement strength={0.3} onClick={() => scrollToSection('about', 'ABOUT!')}>
+            <button className="comic-button" type="button">
+              {/* FIXED BOTTOM BOX */}
+              <span className="back-box" />
+              {/* MOVING TOP BOX */}
+              <span className="front-box">
+                <span>ABOUT</span>
+              </span>
             </button>
           </MagneticElement>
 
-          {/* Register Navbar Magnetic Button (Cyan Accent + Cyan Shadow) */}
+          {/* Register Navbar Magnetic Button */}
           <MagneticElement strength={0.35} onClick={() => navigate('/register')}>
-            <button className="px-3 sm:px-6 py-1 sm:py-1.5 bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[2px] sm:border-[2.5px] border-[#3CE7FF] hover:border-[#F5D90A] shadow-[2.5px_2.5px_0px_#1E8FA3] sm:shadow-[3.5px_3.5px_0px_#1E8FA3] hover:shadow-[3.5px_3.5px_0px_#8A7400] font-display text-[11px] sm:text-sm tracking-wider uppercase cursor-pointer transition-all shrink-0">
-              REGISTER
+            <button className="comic-button-cyan" type="button">
+              {/* FIXED BOTTOM BOX */}
+              <span className="back-box-cyan" />
+              {/* MOVING TOP BOX */}
+              <span className="front-box-cyan">
+                <span>REGISTER</span>
+              </span>
             </button>
           </MagneticElement>
         </nav>
       </header>
 
       {/* =========================================================================
-          2. CENTER HERO: LARGE COMIC PANEL (Main Visual Focus)
+          2. HERO SECTION (Matched to Reference Image)
           ========================================================================= */}
-      <main className="relative z-30 max-w-7xl mx-auto w-full pt-1 sm:pt-2 pb-2 sm:pb-4 px-1 sm:px-3 flex flex-col items-center">
-        {/* Outer unclipped wrapper for top floating badges */}
-        <div className="relative w-full">
+      <section className="relative z-30 max-w-6xl mx-auto w-full pt-1 sm:pt-2 pb-4 sm:pb-6 px-3 sm:px-6 select-none overflow-visible">
 
+        {/* Background Comic Halftone Decorative Layer (Behind all content, center stays clean black) */}
+        <div className="absolute inset-0 pointer-events-none overflow-visible z-0">
+          {/* 1. Bottom-left strictly behind/below the robot */}
+          <div className="comic-halftone -bottom-10 -left-6 opacity-85 scale-110" />
 
+          {/* 2. Bottom-right strictly behind/around the speaker */}
+          <div className="comic-halftone -bottom-14 -right-10 opacity-85 scale-110" />
+        </div>
 
-          {/* Main Hero Banner Container (Transparent, Borderless, Moved Up) */}
-          <div className="relative w-full bg-transparent p-1 xs:p-2 sm:p-4 pt-0 xs:pt-1 sm:pt-1 pb-1 xs:pb-2 sm:pb-3 overflow-hidden">
-            {/* -------------------------------------------------------------
-                HERO CONTENT INSIDE THE COMIC PANEL (EXTRA-LARGE HERO BANNER)
-                ------------------------------------------------------------- */}
-            <div className="relative z-20 flex flex-col items-center justify-center text-center space-y-2 xs:space-y-2.5 sm:space-y-3.5 w-full">
-              {/* Institution & Department Header */}
-              <div className="flex flex-col items-center justify-center text-center w-full px-1 sm:px-4 space-y-1 sm:space-y-1.5">
-                {/* College Name: Large, bold, stretching end-to-end */}
-                <h3 className="w-full text-center font-comic font-black text-[#F5D90A] uppercase whitespace-normal sm:whitespace-nowrap text-lg xs:text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl tracking-wide xs:tracking-wider sm:tracking-[0.22em] md:tracking-[0.28em] lg:tracking-[0.34em] leading-snug sm:leading-tight select-none">
-                  GOVERNMENT COLLEGE OF ENGINEERING, ERODE
-                </h3>
-                {/* Department Name: Slightly smaller than college */}
-                <p className="w-full text-center font-comic font-extrabold text-[#3CE7FF] uppercase whitespace-normal sm:whitespace-nowrap text-sm xs:text-base sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl tracking-normal xs:tracking-wide sm:tracking-[0.12em] md:tracking-[0.16em] lg:tracking-[0.2em] leading-snug sm:leading-tight select-none">
-                  DEPARTMENT OF COMPUTER SCIENCE &amp; ENGINEERING
-                </p>
-              </div>
+        {/* Hand-Drawn Rough Comic Ink Scribbles & Doodles Layer (Minimal framing in hero) */}
+        <div className="absolute inset-0 pointer-events-none overflow-visible z-10 select-none">
+          {/* Left Mid Pink Comic Star */}
+          <div className="absolute top-44 left-3 sm:left-6 rotate-12">
+            <svg viewBox="0 0 50 50" className="w-6 sm:w-8 h-6 sm:h-8 fill-none opacity-85">
+              <path
+                d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z"
+                fill="#E81C65"
+                stroke="#E81C65"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
 
-              {/* Giant Comic Title with '26 (tight gap to dept name) */}
-              <div className="flex flex-col items-center justify-center text-center w-full pt-0">
-                <div className="relative inline-flex items-start justify-center max-w-full">
-                  <h1 className="font-display text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl text-[#F2F2F0] tracking-tight leading-none uppercase select-none">
-                    ZINNIA
-                  </h1>
-                  <span className="font-comic text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#3CE7FF] font-black leading-none translate-y-1 sm:translate-y-2 md:translate-y-3 ml-1.5 sm:ml-2.5 select-none">
-                    '26
-                  </span>
-                </div>
-
-                {/* Subtitle Badges & Chips */}
-                <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 pt-3 xs:pt-3.5 sm:pt-4 max-w-full">
-                  <span className="px-3.5 sm:px-5 py-1.5 sm:py-2 bg-[#FF3366] text-white border-[2px] sm:border-[2.5px] border-[#FF3366] font-bungee text-[11px] sm:text-sm -rotate-2 sticker-pop-alt cursor-pointer shadow-[3px_3px_0px_#B01F45]">
-                    NATIONAL LEVEL
-                  </span>
-                  <span
-                    onClick={() => triggerComicFX('9 BATTLES!')}
-                    className="px-3.5 sm:px-5 py-1.5 sm:py-2 bg-[#123B3E] text-[#3CE7FF] border-[2px] sm:border-[2.5px] border-[#3CE7FF] font-mono text-[11px] sm:text-sm font-black shadow-[2.5px_2.5px_0px_#1E8FA3] sticker-pop cursor-pointer"
-                  >
-                    9 ACTIVE EVENTS
-                  </span>
-                  <span
-                    onClick={() => triggerComicFX('VERIFIED!')}
-                    className="px-3.5 sm:px-5 py-1.5 sm:py-2 bg-[#2B2408] text-[#F5D90A] border-[2px] sm:border-[2.5px] border-[#F5D90A] font-mono text-[11px] sm:text-sm font-black shadow-[2.5px_2.5px_0px_#8A7400] sticker-pop-alt cursor-pointer"
-                  >
-                    ANNA UNIV VERIFIED
-                  </span>
-                </div>
-              </div>
-
-              {/* Center Register CTA Button */}
-              <div className="pt-2 sm:pt-3 flex justify-center w-full max-w-md">
-                <MagneticElement strength={0.35} onClick={() => navigate('/register')} className="w-full sm:w-auto">
-                  <button className="w-full sm:w-auto px-6 xs:px-8 sm:px-10 md:px-12 py-2.5 sm:py-3 bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[2px] sm:border-[2.5px] border-[#3CE7FF] hover:border-[#F5D90A] shadow-[3px_3px_0px_#1E8FA3] sm:shadow-[4px_4px_0px_#1E8FA3] hover:shadow-[4px_4px_0px_#8A7400] font-display text-xs xs:text-sm sm:text-base md:text-lg tracking-wider uppercase cursor-pointer transition-all active:translate-x-1 active:translate-y-1 flex items-center justify-center gap-2 sm:gap-2.5 group">
-                    <span>REGISTER FOR ZINNIA</span>
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform shrink-0" />
-                  </button>
-                </MagneticElement>
-              </div>
-            </div>
+          {/* Right Mid Pink Comic Star near Prize Badge */}
+          <div className="absolute top-28 right-2 sm:right-6 -rotate-12">
+            <svg viewBox="0 0 50 50" className="w-6 sm:w-7 h-6 sm:h-7 fill-none opacity-85">
+              <path
+                d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z"
+                fill="#E81C65"
+                stroke="#E81C65"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
         </div>
 
-        {/* =========================================================================
-            3. COUNTDOWN (Centered Below Comic Panel)
+        {/* Institution & Department Header (Full Width, Centered) */}
+        <div className="relative z-20 flex flex-col items-center text-center w-full mb-2 sm:mb-4">
+          <h3 className="font-comic font-black text-[#FFE600] italic uppercase text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl tracking-wider leading-tight drop-shadow-[2px_2px_0px_#000]">
+            GOVERNMENT COLLEGE OF ENGINEERING, ERODE
+          </h3>
+          <p className="font-comic font-extrabold text-[#00D2FF] italic uppercase text-xs xs:text-sm sm:text-lg md:text-xl lg:text-2xl tracking-wide leading-tight drop-shadow-[1.5px_1.5px_0px_#000] mt-0.5">
+            DEPARTMENT OF COMPUTER SCIENCE &amp; ENGINEERING
+          </p>
+        </div>
+
+        {/* ---- MAIN HERO ROW: [Robot] [ZINNIA + Badges + CTA] [Starburst + Megaphone] ---- */}
+        <div className="relative z-20 flex items-end justify-center w-full">
+
+          {/* LEFT: Robot Mascot — absolutely positioned to overlap from the left */}
+          <div className="hidden md:block absolute left-0 bottom-0 z-30" style={{ width: '340px' }}>
+            <img
+              src={robotMascot}
+              alt="Zinnia Robot Mascot"
+              className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-[0_8px_28px_rgba(0,0,0,0.85)]"
+            />
+          </div>
+          {/* Mobile robot (inline, centered above title) */}
+          <div className="md:hidden flex justify-center w-full mb-3">
+            <img
+              src={robotMascot}
+              alt="Zinnia Robot Mascot"
+              className="w-48 xs:w-56 sm:w-64 h-auto object-contain select-none pointer-events-none drop-shadow-[0_8px_24px_rgba(0,0,0,0.8)]"
+            />
+          </div>
+
+          {/* CENTER: Title + Badges + Register CTA */}
+          <div className="flex flex-col items-center text-center w-full md:pl-[240px] lg:pl-[280px] md:pr-[160px] lg:pr-[200px]">
+
+            {/* Giant ZINNIA '26 Title */}
+            <div className="relative inline-flex items-start justify-center max-w-full">
+              <h1 className="font-display text-5xl xs:text-6xl sm:text-7xl md:text-[8rem] lg:text-[10rem] text-white tracking-tight leading-none uppercase select-none drop-shadow-[5px_5px_0px_#000]">
+                ZINNIA
+              </h1>
+              <span className="font-comic text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-[#00D2FF] font-black leading-none -translate-y-1 sm:-translate-y-3 ml-1 sm:ml-2 select-none drop-shadow-[3px_3px_0px_#000]">
+                '26
+              </span>
+            </div>
+
+            {/* Subtitle Badges Row (SVG Assets: National, Events, Anna Univ) */}
+            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 md:gap-5 mt-3 sm:mt-4 sm:-translate-x-4 md:-translate-x-8 lg:-translate-x-10">
+              {/* NATIONAL LEVEL */}
+              <div
+                onClick={() => triggerComicFX('NATIONAL LEVEL!')}
+                className="relative group cursor-pointer hover:scale-105 transition-transform duration-150 active:scale-95 flex items-center"
+              >
+                <img
+                  src={nationalBadge}
+                  alt="National Level"
+                  className="h-8 sm:h-10 md:h-12 w-auto object-contain select-none pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
+                />
+              </div>
+
+              {/* 9 ACTIVE EVENTS */}
+              <div
+                onClick={() => triggerComicFX('9 BATTLES!')}
+                className="relative group cursor-pointer hover:scale-105 transition-transform duration-150 active:scale-95 flex items-center"
+              >
+                <img
+                  src={evenBadge}
+                  alt="9 Active Events"
+                  className="h-8 sm:h-10 md:h-12 w-auto object-contain select-none pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
+                />
+              </div>
+
+              {/* ANNA UNIV VERIFIED */}
+              <div
+                onClick={() => triggerComicFX('ANNA UNIV VERIFIED!')}
+                className="relative group cursor-pointer hover:scale-105 transition-transform duration-150 active:scale-95 flex items-center"
+              >
+                <img
+                  src={annBadge}
+                  alt="Anna Univ Verified"
+                  className="h-8 sm:h-10 md:h-12 w-auto object-contain select-none pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
+                />
+              </div>
+            </div>
+
+            {/* REGISTER FOR ZINNIA → CTA Button (Hand-Inked Comic Panel & Screen-Print Offset Effect) */}
+            <div className="mt-4 sm:mt-6 w-full max-w-md flex justify-center sm:-translate-x-4 md:-translate-x-8 lg:-translate-x-10">
+              <MagneticElement strength={0.3} onClick={() => navigate('/register')} className="w-full sm:w-auto">
+                <div className="comic-cta-wrapper w-full sm:w-auto group">
+
+                  {/* Fixed Lower Box (Screen-print offset shadow with uneven printed outline) */}
+                  <span className="comic-cta-back" />
+
+                  {/* Offset Screen-Print Registration Lines (Hand-drawn ink strokes below & around box) */}
+                  <div className="absolute -inset-2 pointer-events-none z-0">
+                    {/* Bottom sketched pen hatch lines */}
+                    <svg viewBox="0 0 400 30" className="absolute -bottom-3.5 left-2 right-2 w-[96%] h-4 stroke-white/50 fill-none">
+                      <path d="M 10 12 Q 180 16 380 11" strokeWidth="1.8" strokeLinecap="round" />
+                      <path d="M 30 18 Q 200 22 360 17" strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
+                    </svg>
+
+                    {/* Top-Right Corner Pen Tick / Registration Mark */}
+                    <svg viewBox="0 0 30 30" className="absolute -top-2.5 -right-2 w-6 h-6 stroke-[#00D2FF] fill-none">
+                      <path d="M 6 12 L 20 6 L 14 20" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <line x1="22" y1="4" x2="26" y2="2" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+
+                    {/* Bottom-Left Corner Pen Scribble */}
+                    <svg viewBox="0 0 30 30" className="absolute -bottom-2 -left-2.5 w-6 h-6 stroke-white/70 fill-none">
+                      <path d="M 8 18 L 16 26 L 24 20" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      <line x1="4" y1="20" x2="10" y2="28" strokeWidth="1.4" strokeLinecap="round" />
+                    </svg>
+
+                    {/* Left Speed/Motion Ink Flecks */}
+                    <svg viewBox="0 0 20 40" className="absolute top-1/4 -left-3 w-4 h-8 stroke-white/60 fill-none">
+                      <line x1="12" y1="6" x2="2" y2="12" strokeWidth="1.8" strokeLinecap="round" />
+                      <line x1="14" y1="20" x2="4" y2="24" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+
+                    {/* Right Speed/Motion Ink Flecks */}
+                    <svg viewBox="0 0 20 40" className="absolute top-1/4 -right-3 w-4 h-8 stroke-[#00D2FF] fill-none">
+                      <line x1="4" y1="8" x2="16" y2="14" strokeWidth="1.8" strokeLinecap="round" />
+                      <line x1="2" y1="22" x2="12" y2="26" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </div>
+
+                  {/* Moving Top Cyan Box (Hand-Inked Front Panel) */}
+                  <button
+                    type="button"
+                    className="comic-cta-front px-8 sm:px-12 md:px-14 py-3 sm:py-3.5 flex items-center justify-center gap-3 w-full sm:w-auto"
+                  >
+                    <span className="font-comic font-black text-base sm:text-lg md:text-xl lg:text-2xl tracking-wider uppercase italic">
+                      REGISTER FOR ZINNIA
+                    </span>
+
+                    {/* Hand-Drawn Comic Arrow */}
+                    <svg viewBox="0 0 32 20" className="w-6 sm:w-7 h-4 sm:h-5 stroke-black fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
+                      <path d="M 3 10 L 25 10" strokeWidth="3.2" strokeLinecap="round" />
+                      <path d="M 16 3 L 27 10 L 16 17" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+
+                </div>
+              </MagneticElement>
+            </div>
+          </div>
+
+          {/* RIGHT: Megaphone (desktop only, absolutely positioned) */}
+          <div className="hidden lg:block absolute right-0 top-0 bottom-0 z-20" style={{ width: '230px' }}>
+
+            {/* Megaphone with Lightning Sparks */}
+            <div className="absolute -bottom-8 -right-4 group cursor-pointer hover:scale-110 transition-transform duration-300" onClick={() => triggerComicFX('LOUD!')}>
+
+              <img src={megaphoneSvg} alt="Megaphone" className="w-64 md:w-80 lg:w-96 h-auto drop-shadow-[0_6px_20px_rgba(0,0,0,0.85)] -rotate-12 select-none pointer-events-none" />
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================================================================
+            3. COUNTDOWN (Framed by Hand-Drawn Comic Scribbles)
             ========================================================================= */}
-        <div className="relative z-30 flex flex-col items-center justify-center pt-2 sm:pt-4 w-full">
-          {/* Illustrated Comic Countdown Module */}
-          <div className="flex flex-col items-center max-w-full px-1">
-            {/* Caption Header */}
-            <div className="px-3 sm:px-4 py-0.5 sm:py-1 bg-[#1A1A1D] text-[#A8A8AC] font-comic text-[10px] sm:text-xs uppercase tracking-widest border border-[#3A3A3E] -rotate-1 font-bold sticker-pop cursor-pointer mb-2">
-              SYMPOSIUM COMMENCES IN
+      <div className="relative z-30 flex flex-col items-center justify-center pt-2 sm:pt-4 w-full md:pl-[200px] lg:pl-[240px] md:pr-[140px] lg:pr-[180px] sm:-translate-x-4 md:-translate-x-8 lg:-translate-x-10">
+        {/* Background Layer: Halftones + Scattered Hand-Inked Scribbles Distributed Around Timer & CTA */}
+        <div className="absolute inset-0 pointer-events-none overflow-visible z-0 select-none">
+          {/* Ambient Halftones */}
+          <div className="comic-halftone -top-10 -left-12 opacity-30 scale-75" />
+          <div className="comic-halftone -top-10 -right-12 opacity-30 scale-75" />
+
+          {/* --- SCATTERED DOODLES (Framing Counter & Registration) --- */}
+
+          {/* 1. White Action / Speed Lines (Mid-Left flank of Counter) */}
+          <div className="absolute top-10 left-2 sm:left-6 md:left-12 -rotate-6">
+            <svg viewBox="0 0 80 80" className="w-9 sm:w-12 h-9 sm:h-12 fill-none opacity-75">
+              <path d="M 12 68 Q 26 44 42 16" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
+              <path d="M 38 22 L 46 8" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M 28 74 Q 44 48 64 12" stroke="white" strokeWidth="2.8" strokeLinecap="round" />
+              <path d="M 50 76 Q 62 54 76 30" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* 3. Pink Comic Accent Star (Lower-Left of Counter) */}
+          <div className="absolute -bottom-6 left-6 sm:left-16 md:left-24 rotate-12">
+            <svg viewBox="0 0 50 50" className="w-5 sm:w-7 h-5 sm:h-7 fill-none opacity-85">
+              <path
+                d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z"
+                fill="#E81C65"
+                stroke="#E81C65"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+
+          {/* 4. Irregular 3-Bump White Cloud (Bottom-Center-Left under Counter) */}
+          <div className="hidden sm:block absolute -bottom-10 left-28 sm:left-40 md:left-56 rotate-6">
+            <svg viewBox="0 0 100 70" className="w-12 sm:w-15 h-9 sm:h-11 fill-none opacity-70">
+              <path
+                d="M 12 48 C 6 36, 18 22, 34 26 C 42 12, 62 10, 72 22 C 86 18, 96 32, 88 46 C 82 54, 68 56, 52 52 C 38 56, 22 54, 12 48"
+                stroke="white"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M 24 53 C 38 57, 60 55, 74 49" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* 5. White Zig-Zag Speed Scribble (Upper-Right flank of Counter / below CTA) */}
+          <div className="absolute -top-4 right-10 sm:right-24 md:right-36 -rotate-6">
+            <svg viewBox="0 0 60 70" className="w-8 sm:w-11 h-10 sm:h-13 fill-none opacity-75">
+              <path
+                d="M 46 8 L 22 24 L 40 36 L 12 52 L 42 64"
+                stroke="white"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M 28 22 L 16 30 L 30 38" stroke="white" strokeWidth="1.4" strokeLinecap="round" opacity="0.6" />
+            </svg>
+          </div>
+
+          {/* 6. Yellow Hand-Inked Lightning Bolt (Mid-Right flank of Counter) */}
+          <div className="absolute top-12 right-4 sm:right-10 md:right-16 rotate-12">
+            <svg viewBox="0 0 70 90" className="w-8 sm:w-10 h-10 sm:h-14 fill-none drop-shadow-[0_2px_8px_rgba(255,230,0,0.4)]">
+              <path
+                d="M 38 6 L 16 42 L 34 40 L 22 84 L 54 36 L 36 38 L 48 6 Z"
+                fill="#FFE600"
+                stroke="#FFE600"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M 10 28 L 6 38" stroke="#FFE600" strokeWidth="2" strokeLinecap="round" />
+              <path d="M 52 20 L 62 14" stroke="#FFE600" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* 7. Irregular 3-Bump White Cloud (Bottom-Right under Counter) */}
+          <div className="hidden sm:block absolute -bottom-10 right-8 sm:right-20 md:right-32 -rotate-6">
+            <svg viewBox="0 0 100 70" className="w-12 sm:w-15 h-9 sm:h-11 fill-none opacity-70">
+              <path
+                d="M 14 46 C 8 34, 20 20, 36 24 C 44 10, 64 8, 74 20 C 88 16, 98 30, 90 44 C 84 52, 70 54, 54 50 C 40 54, 24 52, 14 46"
+                stroke="white"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M 26 51 C 40 55, 62 53, 76 47" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* 8. Pink Comic Accent Star (Far-Right of Counter) */}
+          <div className="absolute top-4 right-2 sm:right-6 md:right-10 -rotate-12">
+            <svg viewBox="0 0 50 50" className="w-4 sm:w-6 h-4 sm:h-6 fill-none opacity-85">
+              <path
+                d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z"
+                fill="#E81C65"
+                stroke="#E81C65"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Illustrated Comic Countdown Module */}
+        <div className="relative z-10 flex flex-col items-center max-w-full px-1">
+          {/* ₹15,000+ PRIZE POOL! Starburst (price.svg asset vertically flipped with matching overlay text) */}
+          <div
+            className="hidden lg:block absolute -left-36 sm:-left-48 md:-left-56 lg:-left-64 -top-16 sm:-top-20 md:-top-24 hover:scale-105 transition-transform cursor-pointer z-30 select-none"
+            onClick={() => triggerComicFX('PRIZES!')}
+          >
+            <div className="relative flex items-center justify-center w-36 sm:w-44 md:w-52 lg:w-56 h-36 sm:h-44 md:h-52 lg:h-56">
+              <img
+                src={priceSvg}
+                alt="Prize Pool"
+                className="w-full h-full object-contain select-none pointer-events-none scale-y-[-1] drop-shadow-[0_6px_22px_rgba(249,3,99,0.55)]"
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center -rotate-[25deg]">
+                <span className="font-display text-xl sm:text-2xl md:text-3xl lg:text-[32px] text-white leading-none font-black drop-shadow-[2px_2px_0px_#000]">
+                  ₹15,000+
+                </span>
+                <span className="font-comic text-[11px] sm:text-sm md:text-base text-[#FFE600] font-black leading-tight drop-shadow-[1.5px_1.5px_0px_#000] mt-1 tracking-wide">
+                  PRIZE POOL!
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Caption Header */}
+          <div className="px-3 sm:px-4 py-0.5 sm:py-1 bg-[#1A1A1D] text-[#A8A8AC] font-comic text-[10px] sm:text-xs uppercase tracking-widest border border-[#3A3A3E] -rotate-1 font-bold sticker-pop cursor-pointer mb-2">
+            SYMPOSIUM COMMENCES IN
+          </div>
+
+          {/* Countdown Comic Number Boxes */}
+          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3">
+            {/* Days */}
+            <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
+              <FlipNumber
+                value={timeLeft.days}
+                className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-[#F2F2F0]"
+              />
+              <span className="font-comic text-[7px] sm:text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">
+                DAYS
+              </span>
             </div>
 
-            {/* Countdown Comic Number Boxes */}
-            <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3">
-              {/* Days */}
-              <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
-                <FlipNumber
-                  value={timeLeft.days}
-                  className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-[#F2F2F0]"
-                />
-                <span className="font-comic text-[7px] sm:text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">
-                  DAYS
-                </span>
-              </div>
+            <span className="font-display text-base sm:text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
 
-              <span className="font-display text-base sm:text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
-
-              {/* Hours */}
-              <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
-                <FlipNumber
-                  value={timeLeft.hours}
-                  className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-[#F2F2F0]"
-                />
-                <span className="font-comic text-[7px] sm:text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">
-                  HRS
-                </span>
-              </div>
-
-              <span className="font-display text-base sm:text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
-
-              {/* Minutes */}
-              <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
-                <FlipNumber
-                  value={timeLeft.minutes}
-                  className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-[#F2F2F0]"
-                />
-                <span className="font-comic text-[7px] sm:text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">
-                  MIN
-                </span>
-              </div>
-
-              <span className="font-display text-base sm:text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
-
-              {/* Seconds */}
-              <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#FF3366] border-[1.5px] sm:border-[2px] border-[#FF3366] shadow-[2.5px_2.5px_0px_#B01F45] sm:shadow-[4px_4px_0px_#B01F45] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#B01F45] transition-all cursor-pointer">
-                <FlipNumber
-                  value={timeLeft.seconds}
-                  className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-white font-black"
-                />
-                <span className="font-comic text-[7px] sm:text-[10px] text-[#F5D90A] font-extrabold uppercase mt-0.5">
-                  SEC
-                </span>
-              </div>
+            {/* Hours */}
+            <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
+              <FlipNumber
+                value={timeLeft.hours}
+                className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-[#F2F2F0]"
+              />
+              <span className="font-comic text-[7px] sm:text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">
+                HRS
+              </span>
             </div>
 
-            {/* Timeline Status Callout */}
-            <div 
-              onClick={() => triggerComicFX('TIMELINE!')}
-              className="mt-3 sm:mt-4 px-3 sm:px-4 py-1 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#FF8C00] shadow-[2.5px_2.5px_0px_#8A5500] rotate-1 sticker-pop cursor-pointer max-w-full text-center"
-            >
-              <span className="font-comic text-[10px] sm:text-xs uppercase text-[#FF8C00] font-bold tracking-wider">
-                ⏰ TIMELINE MONITORED &bull; 24 SEPTEMBER 2026 &bull; GCE ERODE CSE
+            <span className="font-display text-base sm:text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
+
+            {/* Minutes */}
+            <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#3A3A3E] shadow-[2.5px_2.5px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
+              <FlipNumber
+                value={timeLeft.minutes}
+                className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-[#F2F2F0]"
+              />
+              <span className="font-comic text-[7px] sm:text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">
+                MIN
+              </span>
+            </div>
+
+            <span className="font-display text-base sm:text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
+
+            {/* Seconds */}
+            <div className="flex flex-col items-center p-1.5 sm:p-2.5 bg-[#FF3366] border-[1.5px] sm:border-[2px] border-[#FF3366] shadow-[2.5px_2.5px_0px_#B01F45] sm:shadow-[4px_4px_0px_#B01F45] min-w-[46px] xs:min-w-[54px] sm:min-w-[72px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#B01F45] transition-all cursor-pointer">
+              <FlipNumber
+                value={timeLeft.seconds}
+                className="font-display text-lg xs:text-xl sm:text-3xl md:text-4xl text-white font-black"
+              />
+              <span className="font-comic text-[7px] sm:text-[10px] text-[#F5D90A] font-extrabold uppercase mt-0.5">
+                SEC
               </span>
             </div>
           </div>
 
+          {/* Timeline Status Callout */}
+          <div
+            onClick={() => triggerComicFX('TIMELINE!')}
+            className="mt-3 sm:mt-4 px-3 sm:px-4 py-1 bg-[#1A1A1D] border-[1.5px] sm:border-[2px] border-[#FF8C00] shadow-[2.5px_2.5px_0px_#8A5500] rotate-1 sticker-pop cursor-pointer max-w-full text-center"
+          >
+            <span className="font-comic text-[10px] sm:text-xs uppercase text-[#FF8C00] font-bold tracking-wider">
+              ⏰ TIMELINE MONITORED &bull; 24 SEPTEMBER 2026 &bull; GCE ERODE CSE
+            </span>
+          </div>
         </div>
-      </main>
+
+      </div>
+
 
       {/* =========================================================================
           EVENTS SECTION (100% Pixel-Faithful to Reference Design)
@@ -507,7 +787,7 @@ export const WebsiteHomePage: React.FC = () => {
                 {/* --- COMIC SCRABBLING & CORNER MARKS --- */}
                 {/* Top-Left Ribbon Badge */}
                 <div className="absolute -top-[1.5px] -left-[1.5px] z-10">
-                  <div 
+                  <div
                     className="relative bg-[#00E5FF] text-[#000000] font-mono font-black text-xs px-3 py-0.5 shadow-sm flex items-center justify-center rounded-tl-xl"
                     style={{
                       clipPath: 'polygon(0 0, 100% 0, 80% 100%, 0 100%)',
@@ -542,7 +822,7 @@ export const WebsiteHomePage: React.FC = () => {
                 </svg>
 
                 {/* Subtle comic halftone screen-tone at top */}
-                <div 
+                <div
                   className="absolute inset-x-0 top-0 h-24 pointer-events-none opacity-15 rounded-t-xl"
                   style={{
                     backgroundImage: 'radial-gradient(#00E5FF 1px, transparent 1px)',
@@ -666,69 +946,15 @@ export const WebsiteHomePage: React.FC = () => {
               Col 6: Flying Paper Airplane Doodle
           */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4 items-center">
-            
-            {/* Column 1 on Desktop: Detailed Comic Cloud Sketch & Star */}
+
+            {/* Column 1 on Desktop: Official Comic Cloud Asset */}
             <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex flex-col items-center justify-center relative select-none pointer-events-none min-h-[220px] sm:min-h-[295px] pr-2">
-              <div className="relative w-full max-w-[190px] h-[170px] flex items-center justify-center">
-                {/* Comic Hatching Cumulus Cloud */}
-                <svg className="w-full h-full" viewBox="0 0 160 140" fill="none">
-                  {/* Outer Cloud Outline with White Puff Top and Ink Border */}
-                  <path
-                    d="M20 112C10 112 3 102 3 88C3 74 15 64 28 64C28 42 46 26 68 30C78 16 102 18 112 36C124 36 138 48 138 66C138 84 126 94 112 96C108 96 88 102 64 108C40 112 28 112 20 112Z"
-                    fill="#E4E4E7"
-                    stroke="#FFFFFF"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-
-                  {/* Dense Bottom & Left Hatching Shading (Comic Inking) */}
-                  <g stroke="#18181B" strokeWidth="1.8">
-                    <line x1="8" y1="92" x2="26" y2="74" />
-                    <line x1="12" y1="98" x2="34" y2="76" />
-                    <line x1="18" y1="104" x2="44" y2="78" />
-                    <line x1="26" y1="108" x2="56" y2="78" />
-                    <line x1="36" y1="110" x2="68" y2="78" />
-                    <line x1="46" y1="110" x2="80" y2="76" />
-                    <line x1="56" y1="108" x2="90" y2="76" />
-                    <line x1="68" y1="106" x2="102" y2="76" />
-                    <line x1="80" y1="102" x2="114" y2="78" />
-                    <line x1="92" y1="98" x2="122" y2="78" />
-                    <line x1="104" y1="94" x2="130" y2="76" />
-                    {/* Cross-hatch accent lines */}
-                    <line x1="16" y1="78" x2="38" y2="102" />
-                    <line x1="28" y1="78" x2="52" y2="104" />
-                    <line x1="42" y1="78" x2="68" y2="106" />
-                    <line x1="58" y1="76" x2="84" y2="104" />
-                  </g>
-
-                  {/* Billowing cumulus puff lobe curves */}
-                  <path
-                    d="M28 64C32 54 40 46 50 42C60 38 70 40 78 46C86 36 100 34 110 40C120 46 126 56 126 66"
-                    stroke="#A1A1AA"
-                    strokeWidth="2.2"
-                    fill="none"
-                  />
-                  <path
-                    d="M48 64C54 56 64 52 74 54C82 56 88 62 92 70"
-                    stroke="#A1A1AA"
-                    strokeWidth="1.8"
-                    fill="none"
-                  />
-                </svg>
-
-                {/* Comic 4-Point Star Doodle Floating on Cloud */}
-                <div className="absolute top-7 right-1">
-                  <svg className="w-8 h-8 animate-pulse" viewBox="0 0 32 32" fill="none">
-                    <path
-                      d="M16 2L18.5 12.5L29 16L18.5 19.5L16 30L13.5 19.5L3 16L13.5 12.5L16 2Z"
-                      fill="none"
-                      stroke="#F5D90A"
-                      strokeWidth="2.2"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
+              <div className="relative w-full max-w-[210px] flex items-center justify-center">
+                <img
+                  src={cloudSvg}
+                  alt="Comic Cloud"
+                  className="w-full h-auto object-contain select-none pointer-events-none mix-blend-screen drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)]"
+                />
               </div>
             </div>
 
@@ -745,7 +971,7 @@ export const WebsiteHomePage: React.FC = () => {
                 {/* --- COMIC SCRABBLING & CORNER MARKS (EXACT MATCH TO CROP) --- */}
                 {/* Top-Left Ribbon Badge with Notch & Stitch */}
                 <div className="absolute -top-[1.5px] -left-[1.5px] z-10">
-                  <div 
+                  <div
                     className="relative bg-[#FF2E63] text-white font-mono font-black text-xs px-3 py-0.5 shadow-sm flex items-center justify-center rounded-tl-xl"
                     style={{
                       clipPath: 'polygon(0 0, 100% 0, 80% 100%, 0 100%)',
@@ -780,7 +1006,7 @@ export const WebsiteHomePage: React.FC = () => {
                 </svg>
 
                 {/* Subtle comic halftone screen-tone at top */}
-                <div 
+                <div
                   className="absolute inset-x-0 top-0 h-24 pointer-events-none opacity-15 rounded-t-xl"
                   style={{
                     backgroundImage: 'radial-gradient(#FF2E63 1px, transparent 1px)',
@@ -869,12 +1095,12 @@ export const WebsiteHomePage: React.FC = () => {
             <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex items-center justify-center relative pointer-events-none select-none min-h-[220px] sm:min-h-[295px]">
               <svg className="w-full h-full max-w-[200px] max-h-[190px]" viewBox="0 0 200 190" fill="none">
                 {/* Dashed flight loop */}
-                <path 
-                  d="M15 155C45 185 70 120 55 95C40 70 30 120 75 110C120 100 145 60 175 30" 
-                  stroke="#FF2E63" 
-                  strokeWidth="2" 
-                  strokeDasharray="5 5" 
-                  fill="none" 
+                <path
+                  d="M15 155C45 185 70 120 55 95C40 70 30 120 75 110C120 100 145 60 175 30"
+                  stroke="#FF2E63"
+                  strokeWidth="2"
+                  strokeDasharray="5 5"
+                  fill="none"
                 />
                 {/* Flying Paper Airplane */}
                 <g transform="translate(150, 10) rotate(12)">
@@ -891,23 +1117,21 @@ export const WebsiteHomePage: React.FC = () => {
           EVENT DETAILS INTERACTIVE MODAL
           ========================================================================= */}
       {selectedEvent && (
-        <div 
+        <div
           onClick={() => setSelectedEvent(null)}
           className="fixed inset-0 z-100 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200"
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#141417] border-[3px] ${
-              selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
-            } shadow-[8px_8px_0px_#000000] p-5 sm:p-7 rounded-2xl space-y-5 select-text`}
+            className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#141417] border-[3px] ${selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
+              } shadow-[8px_8px_0px_#000000] p-5 sm:p-7 rounded-2xl space-y-5 select-text`}
           >
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 border-b border-[#2A2A2E] pb-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${
-                    selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
-                  }`}>
+                  <span className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
+                    }`}>
                     {selectedEvent.code}
                   </span>
                   <span className="font-mono text-xs text-[#A8A8AC] uppercase">
@@ -917,13 +1141,12 @@ export const WebsiteHomePage: React.FC = () => {
                 <h3 className="font-display text-2xl sm:text-3xl text-white uppercase tracking-wide">
                   {selectedEvent.mission_name}
                 </h3>
-                <p className={`font-comic text-xs sm:text-sm font-bold ${
-                  selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
-                }`}>
+                <p className={`font-comic text-xs sm:text-sm font-bold ${selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
+                  }`}>
                   {selectedEvent.tagline || selectedEvent.title}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setSelectedEvent(null)}
                 className="p-1.5 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-lg transition-colors cursor-pointer"
               >
@@ -1037,11 +1260,10 @@ export const WebsiteHomePage: React.FC = () => {
                   triggerComicFX('DEPLOY!');
                   navigate(`/register?mission=${selectedEvent.id}`);
                 }}
-                className={`w-full py-3 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
-                  selectedEvent.event_type === 'TECH'
-                    ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
-                    : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
-                }`}
+                className={`w-full py-3 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${selectedEvent.event_type === 'TECH'
+                  ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
+                  : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
+                  }`}
               >
                 <span>REGISTER FOR {selectedEvent.mission_name}</span>
                 <ArrowRight className="w-4 h-4" />

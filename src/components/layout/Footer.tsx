@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const WebsiteFooter: React.FC = () => {
-  const developers = ['JEO JUSTIN', 'TAMILVANI', 'KANISHKAR'];
+  const developers = ['TAMILVANI', 'KANISHKAR', 'JEO JUSTIN'];
 
   return (
     <footer id="contact" className="relative z-30 w-full bg-[#060608] border-t border-[#1C1C22] pt-12 pb-6 px-4 sm:px-6 lg:px-12 mt-16">
