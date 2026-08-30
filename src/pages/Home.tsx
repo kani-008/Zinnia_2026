@@ -3,16 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
 import { WebsiteFooter } from '../components/layout/Footer';
-import robotMascot from '../assets/1.svg';
-import megaphoneSvg from '../assets/megaphone.svg';
-import zinniaSvg from '../assets/zinnia.svg';
-import nationalBadge from '../assets/national.svg';
-import evenBadge from '../assets/even.svg';
-import annBadge from '../assets/ann.svg';
-import cloudSvg from '../assets/cloud.svg';
-import priceSvg from '../assets/price.svg';
-import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award, X, Phone, CheckCircle2, Mail, Send, Menu, ChevronDown } from 'lucide-react';
-import { ComicHandDrawnCard } from '../components/events/ComicHandDrawnCard';
+import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award, X, Phone, CheckCircle2, Mail, Send } from 'lucide-react';
 
 // 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
 const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
@@ -159,6 +150,17 @@ export const WebsiteHomePage: React.FC = () => {
 
   // Selected Event Modal State
   const [selectedEvent, setSelectedEvent] = useState<EventMission | null>(null);
+
+  useEffect(() => {
+    if (selectedEvent) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedEvent]);
 
   // Live Events Sync from Supabase DB / Store
   const [events, setEvents] = useState<EventMission[]>(() => store.getEvents());
@@ -1156,94 +1158,125 @@ export const WebsiteHomePage: React.FC = () => {
       </section>
 
       {/* =========================================================================
+          4. EVENT SCHEDULE CONTROL ROOM TIMETABLE SECTION
+          ========================================================================= */}
+      <div id="schedule" className="relative z-10 max-w-7xl mx-auto w-full px-2 sm:px-4 py-8">
+        <EventScheduleView onSelectEvent={(e) => setSelectedEvent(e)} />
+      </div>
+
+      {/* =========================================================================
           EVENT DETAILS INTERACTIVE MODAL
           ========================================================================= */}
       {selectedEvent && (
         <div
           onClick={() => setSelectedEvent(null)}
-          className="fixed inset-0 z-100 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] bg-black/92 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-hidden animate-in fade-in duration-200"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#141417] border-[3px] ${selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
-              } shadow-[8px_8px_0px_#000000] p-5 sm:p-7 rounded-2xl space-y-5 select-text`}
+            className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#141417] border-[3px] ${
+              selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
+            } shadow-[8px_8px_0px_#000000] p-5 sm:p-7 rounded-2xl space-y-5 select-text`}
           >
             {/* Modal Header */}
-            <div className="flex items-start justify-between gap-4 border-b border-[#2A2A2E] pb-4">
-              <div className="space-y-1">
+            <div className="flex items-start justify-between gap-3 border-b border-[#2A2A2E] pb-2.5">
+              <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
-                    }`}>
+                  <span className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${
+                    selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
+                  }`}>
                     {selectedEvent.code}
                   </span>
-                  <span className="font-mono text-xs text-[#A8A8AC] uppercase">
+                  <span className="font-mono text-[11px] text-[#A8A8AC] uppercase">
                     {selectedEvent.category}
                   </span>
                 </div>
-                <h3 className="font-display text-2xl sm:text-3xl text-white uppercase tracking-wide">
+                <h3 className="font-display text-xl sm:text-2xl text-white uppercase tracking-wide">
                   {selectedEvent.mission_name}
                 </h3>
-                <p className={`font-comic text-xs sm:text-sm font-bold ${selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
-                  }`}>
+                <p className={`font-comic text-xs sm:text-sm font-bold ${
+                  selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
+                }`}>
                   {selectedEvent.tagline || selectedEvent.title}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedEvent(null)}
-                className="p-1.5 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-lg transition-colors cursor-pointer"
+                className="p-1 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-lg transition-colors cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4.5 h-4.5" />
               </button>
             </div>
 
-            {/* Quick Meta Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
-              <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                  <Users className="w-3 h-3 text-[#F5D90A]" /> TEAM SIZE
+            {/* Quick Meta Stats (Only 2 wider balanced boxes for Prize Distribution) */}
+            {selectedEvent.id === 'prize-distribution' ? (
+              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
+                  </div>
+                  <div className="text-white font-bold mt-0.5 text-xs sm:text-sm truncate">
+                    03:00 PM – 04:00 PM
+                  </div>
                 </div>
-                <div className="text-white font-bold mt-0.5">
-                  {selectedEvent.team_size_min}{selectedEvent.team_size_min !== selectedEvent.team_size_max ? ` - ${selectedEvent.team_size_max}` : ''} Members
-                </div>
-              </div>
-              <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
-                </div>
-                <div className="text-white font-bold mt-0.5 truncate">
-                  {selectedEvent.schedule_time}
-                </div>
-              </div>
-              <div className="col-span-2 sm:col-span-1 p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-[#3CE7FF]" /> VENUE
-                </div>
-                <div className="text-white font-bold mt-0.5 truncate">
-                  {selectedEvent.venue}
+                <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-[#C084FC]" /> VENUE
+                  </div>
+                  <div className="text-white font-bold mt-0.5 text-xs sm:text-sm truncate">
+                    Main Auditorium
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs font-mono">
+                <div className="p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                    <Users className="w-3 h-3 text-[#F5D90A]" /> TEAM SIZE
+                  </div>
+                  <div className="text-white font-bold mt-0.5 text-xs">
+                    {selectedEvent.team_size_min}{selectedEvent.team_size_min !== selectedEvent.team_size_max ? ` - ${selectedEvent.team_size_max}` : ''} Members
+                  </div>
+                </div>
+                <div className="p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
+                  </div>
+                  <div className="text-white font-bold mt-0.5 text-xs truncate">
+                    {selectedEvent.schedule_time}
+                  </div>
+                </div>
+                <div className="col-span-2 sm:col-span-1 p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-[#3CE7FF]" /> VENUE
+                  </div>
+                  <div className="text-white font-bold mt-0.5 text-xs truncate">
+                    {selectedEvent.venue}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Description */}
-            <div className="space-y-1.5">
-              <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
+            <div className="space-y-1">
+              <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
                 // BRIEFING
               </h4>
-              <p className="font-comic text-sm text-[#D0D0D4] leading-relaxed">
+              <p className="font-comic text-xs sm:text-xs text-[#D0D0D4] leading-relaxed">
                 {selectedEvent.description}
               </p>
             </div>
 
             {/* Rules */}
             {selectedEvent.rules && selectedEvent.rules.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
+              <div className="space-y-1">
+                <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
                   // RULES & GUIDELINES
                 </h4>
-                <ul className="space-y-1.5">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5">
                   {selectedEvent.rules.map((rule, rIdx) => (
-                    <li key={rIdx} className="flex items-start gap-2 text-xs font-comic text-[#C0C0C5]">
-                      <span className="text-[#3CE7FF] shrink-0 font-bold">•</span>
+                    <li key={rIdx} className="flex items-start gap-1.5 text-[11px] font-comic text-[#C0C0C5] leading-tight">
+                      <span className="text-[#C084FC] shrink-0 font-bold">•</span>
                       <span>{rule}</span>
                     </li>
                   ))}
@@ -1253,46 +1286,112 @@ export const WebsiteHomePage: React.FC = () => {
 
             {/* Cash Prizes */}
             {selectedEvent.prizes && (
-              <div className="p-3 bg-[#1A1A1E] border border-[#2E2E33] rounded-xl space-y-2">
-                <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
-                  <Trophy className="w-3.5 h-3.5 text-[#F5D90A]" /> PRIZE REWARDS
+              <div className="p-2 sm:p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-xl space-y-1.5">
+                <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
+                  <Trophy className="w-3 h-3 text-[#F5D90A]" /> PRIZE REWARDS
                 </h4>
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[10px] text-[#A8A8AC]">1ST PRIZE</div>
-                    <div className="text-[#F5D90A] font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.first}</div>
+                <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
+                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[9px] text-[#A8A8AC]">1ST PRIZE</div>
+                    <div className="text-[#F5D90A] font-bold text-xs mt-0.5">{selectedEvent.prizes.first}</div>
                   </div>
-                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[10px] text-[#A8A8AC]">2ND PRIZE</div>
-                    <div className="text-white font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.second}</div>
+                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[9px] text-[#A8A8AC]">2ND PRIZE</div>
+                    <div className="text-white font-bold text-xs mt-0.5">{selectedEvent.prizes.second}</div>
                   </div>
-                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[10px] text-[#A8A8AC]">3RD PRIZE</div>
-                    <div className="text-[#A8A8AC] font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.third}</div>
+                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[9px] text-[#A8A8AC]">3RD PRIZE</div>
+                    <div className="text-[#A8A8AC] font-bold text-xs mt-0.5">{selectedEvent.prizes.third}</div>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Coordinators */}
-            {selectedEvent.coordinators && selectedEvent.coordinators.length > 0 && (
-              <div className="space-y-1.5">
-                <h4 className="font-mono text-xs text-[#A8A8AC] uppercase tracking-wider font-bold">
-                  // HELPLINE & COORDINATORS
+            {selectedEvent.id === 'prize-distribution' ? (
+              <div className="space-y-2">
+                <h4 className="font-mono text-[10px] text-[#A8A8AC] uppercase tracking-wider font-bold">
+                  // EVENT COORDINATORS
                 </h4>
-                <div className="flex flex-wrap gap-3">
-                  {selectedEvent.coordinators.map((c, cIdx) => (
-                    <div key={cIdx} className="text-xs font-mono text-[#D0D0D4] flex items-center gap-1.5 bg-[#1A1A1E] px-2.5 py-1 rounded border border-[#2E2E33]">
-                      <span>{c.name} ({c.role}):</span>
-                      {c.phone && (
-                        <a href={`tel:${c.phone}`} className="text-[#3CE7FF] hover:underline font-bold">
-                          {c.phone}
-                        </a>
-                      )}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-mono">
+                  {/* OVERALL COORDINATOR */}
+                  <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg space-y-1">
+                    <div className="text-[10px] text-[#C084FC] uppercase font-bold tracking-wider">
+                      OVERALL COORDINATOR
                     </div>
-                  ))}
+                    <div className="text-[#D0D0D4]">
+                      <span>Saran S: </span>
+                      <a href="tel:+919629993985" className="text-[#3CE7FF] font-bold hover:underline">
+                        +91 96299 93985
+                      </a>
+                    </div>
+                    <div className="text-[#D0D0D4]">
+                      <span>Bharani E K: </span>
+                      <a href="tel:+918807176399" className="text-[#3CE7FF] font-bold hover:underline">
+                        +91 88071 76399
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* TECHNICAL EVENT */}
+                  <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg space-y-1">
+                    <div className="text-[10px] text-[#3CE7FF] uppercase font-bold tracking-wider">
+                      TECHNICAL EVENT
+                    </div>
+                    <div className="text-[#D0D0D4]">
+                      <span>Kishore E: </span>
+                      <a href="tel:+918903664244" className="text-[#3CE7FF] font-bold hover:underline">
+                        +91 89036 64244
+                      </a>
+                    </div>
+                    <div className="text-[#D0D0D4]">
+                      <span>Amisha S: </span>
+                      <a href="tel:+919360384877" className="text-[#3CE7FF] font-bold hover:underline">
+                        +91 93603 84877
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* NON TECHNICAL EVENT */}
+                  <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg space-y-1">
+                    <div className="text-[10px] text-[#FF3366] uppercase font-bold tracking-wider">
+                      NON TECHNICAL EVENT
+                    </div>
+                    <div className="text-[#D0D0D4]">
+                      <span>Jeo Justin J K: </span>
+                      <a href="tel:+919043678257" className="text-[#3CE7FF] font-bold hover:underline">
+                        +91 90436 78257
+                      </a>
+                    </div>
+                    <div className="text-[#D0D0D4]">
+                      <span>Nandhini S: </span>
+                      <a href="tel:+919042736307" className="text-[#3CE7FF] font-bold hover:underline">
+                        +91 90427 36307
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
+            ) : (
+              selectedEvent.coordinators && selectedEvent.coordinators.length > 0 && (
+                <div className="space-y-1">
+                  <h4 className="font-mono text-[10px] text-[#A8A8AC] uppercase tracking-wider font-bold">
+                    // EVENT COORDINATORS
+                  </h4>
+                  <div className="flex flex-col items-start gap-1.5">
+                    {selectedEvent.coordinators.map((c, cIdx) => (
+                      <div key={cIdx} className="text-[11px] font-mono text-[#D0D0D4] flex items-center gap-1 bg-[#1A1A1E] px-2 py-0.5 rounded border border-[#2E2E33]">
+                        <span>{c.name}{c.phone ? ':' : ''}</span>
+                        {c.phone && (
+                          <a href={`tel:${c.phone}`} className="text-[#3CE7FF] hover:underline font-bold">
+                            {c.phone}
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
             )}
 
             {/* Modal Register CTA Button */}
@@ -1302,10 +1401,11 @@ export const WebsiteHomePage: React.FC = () => {
                   triggerComicFX('DEPLOY!');
                   navigate(`/register?mission=${selectedEvent.id}`);
                 }}
-                className={`w-full py-3 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${selectedEvent.event_type === 'TECH'
-                  ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
-                  : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
-                  }`}
+                className={`w-full py-3 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
+                  selectedEvent.event_type === 'TECH'
+                    ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
+                    : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
+                }`}
               >
                 <span>REGISTER FOR {selectedEvent.mission_name}</span>
                 <ArrowRight className="w-4 h-4" />

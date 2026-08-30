@@ -60,6 +60,15 @@ class ZinniaStore {
     if (this.realTimeChannel) return;
 
     try {
+      // Clean up existing channel with same topic name if already instantiated during HMR / re-render
+      const existingChannels = supabase.getChannels();
+      const existing = existingChannels.find(ch => ch.topic === 'realtime:public_team_db_sync' || ch.topic === 'public_team_db_sync');
+      if (existing) {
+        try {
+          supabase.removeChannel(existing);
+        } catch (e) {}
+      }
+
       let isCleaningUp = false;
       const channel = supabase.channel('public_team_db_sync');
 
@@ -75,7 +84,6 @@ class ZinniaStore {
           }
           if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') && !isCleaningUp) {
             isCleaningUp = true;
-            console.warn('[Supabase Realtime] WebSocket connection closed or error:', err || status);
             setTimeout(() => {
               try {
                 supabase.removeChannel(channel);
@@ -89,7 +97,7 @@ class ZinniaStore {
 
       this.realTimeChannel = channel;
     } catch (e) {
-      console.warn('Realtime subscription notice:', e);
+      // Silently handle channel initialization notices
     }
   }
 
@@ -1128,9 +1136,28 @@ class ZinniaStore {
   // --- EVENTS ---
   getEvents(filterType?: EventType): EventMission[] {
     let events = this.getStorage<EventMission[]>(STORAGE_KEYS.EVENTS, OFFICIAL_MISSIONS);
-    // If the cache contains legacy data (not 9 events or missing 'debugging'), refresh from OFFICIAL_MISSIONS
+    // Refresh from OFFICIAL_MISSIONS if cache is invalid
     if (!events || events.length !== 9 || !events.some(e => e.id === 'debugging')) {
       events = OFFICIAL_MISSIONS;
+      this.setStorage(STORAGE_KEYS.EVENTS, events);
+    } else {
+      // Sync official content properties from OFFICIAL_MISSIONS
+      events = events.map(e => {
+        const official = OFFICIAL_MISSIONS.find(m => m.id === e.id);
+        return official
+          ? {
+              ...e,
+              description: official.description,
+              rules: official.rules,
+              team_size_min: official.team_size_min,
+              team_size_max: official.team_size_max,
+              coordinators: official.coordinators,
+              venue: official.venue,
+              schedule_time: official.schedule_time,
+              duration: official.duration,
+            }
+          : e;
+      });
       this.setStorage(STORAGE_KEYS.EVENTS, events);
     }
     if (filterType) {

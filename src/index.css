@@ -24,6 +24,15 @@ body,
   user-select: none;
 }
 
+/* Tech HUD Cyber Background Utilities */
+.bg-tech-hud {
+  background-image: url('/tech_hud_bg.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 /* Comic Fonts Utilities */
 .font-comic {
   font-family: var(--font-comic);
@@ -286,21 +295,10 @@ body,
   position: absolute;
   width: 220px;
   height: 220px;
-
-  background-image: radial-gradient(circle,
-      rgba(255, 255, 255, .28) 1.5px,
-      transparent 1.6px);
-
+  background-image: radial-gradient(circle, rgba(255, 255, 255, .28) 1.5px, transparent 1.6px);
   background-size: 12px 12px;
-
-  -webkit-mask-image: radial-gradient(ellipse at center,
-      black 0%,
-      transparent 72%);
-
-  mask-image: radial-gradient(ellipse at center,
-      black 0%,
-      transparent 72%);
-
+  -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
   pointer-events: none;
 }
 
@@ -406,21 +404,17 @@ body,
     transform: scale(0.3) translateY(120px) rotate(-15deg);
     opacity: 0;
   }
-
   18% {
     transform: scale(1.15) translateY(-15px) rotate(6deg);
     opacity: 1;
   }
-
   45% {
     transform: scale(1.0) translateY(-35px) rotate(-6deg);
   }
-
   75% {
     transform: scale(1.08) translateY(-10px) rotate(4deg);
     opacity: 1;
   }
-
   100% {
     transform: scale(1.25) translateY(-140px) rotate(15deg);
     opacity: 0;
@@ -432,13 +426,10 @@ body,
 }
 
 @keyframes comicPulseGlow {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: scale(1);
     opacity: 0.4;
   }
-
   50% {
     transform: scale(1.15);
     opacity: 0.8;
@@ -455,17 +446,14 @@ body,
     transform: scale(0.2) translateY(50px) rotate(0deg);
     opacity: 0;
   }
-
   20% {
     transform: scale(1) translateY(-10px) rotate(var(--toy-rot, 12deg));
     opacity: 1;
   }
-
   60% {
     transform: scale(1.1) translateY(-40px) rotate(calc(var(--toy-rot, 12deg) * -1));
     opacity: 0.95;
   }
-
   100% {
     transform: scale(0.3) translateY(-120px) rotate(45deg);
     opacity: 0;
@@ -477,13 +465,10 @@ body,
 }
 
 @keyframes glitterTwinkle {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: scale(0) rotate(0deg);
     opacity: 0;
   }
-
   50% {
     transform: scale(1.4) rotate(180deg);
     opacity: 1;
@@ -534,7 +519,6 @@ body,
   0% {
     transform: translateX(0%);
   }
-
   100% {
     transform: translateX(-50%);
   }
@@ -549,7 +533,6 @@ body,
 .animate-marquee:hover {
   animation-play-state: paused;
 }
-
 
 /* Scroll Reveal (Ease-out-expo cubic-bezier curve) */
 .scroll-reveal-init {
@@ -587,30 +570,24 @@ body,
     left: 12px;
     transform: translateY(-50%) scaleX(1) rotate(0deg);
   }
-
   24% {
     transform: translateY(-56%) scaleX(1) rotate(6deg);
   }
-
   48% {
     left: calc(100% - 30px);
     transform: translateY(-50%) scaleX(1) rotate(0deg);
   }
-
   50% {
     left: calc(100% - 30px);
     transform: translateY(-50%) scaleX(-1) rotate(0deg);
   }
-
   74% {
     transform: translateY(-56%) scaleX(-1) rotate(-6deg);
   }
-
   98% {
     left: 12px;
     transform: translateY(-50%) scaleX(-1) rotate(0deg);
   }
-
   100% {
     left: 12px;
     transform: translateY(-50%) scaleX(1) rotate(0deg);
@@ -630,23 +607,18 @@ body,
   0% {
     transform: translateY(0px) rotate(-8deg) scale(1);
   }
-
   20% {
     transform: translateY(-4px) rotate(10deg) scale(1.12);
   }
-
   40% {
     transform: translateY(3px) rotate(-12deg) scale(0.95);
   }
-
   60% {
     transform: translateY(-5px) rotate(8deg) scale(1.08);
   }
-
   80% {
     transform: translateY(2px) rotate(-6deg) scale(1.02);
   }
-
   100% {
     transform: translateY(0px) rotate(-8deg) scale(1);
   }
@@ -664,13 +636,11 @@ body,
     opacity: 0;
     transform-origin: right center;
   }
-
   60% {
     transform: scaleX(1.04);
     opacity: 0.85;
     transform-origin: right center;
   }
-
   100% {
     transform: scaleX(1);
     opacity: 0.7;
@@ -688,7 +658,6 @@ body,
   0% {
     stroke-dashoffset: 72;
   }
-
   100% {
     stroke-dashoffset: 0;
   }
@@ -709,7 +678,6 @@ body,
   0% {
     stroke-dashoffset: 140;
   }
-
   100% {
     stroke-dashoffset: 0;
   }
@@ -1083,7 +1051,6 @@ body,
   height: 32px;
   background: #f1f1f1;
   clip-path: polygon(
-    /* TOP TEAR */
     0% 47%,
     2% 41%,
     5% 44%,
@@ -1119,7 +1086,6 @@ body,
     96% 38%,
     98% 45%,
     100% 39%,
-    /* BOTTOM TEAR */
     100% 69%,
     98% 75%,
     95% 64%,
@@ -1297,4 +1263,62 @@ body,
     height: 26px;
   }
 }
-
+
+/* Cyber HUD Background Dynamic Motion Keyframes */
+@keyframes hudBgDrift {
+  0% {
+    transform: translate(0px, 0px) scale(1.08) rotate(0deg);
+  }
+  25% {
+    transform: translate(22px, -18px) scale(1.11) rotate(0.4deg);
+  }
+  50% {
+    transform: translate(-16px, 24px) scale(1.09) rotate(-0.3deg);
+  }
+  75% {
+    transform: translate(-26px, -12px) scale(1.12) rotate(0.5deg);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1.08) rotate(0deg);
+  }
+}
+
+.animate-hud-bg-float {
+  animation: hudBgDrift 28s ease-in-out infinite alternate;
+}
+
+@keyframes hudScanline {
+  0% {
+    top: -10%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    top: 110%;
+    opacity: 0;
+  }
+}
+
+.animate-hud-scanline {
+  animation: hudScanline 7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes nodePulse {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
+.animate-node-pulse {
+  animation: nodePulse 3s ease-in-out infinite;
+}

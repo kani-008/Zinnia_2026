@@ -1,43 +1,38 @@
 import React from 'react';
 import { TornPaperDivider } from './TornPaperDivider';
-
 export const WebsiteFooter: React.FC = () => {
   const developers = ['TAMILVANI', 'KANISHKAR', 'JEO JUSTIN'];
 
+  const quickLinks = [
+    { name: 'HOME', path: '/' },
+    { name: 'EVENTS', path: '/events' },
+    { name: 'SCHEDULE', path: '/schedule' },
+    { name: 'CONTACT', path: '/contact' },
+    { name: 'REGISTER', path: '/register' },
+  ];
+
   return (
-    <footer
-      id="contact"
-      className="relative z-30 bg-[#060608] overflow-visible"
-      style={{
-        width: '100vw',
-        marginLeft: 'calc(-50vw + 50%)',
-        marginBottom: '-1rem',
-      }}
-    >
-      {/* ── Torn Paper Divider (untouched) ── */}
-      <div className="w-full -translate-y-1/2 overflow-visible">
-        <TornPaperDivider />
-      </div>
-
-      {/* ── Main 2-Column Content ── */}
-      <div className="mx-auto px-6 sm:px-10 lg:px-16" style={{ maxWidth: '1180px' }}>
-        <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-8 md:gap-12 pt-2 pb-8">
-
-          {/* ─── LEFT · BRAND ─── */}
-          <div className="flex flex-col items-center md:items-start">
-            {/* Yellow comic speech-bubble logo */}
-            <div className="relative inline-block select-none cursor-pointer group mb-2">
-              <div className="bg-[#F5D90A] text-black font-sans font-black text-xl sm:text-2xl px-4 py-1.5 rounded-sm border-[2.5px] border-black shadow-[3px_3px_0px_#000] -rotate-1 tracking-wider flex items-center justify-center group-hover:scale-105 transition-transform">
+    <footer id="contact" className="relative z-30 w-full bg-[#060608] border-t border-[#1C1C22] pt-12 pb-6 px-4 sm:px-6 lg:px-12 mt-16 select-none">
+      <div className="max-w-6xl mx-auto space-y-8">
+        
+        {/* Main 3-Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 items-start text-center md:text-left">
+          
+          {/* COLUMN 1: ZINNIA Information */}
+          <div className="flex flex-col items-center md:items-start space-y-4">
+            {/* Yellow Comic Speech Bubble Sticker */}
+            <Link to="/" className="relative inline-block select-none cursor-pointer group">
+              <div className="bg-[#F5D90A] text-black font-sans font-black text-xl sm:text-2xl px-4 py-1.5 rounded-sm border-[2.5px] border-black shadow-[3px_3px_0px_#000000] -rotate-1 tracking-wider flex items-center justify-center group-hover:scale-105 transition-transform">
                 <span>ZINNIA</span>
                 <span className="text-[#FF2E63] ml-1.5">'26</span>
               </div>
               <div className="w-0 h-0 border-t-[8px] border-t-[#F5D90A] border-l-[8px] border-l-transparent border-r-[4px] border-r-transparent ml-3 -mt-0.5" />
-            </div>
+            </Link>
 
             <div className="space-y-0.5 text-xs sm:text-sm font-mono font-medium text-[#9CA3AF] tracking-wide uppercase leading-relaxed text-center md:text-left">
               <p className="font-bold text-white">DEPARTMENT OF CSE</p>
               <p>GOVERNMENT COLLEGE OF ENGINEERING</p>
-              <p>ERODE – 638011, TAMIL NADU</p>
+              <p>ERODE – 638316, TAMIL NADU</p>
             </div>
 
             {/* Social icons */}
@@ -121,6 +116,35 @@ export const WebsiteFooter: React.FC = () => {
             <span>DESIGNED WITH</span>
             <span className="text-[#F5D90A] text-sm">⚡</span>
             <span>BY CSE CODE</span>
+=======
+        {/* Bottom Banner Strip matching upper 3-Column Grid */}
+        <div className="py-4 border-t border-[#1C1C22]/60 pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 items-center text-center md:text-left font-mono text-xs tracking-wider uppercase">
+            
+            {/* Column 1: Copyright (Aligned under ZINNIA Info) */}
+            <div className="flex items-center justify-center md:justify-start gap-2 text-[#9CA3AF]">
+              <span className="text-[#F5D90A] text-sm">⚡</span>
+              <span>© 2026 ZINNIA ’26. ALL RIGHTS RESERVED.</span>
+            </div>
+
+            {/* Column 2: Questions (Aligned under QUICK LINKS) */}
+            <div className="flex flex-col items-center md:items-start text-center md:text-left">
+              <span className="text-[#F5D90A] font-bold tracking-widest">
+                QUESTIONS? WE’RE HERE.
+              </span>
+              <span className="text-[#71717A] text-[11px] normal-case mt-0.5">
+                For event-related queries, contact the coordinators.
+              </span>
+            </div>
+
+            {/* Column 3: Credits (Aligned under DEVELOPERS) */}
+            <div className="flex items-center justify-center md:justify-start gap-1.5 text-[#9CA3AF]">
+              <span>DESIGNED WITH</span>
+              <span className="text-[#F5D90A] text-sm">⚡</span>
+              <span>BY CSE CODE</span>
+            </div>
+
+>>>>>>> origin/develop
           </div>
         </div>
       </div>

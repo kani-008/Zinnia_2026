@@ -4,6 +4,7 @@ import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
 import { EventMission } from '@/types';
 import { WebsiteNavbar } from '../components/layout/Navbar';
+import { EventScheduleView } from '../components/ui/EventScheduleView';
 import { 
   Users, 
   Clock, 
@@ -288,6 +289,11 @@ export const WebsiteEventsPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Dedicated Cyberpunk Mission Schedule Timetable Section */}
+        <div className="pt-8 border-t-2 border-[#3A3A3E]">
+          <EventScheduleView onSelectEvent={(e) => setSelectedEvent(e)} />
+        </div>
       </div>
     </div>
   );
