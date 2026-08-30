@@ -11,8 +11,8 @@ import evenBadge from '../assets/even.svg';
 import annBadge from '../assets/ann.svg';
 import cloudSvg from '../assets/cloud.svg';
 import priceSvg from '../assets/price.svg';
-import regSvg from '../assets/reg.svg';
 import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award, X, Phone, CheckCircle2, Mail, Send } from 'lucide-react';
+import { ComicHandDrawnCard } from '../components/events/ComicHandDrawnCard';
 
 // 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
 const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
@@ -327,7 +327,7 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
           2. HERO SECTION (Matched to Reference Image)
           ========================================================================= */}
-      <section className="relative z-30 max-w-6xl mx-auto w-full pt-1 sm:pt-2 pb-4 sm:pb-6 px-3 sm:px-6 select-none overflow-visible">
+      <section className="relative z-30 max-w-6xl mx-auto w-full pt-1 sm:pt-2 pb-1 sm:pb-2 px-3 sm:px-6 select-none overflow-visible">
 
         {/* Background Comic Halftone Decorative Layer (Behind all content, center stays clean black) */}
         <div className="absolute inset-0 pointer-events-none overflow-visible z-0">
@@ -411,7 +411,7 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
 
             {/* Subtitle Badges Row (SVG Assets: National, Events, Anna Univ) */}
-            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 md:gap-5 mt-3 sm:mt-4 sm:-translate-x-4 md:-translate-x-8 lg:-translate-x-10">
+            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 md:gap-5 mt-1 sm:mt-2 sm:-translate-x-4 md:-translate-x-8 lg:-translate-x-10">
               {/* NATIONAL LEVEL */}
               <div
                 onClick={() => triggerComicFX('NATIONAL LEVEL!')}
@@ -450,7 +450,7 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
 
             {/* REGISTER FOR ZINNIA → CTA Button (Hand-Inked Comic Panel & Screen-Print Offset Effect) */}
-            <div className="mt-4 sm:mt-6 w-full max-w-md flex justify-center sm:-translate-x-4 md:-translate-x-8 lg:-translate-x-10">
+            <div className="mt-2.5 sm:mt-3.5 w-full max-w-md flex justify-center sm:-translate-x-4 md:-translate-x-8 lg:-translate-x-10">
               <MagneticElement strength={0.3} onClick={() => navigate('/register')} className="w-full sm:w-auto">
                 <div className="comic-cta-wrapper w-full sm:w-auto group">
 
@@ -527,7 +527,7 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
             3. COUNTDOWN (Framed by Hand-Drawn Comic Scribbles)
             ========================================================================= */}
-      <div className="relative z-30 flex flex-col items-center justify-center pt-2 sm:pt-4 w-full md:pl-[200px] lg:pl-[240px] md:pr-[140px] lg:pr-[180px] sm:-translate-x-4 md:-translate-x-8 lg:-translate-x-10">
+      <div className="relative z-30 flex flex-col items-center justify-center mt-2 sm:mt-3 md:mt-4 pt-1 sm:pt-2 w-full md:pl-[200px] lg:pl-[240px] md:pr-[140px] lg:pr-[180px] sm:-translate-x-4 md:-translate-x-8 lg:-translate-x-10">
         {/* Background Layer: Halftones + Scattered Hand-Inked Scribbles Distributed Around Timer & CTA */}
         <div className="absolute inset-0 pointer-events-none overflow-visible z-0 select-none">
           {/* Ambient Halftones */}
@@ -774,77 +774,31 @@ export const WebsiteHomePage: React.FC = () => {
           </div>
 
           {/* 5 Technical Cards Row (5 Columns) */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 lg:gap-6">
             {techEvents.map((e) => (
-              <div
+              <ComicHandDrawnCard
                 key={e.id}
+                code={e.code}
+                variant="tech"
                 onClick={() => {
                   triggerComicFX('ARENA!');
                   setSelectedEvent(e);
                 }}
-                className="group relative bg-[#040608] border-[1.5px] border-[#00E5FF] rounded-xl p-3.5 sm:p-4 pt-8 sm:pt-9 flex flex-col items-center text-center justify-between min-h-[260px] sm:min-h-[295px] cursor-pointer shadow-[0_0_15px_rgba(0,229,255,0.07)] hover:shadow-[0_0_25px_rgba(0,229,255,0.35),_3px_3px_0px_#00A8C6] hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200"
               >
-                {/* --- COMIC SCRABBLING & CORNER MARKS --- */}
-                {/* Top-Left Ribbon Badge */}
-                <div className="absolute -top-[1.5px] -left-[1.5px] z-10">
-                  <div
-                    className="relative bg-[#00E5FF] text-[#000000] font-mono font-black text-xs px-3 py-0.5 shadow-sm flex items-center justify-center rounded-tl-xl"
-                    style={{
-                      clipPath: 'polygon(0 0, 100% 0, 80% 100%, 0 100%)',
-                      paddingRight: '14px',
-                    }}
-                  >
-                    <span>{e.code}</span>
-                    {/* Ribbon top stitch tick */}
-                    <span className="absolute -top-0.5 right-2.5 w-1 h-1.5 bg-black/60 rotate-12" />
-                  </div>
-                  {/* Scratch tick mark right under ribbon */}
-                  <span className="absolute -bottom-2 left-0 w-[1.5px] h-2 bg-[#00E5FF] opacity-90" />
-                </div>
-
-                {/* Top-Right Corner Scratch Tick */}
-                <svg className="absolute -top-1 -right-1 w-4 h-4 pointer-events-none" viewBox="0 0 16 16" fill="none">
-                  <line x1="14" y1="2" x2="14" y2="8" stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="15" y1="7" x2="12" y2="12" stroke="#00E5FF" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-
-                {/* Bottom-Left Corner Scratch Tick */}
-                <svg className="absolute -bottom-1 -left-1 w-4 h-4 pointer-events-none" viewBox="0 0 16 16" fill="none">
-                  <line x1="2" y1="8" x2="2" y2="14" stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="1" y1="11" x2="5" y2="15" stroke="#00E5FF" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-
-                {/* Bottom-Right Corner Scrabbling Marks (//) */}
-                <svg className="absolute -bottom-1 -right-1 w-5 h-5 pointer-events-none" viewBox="0 0 20 20" fill="none">
-                  <line x1="18" y1="8" x2="18" y2="18" stroke="#00E5FF" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="13" y1="11" x2="9" y2="19" stroke="#00E5FF" strokeWidth="1.2" strokeLinecap="round" />
-                  <line x1="18" y1="12" x2="14" y2="20" stroke="#00E5FF" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-
-                {/* Subtle comic halftone screen-tone at top */}
-                <div
-                  className="absolute inset-x-0 top-0 h-24 pointer-events-none opacity-15 rounded-t-xl"
-                  style={{
-                    backgroundImage: 'radial-gradient(#00E5FF 1px, transparent 1px)',
-                    backgroundSize: '7px 7px',
-                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1), transparent)'
-                  }}
-                />
-
                 {/* Centered Large Line-Art Icon */}
-                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-[#00E5FF] group-hover:scale-110 transition-transform my-auto">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-[#00d9f7] group-hover:scale-110 transition-transform my-auto">
                   {e.id.includes('debug') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00E5FF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00d9f7" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 28C22 22 26 18 32 18C38 18 42 22 42 28V36C42 42 38 46 32 46C26 46 22 42 22 36V28Z" />
                       <path d="M32 18V12M28 12H36" />
                       <path d="M14 26L22 30M12 36H22M14 46L22 42" />
                       <path d="M50 26L42 30M52 36H42M50 46L42 42" />
-                      <circle cx="32" cy="32" r="3" fill="#00E5FF" />
+                      <circle cx="32" cy="32" r="3" fill="#00d9f7" />
                     </svg>
                   )}
                   {e.id.includes('signal') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00E5FF" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="32" cy="46" r="4" fill="#00E5FF" />
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00d9f7" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="32" cy="46" r="4" fill="#00d9f7" />
                       <path d="M32 42V28" strokeWidth="2.8" />
                       <path d="M24 38C20 34 20 28 24 24" />
                       <path d="M40 38C44 34 44 28 40 24" />
@@ -854,18 +808,18 @@ export const WebsiteHomePage: React.FC = () => {
                     </svg>
                   )}
                   {e.id.includes('sql') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00E5FF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00d9f7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <ellipse cx="32" cy="18" rx="18" ry="6" />
                       <path d="M14 18V32C14 35.3 22 38 32 38C42 38 50 35.3 50 32V18" />
                       <path d="M14 32V46C14 49.3 22 52 32 52C42 52 50 49.3 50 46V32" />
-                      <circle cx="24" cy="32" r="2" fill="#00E5FF" />
-                      <circle cx="24" cy="46" r="2" fill="#00E5FF" />
+                      <circle cx="24" cy="32" r="2" fill="#00d9f7" />
+                      <circle cx="24" cy="46" r="2" fill="#00d9f7" />
                     </svg>
                   )}
                   {e.id.includes('gadget') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00E5FF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00d9f7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="19" y="19" width="26" height="26" rx="4" />
-                      <rect x="26" y="26" width="12" height="12" rx="2" fill="#00E5FF" fillOpacity="0.2" />
+                      <rect x="26" y="26" width="12" height="12" rx="2" fill="#00d9f7" fillOpacity="0.2" />
                       <path d="M24 9V19M32 9V19M40 9V19" />
                       <path d="M24 45V55M32 45V55M40 45V55" />
                       <path d="M9 24H19M9 32H19M9 40H19" />
@@ -873,11 +827,11 @@ export const WebsiteHomePage: React.FC = () => {
                     </svg>
                   )}
                   {e.id.includes('paper') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00E5FF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00d9f7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 14H52" strokeWidth="3" />
                       <rect x="14" y="16" width="36" height="24" rx="2" />
                       <path d="M20 32L28 24L36 28L44 18" strokeWidth="2.2" />
-                      <circle cx="44" cy="18" r="2.5" fill="#00E5FF" />
+                      <circle cx="44" cy="18" r="2.5" fill="#00d9f7" />
                       <path d="M32 40V52M22 52L32 40L42 52" strokeWidth="2.5" />
                     </svg>
                   )}
@@ -885,7 +839,7 @@ export const WebsiteHomePage: React.FC = () => {
 
                 {/* Event Title (Stacked Lines) & Tagline */}
                 <div className="w-full mt-auto">
-                  <h3 className="font-sans font-black text-sm xs:text-base sm:text-lg text-white uppercase tracking-wider group-hover:text-[#00E5FF] transition-colors leading-tight">
+                  <h3 className="font-sans font-black text-sm xs:text-base sm:text-lg text-white uppercase tracking-wider group-hover:text-[#00d9f7] transition-colors leading-tight">
                     {e.mission_name.toLowerCase().includes('gadget') ? (
                       <>
                         <span>GADGET CODES</span>
@@ -918,7 +872,7 @@ export const WebsiteHomePage: React.FC = () => {
                     {e.tagline || e.title}
                   </p>
                 </div>
-              </div>
+              </ComicHandDrawnCard>
             ))}
           </div>
         </div>
@@ -945,7 +899,7 @@ export const WebsiteHomePage: React.FC = () => {
               Col 5: 09 SHORT FLIM (underneath Paper Presentation 05)
               Col 6: Flying Paper Airplane Doodle
           */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4 items-center">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5 lg:gap-6 items-center">
 
             {/* Column 1 on Desktop: Official Comic Cloud Asset */}
             <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex flex-col items-center justify-center relative select-none pointer-events-none min-h-[220px] sm:min-h-[295px] pr-2">
@@ -960,61 +914,15 @@ export const WebsiteHomePage: React.FC = () => {
 
             {/* Columns 2 to 5: The 4 Non-Technical Cards (06, 07, 08, 09) */}
             {nonTechEvents.map((e) => (
-              <div
+              <ComicHandDrawnCard
                 key={e.id}
+                code={e.code}
+                variant="non-tech"
                 onClick={() => {
                   triggerComicFX('ARENA!');
                   setSelectedEvent(e);
                 }}
-                className="group relative bg-[#080406] border-[1.5px] border-[#FF2E63] rounded-xl p-3.5 sm:p-4 pt-8 sm:pt-9 flex flex-col items-center text-center justify-between min-h-[260px] sm:min-h-[295px] cursor-pointer shadow-[0_0_15px_rgba(255,46,99,0.07)] hover:shadow-[0_0_25px_rgba(255,46,99,0.35),_3px_3px_0px_#C41E45] hover:scale-[1.02] hover:-translate-y-1 transition-all duration-200"
               >
-                {/* --- COMIC SCRABBLING & CORNER MARKS (EXACT MATCH TO CROP) --- */}
-                {/* Top-Left Ribbon Badge with Notch & Stitch */}
-                <div className="absolute -top-[1.5px] -left-[1.5px] z-10">
-                  <div
-                    className="relative bg-[#FF2E63] text-white font-mono font-black text-xs px-3 py-0.5 shadow-sm flex items-center justify-center rounded-tl-xl"
-                    style={{
-                      clipPath: 'polygon(0 0, 100% 0, 80% 100%, 0 100%)',
-                      paddingRight: '14px',
-                    }}
-                  >
-                    <span>{e.code}</span>
-                    {/* Ribbon top stitch tick */}
-                    <span className="absolute -top-0.5 right-2.5 w-1 h-1.5 bg-black/60 rotate-12" />
-                  </div>
-                  {/* Scratch tick mark right under ribbon */}
-                  <span className="absolute -bottom-2 left-0 w-[1.5px] h-2 bg-[#FF2E63] opacity-90" />
-                </div>
-
-                {/* Top-Right Corner Scratch Tick */}
-                <svg className="absolute -top-1 -right-1 w-4 h-4 pointer-events-none" viewBox="0 0 16 16" fill="none">
-                  <line x1="14" y1="2" x2="14" y2="8" stroke="#FF2E63" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="15" y1="7" x2="12" y2="12" stroke="#FF2E63" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-
-                {/* Bottom-Left Corner Scratch Tick */}
-                <svg className="absolute -bottom-1 -left-1 w-4 h-4 pointer-events-none" viewBox="0 0 16 16" fill="none">
-                  <line x1="2" y1="8" x2="2" y2="14" stroke="#FF2E63" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="1" y1="11" x2="5" y2="15" stroke="#FF2E63" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-
-                {/* Bottom-Right Corner Scrabbling Marks (//) */}
-                <svg className="absolute -bottom-1 -right-1 w-5 h-5 pointer-events-none" viewBox="0 0 20 20" fill="none">
-                  <line x1="18" y1="8" x2="18" y2="18" stroke="#FF2E63" strokeWidth="1.5" strokeLinecap="round" />
-                  <line x1="13" y1="11" x2="9" y2="19" stroke="#FF2E63" strokeWidth="1.2" strokeLinecap="round" />
-                  <line x1="18" y1="12" x2="14" y2="20" stroke="#FF2E63" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-
-                {/* Subtle comic halftone screen-tone at top */}
-                <div
-                  className="absolute inset-x-0 top-0 h-24 pointer-events-none opacity-15 rounded-t-xl"
-                  style={{
-                    backgroundImage: 'radial-gradient(#FF2E63 1px, transparent 1px)',
-                    backgroundSize: '7px 7px',
-                    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1), transparent)'
-                  }}
-                />
-
                 {/* Centered Large Line-Art Icon */}
                 <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-[#FF2E63] group-hover:scale-110 transition-transform my-auto">
                   {e.id.includes('borderland') && (
@@ -1088,7 +996,7 @@ export const WebsiteHomePage: React.FC = () => {
                     {e.tagline || e.title}
                   </p>
                 </div>
-              </div>
+              </ComicHandDrawnCard>
             ))}
 
             {/* Column 6 on Desktop: Flying Paper Airplane Doodle with Looped Trail */}

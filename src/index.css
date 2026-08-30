@@ -719,3 +719,283 @@ body,
   stroke-dasharray: 100 40;
   animation: webSilkFlow100 0.6s linear infinite;
 }
+
+/* =========================================================
+   HAND-DRAWN COMIC EVENT CARD (Tech & Non-Tech)
+========================================================= */
+
+.comic-card-wrapper {
+  --cyan: #00d9f7;
+  --cyan-dark: #007f96;
+  --cyan-shadow: #003d49;
+  --cyan-inner: #00a9c4;
+  --cyan-dark-ink: #003641;
+  --cyan-glow: rgba(0, 217, 247, 0.4);
+
+  --pink: #FF2E63;
+  --pink-dark: #b8143e;
+  --pink-shadow: #4d0a1a;
+  --pink-inner: #ff658a;
+  --pink-dark-ink: #3b0713;
+  --pink-glow: rgba(255, 46, 99, 0.4);
+
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  background: transparent;
+  cursor: pointer;
+  transform: rotate(-0.45deg);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.comic-card-wrapper.tech {
+  --card-main: var(--cyan);
+  --card-shadow: var(--cyan-shadow);
+  --card-inner: var(--cyan-inner);
+  --card-dark: var(--cyan-dark-ink);
+  --card-glow: var(--cyan-glow);
+}
+
+.comic-card-wrapper.non-tech {
+  --card-main: var(--pink);
+  --card-shadow: var(--pink-shadow);
+  --card-inner: var(--pink-inner);
+  --card-dark: var(--pink-dark-ink);
+  --card-glow: var(--pink-glow);
+}
+
+.comic-card-wrapper:hover {
+  transform: translateY(-5px) scale(1.025) rotate(0deg);
+  filter: drop-shadow(0 8px 24px var(--card-glow));
+}
+
+/* MAIN HAND-DRAWN CARD SVG */
+.card-svg-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.card-svg-frame .card-shadow {
+  fill: none;
+  stroke: var(--card-shadow);
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+.card-svg-frame .card-main {
+  fill: none;
+  stroke: var(--card-main);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.card-svg-frame .card-inner {
+  fill: none;
+  stroke: var(--card-inner);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* NUMBER HOLDER TAG */
+.comic-number-holder {
+  position: absolute;
+  top: 0px;
+  left: -2px;
+  width: 58px;
+  height: 47px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-main);
+  color: #050505;
+  font-family: "Arial Narrow", "Roboto Condensed", var(--font-comic), Arial, sans-serif;
+  font-size: 19px;
+  font-weight: 900;
+  transform: rotate(-4deg);
+  clip-path: polygon(
+    3% 8%,
+    17% 4%,
+    33% 5%,
+    49% 2%,
+    66% 4%,
+    82% 2%,
+    97% 7%,
+    94% 27%,
+    97% 47%,
+    94% 69%,
+    87% 92%,
+    69% 97%,
+    51% 94%,
+    34% 98%,
+    16% 94%,
+    5% 87%,
+    2% 67%,
+    5% 48%,
+    2% 28%
+  );
+  pointer-events: none;
+}
+
+.comic-number-holder::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1.4px solid var(--card-dark);
+  clip-path: polygon(
+    4% 8%,
+    22% 4%,
+    41% 6%,
+    61% 3%,
+    91% 7%,
+    96% 28%,
+    93% 49%,
+    96% 72%,
+    89% 94%,
+    68% 91%,
+    47% 95%,
+    25% 92%,
+    7% 94%,
+    3% 72%,
+    6% 49%,
+    3% 28%
+  );
+  pointer-events: none;
+}
+
+.comic-number-holder::after {
+  content: "";
+  position: absolute;
+  right: -11px;
+  top: 4px;
+  width: 16px;
+  height: 2px;
+  background: var(--card-main);
+  transform: rotate(10deg);
+  box-shadow: -5px 6px 0 var(--card-glow);
+  pointer-events: none;
+}
+
+.comic-number-holder .number-text {
+  position: relative;
+  z-index: 5;
+  transform: translate(-1px, -1px);
+}
+
+/* NUMBER HOLDER TAIL */
+.comic-number-tail {
+  position: absolute;
+  left: 5px;
+  top: 39px;
+  width: 34px;
+  height: 18px;
+  z-index: 8;
+  background: var(--card-main);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    72% 100%,
+    34% 66%
+  );
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+
+.comic-number-tail::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  width: 23px;
+  height: 2px;
+  background: var(--card-dark);
+  transform: rotate(-12deg);
+}
+
+/* COMIC SCRIBBLES AROUND CARD */
+.comic-card-mark {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.comic-card-mark.one {
+  right: -2px;
+  top: 1px;
+  width: 35px;
+  height: 16px;
+}
+
+.comic-card-mark.one::before,
+.comic-card-mark.one::after {
+  content: "";
+  position: absolute;
+  height: 1.7px;
+  background: var(--card-main);
+  border-radius: 50%;
+}
+
+.comic-card-mark.one::before {
+  width: 24px;
+  right: 0;
+  top: 5px;
+  transform: rotate(-4deg);
+}
+
+.comic-card-mark.one::after {
+  width: 14px;
+  right: 7px;
+  top: 11px;
+  transform: rotate(4deg);
+}
+
+.comic-card-mark.two {
+  left: -1px;
+  bottom: -2px;
+  width: 38px;
+  height: 16px;
+}
+
+.comic-card-mark.two::before,
+.comic-card-mark.two::after {
+  content: "";
+  position: absolute;
+  height: 1.6px;
+  background: var(--card-main);
+}
+
+.comic-card-mark.two::before {
+  width: 22px;
+  left: 0;
+  top: 4px;
+  transform: rotate(4deg);
+}
+
+.comic-card-mark.two::after {
+  width: 14px;
+  left: 8px;
+  top: 10px;
+  transform: rotate(-5deg);
+}
+
+@media (max-width: 600px) {
+  .comic-number-holder {
+    width: 46px;
+    height: 38px;
+    font-size: 15px;
+  }
+
+  .comic-number-tail {
+    top: 32px;
+    width: 28px;
+    height: 15px;
+  }
+}
