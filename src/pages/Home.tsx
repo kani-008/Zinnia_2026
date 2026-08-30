@@ -1,30 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
 import { WebsiteFooter } from '../components/layout/Footer';
-import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award, X, Phone, CheckCircle2, Mail, Send } from 'lucide-react';
+import robotMascot from '../assets/1.svg';
+import megaphoneSvg from '../assets/megaphone.svg';
+import zinniaSvg from '../assets/zinnia.svg';
+import nationalBadge from '../assets/national.svg';
+import evenBadge from '../assets/even.svg';
+import annBadge from '../assets/ann.svg';
+import cloudSvg from '../assets/cloud.svg';
+import priceSvg from '../assets/price.svg';
+import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award, X, Phone, CheckCircle2, Mail, Send, Menu, ChevronDown } from 'lucide-react';
+import { ComicHandDrawnCard } from '../components/events/ComicHandDrawnCard';
 
-// 2D-only Tactile Digit Swap Component (Clean vertical centering & pop transition)
-const FlipNumber: React.FC<{ value: string; className?: string }> = ({ value, className = '' }) => {
+// 2D Comic Digit Swap Component (Printed comic stamp with Bangers font)
+const ComicFlipNumber: React.FC<{
+  value: string;
+  className?: string;
+  style?: React.CSSProperties;
+}> = ({ value, className = '', style }) => {
   const [current, setCurrent] = useState(value);
-  const [animating, setAnimating] = useState(false);
+  const [tick, setTick] = useState(false);
 
   useEffect(() => {
     if (value !== current) {
       setCurrent(value);
-      setAnimating(true);
-      const timer = setTimeout(() => setAnimating(false), 200);
+      setTick(true);
+      const timer = setTimeout(() => setTick(false), 160);
       return () => clearTimeout(timer);
     }
   }, [value, current]);
 
   return (
-    <div className={`flex items-center justify-center h-8 sm:h-9 md:h-10 overflow-visible ${className}`}>
+    <div className={`flex items-center justify-center overflow-visible ${className}`}>
       <span
         key={current}
-        className={`leading-none select-none inline-block transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${animating ? 'scale-110 -translate-y-0.5' : 'scale-100 translate-y-0'
-          }`}
+        style={{
+          fontFamily: '"Bangers", cursive',
+          letterSpacing: '0.03em',
+          ...style,
+        }}
+        className={`timer-value leading-none select-none font-bold ${tick ? 'tick' : ''}`}
       >
         {current}
       </span>
@@ -134,19 +151,46 @@ const MagneticElement: React.FC<{
   );
 };
 
+const TARGET_EVENT_DATE = new Date('2026-09-24T09:00:00+05:30').getTime();
+
+const calculateTimeLeft = () => {
+  const now = new Date().getTime();
+  const diff = Math.max(0, TARGET_EVENT_DATE - now);
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+
+  return {
+    days: String(days).padStart(2, '0'),
+    hours: String(hours).padStart(2, '0'),
+    minutes: String(minutes).padStart(2, '0'),
+    seconds: String(seconds).padStart(2, '0'),
+  };
+};
+
 export const WebsiteHomePage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Real-time ticking countdown to September 17, 2026
-  const [timeLeft, setTimeLeft] = useState({
-    days: '12',
-    hours: '48',
-    minutes: '32',
-    seconds: '15',
-  });
+  // Real-time ticking countdown to September 24, 2026 (calculated instantly without initial dummy values)
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
 
   const [interactiveSoundText, setInteractiveSoundText] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [secSnap, setSecSnap] = useState(false);
+  const isFirstMountRef = React.useRef(true);
+
+  useEffect(() => {
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      return;
+    }
+    setSecSnap(true);
+    const timer = setTimeout(() => setSecSnap(false), 160);
+    return () => clearTimeout(timer);
+  }, [timeLeft.seconds]);
 
   // Selected Event Modal State
   const [selectedEvent, setSelectedEvent] = useState<EventMission | null>(null);
@@ -165,6 +209,41 @@ export const WebsiteHomePage: React.FC = () => {
   // Live Events Sync from Supabase DB / Store
   const [events, setEvents] = useState<EventMission[]>(() => store.getEvents());
   const [newsletterEmail, setNewsletterEmail] = useState('');
+
+  // Handle hash / event selection when coming from other pages (e.g. /#events or ?event=...)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const eventParam = params.get('event') || params.get('mission');
+    const state = location.state as { scrollTo?: string; eventId?: string } | null;
+    const targetEventId = eventParam || state?.eventId;
+
+    if (targetEventId && events.length > 0) {
+      const found = events.find(
+        (e) =>
+          e.id.toLowerCase() === targetEventId.toLowerCase() ||
+          e.code?.toLowerCase() === targetEventId.toLowerCase() ||
+          e.title.toLowerCase().includes(targetEventId.toLowerCase())
+      );
+      if (found) {
+        setSelectedEvent(found);
+      }
+    }
+
+    if (
+      location.hash === '#events' ||
+      window.location.hash === '#events' ||
+      state?.scrollTo === 'events' ||
+      targetEventId
+    ) {
+      const timer = setTimeout(() => {
+        const eventsEl = document.getElementById('events');
+        if (eventsEl) {
+          eventsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [location.hash, location.search, location.state, events]);
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,26 +284,9 @@ export const WebsiteHomePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const targetDate = new Date('2026-09-24T09:00:00+05:30').getTime();
-
     const updateTimer = () => {
-      const now = new Date().getTime();
-      const diff = Math.max(0, targetDate - now);
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-
-      setTimeLeft({
-        days: String(days).padStart(2, '0'),
-        hours: String(hours).padStart(2, '0'),
-        minutes: String(minutes).padStart(2, '0'),
-        seconds: String(seconds).padStart(2, '0'),
-      });
+      setTimeLeft(calculateTimeLeft());
     };
-
-    updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -238,12 +300,12 @@ export const WebsiteHomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-transparent text-[#F2F2F0] flex flex-col justify-between px-2 sm:px-4 md:px-6 pt-1 pb-4 select-none scroll-smooth">
+    <div className="relative w-full min-h-screen bg-transparent text-[#EEEEEA] flex flex-col justify-between px-2 sm:px-4 md:px-6 pt-1 pb-4 select-none scroll-smooth">
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
-          <div className="px-6 py-2.5 bg-[#F5D90A] border-3 border-[#F5D90A] shadow-[6px_6px_0px_#8A7400] rotate-6 sticker-pop">
-            <span className="font-display text-4xl sm:text-6xl text-[#FF3366] tracking-wider">
+          <div className="px-6 py-2.5 bg-[#E5BD00] border-3 border-[#090A0B] shadow-[6px_6px_0px_#090A0B] rotate-6 sticker-pop">
+            <span className="font-display text-4xl sm:text-6xl text-[#D51F55] tracking-wider">
               {interactiveSoundText}
             </span>
           </div>
@@ -262,7 +324,7 @@ export const WebsiteHomePage: React.FC = () => {
               <img
                 src={zinniaSvg}
                 alt="ZINNIA '26 Logo"
-                className="h-16 sm:h-15 md:h-18 lg:h-20 w-auto object-contain select-none pointer-events-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]"
+                className="h-20 sm:h-16 md:h-18 lg:h-20 w-auto object-contain select-none pointer-events-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]"
               />
             </div>
           </MagneticElement>
@@ -273,10 +335,10 @@ export const WebsiteHomePage: React.FC = () => {
         {/* Mobile Hamburger Menu Button */}
         <button
           type="button"
-          className="sm:hidden flex items-center justify-center w-11 h-11 bg-[#1A1A1D] border-2 border-white/80 shadow-[3px_3px_0px_#000000] cursor-pointer active:scale-95 transition-transform"
+          className="sm:hidden flex items-center justify-center w-11 h-11 bg-[#111214] border-2 border-[#EEEEEA]/80 shadow-[3px_3px_0px_#090A0B] cursor-pointer active:scale-95 transition-transform"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
-          {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+          {mobileMenuOpen ? <X className="w-6 h-6 text-[#EEEEEA]" /> : <Menu className="w-6 h-6 text-[#EEEEEA]" />}
         </button>
 
         {/* Desktop Comic Navigation Tabs with Magnetic Pull */}
@@ -290,6 +352,18 @@ export const WebsiteHomePage: React.FC = () => {
               <span className="front-box">
                 <span className="lightning">⚡</span>
                 <span>EVENTS</span>
+              </span>
+            </button>
+          </MagneticElement>
+
+          {/* PASS TAB */}
+          <MagneticElement strength={0.3} onClick={() => { triggerComicFX('PASSES!'); navigate('/passport'); }}>
+            <button className="comic-button" type="button">
+              {/* FIXED BOTTOM BOX */}
+              <span className="back-box" />
+              {/* MOVING TOP BOX */}
+              <span className="front-box">
+                <span>PASS</span>
               </span>
             </button>
           </MagneticElement>
@@ -320,37 +394,252 @@ export const WebsiteHomePage: React.FC = () => {
         </nav>
       </header>
 
-      {/* Mobile Menu Drawer */}
+      {/* Mobile Menu Drawer (Authentic Hand-Drawn 2D Comic Panel) */}
       {mobileMenuOpen && (
-        <div className="sm:hidden fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center gap-6 animate-in fade-in duration-200">
+        <div className="sm:hidden fixed inset-0 z-[100] bg-[#08090A] flex flex-col items-center justify-center p-4 select-none overflow-y-auto animate-in fade-in duration-150">
+          {/* 1–2 Sparse Localized Halftone & Ink Doodles (Not covering whole screen) */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
+            {/* Top-left small halftone patch */}
+            <div className="comic-halftone -top-10 -left-10 opacity-25 scale-75" />
+            {/* Bottom-right small halftone patch */}
+            <div className="comic-halftone -bottom-10 -right-10 opacity-25 scale-75" />
+
+            {/* Hand-drawn pink star doodle (top-left) */}
+            <div className="absolute top-16 left-6 rotate-12 opacity-60">
+              <svg viewBox="0 0 50 50" className="w-6 h-6 fill-none">
+                <path d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z" fill="#D51F55" stroke="#D51F55" strokeWidth="1.5" strokeLinejoin="round" />
+              </svg>
+            </div>
+
+            {/* Hand-drawn yellow lightning doodle (bottom-right) */}
+            <div className="absolute bottom-20 right-6 -rotate-12 opacity-70">
+              <svg viewBox="0 0 40 50" className="w-5 h-7 fill-[#E5BD00]">
+                <path d="M 22 2 L 6 26 L 18 24 L 10 48 L 34 18 L 22 20 Z" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Close Button (Hand-Drawn Comic Square) */}
           <button
             type="button"
-            className="absolute top-4 right-4 w-11 h-11 bg-[#1A1A1D] border-2 border-white/80 shadow-[3px_3px_0px_#000000] flex items-center justify-center cursor-pointer"
+            className="absolute top-4 right-4 z-20 w-10 h-10 bg-[#111214] border-2 border-[#EEEEEA] text-[#EEEEEA] shadow-[3px_3px_0px_#090A0B] flex items-center justify-center cursor-pointer active:translate-x-0.5 active:translate-y-0.5 -rotate-3 transition-transform"
             onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close menu"
           >
-            <X className="w-6 h-6 text-white" />
+            <X className="w-5 h-5 stroke-[2.5]" />
           </button>
-          <button
-            type="button"
-            className="font-comic font-black text-white text-2xl tracking-wider uppercase px-8 py-3 border-2 border-white/60 bg-[#1A1A1D] shadow-[4px_4px_0px_#000] active:scale-95 transition-transform"
-            onClick={() => { setMobileMenuOpen(false); scrollToSection('events', 'EVENTS!'); }}
-          >
-            ⚡ EVENTS
-          </button>
-          <button
-            type="button"
-            className="font-comic font-black text-white text-2xl tracking-wider uppercase px-8 py-3 border-2 border-white/60 bg-[#1A1A1D] shadow-[4px_4px_0px_#000] active:scale-95 transition-transform"
-            onClick={() => { setMobileMenuOpen(false); triggerComicFX('CONTACT!'); navigate('/contact'); }}
-          >
-            CONTACT
-          </button>
-          <button
-            type="button"
-            className="font-comic font-black text-black text-2xl tracking-wider uppercase px-8 py-3 border-2 border-black bg-[#00D2FF] shadow-[4px_4px_0px_#000] active:scale-95 transition-transform"
-            onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
-          >
-            REGISTER
-          </button>
+
+          {/* Menu Card Content Container */}
+          <div className="relative z-10 w-full max-w-[310px] xs:max-w-[340px] flex flex-col items-center gap-3.5">
+            
+            {/* NAVIGATION MENU Sticker (Irregular quadrilateral yellow comic sticker) */}
+            <div className="mb-1">
+              <div
+                className="relative inline-block px-4 py-1.5 bg-[#E5BD00] border-2 border-[#090A0B] shadow-[3px_3px_0px_#090A0B] -rotate-2"
+                style={{
+                  clipPath: 'polygon(2% 8%, 98% 1%, 100% 93%, 1% 98%)',
+                }}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[#090A0B] text-xs font-black">⚡</span>
+                  <span className="font-comic font-black italic text-[#090A0B] text-xs xs:text-sm tracking-wider uppercase">
+                    NAVIGATION MENU
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 4 Navigation Buttons (Sticker arrangement: HOME, EVENTS, PASSES, CONTACT) */}
+            <div className="grid grid-cols-2 gap-3 w-full">
+              
+              {/* 1. HOME */}
+              <div
+                className="relative group cursor-pointer select-none"
+                style={{ transform: 'rotate(-0.8deg)' }}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  triggerComicFX('HOME!');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
+                {/* Slightly offset back border box */}
+                <div
+                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
+                  style={{
+                    transform: 'translate(3px, 3px)',
+                    clipPath: 'polygon(1% 5%, 98% 2%, 99% 95%, 2% 98%)',
+                  }}
+                />
+                {/* Front comic button */}
+                <div
+                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                  style={{
+                    clipPath: 'polygon(2% 3%, 99% 1%, 98% 97%, 1% 95%)',
+                  }}
+                >
+                  <svg className="absolute -top-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                    <path d="M1 8 L1 1 L8 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  <svg className="absolute -bottom-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                    <path d="M9 2 L9 9 L2 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  <div className="absolute top-1 right-2 w-1.5 h-[1.5px] bg-[#0FA9C6] opacity-80" />
+                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
+                    HOME
+                  </span>
+                </div>
+              </div>
+
+              {/* 2. EVENTS */}
+              <div
+                className="relative group cursor-pointer select-none"
+                style={{ transform: 'rotate(1.1deg)' }}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollToSection('events', 'EVENTS!');
+                }}
+              >
+                {/* Slightly offset back border box */}
+                <div
+                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
+                  style={{
+                    transform: 'translate(3px, 3px)',
+                    clipPath: 'polygon(2% 2%, 99% 4%, 97% 98%, 1% 94%)',
+                  }}
+                />
+                {/* Front comic button */}
+                <div
+                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center gap-1 transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                  style={{
+                    clipPath: 'polygon(1% 1%, 98% 3%, 99% 96%, 2% 98%)',
+                  }}
+                >
+                  <svg className="absolute -top-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                    <path d="M9 8 L9 1 L2 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  <svg className="absolute -bottom-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                    <path d="M1 2 L1 9 L8 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  <span className="text-[#E5BD00] text-xs font-black">⚡</span>
+                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
+                    EVENTS
+                  </span>
+                </div>
+              </div>
+
+              {/* 3. PASSES */}
+              <div
+                className="relative group cursor-pointer select-none"
+                style={{ transform: 'rotate(0.7deg)' }}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  triggerComicFX('PASSES!');
+                  navigate('/passport');
+                }}
+              >
+                {/* Slightly offset back border box */}
+                <div
+                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
+                  style={{
+                    transform: 'translate(3px, 3px)',
+                    clipPath: 'polygon(2% 4%, 99% 1%, 98% 96%, 1% 98%)',
+                  }}
+                />
+                {/* Front comic button */}
+                <div
+                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                  style={{
+                    clipPath: 'polygon(1% 2%, 98% 1%, 99% 97%, 2% 95%)',
+                  }}
+                >
+                  <svg className="absolute -top-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                    <path d="M1 8 L1 1 L8 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  <svg className="absolute -bottom-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                    <path d="M9 2 L9 9 L2 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  <div className="absolute bottom-1 right-2 w-1.5 h-[1.5px] bg-[#0FA9C6] opacity-80" />
+                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
+                    PASSES
+                  </span>
+                </div>
+              </div>
+
+              {/* 4. CONTACT */}
+              <div
+                className="relative group cursor-pointer select-none"
+                style={{ transform: 'rotate(-0.9deg)' }}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  triggerComicFX('CONTACT!');
+                  navigate('/contact');
+                }}
+              >
+                {/* Slightly offset back border box */}
+                <div
+                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
+                  style={{
+                    transform: 'translate(3px, 3px)',
+                    clipPath: 'polygon(1% 2%, 98% 4%, 99% 97%, 2% 95%)',
+                  }}
+                />
+                {/* Front comic button */}
+                <div
+                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                  style={{
+                    clipPath: 'polygon(2% 1%, 99% 2%, 98% 98%, 1% 96%)',
+                  }}
+                >
+                  <svg className="absolute -top-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                    <path d="M9 8 L9 1 L2 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  <svg className="absolute -bottom-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                    <path d="M1 2 L1 9 L8 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
+                    CONTACT
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 5. REGISTER */}
+            <div
+              className="w-full mt-1 cursor-pointer select-none group"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                triggerComicFX('REGISTER!');
+                navigate('/register');
+              }}
+            >
+              <div className="relative w-full">
+                {/* Fixed offset back-box underneath */}
+                <div
+                  className="absolute inset-0 bg-[#090A0B] border-2 border-[#B8B8B2]"
+                  style={{
+                    transform: 'translate(4px, 4px)',
+                    clipPath: 'polygon(1.2% 4.5%, 98.5% 1%, 100% 6.5%, 98.5% 95.5%, 96% 99%, 3.5% 98.5%, 0.5% 92.5%)',
+                  }}
+                />
+                {/* Moving top cyan panel */}
+                <div
+                  className="relative z-10 w-full bg-[#0FA9C6] hover:bg-[#E5BD00] border-[2.5px] border-[#090A0B] px-5 py-3 flex items-center justify-center gap-2.5 transition-all active:translate-x-1 active:translate-y-1"
+                  style={{
+                    clipPath: 'polygon(0.8% 3.5%, 99.2% 1.2%, 100% 5.8%, 99% 94.5%, 96.5% 98.5%, 3% 97.2%, 0.8% 92%)',
+                  }}
+                >
+                  <span className="font-comic font-black text-lg xs:text-xl tracking-wider uppercase italic text-[#090A0B]">
+                    REGISTER
+                  </span>
+                  <svg viewBox="0 0 32 20" className="w-6 h-4 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1 transition-transform">
+                    <path d="M 3 10 L 25 10" strokeWidth="3.2" strokeLinecap="round" />
+                    <path d="M 16 3 L 27 10 L 16 17" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       )}
 
@@ -359,24 +648,21 @@ export const WebsiteHomePage: React.FC = () => {
           ========================================================================= */}
       <section className="relative z-30 max-w-6xl mx-auto w-full pt-1 sm:pt-2 pb-1 sm:pb-2 px-3 sm:px-6 select-none overflow-visible">
 
-        {/* Background Comic Halftone Decorative Layer (Behind all content, center stays clean black) */}
+        {/* Background Comic Halftone Decorative Layer */}
         <div className="absolute inset-0 pointer-events-none overflow-visible z-0">
-          {/* 1. Bottom-left strictly behind/below the robot */}
           <div className="comic-halftone -bottom-10 -left-6 opacity-85 scale-110" />
-
-          {/* 2. Bottom-right strictly behind/around the speaker */}
           <div className="comic-halftone -bottom-14 -right-10 opacity-85 scale-110" />
         </div>
 
-        {/* Hand-Drawn Rough Comic Ink Scribbles & Doodles Layer (Minimal framing in hero) */}
+        {/* Hand-Drawn Rough Comic Ink Scribbles & Doodles Layer */}
         <div className="absolute inset-0 pointer-events-none overflow-visible z-10 select-none">
           {/* Left Mid Pink Comic Star */}
           <div className="absolute top-44 left-3 sm:left-6 rotate-12">
             <svg viewBox="0 0 50 50" className="w-6 sm:w-8 h-6 sm:h-8 fill-none opacity-85">
               <path
                 d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z"
-                fill="#E81C65"
-                stroke="#E81C65"
+                fill="#D51F55"
+                stroke="#D51F55"
                 strokeWidth="1.5"
                 strokeLinejoin="round"
               />
@@ -388,8 +674,8 @@ export const WebsiteHomePage: React.FC = () => {
             <svg viewBox="0 0 50 50" className="w-6 sm:w-7 h-6 sm:h-7 fill-none opacity-85">
               <path
                 d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z"
-                fill="#E81C65"
-                stroke="#E81C65"
+                fill="#D51F55"
+                stroke="#D51F55"
                 strokeWidth="1.5"
                 strokeLinejoin="round"
               />
@@ -397,23 +683,35 @@ export const WebsiteHomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Institution & Department Header (Centered, Bold & Prominent) */}
-        <div className="relative z-20 flex flex-col items-center justify-center text-center w-full mb-0 sm:mb-4 px-2">
-          <h3 className="font-comic font-black text-[#FFE600] italic uppercase text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-wide leading-tight drop-shadow-[2.5px_2.5px_0px_#000]">
+        {/* Institution & Department Header */}
+        <div className="relative z-20 flex flex-col items-center justify-center text-center w-full mb-0 sm:mb-3 px-2">
+          <h3
+            className="text-[#E5BD00] uppercase text-2xl xs:text-3xl md:text-3xl lg:text-3.5xl tracking-wide leading-none drop-shadow-[2.5px_2.5px_0px_#090A0B]"
+            style={{ fontFamily: '"Teko", sans-serif', fontWeight: 700 }}
+          >
             <span className="block sm:inline">GOVERNMENT COLLEGE OF ENGINEERING, </span>
             <span className="block sm:inline">ERODE</span>
           </h3>
-          <p className="font-comic font-extrabold text-[#00D2FF] italic uppercase text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl tracking-wide leading-tight drop-shadow-[1.5px_1.5px_0px_#000] mt-0.5">
+          <p
+            className="text-[#0FA9C6] uppercase text-xl xs:text-2xl md:text-xl lg:text-2xl tracking-wide leading-none drop-shadow-[1.5px_1.5px_0px_#090A0B] mt-0.5"
+            style={{ fontFamily: '"Teko", sans-serif', fontWeight: 700 }}
+          >
             <span className="block sm:inline">DEPARTMENT OF COMPUTER </span>
             <span className="block sm:inline">SCIENCE &amp; ENGINEERING</span>
           </p>
         </div>
 
-        {/* ---- MAIN HERO ROW: [Robot] [ZINNIA + Badges + CTA] [Starburst + Megaphone] ---- */}
+        {/* ---- MAIN HERO ROW ---- */}
         <div className="relative z-20 flex items-end justify-center w-full">
 
-          {/* LEFT: Robot Mascot — absolutely positioned to overlap from the left */}
-          <div className="hidden md:block absolute left-0 bottom-0 z-30" style={{ width: '340px' }}>
+          {/* LEFT: Robot Mascot */}
+          <div
+            className="hidden md:block absolute bottom-0 z-30 pointer-events-none"
+            style={{
+              left: '-85px',
+              width: '220px',
+            }}
+          >
             <img
               src={robotMascot}
               alt="Zinnia Robot Mascot"
@@ -421,32 +719,28 @@ export const WebsiteHomePage: React.FC = () => {
             />
           </div>
 
-          {/* Mobile: Comic Poster Composition with Dominant Vertical ZINNIA */}
+          {/* Mobile: Comic Poster Composition */}
           <div className="md:hidden relative w-full pt-0 pb-1 overflow-visible -mt-1">
 
             {/* Background Lightning Accents */}
             <div className="absolute inset-0 pointer-events-none z-0 overflow-visible">
-              {/* Lightning top-left */}
               <div className="absolute top-0 left-1 rotate-[-15deg]">
-                <svg viewBox="0 0 40 50" className="w-5 h-7 fill-[#FFE600] drop-shadow-[0_2px_6px_rgba(255,230,0,0.6)]">
+                <svg viewBox="0 0 40 50" className="w-5 h-7 fill-[#E5BD00]">
                   <path d="M 22 2 L 6 26 L 18 24 L 10 48 L 34 18 L 22 20 Z" />
                 </svg>
               </div>
-              {/* Lightning mid-left */}
               <div className="absolute top-40 left-0 rotate-12">
-                <svg viewBox="0 0 40 50" className="w-5 h-7 fill-[#FFE600] drop-shadow-[0_2px_6px_rgba(255,230,0,0.6)]">
+                <svg viewBox="0 0 40 50" className="w-5 h-7 fill-[#E5BD00]">
                   <path d="M 22 2 L 6 26 L 18 24 L 10 48 L 34 18 L 22 20 Z" />
                 </svg>
               </div>
-              {/* Lightning top-right near '26 */}
               <div className="absolute top-0 right-1 rotate-12">
-                <svg viewBox="0 0 40 50" className="w-5 h-7 stroke-white fill-none stroke-[2]">
+                <svg viewBox="0 0 40 50" className="w-5 h-7 stroke-[#EEEEEA] fill-none stroke-[2]">
                   <path d="M 22 2 L 8 22 L 20 20 L 12 46 L 36 16 L 22 18 Z" />
                 </svg>
               </div>
-              {/* Lightning near megaphone */}
               <div className="absolute bottom-12 right-0 rotate-[-20deg]">
-                <svg viewBox="0 0 40 50" className="w-6 h-8 fill-[#FFE600] drop-shadow-[0_2px_6px_rgba(255,230,0,0.6)]">
+                <svg viewBox="0 0 40 50" className="w-6 h-8 fill-[#E5BD00]">
                   <path d="M 22 2 L 6 26 L 18 24 L 10 48 L 34 18 L 22 20 Z" />
                 </svg>
               </div>
@@ -454,15 +748,22 @@ export const WebsiteHomePage: React.FC = () => {
 
             {/* Poster Stage: Robot + Prize Pool on Left, Giant Vertical ZINNIA on Right */}
             <div className="relative z-10 flex items-center justify-between w-full min-h-[260px] mt-0 mb-2">
-              {/* Robot with Prize Pool starburst positioned directly down below it */}
-              <div className="relative z-20 shrink-0 -ml-4 -mr-6 flex flex-col items-center -mt-2" style={{ width: '44%', maxWidth: '180px' }}>
+              <div
+                className="relative z-20 shrink-0 flex flex-col items-center -mt-2"
+                style={{
+                  width: '38%',
+                  maxWidth: '150px',
+                  marginLeft: '-22px',
+                  transform: 'translateX(-10px)',
+                }}
+              >
                 <img
                   src={robotMascot}
                   alt="Zinnia Robot Mascot"
                   className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-[0_8px_24px_rgba(0,0,0,0.9)]"
                 />
 
-                {/* ₹25,000+ Prize Pool Starburst — positioned directly down to the robot */}
+                {/* ₹20,000+ Prize Pool Starburst */}
                 <div
                   className="relative -mt-6 cursor-pointer active:scale-95 transition-transform z-30"
                   onClick={() => triggerComicFX('PRIZES!')}
@@ -471,13 +772,13 @@ export const WebsiteHomePage: React.FC = () => {
                     <img
                       src={priceSvg}
                       alt="Prize Pool"
-                      className="w-full h-full object-contain select-none pointer-events-none scale-y-[-1] drop-shadow-[0_4px_12px_rgba(249,3,99,0.65)]"
+                      className="w-full h-full object-contain select-none pointer-events-none scale-y-[-1]"
                     />
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center -rotate-[22deg]">
-                      <span className="font-display text-xs text-white leading-none font-black drop-shadow-[1.5px_1.5px_0px_#000]">
-                        ₹25,000+
+                      <span className="font-display text-xs text-[#EEEEEA] leading-none font-black drop-shadow-[1.5px_1.5px_0px_#090A0B]">
+                        ₹20,000+
                       </span>
-                      <span className="font-comic text-[8px] xs:text-[9px] text-[#FFE600] font-black leading-tight drop-shadow-[1px_1px_0px_#000] mt-0.5 tracking-wide">
+                      <span className="font-comic text-[8px] xs:text-[9px] text-[#E5BD00] font-black leading-tight drop-shadow-[1px_1px_0px_#090A0B] mt-0.5 tracking-wide">
                         PRIZE POOL!
                       </span>
                     </div>
@@ -486,29 +787,28 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
 
               {/* Right side: '26 on top, Giant Vertically Tall ZINNIA, and Megaphone */}
-              <div className="relative z-10 flex flex-col items-end justify-center flex-1 pr-1 overflow-visible">
-                {/* '26 stacked on top right, bigger and shifted slightly downwards */}
-                <span className="font-comic text-4xl xs:text-5xl text-[#00D2FF] font-black leading-none mt-2 translate-y-8 pr-3 select-none drop-shadow-[3px_3px_0px_#000] -rotate-3 tracking-wider">
+              <div className="relative z-10 flex flex-col items-end justify-center flex-1 -ml-16 pr-1 overflow-visible -translate-x-8 xs:-translate-x-12">
+                <span className="font-comic text-4xl xs:text-5xl text-[#0FA9C6] font-black leading-none mt-0 translate-y-5 -translate-x-14 xs:-translate-x-10 pr-3 select-none drop-shadow-[3px_3px_0px_#090A0B] -rotate-3 tracking-wider">
                   '26
                 </span>
 
-                {/* Giant Vertically Stretched ZINNIA moved slightly downwards */}
-                <div className="relative w-full flex justify-end mt-6 mb-2 translate-y-8 overflow-visible">
+                <div className="relative w-full flex justify-end mt-1 mb-1 translate-y-14 -translate-x-8 xs:-translate-x-12 overflow-visible">
                   <h1
-                    className="font-display text-white uppercase select-none drop-shadow-[6px_6px_0px_#000] -rotate-[7deg] transform scale-y-[1.85] origin-right"
+                    className="font-display text-[#EEEEEA] uppercase select-none drop-shadow-[6px_6px_0px_#090A0B] -rotate-[7deg] origin-right whitespace-nowrap"
                     style={{
-                      fontSize: 'clamp(76px, 22vw, 130px)',
-                      lineHeight: '0.74',
-                      letterSpacing: '-0.07em',
-                      textShadow: '3px 3px 0px #000, 6px 6px 0px #000',
+                      fontSize: 'clamp(95px, 26vw, 150px)',
+                      lineHeight: '0.72',
+                      letterSpacing: '0.02em',
+                      transform: 'scaleX(0.68) scaleY(1.75)',
+                      transformOrigin: 'right center',
+                      textShadow: '3px 3px 0px #090A0B, 6px 6px 0px #090A0B',
                     }}
                   >
                     ZINNIA
                   </h1>
                 </div>
 
-                {/* Megaphone floating on bottom right */}
-                <div className="relative mt-2 -mr-2 w-28 xs:w-32 cursor-pointer active:scale-95 transition-transform" onClick={() => triggerComicFX('LOUD!')}>
+                <div className="relative mt-4 translate-y-12 -mr-2 w-28 xs:w-32 cursor-pointer active:scale-95 transition-transform" onClick={() => triggerComicFX('LOUD!')}>
                   <img
                     src={megaphoneSvg}
                     alt="Megaphone"
@@ -518,8 +818,8 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Badges Row below robot+title (mobile - strictly in one line, larger size) */}
-            <div className="relative z-20 flex flex-nowrap items-center justify-between gap-1.5 xs:gap-2.5 mt-4 w-full px-0.5">
+            {/* Badges Row below robot+title */}
+            <div className="relative z-20 flex flex-nowrap items-center justify-between gap-1.5 xs:gap-2.5 mt-1 -translate-y-1.5 w-full px-0.5">
               <div
                 onClick={() => triggerComicFX('NATIONAL LEVEL!')}
                 className="relative group cursor-pointer hover:scale-105 transition-transform duration-150 active:scale-95 flex items-center justify-center flex-1 min-w-0"
@@ -540,8 +840,8 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Register CTA (mobile - full width) */}
-            <div className="relative z-20 mt-3 w-full flex justify-center px-0.5">
+            {/* Register CTA (mobile) */}
+            <div className="relative z-20 mt-1 -translate-y-1 w-full flex justify-center px-0.5">
               <MagneticElement strength={0.3} onClick={() => navigate('/register')} className="w-full">
                 <div className="comic-cta-wrapper w-full group">
                   <span className="comic-cta-back" />
@@ -549,10 +849,10 @@ export const WebsiteHomePage: React.FC = () => {
                     type="button"
                     className="comic-cta-front px-6 py-3.5 flex items-center justify-center gap-3 w-full"
                   >
-                    <span className="font-comic font-black text-base tracking-wider uppercase italic text-black whitespace-nowrap">
+                    <span className="font-comic font-black text-base tracking-wider uppercase italic text-[#090A0B] whitespace-nowrap">
                       REGISTER FOR ZINNIA
                     </span>
-                    <svg viewBox="0 0 32 20" className="w-6 h-4 stroke-black fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
+                    <svg viewBox="0 0 32 20" className="w-6 h-4 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
                       <path d="M 3 10 L 25 10" strokeWidth="3.2" strokeLinecap="round" />
                       <path d="M 16 3 L 27 10 L 16 17" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -562,21 +862,21 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Desktop: Title + Badges + Register CTA (unchanged) */}
-          <div className="hidden md:flex flex-col items-center text-center w-full md:pl-[240px] lg:pl-[280px] md:pr-[160px] lg:pr-[200px]">
+          {/* Desktop: Title + Badges + Register CTA */}
+          <div className="hidden md:flex flex-col items-center text-center w-full max-w-4xl mx-auto px-4 z-20 md:-translate-x-12 lg:-translate-x-20 xl:-translate-x-24">
 
             {/* Giant ZINNIA '26 Title */}
             <div className="relative inline-flex items-start justify-center max-w-full">
-              <h1 className="font-display md:text-[8rem] lg:text-[10rem] text-white tracking-tight leading-none uppercase select-none drop-shadow-[5px_5px_0px_#000]">
+              <h1 className="font-display md:text-[7.5rem] lg:text-[9.5rem] text-[#EEEEEA] tracking-tight leading-none uppercase select-none drop-shadow-[5px_5px_0px_#090A0B]">
                 ZINNIA
               </h1>
-              <span className="font-comic md:text-5xl lg:text-6xl text-[#00D2FF] font-black leading-none -translate-y-3 ml-2 select-none drop-shadow-[3px_3px_0px_#000]">
+              <span className="font-comic md:text-5xl lg:text-6xl text-[#0FA9C6] font-black leading-none -translate-y-3 ml-2 select-none drop-shadow-[3px_3px_0px_#090A0B]">
                 '26
               </span>
             </div>
 
-            {/* Subtitle Badges Row (SVG Assets: National, Events, Anna Univ) */}
-            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-5 mt-2 md:-translate-x-8 lg:-translate-x-10">
+            {/* Subtitle Badges Row */}
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-5 mt-2">
               <div
                 onClick={() => triggerComicFX('NATIONAL LEVEL!')}
                 className="relative group cursor-pointer hover:scale-105 transition-transform duration-150 active:scale-95 flex items-center"
@@ -598,28 +898,28 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
 
             {/* REGISTER FOR ZINNIA → CTA Button */}
-            <div className="mt-3.5 w-full max-w-md flex justify-center md:-translate-x-8 lg:-translate-x-10">
+            <div className="mt-3.5 w-full max-w-md flex justify-center">
               <MagneticElement strength={0.3} onClick={() => navigate('/register')} className="w-auto">
                 <div className="comic-cta-wrapper w-auto group">
                   <span className="comic-cta-back" />
                   <div className="absolute -inset-2 pointer-events-none z-0">
-                    <svg viewBox="0 0 400 30" className="absolute -bottom-3.5 left-2 right-2 w-[96%] h-4 stroke-white/50 fill-none">
+                    <svg viewBox="0 0 400 30" className="absolute -bottom-3.5 left-2 right-2 w-[96%] h-4 stroke-[#EEEEEA]/50 fill-none">
                       <path d="M 10 12 Q 180 16 380 11" strokeWidth="1.8" strokeLinecap="round" />
                       <path d="M 30 18 Q 200 22 360 17" strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
                     </svg>
-                    <svg viewBox="0 0 30 30" className="absolute -top-2.5 -right-2 w-6 h-6 stroke-[#00D2FF] fill-none">
+                    <svg viewBox="0 0 30 30" className="absolute -top-2.5 -right-2 w-6 h-6 stroke-[#0FA9C6] fill-none">
                       <path d="M 6 12 L 20 6 L 14 20" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                       <line x1="22" y1="4" x2="26" y2="2" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
-                    <svg viewBox="0 0 30 30" className="absolute -bottom-2 -left-2.5 w-6 h-6 stroke-white/70 fill-none">
+                    <svg viewBox="0 0 30 30" className="absolute -bottom-2 -left-2.5 w-6 h-6 stroke-[#EEEEEA]/70 fill-none">
                       <path d="M 8 18 L 16 26 L 24 20" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                       <line x1="4" y1="20" x2="10" y2="28" strokeWidth="1.4" strokeLinecap="round" />
                     </svg>
-                    <svg viewBox="0 0 20 40" className="absolute top-1/4 -left-3 w-4 h-8 stroke-white/60 fill-none">
+                    <svg viewBox="0 0 20 40" className="absolute top-1/4 -left-3 w-4 h-8 stroke-[#EEEEEA]/60 fill-none">
                       <line x1="12" y1="6" x2="2" y2="12" strokeWidth="1.8" strokeLinecap="round" />
                       <line x1="14" y1="20" x2="4" y2="24" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
-                    <svg viewBox="0 0 20 40" className="absolute top-1/4 -right-3 w-4 h-8 stroke-[#00D2FF] fill-none">
+                    <svg viewBox="0 0 20 40" className="absolute top-1/4 -right-3 w-4 h-8 stroke-[#0FA9C6] fill-none">
                       <line x1="4" y1="8" x2="16" y2="14" strokeWidth="1.8" strokeLinecap="round" />
                       <line x1="2" y1="22" x2="12" y2="26" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
@@ -628,10 +928,10 @@ export const WebsiteHomePage: React.FC = () => {
                     type="button"
                     className="comic-cta-front px-12 md:px-14 py-3.5 flex items-center justify-center gap-3 w-auto"
                   >
-                    <span className="font-comic font-black text-lg md:text-xl lg:text-2xl tracking-wider uppercase italic">
+                    <span className="font-comic font-black text-lg md:text-xl lg:text-2xl tracking-wider uppercase italic text-[#090A0B]">
                       REGISTER FOR ZINNIA
                     </span>
-                    <svg viewBox="0 0 32 20" className="w-7 h-5 stroke-black fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
+                    <svg viewBox="0 0 32 20" className="w-7 h-5 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
                       <path d="M 3 10 L 25 10" strokeWidth="3.2" strokeLinecap="round" />
                       <path d="M 16 3 L 27 10 L 16 17" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -641,10 +941,10 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT: Megaphone (desktop only, absolutely positioned) */}
-          <div className="hidden lg:block absolute right-0 top-0 bottom-0 z-20" style={{ width: '230px' }}>
-            <div className="absolute -bottom-8 -right-4 group cursor-pointer hover:scale-110 transition-transform duration-300" onClick={() => triggerComicFX('LOUD!')}>
-              <img src={megaphoneSvg} alt="Megaphone" className="w-64 md:w-80 lg:w-96 h-auto drop-shadow-[0_6px_20px_rgba(0,0,0,0.85)] -rotate-12 select-none pointer-events-none" />
+          {/* RIGHT: Megaphone */}
+          <div className="hidden lg:block absolute -right-6 lg:-right-8 top-0 bottom-0 z-20 w-[200px] lg:w-[220px]">
+            <div className="absolute -bottom-8 right-0 group cursor-pointer hover:scale-110 transition-transform duration-300" onClick={() => triggerComicFX('LOUD!')}>
+              <img src={megaphoneSvg} alt="Megaphone" className="w-56 md:w-64 lg:w-72 h-auto drop-shadow-[0_6px_20px_rgba(0,0,0,0.85)] -rotate-12 select-none pointer-events-none" />
             </div>
           </div>
 
@@ -652,260 +952,377 @@ export const WebsiteHomePage: React.FC = () => {
       </section>
 
       {/* =========================================================================
-            3. COUNTDOWN (Framed by Hand-Drawn Comic Scribbles)
-            ========================================================================= */}
-      {/* =========================================================================
             3. COUNTDOWN SECTION
             ========================================================================= */}
-
-      {/* ---- MOBILE COUNTDOWN: Compact inline bar matching reference ---- */}
-      <div className="sm:hidden relative z-30 w-full mt-4 px-1">
-        {/* Countdown Row: Label + Timer */}
-        <div className="flex items-center w-full border-[1.5px] border-[#3A3A3E] bg-[#1A1A1D]/80">
-          {/* Left: REGISTRATION OPENS IN */}
-          <div className="flex flex-col items-center justify-center px-3 py-2 border-r border-[#3A3A3E] shrink-0">
-            <span className="font-comic text-[8px] text-[#A8A8AC] font-bold uppercase tracking-wider leading-tight">REGISTRATION</span>
-            <span className="font-comic text-[8px] text-[#A8A8AC] font-bold uppercase tracking-wider leading-tight">OPENS IN</span>
-            <span className="text-[#F5D90A] text-sm mt-0.5">⚡</span>
-          </div>
-          {/* Right: Timer digits inline */}
-          <div className="flex items-center justify-center gap-1.5 flex-1 py-2 px-2">
-            <div className="flex flex-col items-center">
-              <div className="bg-[#222228] border border-[#3A3A3E] px-2.5 py-1 min-w-[38px] text-center">
-                <FlipNumber value={timeLeft.days} className="font-display text-xl text-[#F2F2F0]" />
-              </div>
-              <span className="font-comic text-[7px] text-[#A8A8AC] font-bold uppercase mt-0.5">DAYS</span>
-            </div>
-            <span className="font-display text-lg text-[#3A3A3E] font-bold animate-pulse">:</span>
-            <div className="flex flex-col items-center">
-              <div className="bg-[#222228] border border-[#3A3A3E] px-2.5 py-1 min-w-[38px] text-center">
-                <FlipNumber value={timeLeft.hours} className="font-display text-xl text-[#F2F2F0]" />
-              </div>
-              <span className="font-comic text-[7px] text-[#A8A8AC] font-bold uppercase mt-0.5">HRS</span>
-            </div>
-            <span className="font-display text-lg text-[#3A3A3E] font-bold animate-pulse">:</span>
-            <div className="flex flex-col items-center">
-              <div className="bg-[#222228] border border-[#3A3A3E] px-2.5 py-1 min-w-[38px] text-center">
-                <FlipNumber value={timeLeft.minutes} className="font-display text-xl text-[#F2F2F0]" />
-              </div>
-              <span className="font-comic text-[7px] text-[#A8A8AC] font-bold uppercase mt-0.5">MINS</span>
-            </div>
-            <span className="font-display text-lg text-[#3A3A3E] font-bold animate-pulse">:</span>
-            <div className="flex flex-col items-center">
-              <div className="bg-[#222228] border border-[#3A3A3E] px-2.5 py-1 min-w-[38px] text-center">
-                <FlipNumber value={timeLeft.seconds} className="font-display text-xl text-[#F2F2F0]" />
-              </div>
-              <span className="font-comic text-[7px] text-[#A8A8AC] font-bold uppercase mt-0.5">SECS</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Info Strip: 3 columns */}
-        <div className="flex items-stretch w-full border-[1.5px] border-t-0 border-[#3A3A3E] bg-[#1A1A1D]/80 divide-x divide-[#3A3A3E]">
-          {/* Cash Prizes */}
-          <div className="flex items-center gap-1.5 flex-1 px-2.5 py-2.5">
-            <Trophy className="w-4 h-4 text-[#F5D90A] shrink-0" />
-            <div className="flex flex-col">
-              <span className="font-comic text-[8px] text-[#F5D90A] font-bold uppercase leading-tight">CASH PRIZES</span>
-              <span className="font-comic text-[8px] text-[#A8A8AC] font-bold uppercase leading-tight">WORTH</span>
-              <span className="font-display text-sm text-white font-black leading-tight">₹25,000+</span>
-            </div>
-          </div>
-          {/* Anna University */}
-          <div className="flex items-center gap-1.5 flex-1 px-2.5 py-2.5">
-            <Shield className="w-4 h-4 text-[#00D2FF] shrink-0" />
-            <div className="flex flex-col">
-              <span className="font-comic text-[8px] text-white font-bold uppercase leading-tight">ANNA UNIVERSITY</span>
-              <span className="font-comic text-[8px] text-[#A8A8AC] font-bold uppercase leading-tight">VERIFIED</span>
-            </div>
-          </div>
-          {/* Open to All */}
-          <div className="flex items-center gap-1.5 flex-1 px-2.5 py-2.5">
-            <Users className="w-4 h-4 text-[#FF3366] shrink-0" />
-            <div className="flex flex-col">
-              <span className="font-comic text-[8px] text-white font-bold uppercase leading-tight">OPEN TO ALL</span>
-              <span className="font-comic text-[8px] text-[#A8A8AC] font-bold uppercase leading-tight">COLLEGES</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Down Chevron Arrow */}
-        <div className="flex justify-center mt-3">
-          <button
-            type="button"
-            className="text-[#A8A8AC] hover:text-white transition-colors cursor-pointer animate-bounce"
-            onClick={() => scrollToSection('events', 'EVENTS!')}
-          >
-            <ChevronDown className="w-7 h-7" />
-          </button>
-        </div>
-      </div>
-
-      {/* ---- DESKTOP COUNTDOWN (unchanged) ---- */}
-      <div className="hidden sm:flex relative z-30 flex-col items-center justify-center mt-3 md:mt-4 pt-2 w-full md:pl-[200px] lg:pl-[240px] md:pr-[140px] lg:pr-[180px] md:-translate-x-8 lg:-translate-x-10">
+      <div className="relative z-30 flex flex-col items-center justify-center mt-3 md:mt-4 pt-2 w-full px-2 max-w-5xl mx-auto md:-translate-x-12 lg:-translate-x-20 xl:-translate-x-24">
         {/* Background Layer: Halftones + Scattered Hand-Inked Scribbles */}
         <div className="absolute inset-0 pointer-events-none overflow-visible z-0 select-none">
           <div className="comic-halftone -top-10 -left-12 opacity-30 scale-75" />
           <div className="comic-halftone -top-10 -right-12 opacity-30 scale-75" />
 
           {/* 1. White Action / Speed Lines */}
-          <div className="absolute top-10 left-6 md:left-12 -rotate-6">
-            <svg viewBox="0 0 80 80" className="w-12 h-12 fill-none opacity-75">
-              <path d="M 12 68 Q 26 44 42 16" stroke="white" strokeWidth="2.4" strokeLinecap="round" />
-              <path d="M 38 22 L 46 8" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M 28 74 Q 44 48 64 12" stroke="white" strokeWidth="2.8" strokeLinecap="round" />
-              <path d="M 50 76 Q 62 54 76 30" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+          <div className="absolute top-10 left-2 sm:left-6 md:left-12 -rotate-6">
+            <svg viewBox="0 0 80 80" className="w-8 sm:w-12 h-8 sm:h-12 fill-none opacity-75">
+              <path d="M 12 68 Q 26 44 42 16" stroke="#EEEEEA" strokeWidth="2.4" strokeLinecap="round" />
+              <path d="M 38 22 L 46 8" stroke="#EEEEEA" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M 28 74 Q 44 48 64 12" stroke="#EEEEEA" strokeWidth="2.8" strokeLinecap="round" />
+              <path d="M 50 76 Q 62 54 76 30" stroke="#EEEEEA" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
           </div>
 
           {/* 3. Pink Comic Accent Star */}
-          <div className="absolute -bottom-6 left-16 md:left-24 rotate-12">
-            <svg viewBox="0 0 50 50" className="w-7 h-7 fill-none opacity-85">
-              <path d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z" fill="#E81C65" stroke="#E81C65" strokeWidth="1.5" strokeLinejoin="round" />
+          <div className="absolute -bottom-6 left-6 sm:left-16 md:left-24 rotate-12">
+            <svg viewBox="0 0 50 50" className="w-5 sm:w-7 h-5 sm:h-7 fill-none opacity-85">
+              <path d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z" fill="#D51F55" stroke="#D51F55" strokeWidth="1.5" strokeLinejoin="round" />
             </svg>
           </div>
 
           {/* 4. White Cloud */}
-          <div className="absolute -bottom-10 left-40 md:left-56 rotate-6">
-            <svg viewBox="0 0 100 70" className="w-15 h-11 fill-none opacity-70">
-              <path d="M 12 48 C 6 36, 18 22, 34 26 C 42 12, 62 10, 72 22 C 86 18, 96 32, 88 46 C 82 54, 68 56, 52 52 C 38 56, 22 54, 12 48" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M 24 53 C 38 57, 60 55, 74 49" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+          <div className="hidden xs:block absolute -bottom-10 left-32 md:left-56 rotate-6">
+            <svg viewBox="0 0 100 70" className="w-12 sm:w-15 h-8 sm:h-11 fill-none opacity-70">
+              <path d="M 12 48 C 6 36, 18 22, 34 26 C 42 12, 62 10, 72 22 C 86 18, 96 32, 88 46 C 82 54, 68 56, 52 52 C 38 56, 22 54, 12 48" stroke="#EEEEEA" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M 24 53 C 38 57, 60 55, 74 49" stroke="#EEEEEA" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
           </div>
 
           {/* 5. Zig-Zag */}
-          <div className="absolute -top-4 right-24 md:right-36 -rotate-6">
-            <svg viewBox="0 0 60 70" className="w-11 h-13 fill-none opacity-75">
-              <path d="M 46 8 L 22 24 L 40 36 L 12 52 L 42 64" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M 28 22 L 16 30 L 30 38" stroke="white" strokeWidth="1.4" strokeLinecap="round" opacity="0.6" />
+          <div className="absolute -top-4 right-16 sm:right-24 md:right-36 -rotate-6">
+            <svg viewBox="0 0 60 70" className="w-8 sm:w-11 h-10 sm:h-13 fill-none opacity-75">
+              <path d="M 46 8 L 22 24 L 40 36 L 12 52 L 42 64" stroke="#EEEEEA" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M 28 22 L 16 30 L 30 38" stroke="#EEEEEA" strokeWidth="1.4" strokeLinecap="round" opacity="0.6" />
             </svg>
           </div>
 
           {/* 6. Yellow Lightning */}
-          <div className="absolute top-12 right-10 md:right-16 rotate-12">
-            <svg viewBox="0 0 70 90" className="w-10 h-14 fill-none drop-shadow-[0_2px_8px_rgba(255,230,0,0.4)]">
-              <path d="M 38 6 L 16 42 L 34 40 L 22 84 L 54 36 L 36 38 L 48 6 Z" fill="#FFE600" stroke="#FFE600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M 10 28 L 6 38" stroke="#FFE600" strokeWidth="2" strokeLinecap="round" />
-              <path d="M 52 20 L 62 14" stroke="#FFE600" strokeWidth="1.8" strokeLinecap="round" />
+          <div className="absolute top-8 sm:top-12 right-4 sm:right-10 md:right-16 rotate-12">
+            <svg viewBox="0 0 70 90" className="w-7 sm:w-10 h-10 sm:h-14 fill-none">
+              <path d="M 38 6 L 16 42 L 34 40 L 22 84 L 54 36 L 36 38 L 48 6 Z" fill="#E5BD00" stroke="#E5BD00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M 10 28 L 6 38" stroke="#E5BD00" strokeWidth="2" strokeLinecap="round" />
+              <path d="M 52 20 L 62 14" stroke="#E5BD00" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </div>
 
           {/* 7. White Cloud Right */}
-          <div className="absolute -bottom-10 right-20 md:right-32 -rotate-6">
-            <svg viewBox="0 0 100 70" className="w-15 h-11 fill-none opacity-70">
-              <path d="M 14 46 C 8 34, 20 20, 36 24 C 44 10, 64 8, 74 20 C 88 16, 98 30, 90 44 C 84 52, 70 54, 54 50 C 40 54, 24 52, 14 46" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M 26 51 C 40 55, 62 53, 76 47" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+          <div className="hidden xs:block absolute -bottom-10 right-14 sm:right-20 md:right-32 -rotate-6">
+            <svg viewBox="0 0 100 70" className="w-12 sm:w-15 h-8 sm:h-11 fill-none opacity-70">
+              <path d="M 14 46 C 8 34, 20 20, 36 24 C 44 10, 64 8, 74 20 C 88 16, 98 30, 90 44 C 84 52, 70 54, 54 50 C 40 54, 24 52, 14 46" stroke="#EEEEEA" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M 26 51 C 40 55, 62 53, 76 47" stroke="#EEEEEA" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
           </div>
 
           {/* 8. Pink Star Right */}
-          <div className="absolute top-4 right-6 md:right-10 -rotate-12">
-            <svg viewBox="0 0 50 50" className="w-6 h-6 fill-none opacity-85">
-              <path d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z" fill="#E81C65" stroke="#E81C65" strokeWidth="1.5" strokeLinejoin="round" />
+          <div className="absolute top-4 right-2 sm:right-6 md:right-10 -rotate-12">
+            <svg viewBox="0 0 50 50" className="w-5 sm:w-6 h-5 sm:h-6 fill-none opacity-85">
+              <path d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z" fill="#D51F55" stroke="#D51F55" strokeWidth="1.5" strokeLinejoin="round" />
             </svg>
           </div>
         </div>
 
-        {/* Desktop Countdown Module */}
+        {/* Countdown Module */}
         <div className="relative z-10 flex flex-col items-center max-w-full px-1">
-          {/* ₹15,000+ PRIZE POOL! Starburst */}
+          {/* ₹20,000+ PRIZE POOL! Starburst */}
           <div
             className="hidden lg:block absolute -left-36 md:-left-56 lg:-left-64 -top-16 md:-top-24 hover:scale-105 transition-transform cursor-pointer z-30 select-none"
             onClick={() => triggerComicFX('PRIZES!')}
           >
             <div className="relative flex items-center justify-center w-44 md:w-52 lg:w-56 h-44 md:h-52 lg:h-56">
-              <img src={priceSvg} alt="Prize Pool" className="w-full h-full object-contain select-none pointer-events-none scale-y-[-1] drop-shadow-[0_6px_22px_rgba(249,3,99,0.55)]" />
+              <img src={priceSvg} alt="Prize Pool" className="w-full h-full object-contain select-none pointer-events-none scale-y-[-1]" />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center -rotate-[25deg]">
-                <span className="font-display text-2xl md:text-3xl lg:text-[32px] text-white leading-none font-black drop-shadow-[2px_2px_0px_#000]">₹15,000+</span>
-                <span className="font-comic text-sm md:text-base text-[#FFE600] font-black leading-tight drop-shadow-[1.5px_1.5px_0px_#000] mt-1 tracking-wide">PRIZE POOL!</span>
+                <span className="font-display text-2xl md:text-3xl lg:text-[32px] text-[#EEEEEA] leading-none font-black drop-shadow-[2px_2px_0px_#090A0B]">₹20,000+</span>
+                <span className="font-comic text-sm md:text-base text-[#E5BD00] font-black leading-tight drop-shadow-[1.5px_1.5px_0px_#090A0B] mt-1 tracking-wide">PRIZE POOL!</span>
               </div>
             </div>
           </div>
 
-          {/* Caption Header */}
-          <div className="px-4 py-1 bg-[#1A1A1D] text-[#A8A8AC] font-comic text-xs uppercase tracking-widest border border-[#3A3A3E] -rotate-1 font-bold sticker-pop cursor-pointer mb-2">
+          {/* Caption Header: Hand-Drawn Gray Comic Label / Sticker with Rough Edges */}
+          <div
+            onClick={() => triggerComicFX('SYMPOSIUM!')}
+            className="relative inline-flex items-center justify-center px-4 py-1 bg-[#111214] text-[#B8B8B2] text-xs sm:text-sm uppercase -rotate-1 cursor-pointer mb-3 select-none active:scale-95 transition-transform"
+            style={{
+              fontFamily: '"Bangers", cursive',
+              letterSpacing: '0.12em',
+              clipPath: 'polygon(1.2% 14%, 98.8% 2%, 100% 88%, 0.8% 97%)',
+              border: '2px solid #B8B8B2',
+              boxShadow: '3px 3px 0px #090A0B',
+            }}
+          >
             SYMPOSIUM COMMENCES IN
           </div>
 
-          {/* Countdown Comic Number Boxes */}
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-center p-2.5 bg-[#1A1A1D] border-[2px] border-[#3A3A3E] shadow-[4px_4px_0px_#000000] min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
-              <FlipNumber value={timeLeft.days} className="font-display text-3xl md:text-4xl text-[#F2F2F0]" />
-              <span className="font-comic text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">DAYS</span>
+          {/* Countdown Comic Number Boxes (Hand-Drawn Double Outline & Offset Layers) */}
+          <div className="flex items-center gap-1.5 xs:gap-2.5 sm:gap-3.5">
+            
+            {/* 1. DAYS BOX (Hand-drawn Comic Panel) */}
+            <div
+              className="relative group cursor-pointer select-none"
+              style={{ transform: 'rotate(-1deg)' }}
+            >
+              {/* Offset secondary print-registration outline behind */}
+              <div
+                className="absolute inset-0 bg-[#090A0B] border-[1.8px] border-[#B8B8B2]/40"
+                style={{
+                  transform: 'translate(3px, 3px)',
+                  clipPath: 'polygon(2% 4%, 98.5% 1%, 99% 96%, 1% 97%)',
+                }}
+              />
+              {/* Front hand-drawn dark black panel */}
+              <div
+                className="relative z-10 flex flex-col items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 bg-[#111214] border-2 border-[#EEEEEA]/85 min-w-[58px] xs:min-w-[66px] sm:min-w-[76px] transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                style={{
+                  clipPath: 'polygon(1.8% 2%, 99% 1.2%, 98.2% 98%, 1% 96.5%)',
+                }}
+              >
+                {/* Hand-drawn ink scratches & corner ticks */}
+                <svg className="absolute -top-1 -left-1 w-3 h-3 text-[#EEEEEA]/60 pointer-events-none" viewBox="0 0 12 12" fill="none">
+                  <path d="M1 9 L1 1 L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M3 5 L5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+                <svg className="absolute -bottom-1 -right-1 w-3 h-3 text-[#EEEEEA]/60 pointer-events-none" viewBox="0 0 12 12" fill="none">
+                  <path d="M11 3 L11 11 L3 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+
+                <ComicFlipNumber
+                  value={timeLeft.days}
+                  className="text-3xl xs:text-4xl sm:text-5xl text-[#EEEEEA]"
+                  style={{ transform: 'rotate(-1deg) translateY(-1px)' }}
+                />
+                <span
+                  style={{ fontFamily: '"Bangers", cursive', letterSpacing: '0.08em', transform: 'rotate(-0.5deg)' }}
+                  className="text-[10px] xs:text-xs sm:text-sm text-[#B8B8B2] font-bold uppercase mt-0.5"
+                >
+                  DAYS
+                </span>
+              </div>
             </div>
-            <span className="font-display text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
-            <div className="flex flex-col items-center p-2.5 bg-[#1A1A1D] border-[2px] border-[#3A3A3E] shadow-[4px_4px_0px_#000000] min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
-              <FlipNumber value={timeLeft.hours} className="font-display text-3xl md:text-4xl text-[#F2F2F0]" />
-              <span className="font-comic text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">HRS</span>
+
+            {/* Comic Separator: Two hand-placed irregular ink dots */}
+            <div className="flex flex-col items-center justify-center gap-2 px-0.5 sm:px-1 select-none pointer-events-none">
+              <svg viewBox="0 0 10 10" className="w-2 h-2 sm:w-2.5 sm:h-2.5 fill-[#EEEEEA] opacity-75">
+                <path d="M 5 1.5 C 7.5 1.2, 8.8 3.2, 8.2 5.5 C 7.6 7.8, 5.8 8.6, 3.8 8.2 C 1.8 7.8, 1.2 5.6, 2.1 3.5 C 2.8 1.8, 3.8 1.6, 5 1.5 Z" />
+              </svg>
+              <svg viewBox="0 0 10 10" className="w-2 h-2 sm:w-2.5 sm:h-2.5 fill-[#EEEEEA] opacity-75 -rotate-45">
+                <path d="M 4.8 1.8 C 7.2 1.5, 8.5 3.5, 8 5.8 C 7.5 8, 5.5 8.4, 3.5 8 C 1.6 7.6, 1.4 5.2, 2.4 3.2 C 3.1 1.9, 3.9 1.9, 4.8 1.8 Z" />
+              </svg>
             </div>
-            <span className="font-display text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
-            <div className="flex flex-col items-center p-2.5 bg-[#1A1A1D] border-[2px] border-[#3A3A3E] shadow-[4px_4px_0px_#000000] min-w-[72px] hover:-translate-y-1 hover:border-[#EAEAEA] transition-all cursor-pointer">
-              <FlipNumber value={timeLeft.minutes} className="font-display text-3xl md:text-4xl text-[#F2F2F0]" />
-              <span className="font-comic text-[10px] text-[#A8A8AC] font-bold uppercase mt-0.5">MIN</span>
+
+            {/* 2. HRS BOX (Hand-drawn Comic Panel) */}
+            <div
+              className="relative group cursor-pointer select-none"
+              style={{ transform: 'rotate(0.8deg)' }}
+            >
+              {/* Offset secondary print-registration outline behind */}
+              <div
+                className="absolute inset-0 bg-[#090A0B] border-[1.8px] border-[#B8B8B2]/40"
+                style={{
+                  transform: 'translate(3px, 3px)',
+                  clipPath: 'polygon(1% 2%, 99% 3.5%, 98% 98%, 2% 95%)',
+                }}
+              />
+              {/* Front hand-drawn dark black panel */}
+              <div
+                className="relative z-10 flex flex-col items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 bg-[#111214] border-2 border-[#EEEEEA]/85 min-w-[58px] xs:min-w-[66px] sm:min-w-[76px] transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                style={{
+                  clipPath: 'polygon(1.2% 1.5%, 98.8% 3%, 99% 97%, 1.5% 98%)',
+                }}
+              >
+                {/* Hand-drawn ink scratches & corner ticks */}
+                <svg className="absolute -top-1 -right-1 w-3 h-3 text-[#EEEEEA]/60 pointer-events-none" viewBox="0 0 12 12" fill="none">
+                  <path d="M11 9 L11 1 L3 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M7 3 L9 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+                <svg className="absolute -bottom-1 -left-1 w-3 h-3 text-[#EEEEEA]/60 pointer-events-none" viewBox="0 0 12 12" fill="none">
+                  <path d="M1 3 L1 11 L9 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+
+                <ComicFlipNumber
+                  value={timeLeft.hours}
+                  className="text-3xl xs:text-4xl sm:text-5xl text-[#EEEEEA]"
+                  style={{ transform: 'rotate(0.5deg) translateY(0.5px)' }}
+                />
+                <span
+                  style={{ fontFamily: '"Bangers", cursive', letterSpacing: '0.08em', transform: 'rotate(0.8deg)' }}
+                  className="text-[10px] xs:text-xs sm:text-sm text-[#B8B8B2] font-bold uppercase mt-0.5"
+                >
+                  HRS
+                </span>
+              </div>
             </div>
-            <span className="font-display text-2xl text-[#3A3A3E] font-bold animate-pulse">:</span>
-            <div className="flex flex-col items-center p-2.5 bg-[#FF3366] border-[2px] border-[#FF3366] shadow-[4px_4px_0px_#B01F45] min-w-[72px] hover:-translate-y-1 hover:shadow-[5px_5px_0px_#B01F45] transition-all cursor-pointer">
-              <FlipNumber value={timeLeft.seconds} className="font-display text-3xl md:text-4xl text-white font-black" />
-              <span className="font-comic text-[10px] text-[#F5D90A] font-extrabold uppercase mt-0.5">SEC</span>
+
+            {/* Comic Separator: Two hand-placed irregular ink dots */}
+            <div className="flex flex-col items-center justify-center gap-2 px-0.5 sm:px-1 select-none pointer-events-none">
+              <svg viewBox="0 0 10 10" className="w-2 h-2 sm:w-2.5 sm:h-2.5 fill-[#EEEEEA] opacity-75">
+                <path d="M 5 1.5 C 7.5 1.2, 8.8 3.2, 8.2 5.5 C 7.6 7.8, 5.8 8.6, 3.8 8.2 C 1.8 7.8, 1.2 5.6, 2.1 3.5 C 2.8 1.8, 3.8 1.6, 5 1.5 Z" />
+              </svg>
+              <svg viewBox="0 0 10 10" className="w-2 h-2 sm:w-2.5 sm:h-2.5 fill-[#EEEEEA] opacity-75 -rotate-45">
+                <path d="M 4.8 1.8 C 7.2 1.5, 8.5 3.5, 8 5.8 C 7.5 8, 5.5 8.4, 3.5 8 C 1.6 7.6, 1.4 5.2, 2.4 3.2 C 3.1 1.9, 3.9 1.9, 4.8 1.8 Z" />
+              </svg>
             </div>
+
+            {/* 3. MIN BOX (Hand-drawn Comic Panel) */}
+            <div
+              className="relative group cursor-pointer select-none"
+              style={{ transform: 'rotate(-0.7deg)' }}
+            >
+              {/* Offset secondary print-registration outline behind */}
+              <div
+                className="absolute inset-0 bg-[#090A0B] border-[1.8px] border-[#B8B8B2]/40"
+                style={{
+                  transform: 'translate(3px, 3px)',
+                  clipPath: 'polygon(2% 1%, 98% 3%, 99% 97%, 1% 95%)',
+                }}
+              />
+              {/* Front hand-drawn dark black panel */}
+              <div
+                className="relative z-10 flex flex-col items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 bg-[#111214] border-2 border-[#EEEEEA]/85 min-w-[58px] xs:min-w-[66px] sm:min-w-[76px] transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                style={{
+                  clipPath: 'polygon(1.5% 2.5%, 98.5% 1%, 98% 97.5%, 1.2% 96%)',
+                }}
+              >
+                {/* Hand-drawn ink scratches & corner ticks */}
+                <svg className="absolute -top-1 -left-1 w-3 h-3 text-[#EEEEEA]/60 pointer-events-none" viewBox="0 0 12 12" fill="none">
+                  <path d="M1 9 L1 1 L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M3 5 L5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+                <svg className="absolute -bottom-1 -right-1 w-3 h-3 text-[#EEEEEA]/60 pointer-events-none" viewBox="0 0 12 12" fill="none">
+                  <path d="M11 3 L11 11 L3 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+
+                <ComicFlipNumber
+                  value={timeLeft.minutes}
+                  className="text-3xl xs:text-4xl sm:text-5xl text-[#EEEEEA]"
+                  style={{ transform: 'rotate(-0.7deg) translateY(-0.5px)' }}
+                />
+                <span
+                  style={{ fontFamily: '"Bangers", cursive', letterSpacing: '0.08em', transform: 'rotate(-0.4deg)' }}
+                  className="text-[10px] xs:text-xs sm:text-sm text-[#B8B8B2] font-bold uppercase mt-0.5"
+                >
+                  MIN
+                </span>
+              </div>
+            </div>
+
+            {/* Comic Separator: Two hand-placed irregular ink dots */}
+            <div className="flex flex-col items-center justify-center gap-2 px-0.5 sm:px-1 select-none pointer-events-none">
+              <svg viewBox="0 0 10 10" className="w-2 h-2 sm:w-2.5 sm:h-2.5 fill-[#EEEEEA] opacity-75">
+                <path d="M 5 1.5 C 7.5 1.2, 8.8 3.2, 8.2 5.5 C 7.6 7.8, 5.8 8.6, 3.8 8.2 C 1.8 7.8, 1.2 5.6, 2.1 3.5 C 2.8 1.8, 3.8 1.6, 5 1.5 Z" />
+              </svg>
+              <svg viewBox="0 0 10 10" className="w-2 h-2 sm:w-2.5 sm:h-2.5 fill-[#EEEEEA] opacity-75 -rotate-45">
+                <path d="M 4.8 1.8 C 7.2 1.5, 8.5 3.5, 8 5.8 C 7.5 8, 5.5 8.4, 3.5 8 C 1.6 7.6, 1.4 5.2, 2.4 3.2 C 3.1 1.9, 3.9 1.9, 4.8 1.8 Z" />
+              </svg>
+            </div>
+
+            {/* 4. SEC BOX (Hand-drawn Comic Restrained Pink Panel #D51F55 + Dark Pink Offset #A81443) */}
+            <div
+              className={`relative group cursor-pointer select-none ${secSnap ? 'sec-box-snap' : ''}`}
+              style={{ transform: 'rotate(1.1deg)' }}
+            >
+              {/* Offset darker pink ink outline behind */}
+              <div
+                className="absolute inset-0 bg-[#090A0B] border-[2px] border-[#A81443]"
+                style={{
+                  transform: 'translate(3.5px, 3.5px)',
+                  clipPath: 'polygon(1% 3%, 99% 1%, 98% 96%, 2% 98%)',
+                }}
+              />
+              {/* Front restrained printed pink panel */}
+              <div
+                className="relative z-10 flex flex-col items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 bg-[#D51F55] border-2 border-[#A81443] min-w-[58px] xs:min-w-[66px] sm:min-w-[76px] transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                style={{
+                  clipPath: 'polygon(1.2% 1.8%, 98.8% 1.2%, 99% 96%, 1% 97.5%)',
+                }}
+              >
+                {/* Corner ink scratches in dark pink / black ink */}
+                <svg className="absolute -top-1 -right-1 w-3 h-3 text-[#090A0B]/70 pointer-events-none" viewBox="0 0 12 12" fill="none">
+                  <path d="M11 9 L11 1 L3 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M7 3 L9 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                </svg>
+                <svg className="absolute -bottom-1 -left-1 w-3 h-3 text-[#090A0B]/70 pointer-events-none" viewBox="0 0 12 12" fill="none">
+                  <path d="M1 3 L1 11 L9 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+
+                <ComicFlipNumber
+                  value={timeLeft.seconds}
+                  className="text-3xl xs:text-4xl sm:text-5xl text-[#EEEEEA]"
+                  style={{ transform: 'rotate(1deg) translateY(0.5px)' }}
+                />
+                <span
+                  style={{ fontFamily: '"Bangers", cursive', letterSpacing: '0.08em', transform: 'rotate(0.6deg)' }}
+                  className="text-[10px] xs:text-xs sm:text-sm text-[#E5BD00] font-bold uppercase mt-0.5 drop-shadow-[1.5px_1.5px_0px_#090A0B]"
+                >
+                  SEC
+                </span>
+              </div>
+            </div>
+
           </div>
 
           {/* Timeline Status Callout */}
           <div
             onClick={() => triggerComicFX('TIMELINE!')}
-            className="mt-4 px-4 py-1 bg-[#1A1A1D] border-[2px] border-[#FF8C00] shadow-[2.5px_2.5px_0px_#8A5500] rotate-1 sticker-pop cursor-pointer max-w-full text-center"
+            className="mt-3.5 sm:mt-4 px-3 xs:px-4 py-1 bg-[#111214] border-[1.5px] sm:border-[2px] border-[#E5BD00] shadow-[2px_2px_0px_#090A0B] sm:shadow-[2.5px_2.5px_0px_#090A0B] rotate-1 sticker-pop cursor-pointer max-w-full text-center"
           >
-            <span className="font-comic text-xs uppercase text-[#FF8C00] font-bold tracking-wider">
+            <span className="font-comic text-[10px] xs:text-xs uppercase text-[#E5BD00] font-bold tracking-wider">
               ⏰ TIMELINE MONITORED &bull; 24 SEPTEMBER 2026 &bull; GCE ERODE CSE
             </span>
+          </div>
+
+          {/* Down Chevron Arrow */}
+          <div className="flex justify-center mt-3">
+            <button
+              type="button"
+              className="text-[#B8B8B2] hover:text-[#EEEEEA] transition-colors cursor-pointer animate-bounce"
+              onClick={() => scrollToSection('events', 'EVENTS!')}
+            >
+              <ChevronDown className="w-6 h-6 sm:w-7 sm:h-7" />
+            </button>
           </div>
         </div>
       </div>
 
 
       {/* =========================================================================
-          EVENTS SECTION (100% Pixel-Faithful to Reference Design)
+          EVENTS SECTION
           ========================================================================= */}
       <section
         id="events"
         className="relative z-30 max-w-7xl mx-auto w-full pt-6 sm:pt-10 pb-0 px-2 sm:px-4 mt-2 sm:mt-4 mb-0 overflow-visible"
       >
-        {/* Section Header: —·····— ⚡ EVENTS ⚡ —·····— */}
+        {/* Section Header */}
         <div className="flex items-center justify-center gap-3 sm:gap-6 mb-8 sm:mb-12">
-          <div className="flex items-center gap-1.5 text-zinc-600">
-            <span className="h-[1px] w-8 sm:w-28 bg-zinc-600" />
-            <span className="w-1 h-1 rounded-full bg-zinc-500" />
-            <span className="w-1 h-1 rounded-full bg-zinc-500" />
-            <span className="w-1 h-1 rounded-full bg-zinc-500" />
-            <span className="h-[1px] w-4 sm:w-16 bg-zinc-600" />
+          <div className="flex items-center gap-1.5 text-[#B8B8B2]/50">
+            <span className="h-[1px] w-8 sm:w-28 bg-[#B8B8B2]/50" />
+            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
+            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
+            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
+            <span className="h-[1px] w-4 sm:w-16 bg-[#B8B8B2]/50" />
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-[#F5D90A] text-2xl sm:text-4xl font-black select-none">⚡</span>
-            <h2 className="font-display italic text-3xl xs:text-4xl sm:text-5xl md:text-6xl text-white tracking-widest uppercase select-none">
+            <span className="text-[#E5BD00] text-2xl sm:text-4xl font-black select-none">⚡</span>
+            <h2 className="font-display italic text-3xl xs:text-4xl sm:text-5xl md:text-6xl text-[#EEEEEA] tracking-widest uppercase select-none">
               EVENTS
             </h2>
-            <span className="text-[#F5D90A] text-2xl sm:text-4xl font-black select-none">⚡</span>
+            <span className="text-[#E5BD00] text-2xl sm:text-4xl font-black select-none">⚡</span>
           </div>
-          <div className="flex items-center gap-1.5 text-zinc-600">
-            <span className="h-[1px] w-4 sm:w-16 bg-zinc-600" />
-            <span className="w-1 h-1 rounded-full bg-zinc-500" />
-            <span className="w-1 h-1 rounded-full bg-zinc-500" />
-            <span className="w-1 h-1 rounded-full bg-zinc-500" />
-            <span className="h-[1px] w-8 sm:w-28 bg-zinc-600" />
+          <div className="flex items-center gap-1.5 text-[#B8B8B2]/50">
+            <span className="h-[1px] w-4 sm:w-16 bg-[#B8B8B2]/50" />
+            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
+            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
+            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
+            <span className="h-[1px] w-8 sm:w-28 bg-[#B8B8B2]/50" />
           </div>
         </div>
 
         {/* -------------------------------------------------------------
-            1. TECHNICAL EVENTS ROW (01 - 06) [NEON CYAN]
+            1. TECHNICAL EVENTS ROW (01 - 06) [PRINTED CYAN]
             ------------------------------------------------------------- */}
         <div className="mb-10 sm:mb-16">
           {/* Subheading: → TECHNICAL EVENTS ───□ */}
           <div className="flex items-center gap-2 mb-4 sm:mb-6">
-            <span className="font-mono font-bold text-sm xs:text-base sm:text-lg text-[#00E5FF] tracking-wider flex items-center gap-2">
+            <span className="font-mono font-bold text-sm xs:text-base sm:text-lg text-[#0FA9C6] tracking-wider flex items-center gap-2">
               <span>→</span>
               <span>TECHNICAL EVENTS</span>
-              <span className="inline-block w-8 sm:w-12 h-[1.5px] bg-[#00E5FF]" />
-              <span className="inline-block w-2.5 h-2.5 border-[1.5px] border-[#00E5FF]" />
+              <span className="inline-block w-8 sm:w-12 h-[1.5px] bg-[#0FA9C6]" />
+              <span className="inline-block w-2.5 h-2.5 border-[1.5px] border-[#0FA9C6]" />
             </span>
           </div>
 
@@ -922,19 +1339,19 @@ export const WebsiteHomePage: React.FC = () => {
                 }}
               >
                 {/* Centered Large Line-Art Icon */}
-                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-[#00d9f7] group-hover:scale-110 transition-transform my-auto">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-[#0FA9C6] group-hover:scale-110 transition-transform my-auto">
                   {e.id.includes('debug') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00d9f7" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#0FA9C6" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 28C22 22 26 18 32 18C38 18 42 22 42 28V36C42 42 38 46 32 46C26 46 22 42 22 36V28Z" />
                       <path d="M32 18V12M28 12H36" />
                       <path d="M14 26L22 30M12 36H22M14 46L22 42" />
                       <path d="M50 26L42 30M52 36H42M50 46L42 42" />
-                      <circle cx="32" cy="32" r="3" fill="#00d9f7" />
+                      <circle cx="32" cy="32" r="3" fill="#0FA9C6" />
                     </svg>
                   )}
                   {e.id.includes('signal') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00d9f7" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="32" cy="46" r="4" fill="#00d9f7" />
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#0FA9C6" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="32" cy="46" r="4" fill="#0FA9C6" />
                       <path d="M32 42V28" strokeWidth="2.8" />
                       <path d="M24 38C20 34 20 28 24 24" />
                       <path d="M40 38C44 34 44 28 40 24" />
@@ -944,18 +1361,18 @@ export const WebsiteHomePage: React.FC = () => {
                     </svg>
                   )}
                   {e.id.includes('sql') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00d9f7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#0FA9C6" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <ellipse cx="32" cy="18" rx="18" ry="6" />
                       <path d="M14 18V32C14 35.3 22 38 32 38C42 38 50 35.3 50 32V18" />
                       <path d="M14 32V46C14 49.3 22 52 32 52C42 52 50 49.3 50 46V32" />
-                      <circle cx="24" cy="32" r="2" fill="#00d9f7" />
-                      <circle cx="24" cy="46" r="2" fill="#00d9f7" />
+                      <circle cx="24" cy="32" r="2" fill="#0FA9C6" />
+                      <circle cx="24" cy="46" r="2" fill="#0FA9C6" />
                     </svg>
                   )}
                   {e.id.includes('gadget') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00d9f7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#0FA9C6" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="19" y="19" width="26" height="26" rx="4" />
-                      <rect x="26" y="26" width="12" height="12" rx="2" fill="#00d9f7" fillOpacity="0.2" />
+                      <rect x="26" y="26" width="12" height="12" rx="2" fill="#0FA9C6" fillOpacity="0.2" />
                       <path d="M24 9V19M32 9V19M40 9V19" />
                       <path d="M24 45V55M32 45V55M40 45V55" />
                       <path d="M9 24H19M9 32H19M9 40H19" />
@@ -963,11 +1380,11 @@ export const WebsiteHomePage: React.FC = () => {
                     </svg>
                   )}
                   {e.id.includes('paper') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#00d9f7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#0FA9C6" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 14H52" strokeWidth="3" />
                       <rect x="14" y="16" width="36" height="24" rx="2" />
                       <path d="M20 32L28 24L36 28L44 18" strokeWidth="2.2" />
-                      <circle cx="44" cy="18" r="2.5" fill="#00d9f7" />
+                      <circle cx="44" cy="18" r="2.5" fill="#0FA9C6" />
                       <path d="M32 40V52M22 52L32 40L42 52" strokeWidth="2.5" />
                     </svg>
                   )}
@@ -975,12 +1392,12 @@ export const WebsiteHomePage: React.FC = () => {
 
                 {/* Event Title (Stacked Lines) & Tagline */}
                 <div className="w-full mt-auto">
-                  <h3 className="font-sans font-black text-sm xs:text-base sm:text-lg text-white uppercase tracking-wider group-hover:text-[#00d9f7] transition-colors leading-tight">
+                  <h3 className="font-sans font-black text-sm xs:text-base sm:text-lg text-[#EEEEEA] uppercase tracking-wider group-hover:text-[#0FA9C6] transition-colors leading-tight">
                     {e.mission_name.toLowerCase().includes('gadget') ? (
                       <>
                         <span>GADGET CODES</span>
                         <br />
-                        <span className="text-[10px] sm:text-xs text-amber-400 font-mono tracking-normal normal-case block mt-0.5">(Single event)</span>
+                        <span className="text-[10px] sm:text-xs text-[#E5BD00] font-mono tracking-normal normal-case block mt-0.5">(Single event)</span>
                       </>
                     ) : e.mission_name.toLowerCase().includes('the last signal') ? (
                       <>
@@ -1004,41 +1421,45 @@ export const WebsiteHomePage: React.FC = () => {
                       <span>{e.mission_name}</span>
                     )}
                   </h3>
-                  <p className="font-mono text-[10px] sm:text-[11px] text-[#A1A1AA] mt-2 leading-tight whitespace-pre-line">
+                  <p className="font-mono text-[10px] sm:text-[11px] text-[#B8B8B2] mt-2 leading-tight whitespace-pre-line">
                     {e.tagline || e.title}
                   </p>
                 </div>
               </ComicHandDrawnCard>
             ))}
           </div>
+
+          {/* Comic Cloud & Star Doodle Graphic */}
+          <div className="flex sm:hidden justify-center items-center my-6 relative select-none pointer-events-none">
+            <div className="relative w-full max-w-[210px] flex items-center justify-center">
+              <img
+                src={cloudSvg}
+                alt="Comic Cloud"
+                className="w-full h-auto object-contain select-none pointer-events-none mix-blend-screen drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)]"
+              />
+            </div>
+          </div>
         </div>
 
         {/* -------------------------------------------------------------
-            2. NON-TECHNICAL EVENTS ROW (06 - 09) [NEON PINK] + DOODLES
+            2. NON-TECHNICAL EVENTS ROW (06 - 09) [PRINTED PINK] + DOODLES
             ------------------------------------------------------------- */}
         <div className="relative mb-2 sm:mb-4">
           {/* Subheading: ✦ NON - TECHNICAL EVENTS ───□ */}
           <div className="flex items-center gap-2 mb-4 sm:mb-6">
-            <span className="font-mono font-bold text-sm xs:text-base sm:text-lg text-[#FF2E63] tracking-wider flex items-center gap-2">
+            <span className="font-mono font-bold text-sm xs:text-base sm:text-lg text-[#D51F55] tracking-wider flex items-center gap-2">
               <span>✦</span>
               <span>NON - TECHNICAL EVENTS</span>
-              <span className="inline-block w-8 sm:w-12 h-[1.5px] bg-[#FF2E63]" />
-              <span className="inline-block w-2.5 h-2.5 border-[1.5px] border-[#FF2E63]" />
+              <span className="inline-block w-8 sm:w-12 h-[1.5px] bg-[#D51F55]" />
+              <span className="inline-block w-2.5 h-2.5 border-[1.5px] border-[#D51F55]" />
             </span>
           </div>
 
-          {/* 6 Columns Grid:
-              Col 1: Cloud & Star Doodle (underneath Debugging 01)
-              Col 2: 06 BORDERLAND @ GCEE (underneath The Last Signal 02)
-              Col 3: 07 THINK, STRIKE AND WIN (underneath Lost at SQL 03)
-              Col 4: 08 PLOT TWIST (underneath Gadget Codes 04)
-              Col 5: 09 SHORT FLIM (underneath Paper Presentation 05)
-              Col 6: Flying Paper Airplane Doodle
-          */}
+          {/* 6 Columns Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5 lg:gap-6 items-center">
 
             {/* Column 1 on Desktop: Official Comic Cloud Asset */}
-            <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex flex-col items-center justify-center relative select-none pointer-events-none min-h-[220px] sm:min-h-[295px] pr-2">
+            <div className="hidden sm:flex col-span-1 lg:col-span-1 flex-col items-center justify-center relative select-none pointer-events-none min-h-[220px] sm:min-h-[295px] pr-2">
               <div className="relative w-full max-w-[210px] flex items-center justify-center">
                 <img
                   src={cloudSvg}
@@ -1060,38 +1481,38 @@ export const WebsiteHomePage: React.FC = () => {
                 }}
               >
                 {/* Centered Large Line-Art Icon */}
-                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-[#FF2E63] group-hover:scale-110 transition-transform my-auto">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-[#D51F55] group-hover:scale-110 transition-transform my-auto">
                   {e.id.includes('borderland') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#FF2E63" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#D51F55" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M32 10L48 18V32C48 42 41 50 32 54C23 50 16 42 16 32V18L32 10Z" />
                       <circle cx="32" cy="30" r="7" />
                       <path d="M32 23V37M25 30H39" />
                     </svg>
                   )}
                   {e.id.includes('strike') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#FF2E63" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#D51F55" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="32" cy="32" r="20" />
                       <circle cx="32" cy="32" r="13" />
-                      <circle cx="32" cy="32" r="6" fill="#FF2E63" />
+                      <circle cx="32" cy="32" r="6" fill="#D51F55" />
                       <path d="M32 6V12M32 52V58M6 32H12M52 32H58" />
                     </svg>
                   )}
                   {e.id.includes('twist') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#FF2E63" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#D51F55" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="14" y="16" width="36" height="32" rx="6" />
                       <path d="M22 28C22 26 25 24 28 26" />
-                      <path d="M36 26C39 24 42 26 42 28" />
+                      <path d="M36 26C39 24 42 28 42 28" />
                       <path d="M22 38C26 42 38 42 42 38" />
-                      <circle cx="25" cy="27" r="2" fill="#FF2E63" />
-                      <circle cx="39" cy="27" r="2" fill="#FF2E63" />
+                      <circle cx="25" cy="27" r="2" fill="#D51F55" />
+                      <circle cx="39" cy="27" r="2" fill="#D51F55" />
                     </svg>
                   )}
                   {e.id.includes('flim') && (
-                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#FF2E63" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 64 64" fill="none" stroke="#D51F55" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="10" y="20" width="34" height="28" rx="5" />
                       <path d="M44 28L54 22V46L44 40V28Z" />
                       <circle cx="27" cy="34" r="6" />
-                      <circle cx="27" cy="34" r="3" fill="#FF2E63" />
+                      <circle cx="27" cy="34" r="3" fill="#D51F55" />
                       <path d="M18 14L22 20M30 14L34 20" />
                     </svg>
                   )}
@@ -1099,7 +1520,7 @@ export const WebsiteHomePage: React.FC = () => {
 
                 {/* Event Title (Stacked Lines) & Tagline */}
                 <div className="w-full mt-auto">
-                  <h3 className="font-sans font-black text-sm xs:text-base sm:text-lg text-white uppercase tracking-wider group-hover:text-[#FF2E63] transition-colors leading-tight">
+                  <h3 className="font-sans font-black text-sm xs:text-base sm:text-lg text-[#EEEEEA] uppercase tracking-wider group-hover:text-[#D51F55] transition-colors leading-tight">
                     {e.mission_name.toLowerCase().includes('borderland') ? (
                       <>
                         <span>BORDERLAND</span>
@@ -1128,7 +1549,7 @@ export const WebsiteHomePage: React.FC = () => {
                       <span>{e.mission_name}</span>
                     )}
                   </h3>
-                  <p className="font-mono text-[10px] sm:text-[11px] text-[#A1A1AA] mt-2 leading-tight whitespace-pre-line">
+                  <p className="font-mono text-[10px] sm:text-[11px] text-[#B8B8B2] mt-2 leading-tight whitespace-pre-line">
                     {e.tagline || e.title}
                   </p>
                 </div>
@@ -1141,15 +1562,15 @@ export const WebsiteHomePage: React.FC = () => {
                 {/* Dashed flight loop */}
                 <path
                   d="M15 155C45 185 70 120 55 95C40 70 30 120 75 110C120 100 145 60 175 30"
-                  stroke="#FF2E63"
+                  stroke="#D51F55"
                   strokeWidth="2"
                   strokeDasharray="5 5"
                   fill="none"
                 />
                 {/* Flying Paper Airplane */}
                 <g transform="translate(150, 10) rotate(12)">
-                  <path d="M0 30L42 0L30 42L18 30L0 30Z" fill="#141417" stroke="#FF2E63" strokeWidth="2.2" strokeLinejoin="round" />
-                  <path d="M42 0L18 30" stroke="#FF2E63" strokeWidth="1.8" />
+                  <path d="M0 30L42 0L30 42L18 30L0 30Z" fill="#111214" stroke="#D51F55" strokeWidth="2.2" strokeLinejoin="round" />
+                  <path d="M42 0L18 30" stroke="#D51F55" strokeWidth="1.8" />
                 </g>
               </svg>
             </div>
@@ -1174,109 +1595,85 @@ export const WebsiteHomePage: React.FC = () => {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#141417] border-[3px] ${
-              selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
-            } shadow-[8px_8px_0px_#000000] p-5 sm:p-7 rounded-2xl space-y-5 select-text`}
+            className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#141417] border-[3px] ${selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
+              } shadow-[8px_8px_0px_#000000] p-5 sm:p-7 rounded-2xl space-y-5 select-text`}
           >
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[#2A2A2E] pb-2.5">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${
-                    selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
-                  }`}>
+                  <span className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
+                    }`}>
                     {selectedEvent.code}
                   </span>
-                  <span className="font-mono text-[11px] text-[#A8A8AC] uppercase">
+                  <span className="font-mono text-xs text-[#A8A8AC] uppercase">
                     {selectedEvent.category}
                   </span>
                 </div>
-                <h3 className="font-display text-xl sm:text-2xl text-white uppercase tracking-wide">
+                <h3 className="font-display text-2xl sm:text-3xl text-white uppercase tracking-wide">
                   {selectedEvent.mission_name}
                 </h3>
-                <p className={`font-comic text-xs sm:text-sm font-bold ${
-                  selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
-                }`}>
+                <p className={`font-comic text-xs sm:text-sm font-bold ${selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
+                  }`}>
                   {selectedEvent.tagline || selectedEvent.title}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedEvent(null)}
-                className="p-1 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-4.5 h-4.5" />
               </button>
             </div>
 
-            {/* Quick Meta Stats (Only 2 wider balanced boxes for Prize Distribution) */}
-            {selectedEvent.id === 'prize-distribution' ? (
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
-                  </div>
-                  <div className="text-white font-bold mt-0.5 text-xs sm:text-sm truncate">
-                    03:00 PM – 04:00 PM
-                  </div>
+            {/* Quick Meta Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
+              <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                  <Users className="w-3 h-3 text-[#F5D90A]" /> TEAM SIZE
                 </div>
-                <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#C084FC]" /> VENUE
-                  </div>
-                  <div className="text-white font-bold mt-0.5 text-xs sm:text-sm truncate">
-                    Main Auditorium
-                  </div>
+                <div className="text-white font-bold mt-0.5">
+                  {selectedEvent.team_size_min}{selectedEvent.team_size_min !== selectedEvent.team_size_max ? ` - ${selectedEvent.team_size_max}` : ''} Members
                 </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs font-mono">
-                <div className="p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <Users className="w-3 h-3 text-[#F5D90A]" /> TEAM SIZE
-                  </div>
-                  <div className="text-white font-bold mt-0.5 text-xs">
-                    {selectedEvent.team_size_min}{selectedEvent.team_size_min !== selectedEvent.team_size_max ? ` - ${selectedEvent.team_size_max}` : ''} Members
-                  </div>
+              <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
                 </div>
-                <div className="p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
-                  </div>
-                  <div className="text-white font-bold mt-0.5 text-xs truncate">
-                    {selectedEvent.schedule_time}
-                  </div>
-                </div>
-                <div className="col-span-2 sm:col-span-1 p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#3CE7FF]" /> VENUE
-                  </div>
-                  <div className="text-white font-bold mt-0.5 text-xs truncate">
-                    {selectedEvent.venue}
-                  </div>
+                <div className="text-white font-bold mt-0.5 truncate">
+                  {selectedEvent.schedule_time}
                 </div>
               </div>
-            )}
+              <div className="col-span-2 sm:col-span-1 p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-[#3CE7FF]" /> VENUE
+                </div>
+                <div className="text-white font-bold mt-0.5 truncate">
+                  {selectedEvent.venue}
+                </div>
+              </div>
+            </div>
 
             {/* Description */}
-            <div className="space-y-1">
-              <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
+            <div className="space-y-1.5">
+              <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
                 // BRIEFING
               </h4>
-              <p className="font-comic text-xs sm:text-xs text-[#D0D0D4] leading-relaxed">
+              <p className="font-comic text-sm text-[#D0D0D4] leading-relaxed">
                 {selectedEvent.description}
               </p>
             </div>
 
             {/* Rules */}
             {selectedEvent.rules && selectedEvent.rules.length > 0 && (
-              <div className="space-y-1">
-                <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
+              <div className="space-y-2">
+                <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
                   // RULES & GUIDELINES
                 </h4>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5">
                   {selectedEvent.rules.map((rule, rIdx) => (
-                    <li key={rIdx} className="flex items-start gap-1.5 text-[11px] font-comic text-[#C0C0C5] leading-tight">
-                      <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                    <li key={rIdx} className="flex items-start gap-2 text-xs font-comic text-[#C0C0C5]">
+                      <span className="text-[#3CE7FF] shrink-0 font-bold">•</span>
                       <span>{rule}</span>
                     </li>
                   ))}
@@ -1286,112 +1683,46 @@ export const WebsiteHomePage: React.FC = () => {
 
             {/* Cash Prizes */}
             {selectedEvent.prizes && (
-              <div className="p-2 sm:p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-xl space-y-1.5">
-                <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
-                  <Trophy className="w-3 h-3 text-[#F5D90A]" /> PRIZE REWARDS
+              <div className="p-3 bg-[#1A1A1E] border border-[#2E2E33] rounded-xl space-y-2">
+                <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
+                  <Trophy className="w-3.5 h-3.5 text-[#F5D90A]" /> PRIZE REWARDS
                 </h4>
-                <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
-                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[9px] text-[#A8A8AC]">1ST PRIZE</div>
-                    <div className="text-[#F5D90A] font-bold text-xs mt-0.5">{selectedEvent.prizes.first}</div>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[10px] text-[#A8A8AC]">1ST PRIZE</div>
+                    <div className="text-[#F5D90A] font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.first}</div>
                   </div>
-                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[9px] text-[#A8A8AC]">2ND PRIZE</div>
-                    <div className="text-white font-bold text-xs mt-0.5">{selectedEvent.prizes.second}</div>
+                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[10px] text-[#A8A8AC]">2ND PRIZE</div>
+                    <div className="text-white font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.second}</div>
                   </div>
-                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[9px] text-[#A8A8AC]">3RD PRIZE</div>
-                    <div className="text-[#A8A8AC] font-bold text-xs mt-0.5">{selectedEvent.prizes.third}</div>
+                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[10px] text-[#A8A8AC]">3RD PRIZE</div>
+                    <div className="text-[#A8A8AC] font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.third}</div>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Coordinators */}
-            {selectedEvent.id === 'prize-distribution' ? (
-              <div className="space-y-2">
-                <h4 className="font-mono text-[10px] text-[#A8A8AC] uppercase tracking-wider font-bold">
-                  // EVENT COORDINATORS
+            {selectedEvent.coordinators && selectedEvent.coordinators.length > 0 && (
+              <div className="space-y-1.5">
+                <h4 className="font-mono text-xs text-[#A8A8AC] uppercase tracking-wider font-bold">
+                  // HELPLINE & COORDINATORS
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-mono">
-                  {/* OVERALL COORDINATOR */}
-                  <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg space-y-1">
-                    <div className="text-[10px] text-[#C084FC] uppercase font-bold tracking-wider">
-                      OVERALL COORDINATOR
+                <div className="flex flex-wrap gap-3">
+                  {selectedEvent.coordinators.map((c, cIdx) => (
+                    <div key={cIdx} className="text-xs font-mono text-[#D0D0D4] flex items-center gap-1.5 bg-[#1A1A1E] px-2.5 py-1 rounded border border-[#2E2E33]">
+                      <span>{c.name} ({c.role}):</span>
+                      {c.phone && (
+                        <a href={`tel:${c.phone}`} className="text-[#3CE7FF] hover:underline font-bold">
+                          {c.phone}
+                        </a>
+                      )}
                     </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Saran S: </span>
-                      <a href="tel:+919629993985" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 96299 93985
-                      </a>
-                    </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Bharani E K: </span>
-                      <a href="tel:+918807176399" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 88071 76399
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* TECHNICAL EVENT */}
-                  <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg space-y-1">
-                    <div className="text-[10px] text-[#3CE7FF] uppercase font-bold tracking-wider">
-                      TECHNICAL EVENT
-                    </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Kishore E: </span>
-                      <a href="tel:+918903664244" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 89036 64244
-                      </a>
-                    </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Amisha S: </span>
-                      <a href="tel:+919360384877" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 93603 84877
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* NON TECHNICAL EVENT */}
-                  <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg space-y-1">
-                    <div className="text-[10px] text-[#FF3366] uppercase font-bold tracking-wider">
-                      NON TECHNICAL EVENT
-                    </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Jeo Justin J K: </span>
-                      <a href="tel:+919043678257" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 90436 78257
-                      </a>
-                    </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Nandhini S: </span>
-                      <a href="tel:+919042736307" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 90427 36307
-                      </a>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
-            ) : (
-              selectedEvent.coordinators && selectedEvent.coordinators.length > 0 && (
-                <div className="space-y-1">
-                  <h4 className="font-mono text-[10px] text-[#A8A8AC] uppercase tracking-wider font-bold">
-                    // EVENT COORDINATORS
-                  </h4>
-                  <div className="flex flex-col items-start gap-1.5">
-                    {selectedEvent.coordinators.map((c, cIdx) => (
-                      <div key={cIdx} className="text-[11px] font-mono text-[#D0D0D4] flex items-center gap-1 bg-[#1A1A1E] px-2 py-0.5 rounded border border-[#2E2E33]">
-                        <span>{c.name}{c.phone ? ':' : ''}</span>
-                        {c.phone && (
-                          <a href={`tel:${c.phone}`} className="text-[#3CE7FF] hover:underline font-bold">
-                            {c.phone}
-                          </a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
             )}
 
             {/* Modal Register CTA Button */}
@@ -1401,11 +1732,10 @@ export const WebsiteHomePage: React.FC = () => {
                   triggerComicFX('DEPLOY!');
                   navigate(`/register?mission=${selectedEvent.id}`);
                 }}
-                className={`w-full py-3 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
-                  selectedEvent.event_type === 'TECH'
-                    ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
-                    : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
-                }`}
+                className={`w-full py-3 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${selectedEvent.event_type === 'TECH'
+                  ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
+                  : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
+                  }`}
               >
                 <span>REGISTER FOR {selectedEvent.mission_name}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -1425,4 +1755,3 @@ export const WebsiteHomePage: React.FC = () => {
 };
 
 export default WebsiteHomePage;
-

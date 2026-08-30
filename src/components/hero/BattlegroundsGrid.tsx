@@ -154,7 +154,7 @@ export const BattlegroundsGrid: React.FC<BattlegroundsGridProps> = ({
   return (
     <div className="relative w-full max-w-[280px] sm:max-w-[310px] md:max-w-[340px] select-none">
       {/* 9 BATTLEGROUNDS Header Banner */}
-      <div className="w-full bg-[#000000] text-[#FFE600] border-[2.5px] border-[#000000] shadow-[3px_3px_0px_#000000] py-1.5 px-3 text-center mb-2.5">
+      <div className="w-full bg-[#090A0B] text-[#E5BD00] border-[2.5px] border-[#090A0B] shadow-[3px_3px_0px_#090A0B] py-1.5 px-3 text-center mb-2.5">
         <h3 className="font-comic text-sm sm:text-base md:text-lg uppercase tracking-wider font-black">
           9 BATTLEGROUNDS
         </h3>
@@ -169,15 +169,15 @@ export const BattlegroundsGrid: React.FC<BattlegroundsGridProps> = ({
               onTriggerSound?.(b.name);
               onSelectBattleground?.(b.id, b.name);
             }}
-            className="group cursor-pointer bg-[#FFFFFF] hover:bg-[#FFE600] text-[#000000] border-[2px] border-[#000000] shadow-[2px_2px_0px_#000000] hover:shadow-[3.5px_3.5px_0px_#000000] hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all duration-150 p-1.5 sm:p-2 aspect-square flex flex-col items-center justify-between text-center"
+            className="group cursor-pointer bg-[#EEEEEA] hover:bg-[#E5BD00] text-[#090A0B] border-[2px] border-[#090A0B] shadow-[2px_2px_0px_#090A0B] hover:shadow-[3.5px_3.5px_0px_#090A0B] hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all duration-150 p-1.5 sm:p-2 aspect-square flex flex-col items-center justify-between text-center"
           >
             {/* Centered Line Icon */}
-            <div className="flex-1 flex items-center justify-center text-[#000000] group-hover:scale-110 transition-transform">
+            <div className="flex-1 flex items-center justify-center text-[#090A0B] group-hover:scale-110 transition-transform">
               {b.icon}
             </div>
 
             {/* Label */}
-            <span className="font-comic text-[8px] sm:text-[9.5px] md:text-[10px] font-black uppercase tracking-tight leading-none text-[#000000]">
+            <span className="font-comic text-[8px] sm:text-[9.5px] md:text-[10px] font-black uppercase tracking-tight leading-none text-[#090A0B]">
               {b.name}
             </span>
           </div>
