@@ -124,7 +124,7 @@ export const EventScheduleView: React.FC<{
       color_theme: 'cyan',
       venue: '104 class room',
       tagline: 'Decode. Transmit. Survive.',
-      description: 'Investigate the mysterious Time Fracture by interacting with ORACLE, a corrupted AI to solve the mystery.'
+      description: 'Intercept, decrypt, and decode corrupted signal packets through cryptographic puzzles.'
     },
     {
       id: 'gadget-codes',
