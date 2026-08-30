@@ -897,27 +897,27 @@ export const WebsiteHomePage: React.FC = () => {
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#141417] border-[3px] ${
+            className={`relative w-full max-w-2xl max-h-[94vh] overflow-y-auto bg-[#141417] border-[3px] ${
               selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
-            } shadow-[8px_8px_0px_#000000] p-5 sm:p-7 rounded-2xl space-y-5 select-text`}
+            } shadow-[8px_8px_0px_#000000] p-4 sm:p-5.5 rounded-2xl space-y-3 sm:space-y-3.5 select-text`}
           >
             {/* Modal Header */}
-            <div className="flex items-start justify-between gap-4 border-b border-[#2A2A2E] pb-4">
-              <div className="space-y-1">
+            <div className="flex items-start justify-between gap-3 border-b border-[#2A2A2E] pb-2.5">
+              <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${
+                  <span className={`px-2 py-0.5 font-mono font-black text-[11px] rounded uppercase ${
                     selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
                   }`}>
                     {selectedEvent.code}
                   </span>
-                  <span className="font-mono text-xs text-[#A8A8AC] uppercase">
+                  <span className="font-mono text-[11px] text-[#A8A8AC] uppercase">
                     {selectedEvent.category}
                   </span>
                 </div>
-                <h3 className="font-display text-2xl sm:text-3xl text-white uppercase tracking-wide">
+                <h3 className="font-display text-xl sm:text-2xl text-white uppercase tracking-wide">
                   {selectedEvent.mission_name}
                 </h3>
-                <p className={`font-comic text-xs sm:text-sm font-bold ${
+                <p className={`font-comic text-xs font-bold ${
                   selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
                 }`}>
                   {selectedEvent.tagline || selectedEvent.title}
@@ -925,59 +925,59 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
               <button 
                 onClick={() => setSelectedEvent(null)}
-                className="p-1.5 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-lg transition-colors cursor-pointer"
+                className="p-1 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-lg transition-colors cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4.5 h-4.5" />
               </button>
             </div>
 
             {/* Quick Meta Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
-              <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs font-mono">
+              <div className="p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
                 <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
                   <Users className="w-3 h-3 text-[#F5D90A]" /> TEAM SIZE
                 </div>
-                <div className="text-white font-bold mt-0.5">
+                <div className="text-white font-bold mt-0.5 text-xs">
                   {selectedEvent.team_size_min}{selectedEvent.team_size_min !== selectedEvent.team_size_max ? ` - ${selectedEvent.team_size_max}` : ''} Members
                 </div>
               </div>
-              <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+              <div className="p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
                 <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
                   <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
                 </div>
-                <div className="text-white font-bold mt-0.5 truncate">
+                <div className="text-white font-bold mt-0.5 text-xs truncate">
                   {selectedEvent.schedule_time}
                 </div>
               </div>
-              <div className="col-span-2 sm:col-span-1 p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+              <div className="col-span-2 sm:col-span-1 p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
                 <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-[#3CE7FF]" /> VENUE
                 </div>
-                <div className="text-white font-bold mt-0.5 truncate">
+                <div className="text-white font-bold mt-0.5 text-xs truncate">
                   {selectedEvent.venue}
                 </div>
               </div>
             </div>
 
             {/* Description */}
-            <div className="space-y-1.5">
-              <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
+            <div className="space-y-1">
+              <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
                 // BRIEFING
               </h4>
-              <p className="font-comic text-sm text-[#D0D0D4] leading-relaxed">
+              <p className="font-comic text-xs sm:text-xs text-[#D0D0D4] leading-relaxed">
                 {selectedEvent.description}
               </p>
             </div>
 
             {/* Rules */}
             {selectedEvent.rules && selectedEvent.rules.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
+              <div className="space-y-1">
+                <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
                   // RULES & GUIDELINES
                 </h4>
-                <ul className="space-y-1.5">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5">
                   {selectedEvent.rules.map((rule, rIdx) => (
-                    <li key={rIdx} className="flex items-start gap-2 text-xs font-comic text-[#C0C0C5]">
+                    <li key={rIdx} className="flex items-start gap-1.5 text-[11px] font-comic text-[#C0C0C5] leading-tight">
                       <span className="text-[#3CE7FF] shrink-0 font-bold">•</span>
                       <span>{rule}</span>
                     </li>
@@ -988,22 +988,22 @@ export const WebsiteHomePage: React.FC = () => {
 
             {/* Cash Prizes */}
             {selectedEvent.prizes && (
-              <div className="p-3 bg-[#1A1A1E] border border-[#2E2E33] rounded-xl space-y-2">
-                <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
-                  <Trophy className="w-3.5 h-3.5 text-[#F5D90A]" /> PRIZE REWARDS
+              <div className="p-2 sm:p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-xl space-y-1.5">
+                <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
+                  <Trophy className="w-3 h-3 text-[#F5D90A]" /> PRIZE REWARDS
                 </h4>
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[10px] text-[#A8A8AC]">1ST PRIZE</div>
-                    <div className="text-[#F5D90A] font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.first}</div>
+                <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
+                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[9px] text-[#A8A8AC]">1ST PRIZE</div>
+                    <div className="text-[#F5D90A] font-bold text-xs mt-0.5">{selectedEvent.prizes.first}</div>
                   </div>
-                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[10px] text-[#A8A8AC]">2ND PRIZE</div>
-                    <div className="text-white font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.second}</div>
+                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[9px] text-[#A8A8AC]">2ND PRIZE</div>
+                    <div className="text-white font-bold text-xs mt-0.5">{selectedEvent.prizes.second}</div>
                   </div>
-                  <div className="p-2 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[10px] text-[#A8A8AC]">3RD PRIZE</div>
-                    <div className="text-[#A8A8AC] font-bold text-xs sm:text-sm mt-0.5">{selectedEvent.prizes.third}</div>
+                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
+                    <div className="text-[9px] text-[#A8A8AC]">3RD PRIZE</div>
+                    <div className="text-[#A8A8AC] font-bold text-xs mt-0.5">{selectedEvent.prizes.third}</div>
                   </div>
                 </div>
               </div>
@@ -1011,14 +1011,14 @@ export const WebsiteHomePage: React.FC = () => {
 
             {/* Coordinators */}
             {selectedEvent.coordinators && selectedEvent.coordinators.length > 0 && (
-              <div className="space-y-1.5">
-                <h4 className="font-mono text-xs text-[#A8A8AC] uppercase tracking-wider font-bold">
-                  // HELPLINE & COORDINATORS
+              <div className="space-y-1">
+                <h4 className="font-mono text-[10px] text-[#A8A8AC] uppercase tracking-wider font-bold">
+                  // EVENT COORDINATORS
                 </h4>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-col items-start gap-1.5">
                   {selectedEvent.coordinators.map((c, cIdx) => (
-                    <div key={cIdx} className="text-xs font-mono text-[#D0D0D4] flex items-center gap-1.5 bg-[#1A1A1E] px-2.5 py-1 rounded border border-[#2E2E33]">
-                      <span>{c.name} ({c.role}):</span>
+                    <div key={cIdx} className="text-[11px] font-mono text-[#D0D0D4] flex items-center gap-1 bg-[#1A1A1E] px-2 py-0.5 rounded border border-[#2E2E33]">
+                      <span>{c.name}:</span>
                       {c.phone && (
                         <a href={`tel:${c.phone}`} className="text-[#3CE7FF] hover:underline font-bold">
                           {c.phone}
@@ -1031,13 +1031,13 @@ export const WebsiteHomePage: React.FC = () => {
             )}
 
             {/* Modal Register CTA Button */}
-            <div className="pt-2">
+            <div className="pt-1">
               <button
                 onClick={() => {
                   triggerComicFX('DEPLOY!');
                   navigate(`/register?mission=${selectedEvent.id}`);
                 }}
-                className={`w-full py-3 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
+                className={`w-full py-2.5 font-display text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
                   selectedEvent.event_type === 'TECH'
                     ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
                     : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'

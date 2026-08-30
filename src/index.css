@@ -14,7 +14,7 @@ body,
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
-  background-color: #0D0D0F;
+  background-color: #020712;
   color: #F2F2F0;
   min-height: 100vh;
   width: 100%;
@@ -23,6 +23,16 @@ body,
   overflow-y: auto;
   user-select: none;
 }
+
+/* Tech HUD Cyber Background Utilities */
+.bg-tech-hud {
+  background-image: url('/tech_hud_bg.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 
 /* Comic Fonts Utilities */
 .font-comic {
@@ -436,3 +446,62 @@ body,
   stroke-dasharray: 100 40;
   animation: webSilkFlow100 0.6s linear infinite;
 }
+
+/* Cyber HUD Background Dynamic Motion Keyframes */
+@keyframes hudBgDrift {
+  0% {
+    transform: translate(0px, 0px) scale(1.08) rotate(0deg);
+  }
+  25% {
+    transform: translate(22px, -18px) scale(1.11) rotate(0.4deg);
+  }
+  50% {
+    transform: translate(-16px, 24px) scale(1.09) rotate(-0.3deg);
+  }
+  75% {
+    transform: translate(-26px, -12px) scale(1.12) rotate(0.5deg);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1.08) rotate(0deg);
+  }
+}
+
+.animate-hud-bg-float {
+  animation: hudBgDrift 28s ease-in-out infinite alternate;
+}
+
+@keyframes hudScanline {
+  0% {
+    top: -10%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    top: 110%;
+    opacity: 0;
+  }
+}
+
+.animate-hud-scanline {
+  animation: hudScanline 7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes nodePulse {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
+.animate-node-pulse {
+  animation: nodePulse 3s ease-in-out infinite;
+}

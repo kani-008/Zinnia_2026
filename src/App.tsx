@@ -8,6 +8,7 @@ import { WebsitePassportPage } from './pages/Passport';
 import { WebsiteContactPage } from './pages/Contact';
 import { registerNav } from './services/registerNavigation';
 
+
 export function App() {
   const navigate = useNavigate();
 

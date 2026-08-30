@@ -13,19 +13,22 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     clearance_level: 'LEVEL 01',
     team_size_min: 1,
     team_size_max: 2,
-    schedule_time: '10:00 AM - 11:30 AM',
+    schedule_time: '11:00 AM - 12:30 PM',
     duration: '1 hr 30 mins',
-    venue: 'Computer Lab 01 (Newton Hall)',
-    description: 'Diagnose runtime exceptions, logical bugs, and memory traps in intentionally broken software systems under strict time constraints.',
+    venue: 'Auditorium 1st floor',
+    description: 'Find bugs, identify system failures, fix faulty code, and restore the program to working condition. Test your logic and debugging skills against the clock.',
     rules: [
-      'Solo or duo participation.',
-      'Languages: C, C++, Java, Python.',
-      'Spot logical, syntactical, and edge-case errors.',
-      'Fastest accurate patches gain maximum points.'
+      'Team size: 1–2 members.',
+      'Languages: C, C++, Java, and Python.',
+      'Complete 2 rounds of debugging challenges.',
+      'Identify bugs, fix code, and determine correct outputs.',
+      'Round 1: Easy & Intermediate challenges.',
+      'Round 2: Intermediate & Hard challenges.',
+      'Complete the challenge within 60 minutes.'
     ],
     coordinators: [
-      { name: 'Staff Coordinator', role: 'Staff Lead', phone: '+91 98401 23456' },
-      { name: 'Student Coordinator', role: 'Student Lead', phone: '+91 94451 98765' }
+      { name: 'Prabakaran D', role: 'STUDENT COORDINATOR', phone: '+91 63692 20453' },
+      { name: 'Deepakala', role: 'STUDENT COORDINATOR', phone: '+91 93425 60879' }
     ],
     prizes: {
       first: '₹3,000 + Merit Shield',
@@ -46,9 +49,9 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     clearance_level: 'LEVEL 01',
     team_size_min: 1,
     team_size_max: 2,
-    schedule_time: '11:30 AM - 12:45 PM',
-    duration: '1 hr 15 mins',
-    venue: 'Networks & Communication Lab',
+    schedule_time: '11:00 AM - 12:30 PM',
+    duration: '1 hr 30 mins',
+    venue: '104 class room',
     description: 'Intercept, decrypt, and decode corrupted signal packets through cryptographic puzzles, packet analysis, and binary telemetry.',
     rules: [
       'Team of 1 to 2 members.',
@@ -57,8 +60,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Tie-breaker based on completion speed.'
     ],
     coordinators: [
-      { name: 'Staff Coordinator', role: 'Staff Lead', phone: '+91 98402 34567' },
-      { name: 'Student Coordinator', role: 'Student Lead', phone: '+91 97890 12345' }
+      { name: 'Abdul Razith', role: 'STUDENT COORDINATOR', phone: '+91 90470 57868' },
+      { name: 'Sri Karthika', role: 'STUDENT COORDINATOR', phone: '+91 93618 40633' }
     ],
     prizes: {
       first: '₹3,000 + Shield',
@@ -78,20 +81,20 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     category: 'TECHNICAL',
     clearance_level: 'LEVEL 01',
     team_size_min: 1,
-    team_size_max: 2,
-    schedule_time: '01:30 PM - 02:45 PM',
-    duration: '1 hr 15 mins',
-    venue: 'Database Architecture Wing (Lab 03)',
-    description: 'Solve intricate relational query puzzles, reverse-engineer damaged schema tables, and write optimized joins to escape the database labyrinth.',
+    team_size_max: 3,
+    schedule_time: '01:30 PM - 03:00 PM',
+    duration: '1 hr 30 mins',
+    venue: 'CC2 lab',
+    description: 'Investigate the disappearance of Black Cipher. Search the database, connect hidden clues, and reconstruct the truth using SQL.',
     rules: [
-      'Solo or duo participation.',
-      'PostgreSQL & MySQL environments provided.',
-      'Subqueries, window functions, and indexing mastery tested.',
-      'Speed and query cost efficiency scored.'
+      'Team size: Up to 3 members.',
+      'Solve 15–20 SQL challenges.',
+      'Use database evidence to solve the case.',
+      'Complete the investigation within 60 minutes.'
     ],
     coordinators: [
-      { name: 'Staff Coordinator', role: 'Staff Lead', phone: '+91 98403 45678' },
-      { name: 'Student Coordinator', role: 'Student Lead', phone: '+91 91234 56789' }
+      { name: 'Vignesh', role: 'STUDENT COORDINATOR', phone: '+91 80154 91593' },
+      { name: 'Indhumathi', role: 'STUDENT COORDINATOR', phone: '+91 80729 51205' }
     ],
     prizes: {
       first: '₹3,000 + Shield',
@@ -111,21 +114,25 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     category: 'TECHNICAL',
     clearance_level: 'LEVEL 01',
     is_single_event_only: true,
-    team_size_min: 1,
+    team_size_min: 2,
     team_size_max: 2,
-    schedule_time: '11:00 AM - 01:00 PM',
-    duration: '2 hrs',
-    venue: 'Embedded Systems & IoT Arena',
-    description: 'Bridge hardware and software by writing firmware and interfacing microcontrollers, sensors, and peripherals to solve hands-on embedded challenges.',
+    schedule_time: '11:00 AM - 02:30 PM',
+    duration: '3 hrs 30 mins',
+    venue: 'CC1 lab',
+    description: 'Compete through quizzes, coding challenges, and a puzzle hunt. Test your technical knowledge, coding skills, and teamwork to unlock the final challenge.',
     rules: [
-      'Individual or duo participation.',
-      'Microcontroller kits and pinouts provided on-site.',
-      'Breadboarding, GPIO pin configuration, and firmware debugging assessed.',
-      'Safety protocols must be followed at all times.'
+      'Team size: 2 members.',
+      'Complete 3 challenging rounds.',
+      'Round 1: Technical Quiz.',
+      'Round 2: Team Coding Challenge with 30-second swaps.',
+      'Round 3: Solve puzzles and collect QR passcode fragments.',
+      'Arrange the fragments to unlock the final challenge.',
+      'Top-performing teams advance to the next round.',
+      'Complete all challenges within the given time.'
     ],
     coordinators: [
-      { name: 'Staff Coordinator', role: 'Staff Lead', phone: '+91 98404 56789' },
-      { name: 'Student Coordinator', role: 'Student Lead', phone: '+91 92345 67890' }
+      { name: 'Muhammed Umer', role: 'STUDENT COORDINATOR', phone: '+91 94458 86230' },
+      { name: 'Swathi', role: 'STUDENT COORDINATOR', phone: '+91 93610 63211' }
     ],
     prizes: {
       first: '₹3,500 + Shield',
@@ -146,9 +153,9 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     clearance_level: 'LEVEL 01',
     team_size_min: 1,
     team_size_max: 3,
-    schedule_time: '10:00 AM - 01:00 PM',
-    duration: '3 hrs',
-    venue: 'Seminar Hall B (Auditorium Block)',
+    schedule_time: '11:00 AM - 03:00 PM',
+    duration: '4 hrs',
+    venue: 'IT & CSE Seminar Hall',
     description: 'Present original research manuscripts, architectural discoveries, and innovative engineering paradigms before an esteemed panel of faculty judges.',
     rules: [
       'Teams of 1 to 3 participants.',
@@ -157,8 +164,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Standard IEEE slide format recommended.'
     ],
     coordinators: [
-      { name: 'Staff Coordinator', role: 'Staff Lead', phone: '+91 98405 67890' },
-      { name: 'Student Coordinator', role: 'Student Lead', phone: '+91 93456 78901' }
+      { name: 'Kanishkar', role: 'STUDENT COORDINATOR', phone: '+91 87787 84819' },
+      { name: 'Karishma', role: 'STUDENT COORDINATOR', phone: '+91 84381 94881' }
     ],
     prizes: {
       first: '₹3,500 + Shield',
@@ -180,20 +187,25 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     category: 'NON_TECHNICAL',
     clearance_level: 'LEVEL 01',
     team_size_min: 2,
-    team_size_max: 4,
-    schedule_time: '01:30 PM - 03:30 PM',
-    duration: '2 hrs',
-    venue: 'Open Quadrangle & Student Center',
-    description: 'An immersive survival challenge with strategic mini-games, clue trails, and cooperative problem-solving tests across the campus borderlands.',
+    team_size_max: 3,
+    schedule_time: '12:00 PM - 03:00 PM',
+    duration: '3 hrs',
+    venue: '101, 102 class room',
+    description: 'Enter the Borderland, survive strategic mini-games, and outsmart rival teams. Clear Round 1 to extend your visa and enter the final Borderland Hunt.',
     rules: [
-      'Teams of 2 to 4 members.',
-      'Multiple elimination stages and tactical checkpoint games.',
-      'No running inside academic halls.',
-      'Fair play guidelines strictly enforced.'
+      'Team size: 2–3 members.',
+      'Round 1: Welcome to Borderland @ GCEE.',
+      'Complete 3 strategic mini-games.',
+      'Every decision affects your team’s leaderboard position.',
+      'Top-performing teams qualify for the next round.',
+      'Round 2: Borderland Hunt @ GCEE.',
+      'Solve clues, discover hidden paths, and complete challenges.',
+      'Teamwork, strategy, observation, and time management are essential.',
+      'No do-overs — every move counts.'
     ],
     coordinators: [
-      { name: 'Staff Coordinator', role: 'Staff Lead', phone: '+91 98406 78901' },
-      { name: 'Student Coordinator', role: 'Student Lead', phone: '+91 95678 90123' }
+      { name: 'Praveenraja', role: 'STUDENT COORDINATOR', phone: '+91 63822 79383' },
+      { name: 'Kaviyasri', role: 'STUDENT COORDINATOR', phone: '+91 76393 67928' }
     ],
     prizes: {
       first: '₹2,500 + Trophy',
@@ -214,19 +226,22 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     clearance_level: 'LEVEL 01',
     team_size_min: 2,
     team_size_max: 3,
-    schedule_time: '11:00 AM - 12:30 PM',
-    duration: '1 hr 30 mins',
-    venue: 'Main Auditorium / Stage Area',
-    description: 'Rapid-fire intellectual combat featuring lateral thinking puzzles, buzzer rounds, and strategic decision trees under dynamic pressure.',
+    schedule_time: '12:00 PM - 02:30 PM',
+    duration: '2 hrs 30 mins',
+    venue: '103 class room',
+    description: 'Challenge your logic, observation, and general knowledge through three fast-paced rounds. Think smart, connect the clues, and identify the answer before time runs out.',
     rules: [
-      'Teams of 2 to 3 members.',
-      'Buzzer speed and penalty scoring rounds.',
-      'Electronic devices strictly prohibited on stage.',
-      'Judges verdict is final in case of dispute.'
+      'Team size: 2–3 members.',
+      'Round 1: Solve Logical & GK MCQs.',
+      'Round 2: Connect pictures and find the common link.',
+      'Round 3: Identify the mystery answer from clues.',
+      'Fewer clues mean higher points.',
+      'Fast and accurate answers score higher.',
+      'Teamwork and quick thinking are essential.'
     ],
     coordinators: [
-      { name: 'Staff Coordinator', role: 'Staff Lead', phone: '+91 98407 89012' },
-      { name: 'Student Coordinator', role: 'Student Lead', phone: '+91 96789 01234' }
+      { name: 'Sivabalan', role: 'STUDENT COORDINATOR', phone: '+91 63845 11989' },
+      { name: 'Yogeshwari', role: 'STUDENT COORDINATOR', phone: '+91 90809 99795' }
     ],
     prizes: {
       first: '₹2,500 + Trophy',
@@ -247,19 +262,23 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     clearance_level: 'LEVEL 01',
     team_size_min: 1,
     team_size_max: 3,
-    schedule_time: '02:00 PM - 03:30 PM',
+    schedule_time: '01:30 PM - 03:00 PM',
     duration: '1 hr 30 mins',
-    venue: 'Media Studio / Room 204',
-    description: 'Spontaneous storytelling and creative improv under sudden constraint twists. Adapt your plotline on the fly when new surprise elements are dropped.',
+    venue: '103 class room',
+    description: 'Uncover the hidden twist by analyzing the story, solving clues, and connecting the evidence. Think fast, solve smart, and reach the Finale with the best advantage.',
     rules: [
-      'Solo or team of up to 3 members.',
-      'Prompts and sudden plot twists provided live on stage.',
-      'Judged on creativity, delivery, coherence, and audience engagement.',
-      'Time limit: 5 minutes per performance.'
+      'Team participation.',
+      'Complete 2 deduction rounds.',
+      'Each round lasts 30 minutes.',
+      'Clues are revealed at the 8- and 16-minute marks.',
+      'Hints are available after solving a mini-puzzle.',
+      'No elimination in Round 1.',
+      'Faster completion earns advantages for the Finale.',
+      'Finale rankings are decided by completion time.'
     ],
     coordinators: [
-      { name: 'Staff Coordinator', role: 'Staff Lead', phone: '+91 98408 90123' },
-      { name: 'Student Coordinator', role: 'Student Lead', phone: '+91 97890 56781' }
+      { name: 'Hariharan', role: 'STUDENT COORDINATOR', phone: '+91 88388 69405' },
+      { name: 'Akshaya', role: 'STUDENT COORDINATOR', phone: '+91 63818 83013' }
     ],
     prizes: {
       first: '₹2,500 + Trophy',
@@ -280,9 +299,9 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     clearance_level: 'LEVEL 01',
     team_size_min: 1,
     team_size_max: 5,
-    schedule_time: '01:00 PM - 03:30 PM',
-    duration: '2 hrs 30 mins',
-    venue: 'AV Screening Hall (Mech Block)',
+    schedule_time: '01:30 PM - 02:30 PM',
+    duration: '1 hr',
+    venue: '',
     description: 'Screen your original cinematic creations, narrative short films, or creative documentaries evaluated by visual storytellers and filmmakers.',
     rules: [
       'Team of up to 5 crew members.',
@@ -291,8 +310,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Must contain original content and copyright-free or credited audio.'
     ],
     coordinators: [
-      { name: 'Staff Coordinator', role: 'Staff Lead', phone: '+91 98409 01234' },
-      { name: 'Student Coordinator', role: 'Student Lead', phone: '+91 98901 23456' }
+      { name: 'Aswin Sanjeev Kumar', role: 'STUDENT COORDINATOR', phone: '+91 79040 98102' },
+      { name: 'Harshini', role: 'STUDENT COORDINATOR', phone: '+91 93634 52517' }
     ],
     prizes: {
       first: '₹3,000 + Trophy',
