@@ -258,12 +258,12 @@ export const WebsiteContactPage: React.FC = () => {
                       <Phone className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-500 uppercase">Saran S (Student Coordinator)</p>
-                      <p className="font-bold text-zinc-200">+91 96299 93985</p>
+                      <p className="text-[10px] text-zinc-500 uppercase">General Helpline</p>
+                      <p className="font-bold text-zinc-200">+91 94451 98765</p>
                     </div>
                   </div>
                   <a
-                    href="tel:+919629993985"
+                    href="tel:+919445198765"
                     className="text-[11px] text-zinc-300 hover:text-white hover:border-zinc-500 font-semibold px-2.5 py-1 bg-[#22222C] border border-[#30303E] rounded transition-colors"
                   >
                     CALL
@@ -276,12 +276,12 @@ export const WebsiteContactPage: React.FC = () => {
                       <Phone className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-500 uppercase">Bharani E K (Student Coordinator)</p>
-                      <p className="font-bold text-zinc-200">+91 88071 76399</p>
+                      <p className="text-[10px] text-zinc-500 uppercase">Event Desk &amp; Registration</p>
+                      <p className="font-bold text-zinc-200">+91 98401 23456</p>
                     </div>
                   </div>
                   <a
-                    href="tel:+918807176399"
+                    href="tel:+919840123456"
                     className="text-[11px] text-zinc-300 hover:text-white hover:border-zinc-500 font-semibold px-2.5 py-1 bg-[#22222C] border border-[#30303E] rounded transition-colors"
                   >
                     CALL
@@ -367,35 +367,35 @@ export const WebsiteContactPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs font-mono">
-              {/* Student Coordinator 1 */}
+              {/* Staff Convener */}
               <div className="p-4 bg-[#181820] border border-[#2A2A36] rounded-lg space-y-1.5 hover:border-zinc-500 transition-colors">
                 <span className="text-[10px] text-[#F5D90A] font-bold tracking-widest uppercase">
-                  STUDENT COORDINATOR
+                  STAFF CONVENER
                 </span>
-                <h4 className="font-bold text-sm text-white">Saran S</h4>
-                <p className="text-zinc-400 text-[11px]">Final Year CSE &bull; Student Coordinator</p>
+                <h4 className="font-bold text-sm text-white">Dr. A. Senthil Kumar</h4>
+                <p className="text-zinc-400 text-[11px]">Professor &amp; Head, Dept of CSE</p>
                 <a
-                  href="tel:+919629993985"
-                  className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#F5D90A] transition-colors pt-1 font-bold"
+                  href="tel:+919840123456"
+                  className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#F5D90A] transition-colors pt-1"
                 >
                   <Phone className="w-3 h-3 text-[#F5D90A]" />
-                  <span>+91 96299 93985</span>
+                  <span>+91 98401 23456</span>
                 </a>
               </div>
 
-              {/* Student Coordinator 2 */}
+              {/* Student Convener */}
               <div className="p-4 bg-[#181820] border border-[#2A2A36] rounded-lg space-y-1.5 hover:border-zinc-500 transition-colors">
                 <span className="text-[10px] text-[#F5D90A] font-bold tracking-widest uppercase">
-                  STUDENT COORDINATOR
+                  STUDENT CONVENER
                 </span>
-                <h4 className="font-bold text-sm text-white">Bharani E K</h4>
-                <p className="text-zinc-400 text-[11px]">Final Year CSE &bull; Student Coordinator</p>
+                <h4 className="font-bold text-sm text-white">R. Kanishkar</h4>
+                <p className="text-zinc-400 text-[11px]">Final Year CSE &bull; Student Lead</p>
                 <a
-                  href="tel:+918807176399"
-                  className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#F5D90A] transition-colors pt-1 font-bold"
+                  href="tel:+919445198765"
+                  className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#F5D90A] transition-colors pt-1"
                 >
                   <Phone className="w-3 h-3 text-[#F5D90A]" />
-                  <span>+91 88071 76399</span>
+                  <span>+91 94451 98765</span>
                 </a>
               </div>
             </div>

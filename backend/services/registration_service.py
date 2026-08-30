@@ -263,3 +263,5 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
             "error_code": "INTERNAL_SERVER_ERROR",
             "message": f"Server encountered an unexpected error: {str(e)}"
         }
+            "message": f"Server encountered an unexpected error: {str(e)}"
+        }
