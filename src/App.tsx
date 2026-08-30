@@ -19,6 +19,7 @@ export function App() {
       {/* Routes */}
       <Routes>
         <Route path="/" element={<WebsiteHomePage />} />
+        <Route path="/events" element={<Navigate to="/#events" replace />} />
         <Route path="/register" element={<WebsiteRegisterPage />} />
         <Route path="/payment" element={<WebsitePaymentPage />} />
         <Route path="/passport" element={<WebsitePassportPage />} />

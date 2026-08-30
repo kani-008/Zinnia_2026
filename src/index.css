@@ -14,8 +14,8 @@ body,
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
-  background-color: #0D0D0F;
-  color: #F2F2F0;
+  background-color: #08090A;
+  color: #EEEEEA;
   min-height: 100vh;
   width: 100%;
   max-width: 100vw;
@@ -73,8 +73,8 @@ body,
   top: 6px;
   width: 130px;
   height: 42px;
-  background: #0D0D0F;
-  border: 2px solid #777;
+  background: #08090A;
+  border: 2px solid #B8B8B2;
   clip-path: polygon(
     2% 5%,
     97% 1%,
@@ -93,8 +93,8 @@ body,
   top: 6px;
   width: 130px;
   height: 42px;
-  background: #0D0D0F;
-  border: 2px solid #00D2FF;
+  background: #08090A;
+  border: 2px solid #0FA9C6;
   clip-path: polygon(
     2% 5%,
     97% 1%,
@@ -113,9 +113,9 @@ body,
   top: 0;
   width: 130px;
   height: 42px;
-  background: #0D0D0F;
-  border: 2px solid #fff;
-  color: #fff;
+  background: #08090A;
+  border: 2px solid #EEEEEA;
+  color: #EEEEEA;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -143,9 +143,9 @@ body,
   top: 0;
   width: 130px;
   height: 42px;
-  background: #00D2FF;
-  border: 2px solid #000;
-  color: #000;
+  background: #0FA9C6;
+  border: 2px solid #090A0B;
+  color: #090A0B;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -168,7 +168,7 @@ body,
 }
 
 .lightning {
-  color: #ffd400;
+  color: #E5BD00;
   font-size: 16px;
   line-height: 1;
 }
@@ -179,7 +179,7 @@ body,
 }
 
 .comic-button-cyan:hover .front-box-cyan {
-  background: #FFE600;
+  background: #E5BD00;
 }
 
 .comic-button:active .front-box,
@@ -203,8 +203,8 @@ body,
   top: 9px;
   width: 100%;
   height: 100%;
-  background: #0D0D0F;
-  border: 2px solid #555;
+  background: #08090A;
+  border: 2px solid #B8B8B2;
   clip-path: polygon(
     1.2% 4.5%,
     98.5% 1%,
@@ -220,9 +220,9 @@ body,
 .comic-cta-front {
   position: relative;
   width: 100%;
-  background: #00D2FF;
-  border: 2.5px solid #000;
-  color: #000;
+  background: #0FA9C6;
+  border: 2.5px solid #090A0B;
+  color: #090A0B;
   clip-path: polygon(
     0.8% 3.5%,
     99.2% 1.2%,
@@ -238,7 +238,7 @@ body,
 
 .comic-cta-wrapper:hover .comic-cta-front {
   transform: translate(-2px, -2px);
-  background-color: #FFE600;
+  background-color: #E5BD00;
 }
 
 .comic-cta-wrapper:active .comic-cta-front {
@@ -288,7 +288,7 @@ body,
   height: 220px;
 
   background-image: radial-gradient(circle,
-      rgba(255, 255, 255, .28) 1.5px,
+      rgba(238, 238, 234, .25) 1.5px,
       transparent 1.6px);
 
   background-size: 12px 12px;
@@ -305,25 +305,25 @@ body,
 }
 
 .bg-halftone-dots {
-  background-image: radial-gradient(#000000 18%, transparent 20%);
+  background-image: radial-gradient(#090A0B 18%, transparent 20%);
   background-position: 0 0, 8px 8px;
   background-size: 16px 16px;
 }
 
 .bg-halftone-dots-cyan {
-  background-image: radial-gradient(#00E5FF 22%, transparent 24%);
+  background-image: radial-gradient(#0FA9C6 22%, transparent 24%);
   background-position: 0 0, 6px 6px;
   background-size: 12px 12px;
 }
 
 .bg-halftone-dots-yellow {
-  background-image: radial-gradient(#FACC15 25%, transparent 27%);
+  background-image: radial-gradient(#E5BD00 25%, transparent 27%);
   background-position: 0 0, 6px 6px;
   background-size: 12px 12px;
 }
 
 .bg-halftone-dots-magenta {
-  background-image: radial-gradient(#FF2E63 22%, transparent 24%);
+  background-image: radial-gradient(#D51F55 22%, transparent 24%);
   background-position: 0 0, 6px 6px;
   background-size: 12px 12px;
 }
@@ -354,50 +354,50 @@ body,
 /* Comic Speedlines / Sunburst */
 .bg-comic-sunburst {
   background: repeating-conic-gradient(from 0deg,
-      #FFE600 0deg 10deg,
-      #FFD000 10deg 20deg);
+      #E5BD00 0deg 10deg,
+      #C29F00 10deg 20deg);
 }
 
 .bg-comic-sunburst-cyan {
   background: repeating-conic-gradient(from 0deg,
-      #E0F7FA 0deg 8deg,
-      #B2EBF2 8deg 16deg);
+      #0FA9C6 0deg 8deg,
+      #08758A 8deg 16deg);
 }
 
 /* Hard 2D Comic Shadows */
 .shadow-comic-sm {
-  box-shadow: 3px 3px 0px #000000;
+  box-shadow: 3px 3px 0px #090A0B;
 }
 
 .shadow-comic {
-  box-shadow: 5px 5px 0px #000000;
+  box-shadow: 5px 5px 0px #090A0B;
 }
 
 .shadow-comic-lg {
-  box-shadow: 8px 8px 0px #000000;
+  box-shadow: 8px 8px 0px #090A0B;
 }
 
 .shadow-comic-xl {
-  box-shadow: 12px 12px 0px #000000;
+  box-shadow: 12px 12px 0px #090A0B;
 }
 
 .shadow-comic-yellow {
-  box-shadow: 6px 6px 0px #FACC15, 6px 6px 0px 3px #000000;
+  box-shadow: 6px 6px 0px #E5BD00, 6px 6px 0px 3px #090A0B;
 }
 
 .shadow-comic-cyan {
-  box-shadow: 6px 6px 0px #00E5FF, 6px 6px 0px 3px #000000;
+  box-shadow: 6px 6px 0px #0FA9C6, 6px 6px 0px 3px #090A0B;
 }
 
 /* Comic Text Stroke Outline */
 .text-stroke-comic {
-  -webkit-text-stroke: 3px #000000;
-  text-shadow: 4px 4px 0px #000000;
+  -webkit-text-stroke: 3px #090A0B;
+  text-shadow: 4px 4px 0px #090A0B;
 }
 
 .text-stroke-comic-sm {
-  -webkit-text-stroke: 1.5px #000000;
-  text-shadow: 2px 2px 0px #000000;
+  -webkit-text-stroke: 1.5px #090A0B;
+  text-shadow: 2px 2px 0px #090A0B;
 }
 
 /* Floating Toy Animation for Ultron Register Transition */
@@ -431,22 +431,32 @@ body,
   animation: ultronToyFloat 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-@keyframes comicPulseGlow {
-
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.4;
-  }
-
-  50% {
-    transform: scale(1.15);
-    opacity: 0.8;
-  }
+.timer-value {
+  display: inline-block;
+  transition: transform 120ms ease;
+  will-change: transform;
 }
 
-.animate-comic-pulse-glow {
-  animation: comicPulseGlow 1.2s ease-in-out infinite;
+.timer-value.tick {
+  animation: comicTick 160ms steps(2, end);
+}
+
+@keyframes comicTick {
+  0%   { transform: translateY(-2px) rotate(-2deg) scale(1.05); }
+  35%  { transform: translateY(2px) rotate(1deg) scale(.92); }
+  70%  { transform: translateY(-1px) rotate(-.5deg) scale(1.02); }
+  100% { transform: translateY(0) rotate(0) scale(1); }
+}
+
+@keyframes secSnapAnim {
+  0%   { transform: rotate(1.2deg) scale(1); }
+  35%  { transform: rotate(0.4deg) scale(0.97) translateY(1px); }
+  70%  { transform: rotate(1.6deg) scale(1.02) translateY(-1px); }
+  100% { transform: rotate(1.2deg) scale(1); }
+}
+
+.sec-box-snap {
+  animation: secSnapAnim 160ms ease-out;
 }
 
 /* Mini Ultron Toys Swarm Explosion Keyframes */
@@ -495,8 +505,8 @@ body,
 }
 
 .text-stroke-comic-lg {
-  -webkit-text-stroke: 4.5px #000000;
-  text-shadow: 6px 6px 0px #000000;
+  -webkit-text-stroke: 4.5px #090A0B;
+  text-shadow: 6px 6px 0px #090A0B;
 }
 
 /* Comic Interactive Button Pop */
@@ -505,7 +515,7 @@ body,
 }
 
 .btn-comic:hover {
-  box-shadow: 8px 8px 0px #000000;
+  box-shadow: 8px 8px 0px #090A0B;
 }
 
 /* Tactile Paper Sticker Pop Hover with Overshoot Bouncy Cubic-Bezier Ease */
@@ -516,7 +526,7 @@ body,
 
 .sticker-pop:hover {
   transform: scale(1.08) rotate(-2deg) !important;
-  box-shadow: 5px 5px 0px #000000;
+  box-shadow: 5px 5px 0px #090A0B;
 }
 
 .sticker-pop-alt {
@@ -526,7 +536,7 @@ body,
 
 .sticker-pop-alt:hover {
   transform: scale(1.08) rotate(3deg) !important;
-  box-shadow: 5px 5px 0px #000000;
+  box-shadow: 5px 5px 0px #090A0B;
 }
 
 /* Infinite Marquee Ticker */
@@ -725,19 +735,17 @@ body,
 ========================================================= */
 
 .comic-card-wrapper {
-  --cyan: #00d9f7;
-  --cyan-dark: #007f96;
-  --cyan-shadow: #003d49;
-  --cyan-inner: #00a9c4;
-  --cyan-dark-ink: #003641;
-  --cyan-glow: rgba(0, 217, 247, 0.4);
+  --cyan: #0FA9C6;
+  --cyan-dark: #08758A;
+  --cyan-shadow: #08758A;
+  --cyan-inner: #0FA9C6;
+  --cyan-dark-ink: #090A0B;
 
-  --pink: #FF2E63;
-  --pink-dark: #b8143e;
-  --pink-shadow: #4d0a1a;
-  --pink-inner: #ff658a;
-  --pink-dark-ink: #3b0713;
-  --pink-glow: rgba(255, 46, 99, 0.4);
+  --pink: #D51F55;
+  --pink-dark: #A81443;
+  --pink-shadow: #A81443;
+  --pink-inner: #D51F55;
+  --pink-dark-ink: #090A0B;
 
   position: relative;
   width: 100%;
@@ -745,7 +753,7 @@ body,
   background: transparent;
   cursor: pointer;
   transform: rotate(-0.45deg);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   flex-direction: column;
 }
@@ -755,7 +763,6 @@ body,
   --card-shadow: var(--cyan-shadow);
   --card-inner: var(--cyan-inner);
   --card-dark: var(--cyan-dark-ink);
-  --card-glow: var(--cyan-glow);
 }
 
 .comic-card-wrapper.non-tech {
@@ -763,12 +770,10 @@ body,
   --card-shadow: var(--pink-shadow);
   --card-inner: var(--pink-inner);
   --card-dark: var(--pink-dark-ink);
-  --card-glow: var(--pink-glow);
 }
 
 .comic-card-wrapper:hover {
   transform: translateY(-5px) scale(1.025) rotate(0deg);
-  filter: drop-shadow(0 8px 24px var(--card-glow));
 }
 
 /* MAIN HAND-DRAWN CARD SVG */
@@ -816,7 +821,7 @@ body,
   align-items: center;
   justify-content: center;
   background: var(--card-main);
-  color: #050505;
+  color: #090A0B;
   font-family: "Arial Narrow", "Roboto Condensed", var(--font-comic), Arial, sans-serif;
   font-size: 19px;
   font-weight: 900;
@@ -880,7 +885,6 @@ body,
   height: 2px;
   background: var(--card-main);
   transform: rotate(10deg);
-  box-shadow: -5px 6px 0 var(--card-glow);
   pointer-events: none;
 }
 
@@ -1021,7 +1025,7 @@ body,
   top: 17px;
   width: 102%;
   height: 29px;
-  background: #000;
+  background: #090A0B;
   opacity: 0.8;
   filter: blur(1.5px);
   clip-path: polygon(
@@ -1081,7 +1085,7 @@ body,
   top: 7px;
   width: 102%;
   height: 32px;
-  background: #f1f1f1;
+  background: #EEEEEA;
   clip-path: polygon(
     /* TOP TEAR */
     0% 47%,
@@ -1164,7 +1168,7 @@ body,
   position: absolute;
   z-index: 4;
   display: block;
-  background: #e8e8e8;
+  background: #B8B8B2;
   pointer-events: none;
 }
 
@@ -1256,7 +1260,7 @@ body,
   z-index: 5;
   width: 3px;
   height: 2px;
-  background: #dedede;
+  background: #B8B8B2;
   pointer-events: none;
 }
 
@@ -1297,4 +1301,3 @@ body,
     height: 26px;
   }
 }
-

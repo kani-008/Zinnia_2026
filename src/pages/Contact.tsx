@@ -71,12 +71,12 @@ export const WebsiteContactPage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-[#0A0A0D] text-[#ECECED] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none scroll-smooth">
+    <div className="relative w-full min-h-screen bg-[#08090A] text-[#EEEEEA] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none scroll-smooth">
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
-          <div className="px-6 py-2.5 bg-[#F5D90A] border-[2.5px] border-[#0A0A0D] shadow-[5px_5px_0px_#8A7400] rotate-3 sticker-pop">
-            <span className="font-display text-3xl sm:text-5xl text-[#0A0A0D] tracking-wider font-black">
+          <div className="px-6 py-2.5 bg-[#E5BD00] border-2 border-[#090A0B] shadow-[5px_5px_0px_#090A0B] rotate-3 sticker-pop">
+            <span className="font-display text-3xl sm:text-5xl text-[#090A0B] tracking-wider font-black">
               {interactiveSoundText}
             </span>
           </div>
@@ -87,65 +87,65 @@ export const WebsiteContactPage: React.FC = () => {
       <WebsiteNavbar />
 
       {/* =========================================================================
-          2. MAIN CONTENT AREA (Harmonious, Modern Dark Theme)
+          2. MAIN CONTENT AREA
           ========================================================================= */}
       <main className="relative z-20 max-w-6xl mx-auto w-full pt-10 sm:pt-14 pb-16 px-2 sm:px-4 flex-1">
         {/* Page Header */}
         <div className="text-center space-y-3 mb-10 sm:mb-12">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#181820] border border-[#2E2E3A] text-zinc-400 font-mono text-xs uppercase tracking-wider">
-            <span className="w-2 h-2 rounded-full bg-[#F5D90A] animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#111214] border border-[#B8B8B2]/30 text-[#B8B8B2] font-mono text-xs uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-[#E5BD00] animate-pulse" />
             <span>COMMUNICATION DESK</span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-6xl md:text-7xl uppercase tracking-tight text-white">
-            CONTACT <span className="text-[#F5D90A]">US</span>
+          <h1 className="font-display text-4xl sm:text-6xl md:text-7xl uppercase tracking-tight text-[#EEEEEA]">
+            CONTACT <span className="text-[#E5BD00]">US</span>
           </h1>
 
-          <p className="font-mono text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto leading-relaxed">
+          <p className="font-mono text-xs sm:text-sm text-[#B8B8B2] max-w-xl mx-auto leading-relaxed">
             Have questions about event guidelines, accommodation, schedule, or registrations? We are here to help.
           </p>
         </div>
 
-        {/* Contact Information Grid - 2x2 Clean Balanced Layout */}
+        {/* Contact Information Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-stretch">
           
           {/* CARD 1: Official Email & Helplines */}
-          <div className="bg-[#121217] border border-[#252530] rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#000000] flex flex-col justify-between relative">
+          <div className="bg-[#111214] border border-[#B8B8B2]/20 rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#090A0B] flex flex-col justify-between relative">
             <div>
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-lg bg-[#1A1A22] border border-[#2E2E3C] text-[#F5D90A] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-[#17181C] border border-[#B8B8B2]/30 text-[#E5BD00] flex items-center justify-center shrink-0">
                   <Mail className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-comic font-black text-lg text-white uppercase tracking-wide">
+                  <h3 className="font-comic font-black text-lg text-[#EEEEEA] uppercase tracking-wide">
                     OFFICIAL CORRESPONDENCE
                   </h3>
-                  <p className="font-mono text-xs text-zinc-400">Direct inquiries &amp; verification desk</p>
+                  <p className="font-mono text-xs text-[#B8B8B2]">Direct inquiries &amp; verification desk</p>
                 </div>
               </div>
 
               {/* Primary Email Box */}
-              <div className="bg-[#181820] border border-[#2A2A36] rounded-xl p-4 sm:p-5 mb-5 group hover:border-zinc-500 transition-colors">
-                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-400 font-bold mb-1.5">
+              <div className="bg-[#17181C] border border-[#B8B8B2]/20 rounded-xl p-4 sm:p-5 mb-5 group hover:border-[#B8B8B2] transition-colors">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-[#B8B8B2] font-bold mb-1.5">
                   DEPARTMENT EMAIL ID
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <a
                     href="mailto:zinnia2026@gcee.ac.in"
-                    className="font-mono text-base sm:text-lg font-bold text-white hover:text-[#F5D90A] transition-colors tracking-wide select-all"
+                    className="font-mono text-base sm:text-lg font-bold text-[#EEEEEA] hover:text-[#E5BD00] transition-colors tracking-wide select-all"
                   >
                     zinnia2026@gcee.ac.in
                   </a>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={handleCopyEmail}
-                      className="px-3 py-1.5 bg-[#22222C] hover:bg-[#2C2C38] border border-[#383846] text-xs font-mono font-medium rounded-lg flex items-center gap-1.5 text-zinc-300 hover:text-white transition-all cursor-pointer"
+                      className="px-3 py-1.5 bg-[#111214] hover:bg-[#1A1A20] border border-[#B8B8B2]/40 text-xs font-mono font-medium rounded-lg flex items-center gap-1.5 text-[#B8B8B2] hover:text-[#EEEEEA] transition-all cursor-pointer"
                       title="Copy email to clipboard"
                     >
                       {copied ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-[#F5D90A]" />
-                          <span className="text-[#F5D90A]">COPIED</span>
+                          <Check className="w-3.5 h-3.5 text-[#E5BD00]" />
+                          <span className="text-[#E5BD00]">COPIED</span>
                         </>
                       ) : (
                         <>
@@ -156,7 +156,7 @@ export const WebsiteContactPage: React.FC = () => {
                     </button>
                     <a
                       href="mailto:zinnia2026@gcee.ac.in"
-                      className="px-3 py-1.5 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] font-comic font-bold text-xs rounded-lg border border-[#F5D90A] shadow-[2px_2px_0px_#000000] flex items-center gap-1.5 transition-all"
+                      className="px-3 py-1.5 bg-[#E5BD00] hover:bg-[#EEEEEA] text-[#090A0B] font-comic font-bold text-xs rounded-lg border border-[#090A0B] shadow-[2px_2px_0px_#090A0B] flex items-center gap-1.5 transition-all"
                     >
                       <span>MAIL</span>
                       <ExternalLink className="w-3 h-3" />
@@ -167,37 +167,37 @@ export const WebsiteContactPage: React.FC = () => {
 
               {/* Helpline Rows */}
               <div className="space-y-2.5 font-mono text-xs">
-                <div className="p-3 bg-[#181820] border border-[#242430] rounded-lg flex items-center justify-between">
+                <div className="p-3 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-md bg-[#20202A] text-zinc-300 flex items-center justify-center shrink-0">
+                    <div className="w-7 h-7 rounded-md bg-[#111214] text-[#B8B8B2] flex items-center justify-center shrink-0">
                       <Phone className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-500 uppercase">General Helpline</p>
-                      <p className="font-bold text-zinc-200">+91 94451 98765</p>
+                      <p className="text-[10px] text-[#B8B8B2]/70 uppercase">General Helpline</p>
+                      <p className="font-bold text-[#EEEEEA]">+91 94451 98765</p>
                     </div>
                   </div>
                   <a
                     href="tel:+919445198765"
-                    className="text-[11px] text-zinc-300 hover:text-white hover:border-zinc-500 font-semibold px-2.5 py-1 bg-[#22222C] border border-[#30303E] rounded transition-colors"
+                    className="text-[11px] text-[#B8B8B2] hover:text-[#EEEEEA] hover:border-[#B8B8B2] font-semibold px-2.5 py-1 bg-[#111214] border border-[#B8B8B2]/30 rounded transition-colors"
                   >
                     CALL
                   </a>
                 </div>
 
-                <div className="p-3 bg-[#181820] border border-[#242430] rounded-lg flex items-center justify-between">
+                <div className="p-3 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-md bg-[#20202A] text-zinc-300 flex items-center justify-center shrink-0">
+                    <div className="w-7 h-7 rounded-md bg-[#111214] text-[#B8B8B2] flex items-center justify-center shrink-0">
                       <Phone className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-500 uppercase">Event Desk &amp; Registration</p>
-                      <p className="font-bold text-zinc-200">+91 98401 23456</p>
+                      <p className="text-[10px] text-[#B8B8B2]/70 uppercase">Event Desk &amp; Registration</p>
+                      <p className="font-bold text-[#EEEEEA]">+91 98401 23456</p>
                     </div>
                   </div>
                   <a
                     href="tel:+919840123456"
-                    className="text-[11px] text-zinc-300 hover:text-white hover:border-zinc-500 font-semibold px-2.5 py-1 bg-[#22222C] border border-[#30303E] rounded transition-colors"
+                    className="text-[11px] text-[#B8B8B2] hover:text-[#EEEEEA] hover:border-[#B8B8B2] font-semibold px-2.5 py-1 bg-[#111214] border border-[#B8B8B2]/30 rounded transition-colors"
                   >
                     CALL
                   </a>
@@ -205,111 +205,111 @@ export const WebsiteContactPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-5 pt-3.5 border-t border-[#20202A] text-zinc-500 text-xs font-mono flex items-center justify-between">
+            <div className="mt-5 pt-3.5 border-t border-[#B8B8B2]/20 text-[#B8B8B2] text-xs font-mono flex items-center justify-between">
               <span>Operational Hours: 9:00 AM – 6:00 PM</span>
-              <span className="text-zinc-400 font-medium flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+              <span className="text-[#B8B8B2] font-medium flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0FA9C6] inline-block" />
                 ONLINE DESK
               </span>
             </div>
           </div>
 
           {/* CARD 2: Campus Headquarters & Location */}
-          <div className="bg-[#121217] border border-[#252530] rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#000000] flex flex-col justify-between relative">
+          <div className="bg-[#111214] border border-[#B8B8B2]/20 rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#090A0B] flex flex-col justify-between relative">
             <div>
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-lg bg-[#1A1A22] border border-[#2E2E3C] text-[#F5D90A] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-[#17181C] border border-[#B8B8B2]/30 text-[#E5BD00] flex items-center justify-center shrink-0">
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-comic font-black text-lg text-white uppercase tracking-wide">
+                  <h3 className="font-comic font-black text-lg text-[#EEEEEA] uppercase tracking-wide">
                     CAMPUS HEADQUARTERS
                   </h3>
-                  <p className="font-mono text-xs text-zinc-400">Government College of Engineering, Erode</p>
+                  <p className="font-mono text-xs text-[#B8B8B2]">Government College of Engineering, Erode</p>
                 </div>
               </div>
 
-              <div className="space-y-1.5 text-xs font-mono text-zinc-300 leading-relaxed bg-[#181820] border border-[#2A2A36] rounded-xl p-4 mb-4">
-                <p className="font-bold text-white text-sm">Department of Computer Science &amp; Engineering</p>
-                <p className="text-zinc-400">NH-544 (Salem - Cochin National Highway), Chithode,</p>
-                <p className="text-zinc-400">Erode - 638316, Tamil Nadu, India</p>
+              <div className="space-y-1.5 text-xs font-mono text-[#EEEEEA] leading-relaxed bg-[#17181C] border border-[#B8B8B2]/20 rounded-xl p-4 mb-4">
+                <p className="font-bold text-[#EEEEEA] text-sm">Department of Computer Science &amp; Engineering</p>
+                <p className="text-[#B8B8B2]">NH-544 (Salem - Cochin National Highway), Chithode,</p>
+                <p className="text-[#B8B8B2]">Erode - 638316, Tamil Nadu, India</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-mono mb-4">
-                <div className="p-3 bg-[#181820] border border-[#242430] rounded-lg flex items-center gap-2.5">
-                  <Calendar className="w-4 h-4 text-zinc-400 shrink-0" />
+                <div className="p-3 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg flex items-center gap-2.5">
+                  <Calendar className="w-4 h-4 text-[#B8B8B2] shrink-0" />
                   <div>
-                    <div className="text-[10px] text-zinc-500 uppercase">SYMPOSIUM DATE</div>
-                    <div className="font-bold text-white">Sep 24, 2026</div>
+                    <div className="text-[10px] text-[#B8B8B2]/70 uppercase">SYMPOSIUM DATE</div>
+                    <div className="font-bold text-[#EEEEEA]">Sep 24, 2026</div>
                   </div>
                 </div>
-                <div className="p-3 bg-[#181820] border border-[#242430] rounded-lg flex items-center gap-2.5">
-                  <Navigation className="w-4 h-4 text-zinc-400 shrink-0" />
+                <div className="p-3 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg flex items-center gap-2.5">
+                  <Navigation className="w-4 h-4 text-[#B8B8B2] shrink-0" />
                   <div>
-                    <div className="text-[10px] text-zinc-500 uppercase">TRANSIT DISTANCE</div>
-                    <div className="font-bold text-white">~14 km from Erode Bus Stand</div>
+                    <div className="text-[10px] text-[#B8B8B2]/70 uppercase">TRANSIT DISTANCE</div>
+                    <div className="font-bold text-[#EEEEEA]">~14 km from Erode Bus Stand</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="pt-3.5 border-t border-[#20202A]">
+            <div className="pt-3.5 border-t border-[#B8B8B2]/20">
               <a
                 href="https://maps.google.com/?q=Government+College+of+Engineering+Erode"
                 target="_blank"
                 rel="noreferrer"
-                className="w-full py-2.5 bg-[#181820] hover:bg-[#22222C] border border-[#30303E] hover:border-zinc-500 text-zinc-200 hover:text-white font-mono text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 transition-all shadow-[2px_2px_0px_#000000] cursor-pointer"
+                className="w-full py-2.5 bg-[#17181C] hover:bg-[#111214] border border-[#B8B8B2]/30 hover:border-[#B8B8B2] text-[#EEEEEA] font-mono text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 transition-all shadow-[2px_2px_0px_#090A0B] cursor-pointer"
               >
-                <MapPin className="w-4 h-4 text-[#F5D90A]" />
+                <MapPin className="w-4 h-4 text-[#E5BD00]" />
                 <span>OPEN IN GOOGLE MAPS</span>
-                <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+                <ExternalLink className="w-3.5 h-3.5 text-[#B8B8B2]" />
               </a>
             </div>
           </div>
 
           {/* CARD 3: Organizing Committee */}
-          <div className="bg-[#121217] border border-[#252530] rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#000000]">
+          <div className="bg-[#111214] border border-[#B8B8B2]/20 rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#090A0B]">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-lg bg-[#1A1A22] border border-[#2E2E3C] text-[#F5D90A] flex items-center justify-center shrink-0">
-                <span className="font-black text-sm">CSE</span>
+              <div className="w-10 h-10 rounded-lg bg-[#17181C] border border-[#B8B8B2]/30 text-[#E5BD00] flex items-center justify-center shrink-0">
+                <span className="font-black text-sm text-[#0FA9C6]">CSE</span>
               </div>
               <div>
-                <h3 className="font-comic font-black text-lg text-white uppercase tracking-wide">
+                <h3 className="font-comic font-black text-lg text-[#EEEEEA] uppercase tracking-wide">
                   ORGANIZING COMMITTEE
                 </h3>
-                <p className="font-mono text-xs text-zinc-400">Symposium leadership &amp; coordinators</p>
+                <p className="font-mono text-xs text-[#B8B8B2]">Symposium leadership &amp; coordinators</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs font-mono">
               {/* Staff Convener */}
-              <div className="p-4 bg-[#181820] border border-[#2A2A36] rounded-lg space-y-1.5 hover:border-zinc-500 transition-colors">
-                <span className="text-[10px] text-[#F5D90A] font-bold tracking-widest uppercase">
+              <div className="p-4 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg space-y-1.5 hover:border-[#B8B8B2] transition-colors">
+                <span className="text-[10px] text-[#E5BD00] font-bold tracking-widest uppercase">
                   STAFF CONVENER
                 </span>
-                <h4 className="font-bold text-sm text-white">Dr. A. Senthil Kumar</h4>
-                <p className="text-zinc-400 text-[11px]">Professor &amp; Head, Dept of CSE</p>
+                <h4 className="font-bold text-sm text-[#EEEEEA]">Dr. A. Senthil Kumar</h4>
+                <p className="text-[#B8B8B2] text-[11px]">Professor &amp; Head, Dept of CSE</p>
                 <a
                   href="tel:+919840123456"
-                  className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#F5D90A] transition-colors pt-1"
+                  className="inline-flex items-center gap-1.5 text-[#B8B8B2] hover:text-[#E5BD00] transition-colors pt-1"
                 >
-                  <Phone className="w-3 h-3 text-[#F5D90A]" />
+                  <Phone className="w-3 h-3 text-[#E5BD00]" />
                   <span>+91 98401 23456</span>
                 </a>
               </div>
 
               {/* Student Convener */}
-              <div className="p-4 bg-[#181820] border border-[#2A2A36] rounded-lg space-y-1.5 hover:border-zinc-500 transition-colors">
-                <span className="text-[10px] text-[#F5D90A] font-bold tracking-widest uppercase">
+              <div className="p-4 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg space-y-1.5 hover:border-[#B8B8B2] transition-colors">
+                <span className="text-[10px] text-[#E5BD00] font-bold tracking-widest uppercase">
                   STUDENT CONVENER
                 </span>
-                <h4 className="font-bold text-sm text-white">R. Kanishkar</h4>
-                <p className="text-zinc-400 text-[11px]">Final Year CSE &bull; Student Lead</p>
+                <h4 className="font-bold text-sm text-[#EEEEEA]">R. Kanishkar</h4>
+                <p className="text-[#B8B8B2] text-[11px]">Final Year CSE &bull; Student Lead</p>
                 <a
                   href="tel:+919445198765"
-                  className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#F5D90A] transition-colors pt-1"
+                  className="inline-flex items-center gap-1.5 text-[#B8B8B2] hover:text-[#E5BD00] transition-colors pt-1"
                 >
-                  <Phone className="w-3 h-3 text-[#F5D90A]" />
+                  <Phone className="w-3 h-3 text-[#E5BD00]" />
                   <span>+91 94451 98765</span>
                 </a>
               </div>
@@ -317,35 +317,35 @@ export const WebsiteContactPage: React.FC = () => {
           </div>
 
           {/* CARD 4: Transit & Arrival Guide */}
-          <div className="bg-[#121217] border border-[#252530] rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#000000]">
+          <div className="bg-[#111214] border border-[#B8B8B2]/20 rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#090A0B]">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-lg bg-[#1A1A22] border border-[#2E2E3C] text-[#F5D90A] flex items-center justify-center shrink-0">
-                <Navigation className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-lg bg-[#17181C] border border-[#B8B8B2]/30 text-[#E5BD00] flex items-center justify-center shrink-0">
+                <Navigation className="w-5 h-5 text-[#0FA9C6]" />
               </div>
               <div>
-                <h3 className="font-comic font-black text-lg text-white uppercase tracking-wide">
+                <h3 className="font-comic font-black text-lg text-[#EEEEEA] uppercase tracking-wide">
                   HOW TO REACH THE VENUE
                 </h3>
-                <p className="font-mono text-xs text-zinc-400">Campus transit &amp; connectivity details</p>
+                <p className="font-mono text-xs text-[#B8B8B2]">Campus transit &amp; connectivity details</p>
               </div>
             </div>
 
-            <div className="space-y-3 text-xs font-mono text-zinc-300">
-              <div className="p-3.5 bg-[#181820] border border-[#242430] rounded-lg flex items-start gap-3">
-                <Bus className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+            <div className="space-y-3 text-xs font-mono text-[#B8B8B2]">
+              <div className="p-3.5 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg flex items-start gap-3">
+                <Bus className="w-4 h-4 text-[#0FA9C6] shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-bold text-white">By Bus</div>
-                  <div className="text-zinc-400 text-[11px] mt-0.5 leading-relaxed">
+                  <div className="font-bold text-[#EEEEEA]">By Bus</div>
+                  <div className="text-[#B8B8B2] text-[11px] mt-0.5 leading-relaxed">
                     Frequent town &amp; mofussil buses operate from Erode Central Bus Stand towards Bhavani / Chithode route. Alight at the IRTT / GCEE main arch stop.
                   </div>
                 </div>
               </div>
 
-              <div className="p-3.5 bg-[#181820] border border-[#242430] rounded-lg flex items-start gap-3">
-                <Train className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+              <div className="p-3.5 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg flex items-start gap-3">
+                <Train className="w-4 h-4 text-[#0FA9C6] shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-bold text-white">By Train</div>
-                  <div className="text-zinc-400 text-[11px] mt-0.5 leading-relaxed">
+                  <div className="font-bold text-[#EEEEEA]">By Train</div>
+                  <div className="text-[#B8B8B2] text-[11px] mt-0.5 leading-relaxed">
                     Erode Junction (ED) is well connected across all major routes. The campus is ~15 km from the station; autorickshaws and buses operate round the clock.
                   </div>
                 </div>
@@ -356,9 +356,7 @@ export const WebsiteContactPage: React.FC = () => {
         </div>
       </main>
 
-      {/* =========================================================================
-          3. FOOTER COMPONENT
-          ========================================================================= */}
+      {/* Website Footer */}
       <WebsiteFooter />
     </div>
   );

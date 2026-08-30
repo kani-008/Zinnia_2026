@@ -77,7 +77,7 @@ export const WebsiteNavbar: React.FC = () => {
           el.scrollIntoView({ behavior: 'smooth' });
         }
       } else {
-        navigate('/#events');
+        navigate('/#events', { state: { scrollTo: 'events' } });
       }
     } else if (target === 'passport') {
       navigate('/passport');
@@ -105,8 +105,8 @@ export const WebsiteNavbar: React.FC = () => {
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[120] pointer-events-none animate-bounce">
-          <div className="px-6 py-2.5 bg-[#F5D90A] border-3 border-[#F5D90A] shadow-[6px_6px_0px_#8A7400] rotate-6 sticker-pop">
-            <span className="font-display text-4xl sm:text-6xl text-[#FF3366] tracking-wider">
+          <div className="px-6 py-2.5 bg-[#E5BD00] border-3 border-[#090A0B] shadow-[6px_6px_0px_#090A0B] rotate-6 sticker-pop">
+            <span className="font-display text-4xl sm:text-6xl text-[#D51F55] tracking-wider">
               {interactiveSoundText}
             </span>
           </div>
@@ -131,11 +131,11 @@ export const WebsiteNavbar: React.FC = () => {
         {/* Mobile Hamburger Menu Button */}
         <button
           type="button"
-          className="sm:hidden flex items-center justify-center w-11 h-11 bg-[#1A1A1D] border-2 border-white/80 shadow-[3px_3px_0px_#000000] cursor-pointer active:scale-95 transition-transform"
+          className="sm:hidden flex items-center justify-center w-11 h-11 bg-[#111214] border-2 border-[#EEEEEA]/80 shadow-[3px_3px_0px_#090A0B] cursor-pointer active:scale-95 transition-transform"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         >
-          {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+          {mobileMenuOpen ? <X className="w-6 h-6 text-[#EEEEEA]" /> : <Menu className="w-6 h-6 text-[#EEEEEA]" />}
         </button>
 
         {/* Desktop Comic Navigation Tabs with Magnetic Pull */}
@@ -196,13 +196,13 @@ export const WebsiteNavbar: React.FC = () => {
             {/* Hand-drawn pink star doodle (top-left) */}
             <div className="absolute top-16 left-6 rotate-12 opacity-60">
               <svg viewBox="0 0 50 50" className="w-6 h-6 fill-none">
-                <path d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z" fill="#E91E5B" stroke="#E91E5B" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z" fill="#D51F55" stroke="#D51F55" strokeWidth="1.5" strokeLinejoin="round" />
               </svg>
             </div>
 
             {/* Hand-drawn yellow lightning doodle (bottom-right) */}
             <div className="absolute bottom-20 right-6 -rotate-12 opacity-70">
-              <svg viewBox="0 0 40 50" className="w-5 h-7 fill-[#F2C800]">
+              <svg viewBox="0 0 40 50" className="w-5 h-7 fill-[#E5BD00]">
                 <path d="M 22 2 L 6 26 L 18 24 L 10 48 L 34 18 L 22 20 Z" />
               </svg>
             </div>
@@ -211,7 +211,7 @@ export const WebsiteNavbar: React.FC = () => {
           {/* Close Button (Hand-Drawn Comic Square) */}
           <button
             type="button"
-            className="absolute top-4 right-4 z-20 w-10 h-10 bg-[#111214] border-2 border-[#F1F1EC] text-[#F1F1EC] shadow-[3px_3px_0px_#090A0B] flex items-center justify-center cursor-pointer active:translate-x-0.5 active:translate-y-0.5 -rotate-3 transition-transform"
+            className="absolute top-4 right-4 z-20 w-10 h-10 bg-[#111214] border-2 border-[#EEEEEA] text-[#EEEEEA] shadow-[3px_3px_0px_#090A0B] flex items-center justify-center cursor-pointer active:translate-x-0.5 active:translate-y-0.5 -rotate-3 transition-transform"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu"
           >
@@ -224,7 +224,7 @@ export const WebsiteNavbar: React.FC = () => {
             {/* NAVIGATION MENU Sticker (Irregular quadrilateral yellow comic sticker) */}
             <div className="mb-1">
               <div
-                className="relative inline-block px-4 py-1.5 bg-[#F2C800] border-2 border-[#090A0B] shadow-[3px_3px_0px_#090A0B] -rotate-2"
+                className="relative inline-block px-4 py-1.5 bg-[#E5BD00] border-2 border-[#090A0B] shadow-[3px_3px_0px_#090A0B] -rotate-2"
                 style={{
                   clipPath: 'polygon(2% 8%, 98% 1%, 100% 93%, 1% 98%)',
                 }}
@@ -249,7 +249,7 @@ export const WebsiteNavbar: React.FC = () => {
               >
                 {/* Slightly offset back border box */}
                 <div
-                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#6F7070]"
+                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
                   style={{
                     transform: 'translate(3px, 3px)',
                     clipPath: 'polygon(1% 5%, 98% 2%, 99% 95%, 2% 98%)',
@@ -257,19 +257,19 @@ export const WebsiteNavbar: React.FC = () => {
                 />
                 {/* Front comic button */}
                 <div
-                  className="relative z-10 bg-[#111214] border-2 border-[#F1F1EC] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
                   style={{
                     clipPath: 'polygon(2% 3%, 99% 1%, 98% 97%, 1% 95%)',
                   }}
                 >
-                  <svg className="absolute -top-1 -left-1 w-2.5 h-2.5 text-[#F1F1EC] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                  <svg className="absolute -top-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
                     <path d="M1 8 L1 1 L8 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   </svg>
-                  <svg className="absolute -bottom-1 -right-1 w-2.5 h-2.5 text-[#F1F1EC] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                  <svg className="absolute -bottom-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
                     <path d="M9 2 L9 9 L2 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   </svg>
-                  <div className="absolute top-1 right-2 w-1.5 h-[1.5px] bg-[#11B8D8] opacity-80" />
-                  <span className="font-comic font-black text-sm xs:text-base text-[#F1F1EC] uppercase tracking-wider">
+                  <div className="absolute top-1 right-2 w-1.5 h-[1.5px] bg-[#0FA9C6] opacity-80" />
+                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
                     HOME
                   </span>
                 </div>
@@ -283,7 +283,7 @@ export const WebsiteNavbar: React.FC = () => {
               >
                 {/* Slightly offset back border box */}
                 <div
-                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#6F7070]"
+                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
                   style={{
                     transform: 'translate(3px, 3px)',
                     clipPath: 'polygon(2% 2%, 99% 4%, 97% 98%, 1% 94%)',
@@ -291,19 +291,19 @@ export const WebsiteNavbar: React.FC = () => {
                 />
                 {/* Front comic button */}
                 <div
-                  className="relative z-10 bg-[#111214] border-2 border-[#F1F1EC] px-3 py-2.5 flex items-center justify-center gap-1 transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center gap-1 transition-transform active:translate-x-0.5 active:translate-y-0.5"
                   style={{
                     clipPath: 'polygon(1% 1%, 98% 3%, 99% 96%, 2% 98%)',
                   }}
                 >
-                  <svg className="absolute -top-1 -right-1 w-2.5 h-2.5 text-[#F1F1EC] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                  <svg className="absolute -top-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
                     <path d="M9 8 L9 1 L2 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   </svg>
-                  <svg className="absolute -bottom-1 -left-1 w-2.5 h-2.5 text-[#F1F1EC] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                  <svg className="absolute -bottom-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
                     <path d="M1 2 L1 9 L8 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   </svg>
-                  <span className="text-[#F2C800] text-xs font-black">⚡</span>
-                  <span className="font-comic font-black text-sm xs:text-base text-[#F1F1EC] uppercase tracking-wider">
+                  <span className="text-[#E5BD00] text-xs font-black">⚡</span>
+                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
                     EVENTS
                   </span>
                 </div>
@@ -317,7 +317,7 @@ export const WebsiteNavbar: React.FC = () => {
               >
                 {/* Slightly offset back border box */}
                 <div
-                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#6F7070]"
+                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
                   style={{
                     transform: 'translate(3px, 3px)',
                     clipPath: 'polygon(2% 4%, 99% 1%, 98% 96%, 1% 98%)',
@@ -325,19 +325,19 @@ export const WebsiteNavbar: React.FC = () => {
                 />
                 {/* Front comic button */}
                 <div
-                  className="relative z-10 bg-[#111214] border-2 border-[#F1F1EC] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
                   style={{
                     clipPath: 'polygon(1% 2%, 98% 1%, 99% 97%, 2% 95%)',
                   }}
                 >
-                  <svg className="absolute -top-1 -left-1 w-2.5 h-2.5 text-[#F1F1EC] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                  <svg className="absolute -top-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
                     <path d="M1 8 L1 1 L8 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   </svg>
-                  <svg className="absolute -bottom-1 -right-1 w-2.5 h-2.5 text-[#F1F1EC] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                  <svg className="absolute -bottom-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
                     <path d="M9 2 L9 9 L2 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   </svg>
-                  <div className="absolute bottom-1 right-2 w-1.5 h-[1.5px] bg-[#11B8D8] opacity-80" />
-                  <span className="font-comic font-black text-sm xs:text-base text-[#F1F1EC] uppercase tracking-wider">
+                  <div className="absolute bottom-1 right-2 w-1.5 h-[1.5px] bg-[#0FA9C6] opacity-80" />
+                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
                     PASSES
                   </span>
                 </div>
@@ -351,7 +351,7 @@ export const WebsiteNavbar: React.FC = () => {
               >
                 {/* Slightly offset back border box */}
                 <div
-                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#6F7070]"
+                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
                   style={{
                     transform: 'translate(3px, 3px)',
                     clipPath: 'polygon(1% 2%, 98% 4%, 99% 97%, 2% 95%)',
@@ -359,18 +359,18 @@ export const WebsiteNavbar: React.FC = () => {
                 />
                 {/* Front comic button */}
                 <div
-                  className="relative z-10 bg-[#111214] border-2 border-[#F1F1EC] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
+                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
                   style={{
                     clipPath: 'polygon(2% 1%, 99% 2%, 98% 98%, 1% 96%)',
                   }}
                 >
-                  <svg className="absolute -top-1 -right-1 w-2.5 h-2.5 text-[#F1F1EC] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                  <svg className="absolute -top-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
                     <path d="M9 8 L9 1 L2 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   </svg>
-                  <svg className="absolute -bottom-1 -left-1 w-2.5 h-2.5 text-[#F1F1EC] pointer-events-none" viewBox="0 0 10 10" fill="none">
+                  <svg className="absolute -bottom-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
                     <path d="M1 2 L1 9 L8 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   </svg>
-                  <span className="font-comic font-black text-sm xs:text-base text-[#F1F1EC] uppercase tracking-wider">
+                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
                     CONTACT
                   </span>
                 </div>
@@ -385,7 +385,7 @@ export const WebsiteNavbar: React.FC = () => {
               <div className="relative w-full">
                 {/* Fixed offset back-box underneath */}
                 <div
-                  className="absolute inset-0 bg-[#090A0B] border-2 border-[#6F7070]"
+                  className="absolute inset-0 bg-[#090A0B] border-2 border-[#B8B8B2]"
                   style={{
                     transform: 'translate(4px, 4px)',
                     clipPath: 'polygon(1.2% 4.5%, 98.5% 1%, 100% 6.5%, 98.5% 95.5%, 96% 99%, 3.5% 98.5%, 0.5% 92.5%)',
@@ -393,7 +393,7 @@ export const WebsiteNavbar: React.FC = () => {
                 />
                 {/* Moving top cyan panel */}
                 <div
-                  className="relative z-10 w-full bg-[#11B8D8] hover:bg-[#F2C800] border-[2.5px] border-[#090A0B] px-5 py-3 flex items-center justify-center gap-2.5 transition-all active:translate-x-1 active:translate-y-1"
+                  className="relative z-10 w-full bg-[#0FA9C6] hover:bg-[#E5BD00] border-[2.5px] border-[#090A0B] px-5 py-3 flex items-center justify-center gap-2.5 transition-all active:translate-x-1 active:translate-y-1"
                   style={{
                     clipPath: 'polygon(0.8% 3.5%, 99.2% 1.2%, 100% 5.8%, 99% 94.5%, 96.5% 98.5%, 3% 97.2%, 0.8% 92%)',
                   }}
