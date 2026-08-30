@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { WebsiteHomePage } from './pages/Home';
-import { WebsiteEventsPage } from './pages/Events';
 import { WebsiteRegisterPage } from './pages/Register';
 import { WebsitePaymentPage } from './pages/Payment';
 import { WebsitePassportPage } from './pages/Passport';
@@ -20,7 +19,6 @@ export function App() {
       {/* Routes */}
       <Routes>
         <Route path="/" element={<WebsiteHomePage />} />
-        <Route path="/events" element={<WebsiteEventsPage />} />
         <Route path="/register" element={<WebsiteRegisterPage />} />
         <Route path="/payment" element={<WebsitePaymentPage />} />
         <Route path="/passport" element={<WebsitePassportPage />} />

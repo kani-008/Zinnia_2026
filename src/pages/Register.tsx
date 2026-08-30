@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
+import { WebsiteNavbar } from '../components/layout/Navbar';
 import { WebsiteFooter } from '../components/layout/Footer';
 import { 
   ArrowRight, 
@@ -208,68 +209,13 @@ export const WebsiteRegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0A0A0D] text-[#ECECED] flex flex-col font-sans selection:bg-[#F5D90A] selection:text-[#0A0A0D]">
-      {/* =========================================================================
-          NAVIGATION BAR
-          ========================================================================= */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-8 py-3 bg-[#0A0A0D]/90 backdrop-blur-md border-b border-[#1F1F28] flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <MagneticElement
-            strength={0.25}
-            onClick={() => navigate('/')}
-          >
-            <div className="cursor-pointer group relative px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#F5D90A] border-[2.5px] sm:border-[3px] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400] sm:shadow-[4px_4px_0px_#8A7400] -rotate-1 hover:rotate-0 transition-transform active:translate-x-1 active:translate-y-1">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-display text-xl sm:text-3xl text-[#0D0D0F] tracking-wide">
-                  ZINNIA
-                </span>
-                <span className="font-comic text-lg sm:text-2xl text-[#FF3366] font-black">
-                  '26
-                </span>
-              </div>
-              {/* Speech Tail */}
-              <div className="absolute -bottom-2 sm:-bottom-2.5 left-3 sm:left-5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-[#F5D90A] border-r-[2.5px] sm:border-r-[3px] border-b-[2.5px] sm:border-b-[3px] border-[#F5D90A] rotate-45" />
-            </div>
-          </MagneticElement>
-
-          <div className="hidden md:flex flex-col items-center justify-center p-1 px-2 bg-[#15151A] border border-[#2E2E38] shadow-[2px_2px_0px_#000000] rotate-2 text-[7px] font-mono leading-tight uppercase font-bold text-center text-[#8E8E98]">
-            <span>APPROVED</span>
-            <span className="text-[6px] text-[#F5D90A]">BY THE</span>
-            <span>CSE CODE</span>
-          </div>
-        </div>
-
-        {/* Nav Tabs */}
-        <nav className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap justify-end">
-          <MagneticElement strength={0.3} onClick={() => navigate('/')}>
-            <button className="px-3 sm:px-4 py-1 sm:py-1.5 bg-[#15151A] hover:bg-[#202028] text-zinc-300 hover:text-white border border-[#2E2E38] hover:border-zinc-500 shadow-[2px_2px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
-              HOME
-            </button>
-          </MagneticElement>
-
-          <MagneticElement strength={0.3} onClick={() => navigate('/events')}>
-            <button className="px-3 sm:px-4 py-1 sm:py-1.5 bg-[#15151A] hover:bg-[#202028] text-zinc-300 hover:text-white border border-[#2E2E38] hover:border-zinc-500 shadow-[2px_2px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
-              EVENTS
-            </button>
-          </MagneticElement>
-
-          <MagneticElement strength={0.3} onClick={() => navigate('/contact')}>
-            <button className="px-3 sm:px-4 py-1 sm:py-1.5 bg-[#15151A] hover:bg-[#202028] text-zinc-300 hover:text-white border border-[#2E2E38] hover:border-zinc-500 shadow-[2px_2px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all">
-              CONTACT
-            </button>
-          </MagneticElement>
-
-          <MagneticElement strength={0.35}>
-            <button className="px-3.5 sm:px-5 py-1 sm:py-1.5 bg-[#F5D90A] text-[#0D0D0F] border-2 border-[#F5D90A] shadow-[2.5px_2.5px_0px_#8A7400] font-display text-xs sm:text-sm tracking-wider uppercase font-black cursor-default transition-all shrink-0">
-              REGISTER
-            </button>
-          </MagneticElement>
-        </nav>
-      </header>
+      {/* Universal Comic Navbar */}
+      <WebsiteNavbar />
 
       {/* =========================================================================
           MAIN FORM CONTENT (Clean, Minimalist Streamlined Flow)
           ========================================================================= */}
-      <main className="flex-1 pt-24 sm:pt-28 pb-16 px-4 sm:px-6 max-w-3xl mx-auto w-full">
+      <main className="flex-1 pt-6 sm:pt-10 pb-16 px-4 sm:px-6 max-w-3xl mx-auto w-full">
         
         {/* Minimalist Heading (No clunky box / stats) */}
         <div className="mb-7 text-center sm:text-left space-y-1">

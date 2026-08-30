@@ -6,7 +6,7 @@ export const WebsiteFooter: React.FC = () => {
 
   return (
     <footer
-      id="contact"
+      id="about"
       className="relative z-30 bg-[#060608] overflow-visible"
       style={{
         width: '100vw',
@@ -14,6 +14,7 @@ export const WebsiteFooter: React.FC = () => {
         marginBottom: '-1rem',
       }}
     >
+      <div id="contact" className="absolute top-0 pointer-events-none" />
       {/* ── Torn Paper Divider (untouched) ── */}
       <div className="w-full -translate-y-1/2 overflow-visible">
         <TornPaperDivider />

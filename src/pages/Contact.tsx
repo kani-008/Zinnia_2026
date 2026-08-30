@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { WebsiteNavbar } from '../components/layout/Navbar';
 import { WebsiteFooter } from '../components/layout/Footer';
 import { registerNav } from '../services/registerNavigation';
 import { Phone, Mail, MapPin, Navigation, Calendar, Copy, Check, ExternalLink, Bus, Train, ArrowRight } from 'lucide-react';
@@ -82,94 +83,8 @@ export const WebsiteContactPage: React.FC = () => {
         </div>
       )}
 
-      {/* =========================================================================
-          1. TOP NAVBAR (Exact Match to Home Page Layout & Structure)
-          ========================================================================= */}
-      <header className="relative z-60 max-w-6xl mx-auto w-full flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-4 pt-1 px-1.5 sm:px-2">
-        {/* Left: Illustrated ZINNIA Comic Logo with Magnetic Pull */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <MagneticElement
-            strength={0.25}
-            onClick={() => {
-              triggerComicFX('HOME!');
-              navigate('/');
-            }}
-          >
-            <div className="cursor-pointer group relative px-2.5 sm:px-4 py-1 sm:py-1.5 bg-[#F5D90A] border-[2.5px] sm:border-[3px] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400] sm:shadow-[4px_4px_0px_#8A7400] -rotate-1 hover:rotate-0 transition-transform active:translate-x-1 active:translate-y-1">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-display text-xl sm:text-3xl text-[#0D0D0F] tracking-wide">
-                  ZINNIA
-                </span>
-                <span className="font-comic text-lg sm:text-2xl text-[#FF3366] font-black">
-                  '26
-                </span>
-              </div>
-              {/* Speech Tail */}
-              <div className="absolute -bottom-2 sm:-bottom-2.5 left-3 sm:left-5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-[#F5D90A] border-r-[2.5px] sm:border-r-[3px] border-b-[2.5px] sm:border-b-[3px] border-[#F5D90A] rotate-45" />
-            </div>
-          </MagneticElement>
-
-          {/* Comics Code Authority Parody Stamp */}
-          <div className="hidden md:flex flex-col items-center justify-center p-1 px-2 bg-[#15151A] border border-[#2E2E38] shadow-[2px_2px_0px_#000000] rotate-2 text-[7px] font-mono leading-tight uppercase font-bold text-center text-[#8E8E98]">
-            <span>APPROVED</span>
-            <span className="text-[6px] text-[#F5D90A]">BY THE</span>
-            <span>CSE CODE</span>
-          </div>
-        </div>
-
-        {/* Center/Right Navigation Tabs */}
-        <nav className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap justify-end">
-          {/* HOME TAB */}
-          <MagneticElement
-            strength={0.3}
-            onClick={() => {
-              triggerComicFX('HOME!');
-              navigate('/');
-            }}
-          >
-            <button className="px-3 sm:px-4 py-1 sm:py-1.5 bg-[#15151A] hover:bg-[#202028] text-zinc-300 hover:text-white border border-[#2E2E38] hover:border-zinc-500 shadow-[2px_2px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
-              <span>HOME</span>
-            </button>
-          </MagneticElement>
-
-          {/* EVENTS TAB */}
-          <MagneticElement
-            strength={0.3}
-            onClick={() => {
-              triggerComicFX('EVENTS!');
-              navigate('/events');
-            }}
-          >
-            <button className="px-3 sm:px-4 py-1 sm:py-1.5 bg-[#15151A] hover:bg-[#202028] text-zinc-300 hover:text-white border border-[#2E2E38] hover:border-zinc-500 shadow-[2px_2px_0px_#000000] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
-              <span>EVENTS</span>
-            </button>
-          </MagneticElement>
-
-          {/* CONTACT TAB (Active) */}
-          <MagneticElement
-            strength={0.3}
-            onClick={() => {
-              triggerComicFX('CONTACT!');
-            }}
-          >
-            <button className="px-3 sm:px-4 py-1 sm:py-1.5 bg-[#1F1F28] text-[#F5D90A] border-2 border-[#F5D90A]/80 shadow-[2px_2px_0px_#8A7400] font-comic text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all flex items-center gap-1">
-              <span>CONTACT</span>
-            </button>
-          </MagneticElement>
-
-          {/* REGISTER Button */}
-          <MagneticElement
-            strength={0.35}
-            onClick={() => {
-              navigate('/register');
-            }}
-          >
-            <button className="px-3.5 sm:px-5 py-1 sm:py-1.5 bg-[#F5D90A] hover:bg-[#FFE633] text-[#0D0D0F] border-2 border-[#F5D90A] shadow-[2.5px_2.5px_0px_#8A7400] font-display text-xs sm:text-sm tracking-wider uppercase font-black cursor-pointer transition-all shrink-0 active:translate-x-0.5 active:translate-y-0.5">
-              REGISTER
-            </button>
-          </MagneticElement>
-        </nav>
-      </header>
+      {/* Universal Comic Navbar */}
+      <WebsiteNavbar />
 
       {/* =========================================================================
           2. MAIN CONTENT AREA (Harmonious, Modern Dark Theme)
