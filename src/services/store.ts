@@ -16,7 +16,7 @@ import { supabase, isSupabaseConfigured, isRealtimeEnabled } from '../lib/supaba
 const STORAGE_KEYS = {
   TEAMS: 'zin26_live_teams_v2',
   MEMBERS: 'zin26_live_members_v2',
-  EVENTS: 'zin26_live_events_v6',
+  EVENTS: 'zin26_live_events_v7',
   REGISTRATIONS: 'zin26_live_registrations_v2',
   ATTENDANCE: 'zin26_live_attendance_v2',
   HAND_BANDS: 'zin26_live_hand_bands_v2',
@@ -36,7 +36,7 @@ class ZinniaStore {
 
   private cleanLegacyStorage() {
     try {
-      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1', 'zin26_live_events_v2', 'zin26_live_events_v3', 'zin26_live_events_v4', 'zin26_live_events_v5'].forEach(k => {
+      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1', 'zin26_live_events_v2', 'zin26_live_events_v3', 'zin26_live_events_v4', 'zin26_live_events_v5', 'zin26_live_events_v6'].forEach(k => {
         localStorage.removeItem(k);
       });
     } catch {}

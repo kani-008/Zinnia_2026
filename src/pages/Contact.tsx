@@ -291,7 +291,7 @@ export const WebsiteContactPage: React.FC = () => {
             </div>
 
             <div className="mt-5 pt-3.5 border-t border-[#20202A] text-zinc-500 text-xs font-mono flex items-center justify-between">
-              <span>Operational Hours: 9:00 AM – 6:00 PM</span>
+              <span>Operational Hours: 11:00 AM – 4:00 PM</span>
               <span className="text-zinc-400 font-medium flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                 ONLINE DESK

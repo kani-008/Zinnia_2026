@@ -48,16 +48,21 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     category: 'TECHNICAL',
     clearance_level: 'LEVEL 01',
     team_size_min: 1,
-    team_size_max: 2,
+    team_size_max: 1,
     schedule_time: '11:00 AM - 12:30 PM',
     duration: '1 hr 30 mins',
     venue: '104 class room',
-    description: 'Intercept, decrypt, and decode corrupted signal packets through cryptographic puzzles, packet analysis, and binary telemetry.',
+    description: 'Investigate the mysterious Time Fracture by interacting with ORACLE, a corrupted AI. Ask the right questions, uncover hidden clues, connect evidence, and solve the mystery before time runs out.',
     rules: [
-      'Team of 1 to 2 members.',
-      'Rounds of ciphers, steganography, and frequency analysis.',
-      'Internet access restricted to designated tools.',
-      'Tie-breaker based on completion speed.'
+      'Individual participation only.',
+      'Interact with ORACLE to uncover clues and evidence.',
+      'Solve multiple investigation missions.',
+      'Your score depends on accuracy, progress, and completion time.',
+      'Do not share clues, answers, or login credentials.',
+      'Do not interfere with the application or other participants.',
+      'Follow all instructions given by the event coordinators.',
+      'Bringing a personal laptop is recommended.',
+      'No prior AI or programming knowledge is required.'
     ],
     coordinators: [
       { name: 'Abdul Razith', role: 'STUDENT COORDINATOR', phone: '+91 90470 57868' },
