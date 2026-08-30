@@ -1,11 +1,17 @@
 import React from 'react';
+import { TornPaperDivider } from './TornPaperDivider';
 
 export const WebsiteFooter: React.FC = () => {
   const developers = ['TAMILVANI', 'KANISHKAR', 'JEO JUSTIN'];
 
   return (
-    <footer id="contact" className="relative z-30 w-full bg-[#060608] border-t border-[#1C1C22] pt-8 sm:pt-10 pb-6 px-4 sm:px-6 lg:px-12 mt-0">
-      <div className="max-w-6xl mx-auto">
+    <footer id="contact" className="relative z-30 w-full bg-[#060608] pb-6 mt-4 sm:mt-8 overflow-visible">
+      {/* Full-Width CSS Torn Paper Divider */}
+      <div className="w-full -translate-y-1/2 overflow-visible">
+        <TornPaperDivider />
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-12 pt-2 sm:pt-4">
         
         {/* Main Section: Brand on Left, Developers on Right */}
         <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-10 pb-10">

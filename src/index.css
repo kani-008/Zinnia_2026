@@ -998,4 +998,303 @@ body,
     width: 28px;
     height: 15px;
   }
-}
+}
+
+/* =========================================================
+   TORN PAPER DIVIDER
+========================================================= */
+
+.torn-paper {
+  position: relative;
+  width: 100%;
+  height: 58px;
+  overflow: visible;
+  isolation: isolate;
+  transform: rotate(-0.05deg);
+}
+
+/* SHADOW UNDER THE PAPER */
+.torn-paper::before {
+  content: "";
+  position: absolute;
+  left: -1%;
+  top: 17px;
+  width: 102%;
+  height: 29px;
+  background: #000;
+  opacity: 0.8;
+  filter: blur(1.5px);
+  clip-path: polygon(
+    0% 42%,
+    4% 37%,
+    8% 45%,
+    12% 34%,
+    17% 44%,
+    22% 51%,
+    27% 39%,
+    31% 46%,
+    36% 34%,
+    41% 48%,
+    46% 40%,
+    51% 54%,
+    56% 42%,
+    61% 36%,
+    66% 49%,
+    71% 41%,
+    76% 55%,
+    81% 38%,
+    86% 47%,
+    91% 35%,
+    96% 51%,
+    100% 44%,
+    100% 79%,
+    96% 71%,
+    92% 82%,
+    87% 68%,
+    82% 80%,
+    77% 67%,
+    72% 86%,
+    67% 72%,
+    62% 83%,
+    57% 69%,
+    52% 85%,
+    47% 71%,
+    42% 88%,
+    37% 73%,
+    32% 81%,
+    27% 69%,
+    22% 86%,
+    17% 70%,
+    12% 82%,
+    7% 68%,
+    3% 77%,
+    0% 68%
+  );
+  z-index: 1;
+}
+
+/* MAIN PAPER */
+.torn-paper::after {
+  content: "";
+  position: absolute;
+  left: -1%;
+  top: 7px;
+  width: 102%;
+  height: 32px;
+  background: #f1f1f1;
+  clip-path: polygon(
+    /* TOP TEAR */
+    0% 47%,
+    2% 41%,
+    5% 44%,
+    8% 33%,
+    11% 39%,
+    14% 36%,
+    17% 49%,
+    20% 43%,
+    24% 30%,
+    27% 36%,
+    30% 45%,
+    33% 40%,
+    36% 50%,
+    39% 35%,
+    42% 43%,
+    45% 38%,
+    48% 51%,
+    51% 44%,
+    54% 34%,
+    57% 41%,
+    60% 37%,
+    63% 48%,
+    66% 42%,
+    69% 31%,
+    72% 38%,
+    75% 46%,
+    78% 40%,
+    81% 52%,
+    84% 43%,
+    87% 35%,
+    90% 42%,
+    93% 31%,
+    96% 38%,
+    98% 45%,
+    100% 39%,
+    /* BOTTOM TEAR */
+    100% 69%,
+    98% 75%,
+    95% 64%,
+    92% 81%,
+    89% 71%,
+    86% 77%,
+    83% 66%,
+    80% 84%,
+    77% 72%,
+    74% 79%,
+    71% 68%,
+    68% 88%,
+    65% 73%,
+    62% 81%,
+    59% 69%,
+    56% 78%,
+    53% 67%,
+    50% 86%,
+    47% 74%,
+    44% 81%,
+    41% 70%,
+    38% 83%,
+    35% 68%,
+    32% 77%,
+    29% 65%,
+    26% 82%,
+    23% 71%,
+    20% 79%,
+    17% 67%,
+    14% 84%,
+    11% 70%,
+    8% 76%,
+    5% 65%,
+    2% 73%,
+    0% 67%
+  );
+  z-index: 2;
+}
+
+/* LOOSE PAPER FIBERS */
+.fiber {
+  position: absolute;
+  z-index: 4;
+  display: block;
+  background: #e8e8e8;
+  pointer-events: none;
+}
+
+.fiber.left {
+  width: 82px;
+  height: 4px;
+  left: 10%;
+  top: 31px;
+  transform: rotate(-1deg);
+  clip-path: polygon(
+    0 45%,
+    14% 14%,
+    28% 62%,
+    43% 22%,
+    58% 67%,
+    73% 17%,
+    100% 46%,
+    83% 76%,
+    66% 43%,
+    47% 83%,
+    29% 49%,
+    13% 87%
+  );
+}
+
+.fiber.center {
+  width: 56px;
+  height: 4px;
+  left: 46%;
+  top: 34px;
+  transform: rotate(2deg);
+  clip-path: polygon(
+    0 48%,
+    19% 18%,
+    38% 61%,
+    57% 27%,
+    78% 70%,
+    100% 36%,
+    100% 72%,
+    79% 88%,
+    59% 52%,
+    37% 91%,
+    16% 57%
+  );
+}
+
+.fiber.right {
+  width: 76px;
+  height: 3px;
+  right: 8%;
+  top: 30px;
+  transform: rotate(-2deg);
+  clip-path: polygon(
+    0 44%,
+    17% 19%,
+    31% 62%,
+    49% 29%,
+    67% 69%,
+    85% 20%,
+    100% 46%,
+    81% 78%,
+    63% 47%,
+    44% 84%,
+    22% 49%
+  );
+}
+
+.fiber.flap {
+  width: 27px;
+  height: 7px;
+  left: 71%;
+  top: 35px;
+  transform: rotate(5deg);
+  clip-path: polygon(
+    0 32%,
+    23% 4%,
+    51% 43%,
+    76% 14%,
+    100% 42%,
+    78% 76%,
+    49% 53%,
+    21% 91%
+  );
+}
+
+/* SMALL PAPER SPECKS */
+.speck {
+  position: absolute;
+  z-index: 5;
+  width: 3px;
+  height: 2px;
+  background: #dedede;
+  pointer-events: none;
+}
+
+.speck.a {
+  left: 23%;
+  top: 34px;
+  transform: rotate(17deg);
+}
+
+.speck.b {
+  left: 58%;
+  top: 37px;
+  transform: rotate(-9deg);
+}
+
+.speck.c {
+  right: 19%;
+  top: 33px;
+  transform: rotate(14deg);
+}
+
+.speck.d {
+  right: 7%;
+  top: 29px;
+  width: 2px;
+}
+
+@media (max-width: 600px) {
+  .torn-paper {
+    height: 48px;
+  }
+  .torn-paper::after {
+    height: 27px;
+    top: 8px;
+  }
+  .torn-paper::before {
+    top: 17px;
+    height: 26px;
+  }
+}
+
