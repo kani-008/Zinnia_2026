@@ -25,6 +25,7 @@ interface MemberInput {
   name: string;
   email: string;
   phone: string;
+  food_preference?: 'VEG' | 'NON_VEG';
 }
 
 // 2D-only Magnetic Interaction Component (Matching Home and Contact pages)
@@ -90,7 +91,8 @@ export const WebsiteRegisterPage: React.FC = () => {
   const [leader, setLeader] = useState<MemberInput>({
     name: '',
     email: '',
-    phone: ''
+    phone: '',
+    food_preference: 'VEG'
   });
 
   // Additional Team Members
@@ -130,7 +132,7 @@ export const WebsiteRegisterPage: React.FC = () => {
 
   const handleAddMemberSlot = () => {
     if (members.length + 1 < maxTeamSize) {
-      setMembers(prev => [...prev, { name: '', email: '', phone: '' }]);
+      setMembers(prev => [...prev, { name: '', email: '', phone: '', food_preference: 'VEG' }]);
     }
   };
 
@@ -195,8 +197,8 @@ export const WebsiteRegisterPage: React.FC = () => {
       };
 
       const allMemberPayloads = [
-        { name: leader.name.trim(), email: leader.email.trim(), phone: leader.phone.trim(), is_leader: true },
-        ...members.map(m => ({ name: m.name.trim(), email: m.email.trim(), phone: m.phone.trim(), is_leader: false }))
+        { name: leader.name.trim(), email: leader.email.trim(), phone: leader.phone.trim(), is_leader: true, food_preference: leader.food_preference || 'VEG' },
+        ...members.map(m => ({ name: m.name.trim(), email: m.email.trim(), phone: m.phone.trim(), is_leader: false, food_preference: m.food_preference || 'VEG' }))
       ];
 
       const registeredTeam = await store.registerTeam(teamPayload, allMemberPayloads);
@@ -422,6 +424,40 @@ export const WebsiteRegisterPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Food Preference Selection (Veg or Non-Veg) */}
+              <div className="space-y-1 pt-1">
+                <label className="block text-xs text-[#B8B8B2] font-medium font-mono">
+                  Food Preference (Lunch) <span className="text-[#D51F55]">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setLeader({ ...leader, food_preference: 'VEG' })}
+                    className={`py-2.5 px-4 rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer select-none ${
+                      (leader.food_preference || 'VEG') === 'VEG'
+                        ? 'bg-[#10B981]/15 text-[#10B981] border-[#10B981] shadow-[2px_2px_0px_#10B981]'
+                        : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30 hover:border-[#B8B8B2]/60'
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shrink-0" />
+                    <span>VEG 🌱</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLeader({ ...leader, food_preference: 'NON_VEG' })}
+                    className={`py-2.5 px-4 rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer select-none ${
+                      leader.food_preference === 'NON_VEG'
+                        ? 'bg-[#D51F55]/15 text-[#D51F55] border-[#D51F55] shadow-[2px_2px_0px_#D51F55]'
+                        : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30 hover:border-[#B8B8B2]/60'
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#D51F55] shrink-0" />
+                    <span>NON-VEG 🍗</span>
+                  </button>
+                </div>
+              </div>
+
               {/* College Name */}
               <div className="space-y-1">
                 <label className="block text-xs text-[#B8B8B2] font-medium font-mono">
@@ -581,6 +617,39 @@ export const WebsiteRegisterPage: React.FC = () => {
                       className="w-full px-3 py-2 rounded-lg bg-[#08090A] border border-[#B8B8B2]/30 font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none"
                       required
                     />
+                  </div>
+
+                  {/* Member Food Preference Selection */}
+                  <div className="pt-1">
+                    <label className="block text-[11px] text-[#B8B8B2] font-mono mb-1">
+                      Food Preference (Member {idx + 2}):
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleMemberChange(idx, 'food_preference', 'VEG')}
+                        className={`py-1.5 px-3 rounded-lg font-mono text-xs font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer select-none ${
+                          (member.food_preference || 'VEG') === 'VEG'
+                            ? 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]'
+                            : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30'
+                        }`}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-[#10B981] shrink-0" />
+                        <span>VEG 🌱</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMemberChange(idx, 'food_preference', 'NON_VEG')}
+                        className={`py-1.5 px-3 rounded-lg font-mono text-xs font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer select-none ${
+                          member.food_preference === 'NON_VEG'
+                            ? 'bg-[#D51F55]/15 text-[#D51F55] border-[#D51F55]'
+                            : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30'
+                        }`}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-[#D51F55] shrink-0" />
+                        <span>NON-VEG 🍗</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -8,9 +8,9 @@ import {
   PrizePosition,
   EventType,
   HandBand
-} from '@/types';
-import { OFFICIAL_MISSIONS } from '@/config/events';
-import { generateTeamId, generateMemberId } from '@/utils/participant-id';
+} from '../types';
+import { OFFICIAL_MISSIONS } from '../config/events';
+import { generateTeamId, generateMemberId } from '../utils/participant-id';
 import { supabase, isSupabaseConfigured, isRealtimeEnabled } from '../lib/supabase';
 
 const STORAGE_KEYS = {
@@ -418,7 +418,7 @@ class ZinniaStore {
   // --- TEAM REGISTRATION ---
   async registerTeam(
     teamData: Omit<Team, 'team_id' | 'created_at' | 'members' | 'payment'>,
-    members: { name: string; email: string; phone: string; is_leader: boolean }[]
+    members: { name: string; email: string; phone: string; is_leader: boolean; food_preference?: 'VEG' | 'NON_VEG' }[]
   ): Promise<Team> {
     if (!members || members.length === 0) {
       throw new Error('A team must contain at least one member.');
@@ -466,7 +466,8 @@ class ZinniaStore {
             name: m.name,
             email: m.email,
             phone: m.phone,
-            is_leader: m.is_leader || idx === 0
+            is_leader: m.is_leader || idx === 0,
+            food_preference: m.food_preference || 'VEG'
           }))
         })
       });
@@ -544,6 +545,7 @@ class ZinniaStore {
       email: m.email.trim().toLowerCase(),
       phone: m.phone.trim(),
       is_leader: m.is_leader || idx === 0,
+      food_preference: m.food_preference || 'VEG',
       passport_token: generateSecureToken(),
       passport_issued_at: now,
       food_collected: false,
@@ -609,6 +611,7 @@ class ZinniaStore {
             email: m.email,
             phone: m.phone,
             is_leader: m.is_leader,
+            food_preference: m.food_preference || 'VEG',
             passport_token: m.passport_token
           }));
           await supabase.from('team_members').insert(memberRows);

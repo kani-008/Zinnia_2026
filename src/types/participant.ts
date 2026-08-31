@@ -14,7 +14,8 @@ export interface TeamMember {
   // Legacy / optional fallback during transition
   band_id?: string;
   
-  // Individual food token claim status
+  // Individual food token claim status and preference
+  food_preference?: 'VEG' | 'NON_VEG';
   food_collected?: boolean;
   food_collected_at?: string;
   

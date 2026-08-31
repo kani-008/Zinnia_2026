@@ -4,6 +4,7 @@ import { WebsiteHomePage } from './pages/Home';
 import { WebsiteRegisterPage } from './pages/Register';
 import { WebsitePaymentPage } from './pages/Payment';
 import { WebsitePassportPage } from './pages/Passport';
+import { WebsiteEventsPage } from './pages/Events';
 import { WebsiteContactPage } from './pages/Contact';
 import { WebsiteSchedulePage } from './pages/Schedule';
 import { registerNav } from './services/registerNavigation';

@@ -4,7 +4,7 @@ import { store } from '../services/store';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { WebsiteFooter } from '../components/layout/Footer';
 import { QRCodeSVG } from 'qrcode.react';
-import { Team, TeamMember } from '@/types';
+import { Team, TeamMember } from '../types';
 import { 
   QrCode, 
   Users, 

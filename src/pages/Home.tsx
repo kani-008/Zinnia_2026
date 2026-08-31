@@ -12,7 +12,9 @@ import annBadge from '../assets/ann.svg';
 import cloudSvg from '../assets/cloud.svg';
 import priceSvg from '../assets/price.svg';
 import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award, X, Phone, CheckCircle2, Mail, Send, Menu, ChevronDown } from 'lucide-react';
+import { EventScheduleView } from '../components/ui/EventScheduleView';
 import { ComicHandDrawnCard } from '../components/events/ComicHandDrawnCard';
+import { EventMission } from '../types';
 
 // 2D Comic Digit Swap Component (Printed comic stamp with Bangers font)
 const ComicFlipNumber: React.FC<{
@@ -684,25 +686,21 @@ export const WebsiteHomePage: React.FC = () => {
         </div>
 
         {/* Institution & Department Header */}
-        <div className="relative z-20 flex flex-col items-center justify-center text-center w-full mb-0 sm:mb-3 px-2">
+        <div className="relative z-20 flex flex-col items-center justify-center text-center w-full mb-1 sm:mb-3 px-2">
           <h3
-            className="text-[#E5BD00] uppercase text-2xl xs:text-3xl md:text-3xl lg:text-3.5xl tracking-wide leading-none drop-shadow-[2.5px_2.5px_0px_#090A0B]"
-            style={{ fontFamily: '"Teko", sans-serif', fontWeight: 700 }}
+            className="text-[#E5BD00] uppercase text-xs xs:text-sm sm:text-2xl md:text-3xl tracking-widest leading-tight drop-shadow-[2px_2px_0px_#090A0B] font-mono font-bold"
           >
-            <span className="block sm:inline">GOVERNMENT COLLEGE OF ENGINEERING, </span>
-            <span className="block sm:inline">ERODE</span>
+            GOVERNMENT COLLEGE OF ENGINEERING, ERODE
           </h3>
           <p
-            className="text-[#0FA9C6] uppercase text-xl xs:text-2xl md:text-xl lg:text-2xl tracking-wide leading-none drop-shadow-[1.5px_1.5px_0px_#090A0B] mt-0.5"
-            style={{ fontFamily: '"Teko", sans-serif', fontWeight: 700 }}
+            className="text-[#3CE7FF] uppercase text-[11px] xs:text-xs sm:text-xl md:text-2xl tracking-widest leading-tight drop-shadow-[1.5px_1.5px_0px_#090A0B] mt-0.5 font-mono font-bold"
           >
-            <span className="block sm:inline">DEPARTMENT OF COMPUTER </span>
-            <span className="block sm:inline">SCIENCE &amp; ENGINEERING</span>
+            DEPARTMENT OF COMPUTER SCIENCE &amp; ENGINEERING
           </p>
         </div>
 
         {/* ---- MAIN HERO ROW ---- */}
-        <div className="relative z-20 flex items-end justify-center w-full">
+        <div className="relative z-20 flex flex-col items-center justify-center text-center w-full">
 
           {/* LEFT: Robot Mascot */}
           <div
@@ -719,8 +717,8 @@ export const WebsiteHomePage: React.FC = () => {
             />
           </div>
 
-          {/* Mobile: Comic Poster Composition */}
-          <div className="md:hidden relative w-full pt-0 pb-1 overflow-visible -mt-1">
+          {/* Mobile: Comic Poster Composition (Centering & Highlighting ZINNIA '26) */}
+          <div className="md:hidden relative w-full pt-1 pb-2 overflow-visible">
 
             {/* Background Lightning Accents */}
             <div className="absolute inset-0 pointer-events-none z-0 overflow-visible">
@@ -746,80 +744,74 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Poster Stage: Robot + Prize Pool on Left, Giant Vertical ZINNIA on Right */}
-            <div className="relative z-10 flex items-center justify-between w-full min-h-[260px] mt-0 mb-2">
-              <div
-                className="relative z-20 shrink-0 flex flex-col items-center -mt-2"
-                style={{
-                  width: '38%',
-                  maxWidth: '150px',
-                  marginLeft: '-22px',
-                  transform: 'translateX(-10px)',
-                }}
-              >
+            {/* Centered ZINNIA '26 Title Block on Mobile (Equal Top & Bottom Gap) */}
+            <div className="relative z-10 flex flex-col items-center justify-center text-center w-full mt-5 xs:mt-6 mb-1 px-1">
+              
+              {/* LEFT SIDE 1: Mascot Peeking Top-Left (Nudged up for gap) */}
+              <div className="absolute -top-9 xs:-top-10 -left-3 xs:-left-2 z-30 pointer-events-none">
                 <img
                   src={robotMascot}
                   alt="Zinnia Robot Mascot"
-                  className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-[0_8px_24px_rgba(0,0,0,0.9)]"
+                  className="w-13 xs:w-16 sm:w-18 h-auto object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.9)]"
                 />
+              </div>
 
-                {/* ₹20,000+ Prize Pool Starburst */}
-                <div
-                  className="relative -mt-6 cursor-pointer active:scale-95 transition-transform z-30"
-                  onClick={() => triggerComicFX('PRIZES!')}
-                >
-                  <div className="relative flex items-center justify-center w-22 h-22 xs:w-24 xs:h-24">
-                    <img
-                      src={priceSvg}
-                      alt="Prize Pool"
-                      className="w-full h-full object-contain select-none pointer-events-none scale-y-[-1]"
-                    />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center -rotate-[22deg]">
-                      <span className="font-display text-xs text-[#EEEEEA] leading-none font-black drop-shadow-[1.5px_1.5px_0px_#090A0B]">
-                        ₹20,000+
-                      </span>
-                      <span className="font-comic text-[8px] xs:text-[9px] text-[#E5BD00] font-black leading-tight drop-shadow-[1px_1px_0px_#090A0B] mt-0.5 tracking-wide">
-                        PRIZE POOL!
-                      </span>
-                    </div>
+              {/* LEFT SIDE 2: Prize Pool Starburst (Positioned in middle with clear gap above and below) */}
+              <div
+                className="absolute top-[62px] xs:top-[68px] -left-2 xs:left-0 z-40 cursor-pointer active:scale-95 transition-transform"
+                onClick={() => triggerComicFX('PRIZES!')}
+              >
+                <div className="relative flex items-center justify-center w-13 h-13 xs:w-15 xs:h-15">
+                  <img
+                    src={priceSvg}
+                    alt="Prize Pool"
+                    className="w-full h-full object-contain scale-y-[-1]"
+                  />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center -rotate-[22deg]">
+                    <span className="font-display text-[8.5px] xs:text-[9.5px] text-[#EEEEEA] leading-none font-black drop-shadow-[1.5px_1.5px_0px_#090A0B]">
+                      ₹20,000+
+                    </span>
+                    <span className="font-comic text-[5.5px] xs:text-[6.5px] text-[#E5BD00] font-black leading-tight drop-shadow-[1px_1px_0px_#090A0B] mt-0.5 tracking-wide">
+                      PRIZE POOL!
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Right side: '26 on top, Giant Vertically Tall ZINNIA, and Megaphone */}
-              <div className="relative z-10 flex flex-col items-end justify-center flex-1 -ml-16 pr-1 overflow-visible -translate-x-8 xs:-translate-x-12">
-                <span className="font-comic text-4xl xs:text-5xl text-[#0FA9C6] font-black leading-none mt-0 translate-y-5 -translate-x-14 xs:-translate-x-10 pr-3 select-none drop-shadow-[3px_3px_0px_#090A0B] -rotate-3 tracking-wider">
+              {/* CENTER: ZINNIA '26 Title (UNTOUCHED & FIXED) */}
+              <div className="relative inline-flex items-start justify-center py-2 px-6">
+                <h1
+                  className="font-display text-[#FFFFFF] uppercase select-none -rotate-[2deg] text-center whitespace-nowrap tracking-wider relative z-10"
+                  style={{
+                    fontSize: 'clamp(60px, 18vw, 110px)',
+                    lineHeight: '0.85',
+                    letterSpacing: '0.02em',
+                    textShadow: '4px 4px 0px #090A0B, 7px 7px 0px #000, 0 0 25px rgba(60, 231, 255, 0.45)',
+                  }}
+                >
+                  ZINNIA
+                </h1>
+                <span className="font-comic text-2xl xs:text-3xl text-[#0FA9C6] font-black leading-none select-none drop-shadow-[3px_3px_0px_#090A0B] -rotate-3 tracking-wider -translate-y-2 xs:-translate-y-3 ml-1.5 xs:ml-2 shrink-0 relative z-20">
                   '26
                 </span>
-
-                <div className="relative w-full flex justify-end mt-1 mb-1 translate-y-14 -translate-x-8 xs:-translate-x-12 overflow-visible">
-                  <h1
-                    className="font-display text-[#EEEEEA] uppercase select-none drop-shadow-[6px_6px_0px_#090A0B] -rotate-[7deg] origin-right whitespace-nowrap"
-                    style={{
-                      fontSize: 'clamp(95px, 26vw, 150px)',
-                      lineHeight: '0.72',
-                      letterSpacing: '0.02em',
-                      transform: 'scaleX(0.68) scaleY(1.75)',
-                      transformOrigin: 'right center',
-                      textShadow: '3px 3px 0px #090A0B, 6px 6px 0px #090A0B',
-                    }}
-                  >
-                    ZINNIA
-                  </h1>
-                </div>
-
-                <div className="relative mt-4 translate-y-12 -mr-2 w-28 xs:w-32 cursor-pointer active:scale-95 transition-transform" onClick={() => triggerComicFX('LOUD!')}>
-                  <img
-                    src={megaphoneSvg}
-                    alt="Megaphone"
-                    className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-[0_6px_16px_rgba(0,0,0,0.85)] -rotate-12"
-                  />
-                </div>
               </div>
+
+              {/* RIGHT SIDE: Megaphone Horn */}
+              <div
+                className="absolute top-1 -right-3 sm:right-0 z-30 cursor-pointer active:scale-95 transition-transform"
+                onClick={() => triggerComicFX('LOUD!')}
+              >
+                <img
+                  src={megaphoneSvg}
+                  alt="Megaphone"
+                  className="w-18 xs:w-22 h-auto object-contain select-none pointer-events-none drop-shadow-[0_6px_16px_rgba(0,0,0,0.85)] -rotate-12"
+                />
+              </div>
+
             </div>
 
-            {/* Badges Row below robot+title */}
-            <div className="relative z-20 flex flex-nowrap items-center justify-between gap-1.5 xs:gap-2.5 mt-1 -translate-y-1.5 w-full px-0.5">
+            {/* Badges Row below with clear gap from Prize Pool */}
+            <div className="relative z-20 flex items-center justify-center gap-2 xs:gap-3 mt-10 xs:mt-12 mb-4 w-full px-1 flex-wrap xs:flex-nowrap">
               <div
                 onClick={() => triggerComicFX('NATIONAL LEVEL!')}
                 className="relative group cursor-pointer hover:scale-105 transition-transform duration-150 active:scale-95 flex items-center justify-center flex-1 min-w-0"
@@ -841,18 +833,18 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
 
             {/* Register CTA (mobile) */}
-            <div className="relative z-20 mt-1 -translate-y-1 w-full flex justify-center px-0.5">
+            <div className="relative z-20 my-4 w-full flex justify-center px-1">
               <MagneticElement strength={0.3} onClick={() => navigate('/register')} className="w-full">
                 <div className="comic-cta-wrapper w-full group">
                   <span className="comic-cta-back" />
                   <button
                     type="button"
-                    className="comic-cta-front px-6 py-3.5 flex items-center justify-center gap-3 w-full"
+                    className="comic-cta-front px-5 py-3.5 flex items-center justify-center gap-3 w-full"
                   >
-                    <span className="font-comic font-black text-base tracking-wider uppercase italic text-[#090A0B] whitespace-nowrap">
+                    <span className="font-comic font-black text-sm xs:text-base tracking-wider uppercase italic text-[#090A0B] whitespace-nowrap">
                       REGISTER FOR ZINNIA
                     </span>
-                    <svg viewBox="0 0 32 20" className="w-6 h-4 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
+                    <svg viewBox="0 0 32 20" className="w-5 h-4 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
                       <path d="M 3 10 L 25 10" strokeWidth="3.2" strokeLinecap="round" />
                       <path d="M 16 3 L 27 10 L 16 17" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -863,11 +855,16 @@ export const WebsiteHomePage: React.FC = () => {
           </div>
 
           {/* Desktop: Title + Badges + Register CTA */}
-          <div className="hidden md:flex flex-col items-center text-center w-full max-w-4xl mx-auto px-4 z-20 md:-translate-x-12 lg:-translate-x-20 xl:-translate-x-24">
+          <div className="hidden md:flex flex-col items-center text-center w-full max-w-4xl mx-auto px-4 z-20">
 
-            {/* Giant ZINNIA '26 Title */}
+            {/* Giant ZINNIA '26 Title (Desktop) */}
             <div className="relative inline-flex items-start justify-center max-w-full">
-              <h1 className="font-display md:text-[7.5rem] lg:text-[9.5rem] text-[#EEEEEA] tracking-tight leading-none uppercase select-none drop-shadow-[5px_5px_0px_#090A0B]">
+              <h1
+                className="font-display md:text-[7.5rem] lg:text-[9.5rem] text-[#FFFFFF] tracking-tight leading-none uppercase select-none"
+                style={{
+                  textShadow: '5px 5px 0px #090A0B, 9px 9px 0px #000, 0 0 35px rgba(60, 231, 255, 0.45)',
+                }}
+              >
                 ZINNIA
               </h1>
               <span className="font-comic md:text-5xl lg:text-6xl text-[#0FA9C6] font-black leading-none -translate-y-3 ml-2 select-none drop-shadow-[3px_3px_0px_#090A0B]">
@@ -954,7 +951,7 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
             3. COUNTDOWN SECTION
             ========================================================================= */}
-      <div className="relative z-30 flex flex-col items-center justify-center mt-3 md:mt-4 pt-2 w-full px-2 max-w-5xl mx-auto md:-translate-x-12 lg:-translate-x-20 xl:-translate-x-24">
+      <div className="relative z-30 flex flex-col items-center justify-center mt-3 md:mt-4 pt-2 w-full px-2 max-w-5xl mx-auto">
         {/* Background Layer: Halftones + Scattered Hand-Inked Scribbles */}
         <div className="absolute inset-0 pointer-events-none overflow-visible z-0 select-none">
           <div className="comic-halftone -top-10 -left-12 opacity-30 scale-75" />
@@ -1588,41 +1585,52 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
           EVENT DETAILS INTERACTIVE MODAL
           ========================================================================= */}
+      {/* =========================================================================
+          EVENT DETAILS INTERACTIVE MODAL (DESKTOP & MOBILE RESPONSIVE)
+          ========================================================================= */}
       {selectedEvent && (
         <div
           onClick={() => setSelectedEvent(null)}
-          className="fixed inset-0 z-[100] bg-black/92 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-hidden animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] bg-black/92 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto animate-in fade-in duration-200"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#141417] border-[3px] ${selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
-              } shadow-[8px_8px_0px_#000000] p-5 sm:p-7 rounded-2xl space-y-5 select-text`}
+            className={`relative w-[92%] sm:w-full max-w-2xl max-h-[88vh] sm:max-h-[90vh] overflow-y-auto bg-[#141417] border-[2.5px] sm:border-[3px] ${
+              selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
+            } shadow-[6px_6px_0px_#000000] sm:shadow-[8px_8px_0px_#000000] p-4 sm:p-7 rounded-2xl space-y-4 sm:space-y-5 select-text mx-auto`}
           >
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[#2A2A2E] pb-2.5">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
-                    }`}>
+              <div className="space-y-0.5 min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${
+                      selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
+                    }`}
+                  >
                     {selectedEvent.code}
                   </span>
                   <span className="font-mono text-xs text-[#A8A8AC] uppercase">
                     {selectedEvent.category}
                   </span>
                 </div>
-                <h3 className="font-display text-2xl sm:text-3xl text-white uppercase tracking-wide">
+                <h3 className="font-display text-2xl sm:text-3xl text-white uppercase tracking-wide leading-tight mt-1">
                   {selectedEvent.mission_name}
                 </h3>
-                <p className={`font-comic text-xs sm:text-sm font-bold ${selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
-                  }`}>
+                <p
+                  className={`font-comic text-xs sm:text-sm font-bold ${
+                    selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
+                  }`}
+                >
                   {selectedEvent.tagline || selectedEvent.title}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedEvent(null)}
-                className="p-1.5 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-lg transition-colors cursor-pointer"
+                className="p-2 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-xl transition-colors cursor-pointer shrink-0"
+                aria-label="Close modal"
               >
-                <X className="w-4.5 h-4.5" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -1633,7 +1641,8 @@ export const WebsiteHomePage: React.FC = () => {
                   <Users className="w-3 h-3 text-[#F5D90A]" /> TEAM SIZE
                 </div>
                 <div className="text-white font-bold mt-0.5">
-                  {selectedEvent.team_size_min}{selectedEvent.team_size_min !== selectedEvent.team_size_max ? ` - ${selectedEvent.team_size_max}` : ''} Members
+                  {selectedEvent.team_size_min}
+                  {selectedEvent.team_size_min !== selectedEvent.team_size_max ? ` - ${selectedEvent.team_size_max}` : ''} Members
                 </div>
               </div>
               <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
@@ -1654,23 +1663,23 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
             </div>
 
-            {/* Description */}
+            {/* Briefing */}
             <div className="space-y-1.5">
               <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
                 // BRIEFING
               </h4>
-              <p className="font-comic text-sm text-[#D0D0D4] leading-relaxed">
+              <p className="font-comic text-xs sm:text-sm text-[#D0D0D4] leading-relaxed">
                 {selectedEvent.description}
               </p>
             </div>
 
-            {/* Rules */}
+            {/* Rules & Guidelines */}
             {selectedEvent.rules && selectedEvent.rules.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
                   // RULES & GUIDELINES
                 </h4>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1">
                   {selectedEvent.rules.map((rule, rIdx) => (
                     <li key={rIdx} className="flex items-start gap-2 text-xs font-comic text-[#C0C0C5]">
                       <span className="text-[#3CE7FF] shrink-0 font-bold">•</span>
@@ -1681,7 +1690,7 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
             )}
 
-            {/* Cash Prizes */}
+            {/* Prize Rewards */}
             {selectedEvent.prizes && (
               <div className="p-3 bg-[#1A1A1E] border border-[#2E2E33] rounded-xl space-y-2">
                 <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
@@ -1704,13 +1713,13 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
             )}
 
-            {/* Coordinators */}
+            {/* Helpline & Coordinators */}
             {selectedEvent.coordinators && selectedEvent.coordinators.length > 0 && (
               <div className="space-y-1.5">
                 <h4 className="font-mono text-xs text-[#A8A8AC] uppercase tracking-wider font-bold">
                   // HELPLINE & COORDINATORS
                 </h4>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                   {selectedEvent.coordinators.map((c, cIdx) => (
                     <div key={cIdx} className="text-xs font-mono text-[#D0D0D4] flex items-center gap-1.5 bg-[#1A1A1E] px-2.5 py-1 rounded border border-[#2E2E33]">
                       <span>{c.name} ({c.role}):</span>
@@ -1725,17 +1734,18 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
             )}
 
-            {/* Modal Register CTA Button */}
-            <div className="pt-2">
+            {/* Register CTA Button at the end of modal */}
+            <div className="pt-3 pb-1 border-t border-[#2A2A2E]">
               <button
                 onClick={() => {
                   triggerComicFX('DEPLOY!');
                   navigate(`/register?mission=${selectedEvent.id}`);
                 }}
-                className={`w-full py-3 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${selectedEvent.event_type === 'TECH'
-                  ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
-                  : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
-                  }`}
+                className={`w-full py-3.5 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
+                  selectedEvent.event_type === 'TECH'
+                    ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
+                    : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
+                }`}
               >
                 <span>REGISTER FOR {selectedEvent.mission_name}</span>
                 <ArrowRight className="w-4 h-4" />

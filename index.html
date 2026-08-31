@@ -10,6 +10,39 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Bungee&family=Luckiest+Guy&family=Permanent+Marker&family=Space+Grotesk:wght@600;700;800;900&family=JetBrains+Mono:wght@700;800&family=Teko:wght@700&display=block" rel="stylesheet">
+    <script>
+      // Edge Copilot extension performance observer safety guard
+      (function() {
+        if (typeof window !== 'undefined' && window.performance) {
+          var dummyEntry = { startTime: 0, duration: 0, name: '', entryType: 'navigation' };
+          ['getEntriesByType', 'getEntriesByName', 'getEntries'].forEach(function(method) {
+            if (typeof window.performance[method] === 'function') {
+              var orig = window.performance[method];
+              window.performance[method] = function() {
+                try {
+                  var res = orig.apply(this, arguments) || [];
+                  if (typeof Proxy !== 'undefined') {
+                    return new Proxy(res, {
+                      get: function(target, prop) {
+                        if ((prop === '0' || prop === 0) && (!target[0] || target.length === 0)) {
+                          return dummyEntry;
+                        }
+                        var val = target[prop];
+                        if (typeof val === 'function') return val.bind(target);
+                        return val;
+                      }
+                    });
+                  }
+                  return res;
+                } catch (e) {
+                  return [dummyEntry];
+                }
+              };
+            }
+          });
+        }
+      })();
+    </script>
   </head>
   <body class="bg-[#0D0D0F] text-[#F2F2F0] antialiased selection:bg-[#F5D90A] selection:text-black overflow-x-hidden min-h-screen">
     <div id="root"></div>

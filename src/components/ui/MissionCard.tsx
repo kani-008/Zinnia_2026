@@ -1,5 +1,5 @@
 import React from 'react';
-import { EventMission } from '@/types';
+import { EventMission } from '../../types';
 import { Clock, Users, ArrowUpRight, Trophy } from 'lucide-react';
 
 export interface MissionCardProps {

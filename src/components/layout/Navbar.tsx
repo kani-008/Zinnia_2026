@@ -51,6 +51,35 @@ export const WebsiteNavbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [interactiveSoundText, setInteractiveSoundText] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const triggerComicFX = (txt: string) => {
+    setInteractiveSoundText(txt);
+    setTimeout(() => setInteractiveSoundText(null), 800);
+  };
+
+  const handleNavClick = (target: string, fx: string) => {
+    triggerComicFX(fx);
+    if (target === 'home') {
+      navigate('/');
+    } else if (target === 'events') {
+      if (location.pathname === '/') {
+        const el = document.getElementById('events');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        else navigate('/#events');
+      } else {
+        navigate('/#events');
+      }
+    } else if (target === 'pass' || target === 'passport') {
+      navigate('/passport');
+    } else if (target === 'contact') {
+      navigate('/contact');
+    } else if (target === 'register') {
+      navigate('/register');
+    }
+  };
+
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Events', path: '/events' },
