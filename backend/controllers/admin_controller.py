@@ -61,13 +61,30 @@ class AdminController:
 
     @staticmethod
     def get_payments():
+        status_filter = request.args.get("status", "").upper()
+        from services.payment_service import get_pending_payments_service
+        pending_data = get_pending_payments_service()
+        pending_list = pending_data.get("payments", [])
+
+        # If only unverified/pending requested
+        if status_filter in ("PENDING_VERIFICATION", "AWAITING_PAYMENT", "REJECTED"):
+            filtered = [p for p in pending_list if p.get("payment_status") == status_filter]
+            return jsonify({"success": True, "payments": filtered}), 200
+
+        # Fetch verified teams from main table
         headers = get_headers()
         try:
-            r = requests.get(f"{SUPABASE_URL}/rest/v1/team_payments?select=*,teams(*)", headers=headers, timeout=6)
-            payments = r.json() if r.status_code == 200 and isinstance(r.json(), list) else []
-            return jsonify({"success": True, "payments": payments}), 200
-        except Exception as e:
-            return jsonify({"success": False, "error": str(e), "payments": []}), 500
+            r = requests.get(f"{SUPABASE_URL}/rest/v1/team_payments?payment_status=eq.VERIFIED&select=*,teams(*)", headers=headers, timeout=6)
+            verified_list = r.json() if r.status_code == 200 and isinstance(r.json(), list) else []
+        except Exception:
+            verified_list = []
+
+        if status_filter == "VERIFIED":
+            return jsonify({"success": True, "payments": verified_list}), 200
+
+        # Unified list (Pending from staging + Verified from main)
+        combined = pending_list + verified_list
+        return jsonify({"success": True, "payments": combined}), 200
 
     @staticmethod
     def verify_payment_endpoint():
@@ -79,105 +96,26 @@ class AdminController:
         if not team_id:
             return jsonify({"success": False, "error": "Missing team_id parameter."}), 400
 
-        headers = get_headers()
-        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-        # 1. Update team_payments table
-        requests.patch(
-            f"{SUPABASE_URL}/rest/v1/team_payments?team_id=eq.{team_id}",
-            headers=headers,
-            json={
-                "payment_status": "VERIFIED",
-                "verified_at": now_iso,
-                "verified_by": admin_name
-            }
-        )
-
-        # 2. Update teams table
-        requests.patch(
-            f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}",
-            headers=headers,
-            json={
-                "payment_status": "VERIFIED"
-            }
-        )
-
-        # 3. Idempotently trigger passport email dispatch with QR
-        dispatch_res = trigger_passport_dispatch(team_id)
-
-        # Report delivery honestly. The payment IS verified at this point, but a
-        # dispatch failure must be visible to the treasurer with a retry, not
-        # buried under a blanket "passes dispatched" message — otherwise a team
-        # sits VERIFIED with nobody holding a pass and no one aware of it.
-        results = dispatch_res.get("results") or []
-        failed = [
-            r for r in results
-            if isinstance(r, dict) and not r.get("success")
-        ]
-        sent = [
-            r for r in results
-            if isinstance(r, dict) and r.get("success") and r.get("status") != "SKIPPED_ALREADY_SENT"
-        ]
-        skipped = [
-            r for r in results
-            if isinstance(r, dict) and r.get("status") == "SKIPPED_ALREADY_SENT"
-        ]
-
-        if failed:
-            return jsonify({
-                "success": True,
-                "payment_status": "VERIFIED",
-                "team_id": team_id,
-                "dispatch_ok": False,
-                "error_code": "DISPATCH_FAILED",
-                "message": (
-                    f"Payment verified for team '{team_id}', but {len(failed)} of "
-                    f"{len(results)} passes FAILED to send. Use Resend to retry."
-                ),
-                "failed_recipients": [
-                    {"email": r.get("recipient") or r.get("email"), "error": r.get("error")}
-                    for r in failed
-                ],
-                "sent_count": len(sent),
-                "skipped_count": len(skipped),
-                "dispatch": dispatch_res
-            }), 200
-
-        return jsonify({
-            "success": True,
-            "payment_status": "VERIFIED",
-            "team_id": team_id,
-            "dispatch_ok": True,
-            "message": (
-                f"Payment verified for team '{team_id}'. "
-                f"{len(sent)} pass(es) sent, {len(skipped)} already delivered."
-            ),
-            "sent_count": len(sent),
-            "skipped_count": len(skipped),
-            "dispatch": dispatch_res
-        }), 200
+        from services.payment_service import verify_payment_by_treasurer
+        res = verify_payment_by_treasurer(team_id=team_id, action="VERIFY", admin_name=admin_name)
+        status_code = 200 if res.get("success") else 400
+        return jsonify(res), status_code
 
     @staticmethod
     def reject_payment_endpoint():
         data = request.get_json(silent=True) or {}
         team_id = data.get("team_id")
         reason = data.get("reason") or data.get("rejection_reason") or "Payment verification rejected by treasurer."
+        admin_user = getattr(g, "admin", None)
+        admin_name = admin_user.get("name") if admin_user else (data.get("admin_name") or "Treasurer")
 
         if not team_id:
             return jsonify({"success": False, "error": "Missing team_id parameter."}), 400
 
-        headers = get_headers()
-        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-        requests.patch(
-            f"{SUPABASE_URL}/rest/v1/team_payments?team_id=eq.{team_id}",
-            headers=headers,
-            json={
-                "payment_status": "REJECTED",
-                "rejection_reason": reason,
-                "updated_at": now_iso
-            }
-        )
+        from services.payment_service import verify_payment_by_treasurer
+        res = verify_payment_by_treasurer(team_id=team_id, action="REJECT", reason=reason, admin_name=admin_name)
+        status_code = 200 if res.get("success") else 400
+        return jsonify(res), status_code
 
         requests.patch(
             f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}",
