@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
 import { WebsiteNavbar } from '../components/layout/Navbar';
@@ -28,75 +28,96 @@ interface MemberInput {
   food_preference?: 'VEG' | 'NON_VEG';
 }
 
-// 2D-only Magnetic Interaction Component (Matching Home and Contact pages)
-const MagneticElement: React.FC<{
-  children: React.ReactNode;
-  strength?: number;
-  className?: string;
-  onClick?: (e: React.MouseEvent) => void;
-}> = ({ children, strength = 0.25, className = '', onClick }) => {
-  const elementRef = React.useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
+const DRAFT_STORAGE_KEY = 'zin26_registration_form_draft';
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!elementRef.current) return;
-    const rect = elementRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    setPosition({ x: x * strength, y: y * strength });
-  };
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setPosition({ x: 0, y: 0 });
-  };
-
-  return (
-    <div
-      ref={elementRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onClick={onClick}
-      style={{
-        transform: `translate(${position.x}px, ${position.y}px)`,
-        transition: isHovered ? 'transform 0.08s ease-out' : 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
-      }}
-      className={`inline-block will-change-transform ${className}`}
-    >
-      {children}
-    </div>
-  );
+const getInitialDraft = () => {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY) || localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
 };
 
 export const WebsiteRegisterPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const preselectedMission = searchParams.get('mission');
+  const existingTeamId = searchParams.get('id');
 
-  const [teamName, setTeamName] = useState('');
-  const [college, setCollege] = useState('');
-  const [department, setDepartment] = useState('');
-  const [year, setYear] = useState('III');
-  const [registeredEvents, setRegisteredEvents] = useState<string[]>(
-    preselectedMission ? [preselectedMission] : []
-  );
+  const draft = useMemo(() => getInitialDraft(), []);
+
+  const [teamName, setTeamName] = useState(draft?.teamName || '');
+  const [college, setCollege] = useState(draft?.college || '');
+  const [department, setDepartment] = useState(draft?.department || '');
+  const [year, setYear] = useState(draft?.year || 'III');
+  const [registeredEvents, setRegisteredEvents] = useState<string[]>(() => {
+    if (preselectedMission) return [preselectedMission];
+    return draft?.registeredEvents || [];
+  });
 
   // Leader is Member 1
-  const [leader, setLeader] = useState<MemberInput>({
-    name: '',
-    email: '',
-    phone: '',
-    food_preference: 'VEG'
+  const [leader, setLeader] = useState<MemberInput>(() => {
+    return draft?.leader || {
+      name: '',
+      email: '',
+      phone: '',
+      food_preference: 'VEG'
+    };
   });
 
   // Additional Team Members
-  const [members, setMembers] = useState<MemberInput[]>([]);
+  const [members, setMembers] = useState<MemberInput[]>(() => {
+    return draft?.members || [];
+  });
+
+  // Auto-save form draft whenever fields change
+  useEffect(() => {
+    try {
+      const currentDraft = {
+        teamName,
+        college,
+        department,
+        year,
+        registeredEvents,
+        leader,
+        members
+      };
+      sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(currentDraft));
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(currentDraft));
+    } catch (e) {}
+  }, [teamName, college, department, year, registeredEvents, leader, members]);
+
+  // Restore from registered team if returning via Team ID
+  useEffect(() => {
+    if (existingTeamId) {
+      const team = store.getTeamById(existingTeamId);
+      if (team) {
+        if (team.team_name) setTeamName(team.team_name);
+        if (team.college) setCollege(team.college);
+        if (team.department) setDepartment(team.department);
+        if (team.year) setYear(team.year);
+        if (team.registered_events && team.registered_events.length > 0) {
+          setRegisteredEvents(team.registered_events);
+        }
+        if (team.members && team.members.length > 0) {
+          const l = team.members.find(m => m.is_leader) || team.members[0];
+          setLeader({
+            name: l.name || '',
+            email: l.email || '',
+            phone: l.phone || '',
+            food_preference: (l as any).food_preference || 'VEG'
+          });
+          const otherMembers = team.members.filter(m => m !== l).map(m => ({
+            name: m.name || '',
+            email: m.email || '',
+            phone: m.phone || '',
+            food_preference: (m as any).food_preference || 'VEG'
+          }));
+          setMembers(otherMembers);
+        }
+      }
+    }
+  }, [existingTeamId]);
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -84,7 +84,6 @@ export const WebsiteNavbar: React.FC = () => {
     { name: 'Home', path: '/' },
     { name: 'Events', path: '/events' },
     { name: 'Contact', path: '/contact' },
-    { name: 'Pass', path: '/passport' },
   ];
 
   return (
@@ -134,16 +133,6 @@ export const WebsiteNavbar: React.FC = () => {
               <span className="front-box">
                 <span className="lightning">⚡</span>
                 <span>EVENTS</span>
-              </span>
-            </button>
-          </MagneticElement>
-
-          {/* PASS TAB */}
-          <MagneticElement strength={0.3} onClick={() => handleNavClick('passport', 'PASSES!')}>
-            <button className="comic-button" type="button">
-              <span className="back-box" />
-              <span className="front-box">
-                <span>PASS</span>
               </span>
             </button>
           </MagneticElement>
@@ -296,39 +285,6 @@ export const WebsiteNavbar: React.FC = () => {
                 </div>
               </div>
 
-              {/* 3. PASSES (Slightly tilted +0.7deg with hand-drawn layered borders) */}
-              <div
-                className="relative group cursor-pointer select-none"
-                style={{ transform: 'rotate(0.7deg)' }}
-                onClick={() => handleNavClick('passport', 'PASSES!')}
-              >
-                {/* Slightly offset back border box */}
-                <div
-                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
-                  style={{
-                    transform: 'translate(3px, 3px)',
-                    clipPath: 'polygon(2% 4%, 99% 1%, 98% 96%, 1% 98%)',
-                  }}
-                />
-                {/* Front comic button */}
-                <div
-                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
-                  style={{
-                    clipPath: 'polygon(1% 2%, 98% 1%, 99% 97%, 2% 95%)',
-                  }}
-                >
-                  <svg className="absolute -top-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
-                    <path d="M1 8 L1 1 L8 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  <svg className="absolute -bottom-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
-                    <path d="M9 2 L9 9 L2 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  <div className="absolute bottom-1 right-2 w-1.5 h-[1.5px] bg-[#0FA9C6] opacity-80" />
-                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
-                    PASSES
-                  </span>
-                </div>
-              </div>
 
               {/* 4. CONTACT (Slightly tilted -0.9deg with hand-drawn layered borders) */}
               <div

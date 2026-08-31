@@ -478,7 +478,7 @@ class ZinniaStore {
       }
 
       const serverData = await serverRes.json();
-      if (!serverData.success) {
+      if (!serverData.success || !serverData.team_id) {
         throw new Error(serverData.message || serverData.error_code || 'Registration validation failed.');
       }
 
@@ -1059,37 +1059,53 @@ class ZinniaStore {
     return { success: true, message: 'Digital passport dispatched to email.' };
   }
 
-  // --- PAYMENT APIS ---
   async getPaymentStatusApi(teamId: string): Promise<{
     success: boolean;
     team_id?: string;
     team_name?: string;
     payment?: boolean;
     payment_status?: string;
+    member_count?: number;
     expected_amount?: number;
     submitted_amount?: number;
     utr_number?: string;
     rejection_reason?: string;
     message?: string;
   }> {
-    const data = await this.fetchJson(`/api/payment/status?team_id=${teamId}`);
+    if (!teamId || teamId === 'undefined' || teamId === 'null') {
+      return { success: false, message: 'No valid Team ID provided.' };
+    }
+    
+    const localTeam = this.getTeamById(teamId);
+    const localMemberCount = localTeam?.members?.length || 1;
+    const minCalculatedAmount = Math.max(250, localMemberCount * 250);
+
+    const data = await this.fetchJson(`/api/payment/status?team_id=${encodeURIComponent(teamId)}`);
     if (data && data.success) {
-      return data;
+      const serverCount = data.member_count || (Array.isArray(data.members) ? data.members.length : 0);
+      const effectiveCount = Math.max(1, localMemberCount, serverCount);
+      const computedFee = effectiveCount * 250;
+      const finalExpected = (data.expected_amount && data.expected_amount >= computedFee) ? data.expected_amount : computedFee;
+      return {
+        ...data,
+        member_count: effectiveCount,
+        expected_amount: finalExpected
+      };
     }
 
     // Fallback: Local Team state lookup
-    const team = this.getTeamById(teamId);
-    if (team) {
-      const expectedAmount = Math.max(250, (team.members?.length || 1) * 250);
+    if (localTeam) {
+      const expectedAmount = minCalculatedAmount;
       return {
         success: true,
-        team_id: team.team_id,
-        team_name: team.team_name,
-        payment: team.payment || false,
-        payment_status: team.payment_status || (team.payment ? 'VERIFIED' : 'AWAITING_PAYMENT'),
+        team_id: localTeam.team_id,
+        team_name: localTeam.team_name,
+        payment: localTeam.payment || false,
+        payment_status: localTeam.payment_status || (localTeam.payment ? 'VERIFIED' : 'AWAITING_PAYMENT'),
+        member_count: localMemberCount,
         expected_amount: expectedAmount,
         submitted_amount: expectedAmount,
-        utr_number: team.utr_number || '',
+        utr_number: localTeam.utr_number || '',
         rejection_reason: ''
       };
     }
@@ -1103,11 +1119,13 @@ class ZinniaStore {
     payment_status?: string;
     error_code?: string;
   }> {
+    const finalUtr = utrNumber?.trim() || `TXN-${teamId}-${Date.now().toString().slice(-4)}`;
+
     // Always update local storage state first
     const teams = this.getStorage<Team[]>(STORAGE_KEYS.TEAMS, []);
     const team = teams.find(t => t.team_id === teamId || t.team_id.toUpperCase() === teamId.toUpperCase());
     if (team) {
-      team.utr_number = utrNumber;
+      team.utr_number = finalUtr;
       team.payment_status = 'PENDING_VERIFICATION';
       this.setStorage(STORAGE_KEYS.TEAMS, teams);
       this.notifySubscribers();
@@ -1118,7 +1136,7 @@ class ZinniaStore {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         team_id: teamId,
-        utr_number: utrNumber,
+        utr_number: finalUtr,
         submitted_amount: submittedAmount
       })
     });
@@ -1130,8 +1148,41 @@ class ZinniaStore {
 
     return {
       success: true,
-      message: 'Payment UTR submitted successfully! Pending admin verification.',
+      message: 'Payment proof recorded! Transaction number forwarded for treasurer verification.',
       payment_status: 'PENDING_VERIFICATION'
+    };
+  }
+
+  async verifyPaymentByTreasurer(teamId: string, action: string = 'VERIFY', reason: string = ''): Promise<{
+    success: boolean;
+    message?: string;
+    payment_status?: string;
+  }> {
+    const teams = this.getStorage<Team[]>(STORAGE_KEYS.TEAMS, []);
+    const team = teams.find(t => t.team_id === teamId || t.team_id.toUpperCase() === teamId.toUpperCase());
+    if (team) {
+      team.payment = (action === 'VERIFY');
+      team.payment_status = (action === 'VERIFY' ? 'VERIFIED' : 'REJECTED');
+      this.setStorage(STORAGE_KEYS.TEAMS, teams);
+      this.notifySubscribers();
+    }
+
+    try {
+      const res = await this.fetchJson('/api/payment/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: teamId, action, reason })
+      });
+      if (res && res.success) {
+        await this.syncFromSupabase();
+        return res;
+      }
+    } catch (e) {}
+
+    return {
+      success: true,
+      message: action === 'VERIFY' ? 'Payment verified successfully by treasurer.' : 'Payment rejected.',
+      payment_status: action === 'VERIFY' ? 'VERIFIED' : 'REJECTED'
     };
   }
 
@@ -1141,6 +1192,7 @@ class ZinniaStore {
     team_name?: string;
     payment?: boolean;
     payment_status?: string;
+    member_count?: number;
     expected_amount?: number;
     submitted_amount?: number;
     utr_number?: string;

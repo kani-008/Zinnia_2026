@@ -14,12 +14,7 @@ export const WebsiteFooter: React.FC = () => {
   return (
     <footer
       id="contact"
-      className="relative z-30 bg-[#060608] overflow-visible"
-      style={{
-        width: '100vw',
-        marginLeft: 'calc(-50vw + 50%)',
-        marginBottom: '-1rem',
-      }}
+      className="relative z-30 bg-[#060608] w-full overflow-hidden"
     >
       {/* ── Torn Paper Divider (untouched) ── */}
       <div className="w-full -translate-y-1/2 overflow-visible">

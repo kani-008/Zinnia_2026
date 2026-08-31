@@ -14,26 +14,22 @@ from typing import Dict, Any, List, Tuple
 from services.passport_service import get_headers, SUPABASE_URL
 
 OFFICIAL_EVENT_REGISTRY = {
-    "msn-sys-recovery": {"id": "msn-sys-recovery", "code": "MSN-01", "mission_name": "Operation: System Recovery", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Cyber Lab 01 (Newton Hall)", "schedule_time": "10:00 AM - 10:45 AM"},
-    "msn-oracle": {"id": "msn-oracle", "code": "MSN-02", "mission_name": "Operation: ORACLE", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "AI Research Arena", "schedule_time": "11:15 AM - 12:15 PM"},
-    "msn-broken-records": {"id": "msn-broken-records", "code": "MSN-03", "mission_name": "Operation: Broken Records", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Database Systems Lab", "schedule_time": "12:30 PM - 01:30 PM"},
-    "msn-infinity-protocol": {"id": "msn-infinity-protocol", "code": "MSN-04", "mission_name": "Operation: Infinity Protocol", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Main Auditorium Stage", "schedule_time": "02:00 PM - 03:30 PM", "is_single_event_only": True},
-    "msn-paper-presentation": {"id": "msn-paper-presentation", "code": "MSN-05", "mission_name": "Operation: Paper Matrix", "team_size_min": 1, "team_size_max": 3, "status": "AVAILABLE", "registration_fee": 150, "venue": "Seminar Hall A", "schedule_time": "10:00 AM - 01:00 PM"},
-    "msn-web-nexus": {"id": "msn-web-nexus", "code": "MSN-06", "mission_name": "Operation: Web Nexus", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Web Technology Lab", "schedule_time": "11:00 AM - 12:30 PM"},
-    "msn-time-heist": {"id": "msn-time-heist", "code": "MSN-07", "mission_name": "Operation: Time Heist", "team_size_min": 2, "team_size_max": 3, "status": "AVAILABLE", "registration_fee": 150, "venue": "Campus Central Grounds", "schedule_time": "01:30 PM - 03:00 PM"},
-    "msn-game-grid": {"id": "msn-game-grid", "code": "MSN-08", "mission_name": "Operation: Game Grid", "team_size_min": 1, "team_size_max": 4, "status": "AVAILABLE", "registration_fee": 150, "venue": "eSports Lounge", "schedule_time": "02:00 PM - 04:00 PM"},
-    "msn-riddle-sphere": {"id": "msn-riddle-sphere", "code": "MSN-09", "mission_name": "Operation: Riddle Sphere", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE", "registration_fee": 150, "venue": "Hall B2", "schedule_time": "10:30 AM - 11:30 AM"}
+    "debugging": {"id": "debugging", "code": "01", "mission_name": "DEBUGGING", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
+    "the-last-signal": {"id": "the-last-signal", "code": "02", "mission_name": "THE LAST SIGNAL", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
+    "lost-at-sql": {"id": "lost-at-sql", "code": "03", "mission_name": "LOST AT SQL", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
+    "gadget-codes": {"id": "gadget-codes", "code": "04", "mission_name": "GADGET CODES", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
+    "paper-presentation": {"id": "paper-presentation", "code": "05", "mission_name": "PAPER PRESENTATION", "team_size_min": 1, "team_size_max": 3, "status": "AVAILABLE"},
+    "borderland-at-gcee": {"id": "borderland-at-gcee", "code": "06", "mission_name": "BORDERLAND AT GCEE", "team_size_min": 2, "team_size_max": 4, "status": "AVAILABLE"},
+    "think-strike-and-win": {"id": "think-strike-and-win", "code": "07", "mission_name": "THINK, STRIKE AND WIN", "team_size_min": 2, "team_size_max": 3, "status": "AVAILABLE"},
+    "plot-twist": {"id": "plot-twist", "code": "08", "mission_name": "PLOT TWIST", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
+    "short-flim": {"id": "short-flim", "code": "09", "mission_name": "SHORT FILM", "team_size_min": 1, "team_size_max": 5, "status": "AVAILABLE"},
+    # Aliases
+    "short-film": {"id": "short-flim", "code": "09", "mission_name": "SHORT FILM", "team_size_min": 1, "team_size_max": 5, "status": "AVAILABLE"},
+    "borderland-at-gce": {"id": "borderland-at-gcee", "code": "06", "mission_name": "BORDERLAND AT GCEE", "team_size_min": 2, "team_size_max": 4, "status": "AVAILABLE"},
+    "think-strike-win": {"id": "think-strike-and-win", "code": "07", "mission_name": "THINK, STRIKE AND WIN", "team_size_min": 2, "team_size_max": 3, "status": "AVAILABLE"}
 }
 
-# Default Symposium Events Registry
-FALLBACK_EVENTS = {
-    **OFFICIAL_EVENT_REGISTRY,
-    "msn-mission-control": {"id": "msn-mission-control", "mission_name": "Operation: Mission Control", "team_size_min": 1, "team_size_max": 2, "registration_fee": 150, "is_single_event_only": True, "status": "AVAILABLE"},
-    "msn-borderland-gce": {"id": "msn-borderland-gce", "mission_name": "Borderland at GCE", "team_size_min": 2, "team_size_max": 4, "registration_fee": 200, "status": "AVAILABLE"},
-    "msn-think-strike-win": {"id": "msn-think-strike-win", "mission_name": "Think, Strike and Win", "team_size_min": 2, "team_size_max": 3, "registration_fee": 150, "status": "AVAILABLE"},
-    "msn-plot-twist": {"id": "msn-plot-twist", "mission_name": "Plot Twist", "team_size_min": 1, "team_size_max": 2, "registration_fee": 100, "status": "AVAILABLE"},
-    "msn-short-film": {"id": "msn-short-film", "mission_name": "Short Film", "team_size_min": 1, "team_size_max": 5, "registration_fee": 150, "status": "AVAILABLE"}
-}
+FALLBACK_EVENTS = OFFICIAL_EVENT_REGISTRY
 
 def generate_team_id() -> str:
     """Generate a unique human-friendly team ID in format ZIN-2026-XXXX."""
@@ -194,6 +190,11 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
             "payment_status": "AWAITING_PAYMENT"
         }
         safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_payments", headers, payment_row)
+        try:
+            from services.payment_service import save_local_payment
+            save_local_payment(team_id, payment_row)
+        except Exception:
+            pass
 
         event_reg_rows = [
             {

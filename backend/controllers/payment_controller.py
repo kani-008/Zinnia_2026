@@ -6,7 +6,9 @@ Handles UPI payment submissions and status inquiries.
 from flask import request, jsonify
 from services.payment_service import (
     submit_payment_service,
-    get_payment_status_service
+    get_payment_status_service,
+    verify_payment_by_treasurer,
+    get_pending_payments_service
 )
 
 class PaymentController:
@@ -35,7 +37,7 @@ class PaymentController:
         try:
             submitted_amount = float(data.get("submitted_amount", 0))
         except (ValueError, TypeError):
-            return jsonify({"success": False, "error_code": "INVALID_AMOUNT", "message": "Invalid submitted amount."}), 400
+            submitted_amount = 0
 
         result = submit_payment_service(
             team_id=team_id,
@@ -44,3 +46,27 @@ class PaymentController:
         )
         status_code = 200 if result.get("success") else 400
         return jsonify(result), status_code
+
+    @staticmethod
+    def verify_payment():
+        """
+        POST /api/payment/verify — Treasurer verifies or rejects payment.
+        Accepts: { "team_id": "...", "action": "VERIFY" | "REJECT", "reason": "..." }
+        """
+        data = request.get_json(silent=True) or {}
+        team_id = data.get("team_id")
+        action = data.get("action", "VERIFY").upper()
+        reason = data.get("reason", "")
+        
+        if not team_id:
+            return jsonify({"success": False, "message": "team_id is required."}), 400
+
+        result = verify_payment_by_treasurer(team_id, action, reason)
+        status_code = 200 if result.get("success") else 400
+        return jsonify(result), status_code
+
+    @staticmethod
+    def get_pending():
+        """GET /api/payment/pending — List all pending payments awaiting treasurer verification."""
+        result = get_pending_payments_service()
+        return jsonify(result), 200

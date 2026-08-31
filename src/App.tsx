@@ -5,6 +5,7 @@ import { WebsiteRegisterPage } from './pages/Register';
 import { WebsitePaymentPage } from './pages/Payment';
 import { WebsitePassportPage } from './pages/Passport';
 import { WebsiteEventsPage } from './pages/Events';
+import { WebsiteConfirmationPage } from './pages/Confirmation';
 import { WebsiteContactPage } from './pages/Contact';
 import { WebsiteSchedulePage } from './pages/Schedule';
 import { registerNav } from './services/registerNavigation';
@@ -14,7 +15,7 @@ function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, [pathname]);
 
   return null;
@@ -28,7 +29,7 @@ export function App() {
   }, [navigate]);
 
   return (
-    <div className="relative w-screen min-h-screen overflow-x-hidden bg-[#0D0D0F] scroll-smooth">
+    <div className="relative w-full min-h-screen bg-[#0D0D0F]">
       <ScrollToTop />
       {/* Routes */}
       <Routes>
@@ -36,6 +37,8 @@ export function App() {
         <Route path="/events" element={<WebsiteEventsPage />} />
         <Route path="/register" element={<WebsiteRegisterPage />} />
         <Route path="/payment" element={<WebsitePaymentPage />} />
+        <Route path="/confirmation" element={<WebsiteConfirmationPage />} />
+        <Route path="/payment-success" element={<Navigate to="/confirmation" replace />} />
         <Route path="/passport" element={<WebsitePassportPage />} />
         <Route path="/contact" element={<WebsiteContactPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
