@@ -22,7 +22,9 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://aiefrwricgwchvapinlc.supabase.co").rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY", "sb_publishable_jP4KLIgOGvI-QIWVEBzznA_5b_FJvOL")
-QR_SIGNING_SECRET = os.getenv("QR_SIGNING_SECRET") or os.getenv("AUTH_SECRET_KEY", "zinnia2026_secure_qr_hmac_signing_secret_prod")
+QR_SIGNING_SECRET = os.getenv("QR_SIGNING_SECRET")
+if not QR_SIGNING_SECRET:
+    raise RuntimeError("CRITICAL SECURITY ERROR: QR_SIGNING_SECRET environment variable is missing!")
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "")
 
 EVENT_CODE_MAPPINGS = {
@@ -98,7 +100,10 @@ def parse_and_validate_scan_payload(raw_scan: str) -> Tuple[str, Optional[Dict[s
             e_codes = data.get("e", [])
             signature = data.get("s", "")
 
-            if signature and token and member_id:
+            # Enforce signature verification on all structured badge payloads
+            if any(k in data for k in ["f", "e", "s", "v", "m"]):
+                if not signature or not token or not member_id:
+                    return token or cleaned, data, False, "REJECTED: Structured QR badge missing cryptographic signature."
                 expected_sig = sign_qr_content(token, member_id, f_val, e_codes)
                 if hmac.compare_digest(signature, expected_sig):
                     return token, data, True, "Valid cryptographic QR signature."
@@ -401,9 +406,18 @@ def process_food_checkin(
 
     member_id = member["id"]
     member_name = member["name"]
-    food_pref = (member.get("food_preference") or "VEG").upper()
-    is_non_veg = (qr_data and qr_data.get("f") == "N") or food_pref.startswith("NON")
-    resolved_preference = "NON_VEG" if is_non_veg else "VEG"
+    
+    # Prioritize database row value; only fallback to QR if DB record is empty and signature is valid
+    db_pref = (member.get("food_preference") or "").strip().upper()
+    if db_pref in ["NON_VEG", "NON-VEG", "NONVEG", "N"] or db_pref.startswith("NON"):
+        resolved_preference = "NON_VEG"
+    elif db_pref in ["VEG", "V"]:
+        resolved_preference = "VEG"
+    else:
+        qr_f = (qr_data.get("f") if (qr_data and sig_valid) else "").upper()
+        resolved_preference = "NON_VEG" if qr_f == "N" else "VEG"
+
+    is_non_veg = (resolved_preference == "NON_VEG")
     headers = get_headers()
     now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
 

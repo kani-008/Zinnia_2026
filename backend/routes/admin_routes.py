@@ -17,9 +17,9 @@ admin_bp.add_url_rule("/api/admin/login", endpoint="admin_login", view_func=Admi
 admin_bp.add_url_rule("/api/admin/stats", endpoint="admin_stats", view_func=require_auth(AdminController.get_stats), methods=["GET"])
 
 # Admin Check-in Operations (Under /api/admin/checkin/*)
-admin_bp.add_url_rule("/api/admin/checkin/entry", endpoint="admin_checkin_entry", view_func=AdminController.checkin_entry, methods=["POST"])
-admin_bp.add_url_rule("/api/admin/checkin/event", endpoint="admin_checkin_event", view_func=AdminController.checkin_event, methods=["POST"])
-admin_bp.add_url_rule("/api/admin/checkin/food", endpoint="admin_checkin_food", view_func=AdminController.checkin_food, methods=["POST"])
+admin_bp.add_url_rule("/api/admin/checkin/entry", endpoint="admin_checkin_entry", view_func=require_role("ENTRY_STAFF", "GATE_ADMIN", "SUPER_ADMIN")(AdminController.checkin_entry), methods=["POST"])
+admin_bp.add_url_rule("/api/admin/checkin/event", endpoint="admin_checkin_event", view_func=require_role("EVENT_COORDINATOR", "EVENT_ADMIN", "SUPER_ADMIN")(AdminController.checkin_event), methods=["POST"])
+admin_bp.add_url_rule("/api/admin/checkin/food", endpoint="admin_checkin_food", view_func=require_role("FOOD_STAFF", "FOOD_ADMIN", "SUPER_ADMIN")(AdminController.checkin_food), methods=["POST"])
 
 # Payment Verification Operations (Treasurer & Super Admin)
 admin_bp.add_url_rule("/api/admin/payments", endpoint="admin_payments", view_func=require_role("TREASURER", "SUPER_ADMIN")(AdminController.get_payments), methods=["GET"])

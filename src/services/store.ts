@@ -430,148 +430,52 @@ class ZinniaStore {
     const rawMembers = optionalMembers || teamData.members || [];
     const membersList = Array.isArray(rawMembers) ? rawMembers : [];
 
-    // 1. Try backend API first (/api/register)
-    try {
-      const apiPayload = {
-        team_name: teamData.team_name,
-        college: teamData.college,
-        department: teamData.department,
-        year: teamData.year,
-        registered_events: teamData.registered_events,
-        selected_event_ids: teamData.registered_events,
-        members: membersList
-      };
+    const apiPayload = {
+      team_name: teamData.team_name,
+      college: teamData.college,
+      department: teamData.department,
+      year: teamData.year,
+      registered_events: teamData.registered_events,
+      selected_event_ids: teamData.registered_events,
+      members: membersList
+    };
 
-      const apiRes = await this.fetchJson<any>('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(apiPayload)
-      });
+    const apiRes = await this.fetchJson<any>('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(apiPayload)
+    });
 
-      if (apiRes && apiRes.success) {
-        const teamObj: Team = {
-          team_id: apiRes.team_id || apiRes.team?.team_id,
-          team_name: apiRes.team_name || apiRes.team?.team_name || teamData.team_name,
-          college: teamData.college,
-          department: teamData.department,
-          year: teamData.year,
-          registered_events: teamData.registered_events,
-          payment: false,
-          payment_status: 'AWAITING_PAYMENT',
-          members: apiRes.members || apiRes.team?.members || [],
-          created_at: new Date().toISOString()
-        };
-
-        const teams = this.getTeams();
-        teams.unshift(teamObj);
-        this.setStorage(STORAGE_KEYS.TEAMS, teams);
-
-        const curMembers = this.getTeamMembers();
-        if (teamObj.members && teamObj.members.length > 0) {
-          curMembers.push(...teamObj.members);
-          this.setStorage(STORAGE_KEYS.MEMBERS, curMembers);
-        }
-
-        this.setCurrentTeam(teamObj);
-        this.notifySubscribers();
-        return teamObj;
-      }
-    } catch (e: any) {
-      console.warn('Backend /api/register error notice, using client fallback:', e);
-      if (e.message && !e.message.includes('HTTP Error') && !e.message.includes('Failed to fetch')) {
-        throw e;
-      }
+    if (!apiRes || !apiRes.success) {
+      throw new Error(apiRes?.message || 'Registration rejected by server. Please check your details and try again.');
     }
 
-    // 2. Client / Supabase fallback
-    const teams = this.getTeams();
-    const team_id = generateTeamId(teams.length);
-    const now = new Date().toISOString();
-
-    const createdMembers: TeamMember[] = membersList.map((m, idx) => ({
-      id: generateMemberId(team_id, idx + 1),
-      team_id,
-      name: m.name,
-      email: m.email,
-      phone: m.phone,
-      is_leader: m.is_leader,
-      passport_token: `PASSPORT-${team_id}-${idx + 1}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-      food_preference: m.food_preference || 'VEG',
-      food_collected: false,
-      created_at: now
-    }));
-
-    const newTeam: Team = {
-      team_id,
-      team_name: teamData.team_name,
+    const teamObj: Team = {
+      team_id: apiRes.team_id || apiRes.team?.team_id,
+      team_name: apiRes.team_name || apiRes.team?.team_name || teamData.team_name,
       college: teamData.college,
       department: teamData.department,
       year: teamData.year,
       registered_events: teamData.registered_events,
       payment: false,
       payment_status: 'AWAITING_PAYMENT',
-      members: createdMembers,
-      created_at: now
+      members: apiRes.members || apiRes.team?.members || [],
+      created_at: new Date().toISOString()
     };
 
-    teams.unshift(newTeam);
+    const teams = this.getTeams();
+    teams.unshift(teamObj);
     this.setStorage(STORAGE_KEYS.TEAMS, teams);
 
-    const allMembers = this.getTeamMembers();
-    allMembers.push(...createdMembers);
-    this.setStorage(STORAGE_KEYS.MEMBERS, allMembers);
-
-    this.setCurrentTeam(newTeam);
-
-    if (isSupabaseConfigured()) {
-      try {
-        await supabase.from('teams').insert([{
-          team_id: newTeam.team_id,
-          team_name: newTeam.team_name,
-          college: newTeam.college,
-          department: newTeam.department,
-          year: newTeam.year,
-          registered_events: newTeam.registered_events,
-          payment_status: 'AWAITING_PAYMENT',
-          created_at: newTeam.created_at
-        }]);
-
-        await supabase.from('team_members').insert(
-          createdMembers.map(m => ({
-            id: m.id,
-            team_id: m.team_id,
-            name: m.name,
-            email: m.email,
-            phone: m.phone,
-            is_leader: m.is_leader,
-            passport_token: m.passport_token,
-            created_at: m.created_at
-          }))
-        );
-
-        if (teamData.registered_events && teamData.registered_events.length > 0) {
-          await supabase.from('event_registrations').insert(
-            teamData.registered_events.map(evId => ({
-              team_id: newTeam.team_id,
-              event_id: evId
-            }))
-          );
-        }
-
-        const totalPayable = createdMembers.length * REGISTRATION_FEE_PER_HEAD;
-        await supabase.from('team_payments').insert([{
-          team_id: newTeam.team_id,
-          expected_amount: totalPayable,
-          payment_status: 'AWAITING_PAYMENT',
-          created_at: now
-        }]);
-      } catch (err) {
-        console.warn('Supabase register error:', err);
-      }
+    const curMembers = this.getTeamMembers();
+    if (teamObj.members && teamObj.members.length > 0) {
+      curMembers.push(...teamObj.members);
+      this.setStorage(STORAGE_KEYS.MEMBERS, curMembers);
     }
 
+    this.setCurrentTeam(teamObj);
     this.notifySubscribers();
-    return newTeam;
+    return teamObj;
   }
 
   // --- CHECK-IN LOGIC (Local Fallbacks) ---

@@ -5,10 +5,10 @@ Validates the complete lifecycle:
 2. Payment submission with genuine 12-digit UTR
 3. Duplicate UTR rejection (409 Conflict)
 4. Treasurer verification & idempotent passport email dispatch
-5. Gate Entry check-in & duplicate scan prevention
-6. Event Track check-in (valid registration vs un-registered rejection) & duplicate scan prevention
-7. Food Token check-in with Veg/Non-Veg telemetry & double-claim prevention
-8. Cryptographic QR signature tamper detection
+5. Gate Entry check-in (with Gate Staff role auth) & duplicate scan prevention
+6. Event Track check-in & Coordinator Scoping RBAC (allowed vs out-of-scope event vs unauthenticated)
+7. Food Token check-in (with Food Staff role auth, DB-authoritative Veg/Non-Veg & single issuance)
+8. Cryptographic QR Signature Tamper Detection & Unsigned Structured Payload Rejection
 """
 
 import os
@@ -17,7 +17,6 @@ import json
 import time
 import requests
 
-# Set path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import app
@@ -123,7 +122,7 @@ def run_tests():
     # TEST 5: Treasurer Payment Verification & Pass Dispatch
     # -------------------------------------------------------------------------
     print(f"\n[TEST 5] Treasurer verifying payment for team {team_id}...")
-    treasurer_login = client.post("/api/admin/auth/login", json={"username": "treasurer", "password": "Treasurer@Zin26"})
+    treasurer_login = client.post("/api/admin/auth/login", json={"username": "treasurer", "password": "treasurer@zinnia"})
     assert treasurer_login.status_code == 200, f"Treasurer login failed: {treasurer_login.text}"
     treasurer_token = treasurer_login.get_json()["token"]
 
@@ -138,68 +137,132 @@ def run_tests():
     print(f"  ✓ Payment VERIFIED. Official QR passes dispatched to all member emails.")
 
     # -------------------------------------------------------------------------
-    # TEST 6: Gate Reception Check-in (Single-Use Entry)
+    # AUTHENTICATION SETUP FOR ROLE CHECKPOINTS
+    # -------------------------------------------------------------------------
+    # Super Admin token
+    superadmin_login = client.post("/api/admin/auth/login", json={"username": "admin", "password": "admin@zinnia"})
+    assert superadmin_login.status_code == 200, f"Superadmin login failed: {superadmin_login.text}"
+    superadmin_token = superadmin_login.get_json()["token"]
+
+    # Gate Staff token
+    gate_login = client.post("/api/admin/auth/login", json={"username": "gate", "password": "gate@zinnia"})
+    assert gate_login.status_code == 200, f"Gate staff login failed: {gate_login.text}"
+    gate_token = gate_login.get_json()["token"]
+
+    # Debugging Coordinator token (scoped to "debugging")
+    coord_debug_login = client.post("/api/admin/auth/login", json={"username": "debugging", "password": "debugging@01"})
+    assert coord_debug_login.status_code == 200, f"Coordinator login failed: {coord_debug_login.text}"
+    coord_debug_token = coord_debug_login.get_json()["token"]
+
+    # Food Staff token
+    food_login = client.post("/api/admin/auth/login", json={"username": "food", "password": "food@zinnia"})
+    assert food_login.status_code == 200, f"Food staff login failed: {food_login.text}"
+    food_token = food_login.get_json()["token"]
+
+    # -------------------------------------------------------------------------
+    # TEST 6: Gate Reception Check-in (Single-Use Entry & RBAC)
     # -------------------------------------------------------------------------
     member_1 = members[0]
     token_1 = member_1["passport_token"]
     signed_qr_1 = generate_signed_qr_payload_for_member(member_1, [{"event_id": "debugging"}, {"event_id": "think-strike-and-win"}])
 
     print(f"\n[TEST 6] Campus Gate Reception entry check-in for {member_1['name']}...")
-    # First scan: PASS
-    gate_res_1 = client.post("/api/checkin/entry", json={"token": signed_qr_1, "scanned_by": "Gate Terminal 1"})
+    # Unauthenticated attempt -> 401
+    unauth_gate = client.post("/api/admin/checkin/entry", json={"token": signed_qr_1})
+    assert unauth_gate.status_code == 401, f"Expected 401 on unauthenticated gate scan, got {unauth_gate.status_code}"
+    print("  ✓ Unauthenticated gate scan correctly rejected with HTTP 401")
+
+    # First scan with Gate Staff token: PASS
+    gate_res_1 = client.post(
+        "/api/admin/checkin/entry",
+        headers={"Authorization": f"Bearer {gate_token}"},
+        json={"token": signed_qr_1, "location": "Main Campus Gate"}
+    )
     assert gate_res_1.status_code == 200, f"Gate scan failed: {gate_res_1.text}"
     assert gate_res_1.get_json().get("success") == True
     print("  ✓ First gate scan: ADMISSION GRANTED")
 
     # Second scan: REJECT (Duplicate entry prevention)
-    gate_res_2 = client.post("/api/checkin/entry", json={"token": signed_qr_1, "scanned_by": "Gate Terminal 1"})
+    gate_res_2 = client.post(
+        "/api/admin/checkin/entry",
+        headers={"Authorization": f"Bearer {gate_token}"},
+        json={"token": signed_qr_1}
+    )
     assert gate_res_2.status_code == 400, f"Expected 400 on duplicate entry, got {gate_res_2.status_code}"
     assert "already checked in" in gate_res_2.get_json().get("reason", "").lower()
     print(f"  ✓ Immediate duplicate gate scan REJECTED: {gate_res_2.get_json().get('reason')}")
 
     # -------------------------------------------------------------------------
-    # TEST 7: Event Track Check-in (Registered vs Unregistered vs Duplicate)
+    # TEST 7: Event Track Check-in & Coordinator Scoping RBAC
     # -------------------------------------------------------------------------
-    print(f"\n[TEST 7] Event Track check-in verification...")
-    # A. Unregistered track scan (Lost at SQL - event_id: lost-at-sql) -> REJECT
-    unregistered_scan = client.post("/api/checkin/event", json={
-        "token": signed_qr_1,
-        "event_id": "lost-at-sql",
-        "scanned_by": "Coordinator - SQL"
-    })
+    print(f"\n[TEST 7] Event Track check-in & Coordinator Scoping RBAC...")
+    # A. Unauthenticated scan -> 401
+    unauth_ev = client.post("/api/admin/checkin/event", json={"token": signed_qr_1, "event_id": "debugging"})
+    assert unauth_ev.status_code == 401
+    print("  ✓ Unauthenticated event check-in correctly rejected with HTTP 401")
+
+    # B. Wrong role (Treasurer attempting event check-in) -> 403 Forbidden
+    forbidden_ev = client.post(
+        "/api/admin/checkin/event",
+        headers={"Authorization": f"Bearer {treasurer_token}"},
+        json={"token": signed_qr_1, "event_id": "debugging"}
+    )
+    assert forbidden_ev.status_code == 403
+    print("  ✓ Unauthorized role (Treasurer) correctly blocked from event check-in with HTTP 403")
+
+    # C. Coordinator Scoping: debug1 coordinator attempting to check into short-flim -> REJECTED (400)
+    scoped_out = client.post(
+        "/api/admin/checkin/event",
+        headers={"Authorization": f"Bearer {coord_debug_token}"},
+        json={"token": signed_qr_1, "event_id": "short-flim"}
+    )
+    assert scoped_out.status_code == 400, f"Expected 400 on coordinator scoping violation, got {scoped_out.status_code}"
+    assert "is not assigned to manage event" in scoped_out.get_json().get("reason", "")
+    print(f"  ✓ Coordinator scoping enforced: debug1 coordinator blocked from checking into 'short-flim'")
+
+    # D. Unregistered track scan by authorized Super Admin (Lost at SQL - event_id: lost-at-sql) -> REJECT
+    unregistered_scan = client.post(
+        "/api/admin/checkin/event",
+        headers={"Authorization": f"Bearer {superadmin_token}"},
+        json={"token": signed_qr_1, "event_id": "lost-at-sql"}
+    )
     assert unregistered_scan.status_code == 400
     assert "not registered" in unregistered_scan.get_json().get("reason", "").lower()
     print("  ✓ Scan for un-registered event 'Lost at SQL' correctly REJECTED")
 
-    # B. Registered track scan (Debugging - event_id: debugging) -> PASS
-    registered_scan_1 = client.post("/api/checkin/event", json={
-        "token": signed_qr_1,
-        "event_id": "debugging",
-        "scanned_by": "Coordinator - Debugging"
-    })
+    # E. Authorized coordinator (debug1) checking into assigned event 'debugging' -> PASS
+    registered_scan_1 = client.post(
+        "/api/admin/checkin/event",
+        headers={"Authorization": f"Bearer {coord_debug_token}"},
+        json={"token": signed_qr_1, "event_id": "debugging"}
+    )
     assert registered_scan_1.status_code == 200, f"Event scan failed: {registered_scan_1.text}"
     assert registered_scan_1.get_json().get("success") == True
-    print("  ✓ Scan for registered event 'Debugging': ADMITTED")
+    print("  ✓ Coordinator 'debug1' successfully admitted attendee to assigned event 'Debugging'")
 
-    # C. Duplicate track scan for same event -> REJECT
-    registered_scan_2 = client.post("/api/checkin/event", json={
-        "token": signed_qr_1,
-        "event_id": "debugging",
-        "scanned_by": "Coordinator - Debugging"
-    })
+    # F. Duplicate track scan for same event -> REJECT
+    registered_scan_2 = client.post(
+        "/api/admin/checkin/event",
+        headers={"Authorization": f"Bearer {coord_debug_token}"},
+        json={"token": signed_qr_1, "event_id": "debugging"}
+    )
     assert registered_scan_2.status_code == 400
-    assert "already checked in" in registered_scan_2.get_json().get("reason", "").lower()
+    assert "already checked into" in registered_scan_2.get_json().get("reason", "").lower()
     print("  ✓ Duplicate event check-in correctly REJECTED")
 
     # -------------------------------------------------------------------------
-    # TEST 8: Food Token Check-in (Veg/Non-Veg Telemetry & Single Issuance)
+    # TEST 8: Dining Hall Food token check-in (Member 2 - NON_VEG)
     # -------------------------------------------------------------------------
-    member_2 = members[1] # NON_VEG
+    member_2 = members[1] # NON_VEG in registration
     signed_qr_2 = generate_signed_qr_payload_for_member(member_2, [{"event_id": "debugging"}])
 
     print(f"\n[TEST 8] Dining Hall Food token check-in (Member 2 - NON_VEG)...")
-    # First meal claim: PASS with NON_VEG
-    food_res_1 = client.post("/api/checkin/food", json={"token": signed_qr_2, "scanned_by": "Dining Counter A"})
+    # First meal claim with Food Staff token: PASS with NON_VEG
+    food_res_1 = client.post(
+        "/api/admin/checkin/food",
+        headers={"Authorization": f"Bearer {food_token}"},
+        json={"token": signed_qr_2, "location": "Dining Counter A"}
+    )
     assert food_res_1.status_code == 200, f"Food scan failed: {food_res_1.text}"
     food_data = food_res_1.get_json()
     assert food_data.get("success") == True
@@ -207,19 +270,30 @@ def run_tests():
     print(f"  ✓ Meal token validated. Telemetry returned: {food_data.get('food_preference')} (NON_VEG meal issued)")
 
     # Second meal claim: REJECT (Single issuance locked)
-    food_res_2 = client.post("/api/checkin/food", json={"token": signed_qr_2, "scanned_by": "Dining Counter A"})
+    food_res_2 = client.post(
+        "/api/admin/checkin/food",
+        headers={"Authorization": f"Bearer {food_token}"},
+        json={"token": signed_qr_2}
+    )
     assert food_res_2.status_code == 400
     assert "already claimed" in food_res_2.get_json().get("reason", "").lower()
     print(f"  ✓ Duplicate meal token claim correctly REJECTED: {food_res_2.get_json().get('reason')}")
 
     # -------------------------------------------------------------------------
-    # TEST 9: Cryptographic QR Signature Tamper Detection
+    # TEST 9: Cryptographic Security & Tamper Detection
     # -------------------------------------------------------------------------
     print("\n[TEST 9] Testing Cryptographic QR Signature Tamper Detection...")
-    tampered_qr = signed_qr_1.replace('"f":"V"', '"f":"N"') # Tamper food pref from V to N
+    # A. Tampered food preference in signature
+    tampered_qr = signed_qr_1.replace('"f":"V"', '"f":"N"')
     resolved_tok, qr_obj, is_valid, msg = parse_and_validate_scan_payload(tampered_qr)
     assert not is_valid, "Tampered QR payload must fail signature verification!"
     print(f"  ✓ Tampered payload detected and rejected: {msg}")
+
+    # B. Unsigned structured JSON payload (without 's') -> MUST BE REJECTED
+    unsigned_structured_json = json.dumps({"v": 1, "t": token_1, "m": member_1["id"], "f": "N"})
+    resolved_tok_2, qr_obj_2, is_valid_2, msg_2 = parse_and_validate_scan_payload(unsigned_structured_json)
+    assert not is_valid_2, "Unsigned structured QR payload must be rejected!"
+    print(f"  ✓ Unsigned structured JSON badge correctly REJECTED: {msg_2}")
 
     print("\n==================================================================")
     print("🎉 ALL ACCEPTANCE TESTS PASSED ACCORDING TO SPECIFICATION!")

@@ -12,10 +12,14 @@ import time
 from functools import wraps
 from flask import request, jsonify, g
 
+from dotenv import load_dotenv
+
+load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
+
 AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY")
-if not AUTH_SECRET_KEY or AUTH_SECRET_KEY.startswith("your_") or len(AUTH_SECRET_KEY) < 16:
-    # Ensure production security
-    AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "zin26_secure_admin_jwt_secret_key_8492048102_prod")
+if not AUTH_SECRET_KEY:
+    raise RuntimeError("CRITICAL SECURITY ERROR: AUTH_SECRET_KEY environment variable is missing!")
 
 def generate_admin_token(user_data: dict, expires_in_seconds: int = 86400 * 7) -> str:
     """Generate a tamper-proof HMAC-signed token for an admin user."""

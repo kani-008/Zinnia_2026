@@ -34,7 +34,8 @@ class PassportController:
         """POST /api/checkin/entry — Campus Entry Gate check-in."""
         data = request.get_json(silent=True) or {}
         token_or_id = data.get("passport_token") or data.get("id") or data.get("token", "")
-        scanned_by = data.get("scanned_by", "Gate Reception Desk")
+        admin_user = getattr(g, "admin", None)
+        scanned_by = admin_user.get("name") if admin_user else data.get("scanned_by", "Gate Reception Desk")
         location = data.get("location", "Main Campus Gate")
 
         if not token_or_id:
@@ -50,7 +51,8 @@ class PassportController:
         data = request.get_json(silent=True) or {}
         token_or_id = data.get("passport_token") or data.get("id") or data.get("token", "")
         event_id = data.get("event_id", "")
-        scanned_by = data.get("scanned_by", "Event Coordinator")
+        admin_user = getattr(g, "admin", None)
+        scanned_by = admin_user.get("name") if admin_user else data.get("scanned_by", "Event Coordinator")
         location = data.get("location", "Event Room")
 
         if not token_or_id or not event_id:
@@ -60,7 +62,8 @@ class PassportController:
             token_or_id=token_or_id,
             event_id=event_id,
             scanned_by=scanned_by,
-            location=location
+            location=location,
+            admin_user=admin_user
         )
         status_code = 200 if result.get("success") else 400
         return jsonify(result), status_code
@@ -70,7 +73,8 @@ class PassportController:
         """POST /api/checkin/food — Food & Refreshment token lock."""
         data = request.get_json(silent=True) or {}
         token_or_id = data.get("passport_token") or data.get("id") or data.get("token", "")
-        scanned_by = data.get("scanned_by", "Dining Staff")
+        admin_user = getattr(g, "admin", None)
+        scanned_by = admin_user.get("name") if admin_user else data.get("scanned_by", "Dining Staff")
         location = data.get("location", "Dining Hall")
 
         if not token_or_id:
