@@ -290,8 +290,11 @@ export const WebsiteRegisterPage: React.FC = () => {
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     console.log('[Register] 🚀 PROCEED TO PAYMENT button clicked!');
 
     if (!validateForm()) {
@@ -334,9 +337,9 @@ export const WebsiteRegisterPage: React.FC = () => {
       const registeredTeam = await store.registerTeam(teamPayload, allMemberPayloads);
       console.log('[Register] 🎉 Registration SUCCESS! Registered Team:', registeredTeam);
 
-      const targetUrl = `/payment?id=${registeredTeam.team_id}`;
+      const targetUrl = `/payment?id=${encodeURIComponent(registeredTeam.team_id)}`;
       console.log('[Register] ➡️ Navigating to payment page:', targetUrl);
-      navigate(targetUrl);
+      navigate(targetUrl, { replace: true });
     } catch (err: any) {
       console.error('[Register] ❌ Registration failed with error:', err);
       setGeneralError(err.message || 'Registration failed. Please review your details and try again.');
@@ -384,8 +387,8 @@ export const WebsiteRegisterPage: React.FC = () => {
           </div>
         )}
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} noValidate className="space-y-6">
+        {/* Form Body Container */}
+        <div className="space-y-6">
 
           {/* SECTION 1: SELECT EVENTS */}
           <div 
@@ -921,10 +924,22 @@ export const WebsiteRegisterPage: React.FC = () => {
             </div>
           )}
 
+          {/* Validation Warning above submit button */}
+          {generalError && (
+            <div className="p-3.5 rounded-xl bg-[#D51F55]/20 border-2 border-[#D51F55] text-[#EEEEEA] text-xs font-mono font-bold flex items-center gap-2.5 shadow-[3px_3px_0px_#D51F55] animate-in fade-in">
+              <AlertCircle className="w-5 h-5 text-[#D51F55] shrink-0" />
+              <div>
+                <span className="text-[#D51F55] uppercase block font-black text-[11px]">Cannot Proceed:</span>
+                <span>{generalError}</span>
+              </div>
+            </div>
+          )}
+
           {/* SUBMIT BUTTON (Desktop + Mobile Sticky bar) */}
           <div className="pt-2">
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               disabled={isSubmitting}
               className="w-full min-h-[48px] py-3.5 px-6 rounded-xl bg-[#E5BD00] hover:bg-[#EEEEEA] text-[#090A0B] border-2 border-[#090A0B] shadow-[3px_3px_0px_#090A0B] font-display text-sm sm:text-base tracking-wider uppercase flex items-center justify-center gap-2 transition-all active:translate-x-0.5 active:translate-y-0.5 cursor-pointer font-black disabled:opacity-60 disabled:cursor-not-allowed"
             >
@@ -951,7 +966,8 @@ export const WebsiteRegisterPage: React.FC = () => {
               <span className="block text-xs font-bold text-[#EEEEEA] uppercase">{totalMembersCount} Member{totalMembersCount === 1 ? '' : 's'}</span>
             </div>
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               disabled={isSubmitting}
               className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#E5BD00] hover:bg-[#EEEEEA] text-[#090A0B] font-display font-black text-xs tracking-wider uppercase flex items-center gap-2 cursor-pointer shadow-[2px_2px_0px_#090A0B] disabled:opacity-60"
             >
@@ -965,7 +981,7 @@ export const WebsiteRegisterPage: React.FC = () => {
               )}
             </button>
           </div>
-        </form>
+        </div>
       </main>
 
       {/* Footer */}

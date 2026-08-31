@@ -1,7 +1,21 @@
 {
-  "ZIN-2026-5069": {
-    "team_id": "ZIN-2026-5069",
+  "ZIN-2026-5953": {
+    "team_id": "ZIN-2026-5953",
     "expected_amount": 500,
+    "submitted_amount": null,
+    "utr_number": null,
+    "payment_status": "AWAITING_PAYMENT"
+  },
+  "ZIN-2026-3550": {
+    "team_id": "ZIN-2026-3550",
+    "expected_amount": 500,
+    "submitted_amount": null,
+    "utr_number": null,
+    "payment_status": "AWAITING_PAYMENT"
+  },
+  "ZIN-2026-7370": {
+    "team_id": "ZIN-2026-7370",
+    "expected_amount": 250,
     "submitted_amount": null,
     "utr_number": null,
     "payment_status": "AWAITING_PAYMENT"

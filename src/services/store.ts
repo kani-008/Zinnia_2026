@@ -275,8 +275,13 @@ class ZinniaStore {
     }));
   }
 
-  getTeamMembers(): TeamMember[] {
-    return this.getStorage<TeamMember[]>(STORAGE_KEYS.MEMBERS, []);
+  getTeamMembers(teamId?: string): TeamMember[] {
+    const all = this.getStorage<TeamMember[]>(STORAGE_KEYS.MEMBERS, []);
+    if (teamId) {
+      const cleaned = teamId.trim().toUpperCase();
+      return all.filter(m => m.team_id && m.team_id.toUpperCase() === cleaned);
+    }
+    return all;
   }
 
   getTeamById(teamId: string): Team | undefined {
@@ -485,8 +490,23 @@ class ZinniaStore {
       throw new Error(apiRes?.message || 'Registration rejected by server. Please check your details and try again.');
     }
 
+    const teamId = apiRes.team_id || apiRes.team?.team_id;
+    const membersWithIds: TeamMember[] = (apiRes.members || apiRes.team?.members || teamData.members || []).map(
+      (m: any, idx: number) => ({
+        id: m.id || `ATT-${(teamId || '').replace('ZIN-', '')}-${idx + 1}`,
+        team_id: teamId,
+        name: m.name,
+        email: m.email,
+        phone: m.phone,
+        is_leader: m.is_leader ?? idx === 0,
+        food_preference: m.food_preference || 'VEG',
+        passport_token: m.passport_token || '',
+        created_at: new Date().toISOString()
+      })
+    );
+
     const teamObj: Team = {
-      team_id: apiRes.team_id || apiRes.team?.team_id,
+      team_id: teamId,
       team_name: apiRes.team_name || apiRes.team?.team_name || teamData.team_name,
       college: teamData.college,
       department: teamData.department,
@@ -494,19 +514,22 @@ class ZinniaStore {
       registered_events: teamData.registered_events,
       payment: false,
       payment_status: 'AWAITING_PAYMENT',
-      members: apiRes.members || apiRes.team?.members || [],
+      members: membersWithIds,
       created_at: new Date().toISOString()
     };
 
     const teams = this.getTeams();
-    teams.unshift(teamObj);
+    const existingIdx = teams.findIndex(t => t.team_id === teamId);
+    if (existingIdx >= 0) {
+      teams[existingIdx] = teamObj;
+    } else {
+      teams.unshift(teamObj);
+    }
     this.setStorage(STORAGE_KEYS.TEAMS, teams);
 
-    const curMembers = this.getTeamMembers();
-    if (teamObj.members && teamObj.members.length > 0) {
-      curMembers.push(...teamObj.members);
-      this.setStorage(STORAGE_KEYS.MEMBERS, curMembers);
-    }
+    const curMembers = this.getTeamMembers().filter(m => m.team_id !== teamId);
+    curMembers.push(...membersWithIds);
+    this.setStorage(STORAGE_KEYS.MEMBERS, curMembers);
 
     this.setCurrentTeam(teamObj);
     this.notifySubscribers();
@@ -520,25 +543,29 @@ class ZinniaStore {
 
     try {
       const res = await this.fetchJson<any>(`/api/payment/status?team_id=${encodeURIComponent(cleaned)}`);
-      return res;
+      if (res && res.success) {
+        return res;
+      }
     } catch (err: any) {
       console.warn('[Store] getPaymentStatus API fallback:', err);
-      const local = this.getTeamById(cleaned);
-      if (local) {
-        return {
-          success: true,
-          team_id: local.team_id,
-          team_name: local.team_name,
-          payment: local.payment,
-          payment_status: local.payment_status || 'AWAITING_PAYMENT',
-          member_count: local.members?.length || 1,
-          members: local.members || [],
-          expected_amount: (local.members?.length || 1) * 250,
-          submitted_amount: (local.members?.length || 1) * 250
-        };
-      }
-      throw err;
     }
+
+    const local = this.getTeamById(cleaned);
+    if (local) {
+      return {
+        success: true,
+        team_id: local.team_id,
+        team_name: local.team_name,
+        payment: local.payment,
+        payment_status: local.payment_status || 'AWAITING_PAYMENT',
+        member_count: local.members?.length || 1,
+        members: local.members || [],
+        registered_events: local.registered_events || [],
+        expected_amount: (local.members?.length || 1) * 250,
+        submitted_amount: (local.members?.length || 1) * 250
+      };
+    }
+    return { success: false, message: `Team ${cleaned} not found.` };
   }
 
   async submitPaymentProof(

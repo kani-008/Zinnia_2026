@@ -200,6 +200,7 @@ def get_payment_status_service(team_id: str) -> Dict[str, Any]:
     Returns expected amount, UTR, and member details.
     """
     headers = get_headers()
+    print(f"\n[Payment Gateway] 🔍 Status requested for Team ID: {team_id}")
 
     # 1. Check staging table: pending_registrations
     ok_p, res_p = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/pending_registrations?team_id=eq.{team_id}&select=*", headers)
@@ -208,6 +209,7 @@ def get_payment_status_service(team_id: str) -> Dict[str, Any]:
         members = pending.get("members", [])
         member_count = len(members) if isinstance(members, list) else 1
         expected = pending.get("expected_amount") or (member_count * 250)
+        print(f"[Payment Gateway] 📋 Found staging record for {team_id}: status={pending.get('payment_status')}, fee=Rs.{expected}, members={member_count}")
         return {
             "success": True,
             "team_id": team_id,
