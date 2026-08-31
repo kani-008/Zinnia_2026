@@ -478,6 +478,14 @@ class ZinniaStore {
     return teamObj;
   }
 
+  setCurrentTeam(team: Team | null) {
+    this.setStorage(STORAGE_KEYS.CURRENT_TEAM, team);
+  }
+
+  getCurrentTeam(): Team | null {
+    return this.getStorage(STORAGE_KEYS.CURRENT_TEAM, null);
+  }
+
   // --- CHECK-IN LOGIC (Local Fallbacks) ---
   recordEntryCheckin(
     identifier: string,

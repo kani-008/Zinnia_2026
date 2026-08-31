@@ -30,17 +30,8 @@ interface MemberInput {
   food_preference: 'VEG' | 'NON_VEG';
 }
 
-const DRAFT_STORAGE_KEY = 'zin26_registration_form_draft';
 const INDIAN_PHONE_REGEX = /^[6-9]\d{9}$/;
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-const getInitialDraft = () => {
-  try {
-    const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY) || localStorage.getItem(DRAFT_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return null;
-};
 
 export const WebsiteRegisterPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -48,36 +39,38 @@ export const WebsiteRegisterPage: React.FC = () => {
   const preselectedMission = searchParams.get('mission');
   const existingTeamId = searchParams.get('id');
 
-  const draft = useMemo(() => getInitialDraft(), []);
-
-  const [teamName, setTeamName] = useState(draft?.teamName || '');
-  const [college, setCollege] = useState(draft?.college || '');
-  const [department, setDepartment] = useState(draft?.department || '');
-  const [year, setYear] = useState(draft?.year || 'III');
+  const [teamName, setTeamName] = useState('');
+  const [college, setCollege] = useState('');
+  const [department, setDepartment] = useState('');
+  const [year, setYear] = useState('III');
   const [registeredEvents, setRegisteredEvents] = useState<string[]>(() => {
     if (preselectedMission) return [preselectedMission];
-    return draft?.registeredEvents || [];
+    return [];
   });
 
   // Leader is Member 1
-  const [leader, setLeader] = useState<MemberInput>(() => {
-    return draft?.leader || {
-      name: '',
-      email: '',
-      phone: '',
-      food_preference: 'VEG'
-    };
+  const [leader, setLeader] = useState<MemberInput>({
+    name: '',
+    email: '',
+    phone: '',
+    food_preference: 'VEG'
   });
 
   // Additional Team Members (max 1 additional member since team_size_max is 2)
-  const [members, setMembers] = useState<MemberInput[]>(() => {
-    return draft?.members || [];
-  });
+  const [members, setMembers] = useState<MemberInput[]>([]);
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const errorRef = useRef<HTMLDivElement>(null);
+
+  // Clear any existing stale registration drafts on mount
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem('zin26_registration_form_draft');
+      localStorage.removeItem('zin26_registration_form_draft');
+    } catch (e) {}
+  }, []);
 
   const allEvents = store.getEvents();
 
@@ -89,23 +82,6 @@ export const WebsiteRegisterPage: React.FC = () => {
     () => allEvents.filter(e => e.event_type === 'NON_TECH' || e.category === 'NON_TECHNICAL'),
     [allEvents]
   );
-
-  // Auto-save form draft
-  useEffect(() => {
-    try {
-      const currentDraft = {
-        teamName,
-        college,
-        department,
-        year,
-        registeredEvents,
-        leader,
-        members
-      };
-      sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(currentDraft));
-      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(currentDraft));
-    } catch (e) {}
-  }, [teamName, college, department, year, registeredEvents, leader, members]);
 
   // Restore from registered team if returning via Team ID
   useEffect(() => {
