@@ -229,14 +229,19 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
         ok_e, res_e = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/pending_registration_emails", headers, email_rows, log_error=False)
         if not ok_e and ok_p:
             err_e_text = str(res_e)
+            # Roll back the pending_registrations row unconditionally
+            requests.delete(f"{SUPABASE_URL}/rest/v1/pending_registrations?team_id=eq.{team_id}", headers=headers)
             if "unique" in err_e_text.lower() or "duplicate" in err_e_text.lower() or "23505" in err_e_text:
-                # Roll back the pending_registrations row
-                requests.delete(f"{SUPABASE_URL}/rest/v1/pending_registrations?team_id=eq.{team_id}", headers=headers)
                 return {
                     "success": False,
                     "error_code": "DUPLICATE_EMAIL",
                     "message": "One or more email addresses are already registered in a pending registration."
                 }
+            return {
+                "success": False,
+                "error_code": "REGISTRATION_FAILED",
+                "message": f"Failed to reserve registration details: {err_e_text}"
+            }
 
         # Backup local cache
         try:

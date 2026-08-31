@@ -30,9 +30,10 @@ CREATE TABLE IF NOT EXISTS pending_registration_emails (
     team_id TEXT NOT NULL REFERENCES pending_registrations(team_id) ON DELETE CASCADE
 );
 
--- Fast lookup indexes
+-- Fast lookup and uniqueness indexes
 CREATE INDEX IF NOT EXISTS idx_pending_reg_status ON pending_registrations(payment_status);
-CREATE INDEX IF NOT EXISTS idx_pending_reg_utr ON pending_registrations(utr_number);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_pending_reg_utr ON pending_registrations(utr_number)
+  WHERE utr_number IS NOT NULL AND utr_number <> '';
 CREATE INDEX IF NOT EXISTS idx_pending_emails_team_id ON pending_registration_emails(team_id);
 
 -- Enable RLS (Backend uses SERVICE ROLE key; no public anon access)

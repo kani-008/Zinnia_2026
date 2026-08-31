@@ -1,28 +1,7 @@
 {
-  "ZIN-2026-6092": {
-    "team_id": "ZIN-2026-6092",
+  "ZIN-2026-1004": {
+    "team_id": "ZIN-2026-1004",
     "expected_amount": 500,
-    "submitted_amount": null,
-    "utr_number": null,
-    "payment_status": "AWAITING_PAYMENT"
-  },
-  "ZIN-2026-6234": {
-    "team_id": "ZIN-2026-6234",
-    "expected_amount": 500,
-    "submitted_amount": null,
-    "utr_number": null,
-    "payment_status": "AWAITING_PAYMENT"
-  },
-  "ZIN-2026-3209": {
-    "team_id": "ZIN-2026-3209",
-    "expected_amount": 250,
-    "submitted_amount": null,
-    "utr_number": null,
-    "payment_status": "AWAITING_PAYMENT"
-  },
-  "ZIN-2026-7930": {
-    "team_id": "ZIN-2026-7930",
-    "expected_amount": 250,
     "submitted_amount": null,
     "utr_number": null,
     "payment_status": "AWAITING_PAYMENT"

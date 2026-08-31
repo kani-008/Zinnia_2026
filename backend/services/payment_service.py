@@ -162,7 +162,22 @@ def submit_payment_service(team_id: str, utr_number: str, submitted_amount: floa
     }
 
     # 1. Update staging table: pending_registrations
-    safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/pending_registrations?team_id=eq.{team_id}", headers, pay_update)
+    ok_patch, res_patch = safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/pending_registrations?team_id=eq.{team_id}", headers, pay_update)
+    if not ok_patch:
+        err_patch_text = str(res_patch)
+        if "23505" in err_patch_text or "uq_pending_reg_utr" in err_patch_text or "duplicate" in err_patch_text.lower():
+            return {
+                "success": False,
+                "status_code": 409,
+                "error_code": "DUPLICATE_UTR",
+                "message": f"Transaction reference '{cleaned_utr}' has already been submitted by another team. Each payment proof must be unique."
+            }
+        return {
+            "success": False,
+            "status_code": 500,
+            "error_code": "PAYMENT_SUBMIT_FAILED",
+            "message": f"Failed to record transaction reference: {err_patch_text}"
+        }
 
     # 2. Save local cache
     pending.update(pay_update)
@@ -262,14 +277,14 @@ def get_payment_status_service(team_id: str) -> Dict[str, Any]:
 def verify_payment_by_treasurer(team_id: str, action: str = "VERIFY", reason: str = "", admin_name: str = "Treasurer") -> Dict[str, Any]:
     """
     Treasurer verification action.
-    VERIFY -> Atomically promotes team from pending_registrations into teams, team_members, event_registrations, team_payments.
+    VERIFY -> Atomically promotes team from pending_registrations to teams via promote_pending_team RPC.
     REJECT -> Sets rejection reason in pending_registrations and emails rejection notification.
     """
     headers = get_headers()
     now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
     action = action.upper()
 
-    # 1. Fetch from staging table: pending_registrations
+    # Fetch staging record
     pending = get_payment_record(team_id) or {"team_id": team_id}
     members = pending.get("members", [])
     if isinstance(members, str):
@@ -279,103 +294,35 @@ def verify_payment_by_treasurer(team_id: str, action: str = "VERIFY", reason: st
             members = []
 
     if action == "VERIFY":
-        # Check if already verified
-        ok_chk, res_chk = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}&select=team_id", headers)
-        if ok_chk and isinstance(res_chk, list) and len(res_chk) > 0:
+        # Execute atomic PL/pgSQL promote function in a single transaction (Task 1)
+        rpc_url = f"{SUPABASE_URL}/rest/v1/rpc/promote_pending_team"
+        rpc_payload = {
+            "p_team_id": team_id,
+            "p_admin": admin_name
+        }
+
+        ok_rpc, res_rpc = safe_supabase_post(rpc_url, headers, rpc_payload)
+        if not ok_rpc:
+            err_msg = res_rpc.get("message") if isinstance(res_rpc, dict) else str(res_rpc)
+            print(f"[Promotion RPC Error] Failed to promote team {team_id}: {err_msg}")
+
+            if "23505" in str(res_rpc) or "duplicate" in str(res_rpc).lower() or "already registered" in str(res_rpc).lower():
+                return {
+                    "success": False,
+                    "error_code": "DUPLICATE_EMAIL",
+                    "message": f"Cannot verify team: A member email is already registered in another verified team."
+                }
             return {
-                "success": True,
-                "message": f"Team {team_id} was already verified.",
-                "team_id": team_id,
-                "payment_status": "VERIFIED"
+                "success": False,
+                "error_code": "PROMOTION_FAILED",
+                "message": f"Atomic promotion failed: {err_msg}"
             }
 
-        # Step a: Re-check every member email against team_members (fail loudly if taken)
-        for m in members:
-            m_email = m.get("email", "").strip().lower()
-            if m_email:
-                ok_mchk, res_mchk = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/team_members?email=eq.{m_email}&select=id,name", headers)
-                if ok_mchk and isinstance(res_mchk, list) and len(res_mchk) > 0:
-                    return {
-                        "success": False,
-                        "error_code": "DUPLICATE_EMAIL",
-                        "message": f"Cannot verify team: Member email '{m_email}' was already registered by attendee '{res_mchk[0].get('name')}' in another verified team."
-                    }
-
-        # Step b: Insert into teams
-        team_row = {
-            "team_id": team_id,
-            "team_name": pending.get("team_name", f"Team {team_id}"),
-            "college": pending.get("college", "GCE Erode"),
-            "department": pending.get("department", "CSE"),
-            "year": pending.get("year", "III"),
-            "registered_events": pending.get("registered_events", []),
-            "payment": True,
-            "payment_status": "VERIFIED"
-        }
-        ok_t, res_t = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/teams", headers, team_row)
-        if not ok_t:
-            return {"success": False, "message": f"Promotion failed (teams table write error): {res_t}"}
-
-        # Step c: Insert into team_members (generate crypto-random passport_token now)
-        created_members = []
-        for idx, m in enumerate(members):
-            m_id = f"ATT-{team_id[-4:]}-{idx+1}"
-            passport_token = secrets.token_hex(16)
-            created_members.append({
-                "id": m_id,
-                "team_id": team_id,
-                "name": m.get("name", "").strip(),
-                "email": m.get("email", "").strip().lower(),
-                "phone": m.get("phone", "").strip(),
-                "is_leader": m.get("is_leader", idx == 0),
-                "passport_token": passport_token,
-                "food_preference": m.get("food_preference") or "VEG"
-            })
-
-        if created_members:
-            ok_m, res_m = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, created_members, log_error=False)
-            if not ok_m and "food_preference" in str(res_m):
-                members_no_food = [{k: v for k, v in cm.items() if k != "food_preference"} for cm in created_members]
-                ok_m, res_m = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, members_no_food)
-
-            if not ok_m:
-                # Rollback team row
-                requests.delete(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}", headers=headers)
-                return {"success": False, "message": f"Promotion failed (team_members write error): {res_m}"}
-
-        # Step d: Insert into event_registrations
-        reg_events = pending.get("registered_events", [])
-        if reg_events:
-            event_rows = [
-                {
-                    "team_id": team_id,
-                    "event_id": ev_id,
-                    "team_name": pending.get("team_name", f"Team {team_id}")
-                }
-                for ev_id in reg_events
-            ]
-            safe_supabase_post(f"{SUPABASE_URL}/rest/v1/event_registrations", headers, event_rows)
-
-        # Step e: Insert into team_payments
-        expected = pending.get("expected_amount") or (len(created_members) * 250)
-        pay_row = {
-            "team_id": team_id,
-            "expected_amount": expected,
-            "submitted_amount": pending.get("submitted_amount", expected),
-            "utr_number": pending.get("utr_number"),
-            "payment_status": "VERIFIED",
-            "payment_verified_at": now_iso,
-            "verified_by": admin_name
-        }
-        safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_payments", headers, pay_row)
-
-        # Step f: Delete staging record (cascade clears pending_registration_emails)
-        requests.delete(f"{SUPABASE_URL}/rest/v1/pending_registrations?team_id=eq.{team_id}", headers=headers)
-
-        # Step g: Only after all promotion succeeds, trigger passport email dispatch
+        # ONLY dispatch passport emails if promotion succeeded!
+        dispatch_res = None
         try:
             from services.passport_service import trigger_passport_dispatch
-            trigger_passport_dispatch(team_id)
+            dispatch_res = trigger_passport_dispatch(team_id)
         except Exception as e:
             print(f"[Treasurer Notice] Passport dispatch notification: {e}")
 
@@ -387,7 +334,9 @@ def verify_payment_by_treasurer(team_id: str, action: str = "VERIFY", reason: st
             "success": True,
             "message": f"Team {team_id} verified and promoted to official symposium records. Gate passes dispatched!",
             "team_id": team_id,
-            "payment_status": "VERIFIED"
+            "payment_status": "VERIFIED",
+            "promotion": res_rpc,
+            "dispatch": dispatch_res
         }
 
     else:
@@ -430,7 +379,8 @@ def verify_payment_by_treasurer(team_id: str, action: str = "VERIFY", reason: st
                 if not m_email or m_email in already_notified:
                     continue
 
-                m_id = f"ATT-{team_id[-4:]}-{idx+1}"
+                clean_num = team_id.replace("ZIN-", "")
+                m_id = f"ATT-{clean_num}-{idx+1}"
                 mail_res = send_payment_rejected_email(
                     member=m,
                     team=pending,
