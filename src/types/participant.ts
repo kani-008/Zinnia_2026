@@ -1,5 +1,7 @@
+export type ClearanceLevel = 'ALL' | 'STUDENT' | 'DELEGATE' | string;
+
 export interface TeamMember {
-  id: string; // Unique Member UUID / ID e.g. "MEM-ZIN26-1"
+  id: string; // Unique Member UUID / ID e.g. "ATT-1045-1"
   team_id: string; // References Team.team_id
   name: string;
   email: string;
@@ -10,9 +12,6 @@ export interface TeamMember {
   passport_token: string;
   passport_issued_at?: string;
   passport_sent_at?: string;
-  
-  // Legacy / optional fallback during transition
-  band_id?: string;
   
   // Individual food token claim status and preference
   food_preference?: 'VEG' | 'NON_VEG';
@@ -34,13 +33,15 @@ export interface PassportDispatchRecord {
 }
 
 export interface Team {
-  team_id: string; // Primary Key e.g. "ZIN26-T8X92B"
+  team_id: string; // Primary Key e.g. "ZIN-2026-1045"
   team_name: string;
   college: string;
   department: string;
   year: 'I' | 'II' | 'III' | 'IV' | 'PG' | string;
   registered_events: string[];
   payment: boolean;
+  payment_status?: string;
+  utr_number?: string;
   
   members?: TeamMember[];
   
@@ -55,15 +56,7 @@ export type Participant = Team & {
   email?: string;
   phone?: string;
   passport_token?: string;
-  band_id?: string;
+  food_preference?: 'VEG' | 'NON_VEG';
   food_collected?: boolean;
   food_collected_at?: string;
 };
-
-export interface HandBand {
-  band_id: string; // PRIMARY KEY
-  member_id: string; // Team Member ID Reference
-  team_id: string; // Team ID Reference
-  assigned_at: string;
-}
-

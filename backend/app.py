@@ -10,23 +10,6 @@ from dotenv import load_dotenv
 # Ensure backend root is on python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Disable SSL verification warnings & patch requests globally to bypass local SSL chain errors
-import ssl
-import urllib3
-import requests
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-try:
-    ssl._create_default_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-
-_orig_request = requests.Session.request
-def _patched_request(self, method, url, **kwargs):
-    kwargs.setdefault('verify', False)
-    return _orig_request(self, method, url, **kwargs)
-requests.Session.request = _patched_request
-
 # Load server environment variables
 load_dotenv()
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
@@ -37,6 +20,7 @@ from flask_cors import CORS
 from routes.passport_routes import passport_bp
 from routes.registration_routes import registration_bp
 from routes.payment_routes import payment_bp
+from routes.admin_routes import admin_bp
 from middleware.error_handler import register_error_handlers
 
 def check_db_connection():
@@ -63,7 +47,7 @@ def check_db_connection():
         if r.status_code == 200:
             print(f"[DB] Database connected successfully! ({supabase_url})")
         elif r.status_code == 401:
-            print(f"[DB Error] Database connection failed: RLS Policy / Unauthorized. Please click 'Disable RLS' on tables in your Supabase Dashboard.")
+            print(f"[DB Error] Database connection failed: RLS Policy / Unauthorized. Please check table permissions.")
         else:
             print(f"[DB Error] Database connection failed: HTTP {r.status_code} ({r.text[:150]})")
     except Exception as e:
@@ -73,7 +57,7 @@ def create_app() -> Flask:
     """Application Factory creating and configuring the Flask app instance."""
     app = Flask(__name__)
     
-    # 1. Enable CORS for frontend communication
+    # 1. Enable CORS for frontend communication (allow dev ports 5173 and 5174)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     # 2. Register Global Middlewares
@@ -83,6 +67,7 @@ def create_app() -> Flask:
     app.register_blueprint(passport_bp)
     app.register_blueprint(registration_bp)
     app.register_blueprint(payment_bp)
+    app.register_blueprint(admin_bp)
 
     # 4. Check DB Connection
     check_db_connection()
@@ -95,5 +80,5 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
     host = os.getenv("HOST", "0.0.0.0")
     debug = os.getenv("DEBUG", "False").lower() == "true"
-    print(f"[*] Starting Zinnia 2026 Server on http://localhost:{port}")
+    print(f"[*] Starting Zinnia 2026 Consolidated Server on http://localhost:{port}")
     app.run(host=host, port=port, debug=debug)

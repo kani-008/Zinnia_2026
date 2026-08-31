@@ -1,24 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { WebsiteFooter } from '../components/layout/Footer';
 import { store } from '../services/store';
+import { TREASURER_PAYMENT_CONFIG, REGISTRATION_FEE_PER_HEAD } from '../config/site';
+import treasurerQrImg from '../assets/treasurer-upi-qr.png';
 import { 
-  CreditCard, 
   CheckCircle2, 
-  Clock, 
   Copy, 
   Check, 
   AlertCircle, 
   ArrowRight, 
   ArrowLeft,
   ShieldCheck, 
-  ExternalLink,
-  Users,
-  QrCode,
-  Mail
+  Download,
+  Smartphone,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
+
+const UTR_REGEX = /^[A-Z0-9]{10,30}$/;
 
 export const WebsitePaymentPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -30,20 +31,11 @@ export const WebsitePaymentPage: React.FC = () => {
   const [paymentInfo, setPaymentInfo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [utrNumber, setUtrNumber] = useState('');
-  const [submittedAmount, setSubmittedAmount] = useState<number | string>('');
+  const [hasConfirmedPaid, setHasConfirmedPaid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [soundFX, setSoundFX] = useState<string | null>(null);
-
-  const triggerComicSound = (txt: string) => {
-    setSoundFX(txt);
-    setTimeout(() => setSoundFX(null), 900);
-  };
-
-  const UPI_ID = '9361817740@axl';
-  const PAYEE_NAME = 'ZINNIA 2026 GCE ERODE';
 
   const loadStatus = async (targetId: string) => {
     if (!targetId || !targetId.trim() || targetId === 'undefined' || targetId === 'null') return;
@@ -51,40 +43,33 @@ export const WebsitePaymentPage: React.FC = () => {
     setError(null);
     try {
       let data = await store.getPaymentStatus(targetId.trim());
-      if (!data) {
+      if (!data || !data.success) {
         await store.syncFromSupabase();
         data = await store.getPaymentStatus(targetId.trim());
       }
-      if (data) {
-        // If already pending or verified, redirect to dedicated confirmation page unless editing
+
+      if (data && data.success) {
         const isEditMode = searchParams.get('edit') === 'true';
-        if ((data.payment_status === 'PENDING_VERIFICATION' || data.payment_status === 'VERIFIED') && !isEditMode) {
+        if (data.payment_status === 'VERIFIED') {
           navigate(`/confirmation?id=${targetId.trim()}`, { replace: true });
           return;
         }
 
-        const localTeam = store.getTeamById(targetId.trim());
-        const count = Math.max(
-          1,
-          localTeam?.members?.length || 0,
-          data.member_count || 0,
-          Array.isArray((data as any).members) ? (data as any).members.length : 0
-        );
-        const totalAmount = count * 250;
-        
-        setPaymentInfo({
-          ...data,
-          member_count: count,
-          expected_amount: data.expected_amount && data.expected_amount >= totalAmount ? data.expected_amount : totalAmount
-        });
-        setSubmittedAmount(data.expected_amount && data.expected_amount >= totalAmount ? data.expected_amount : totalAmount);
-        if (data.utr_number) setUtrNumber(data.utr_number);
+        if (data.payment_status === 'PENDING_VERIFICATION' && !isEditMode) {
+          navigate(`/confirmation?id=${targetId.trim()}`, { replace: true });
+          return;
+        }
+
+        setPaymentInfo(data);
+        if (data.utr_number) {
+          setUtrNumber(data.utr_number);
+        }
       } else {
-        setError(`No squad registration found with Team ID: ${targetId}. Please verify your ID.`);
+        setError(`Unable to find or confirm payment record for Team ID "${targetId}". Please retry.`);
         setPaymentInfo(null);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to retrieve payment information.');
+      setError(err.message || 'Unable to confirm payment amount from server — please retry.');
       setPaymentInfo(null);
     } finally {
       setLoading(false);
@@ -98,84 +83,89 @@ export const WebsitePaymentPage: React.FC = () => {
   }, [initialTeamId]);
 
   const handleCopyUpi = () => {
-    navigator.clipboard.writeText(UPI_ID);
+    navigator.clipboard.writeText(TREASURER_PAYMENT_CONFIG.upiId);
     setCopiedUpi(true);
-    triggerComicSound('COPIED!');
     setTimeout(() => setCopiedUpi(false), 2000);
   };
 
-  const localTeam = store.getTeamById(paymentInfo?.team_id || teamId);
-  const memberCount = Math.max(
-    1,
-    localTeam?.members?.length || 0,
-    paymentInfo?.member_count || 0,
-    Array.isArray((paymentInfo as any)?.members) ? (paymentInfo as any).members.length : 0
-  );
-  const expectedAmount = Math.max(
-    memberCount * 250,
-    paymentInfo?.expected_amount || 0
-  );
-  const membersList = (localTeam?.members && localTeam.members.length > 0)
-    ? localTeam.members
-    : (Array.isArray(paymentInfo?.members) && paymentInfo.members.length > 0 ? paymentInfo.members : []);
+  // Authoritative server amount calculation
+  const memberCount = useMemo(() => {
+    if (paymentInfo?.member_count && paymentInfo.member_count > 0) {
+      return paymentInfo.member_count;
+    }
+    const localTeam = store.getTeamById(teamId);
+    return localTeam?.members?.length || 1;
+  }, [paymentInfo, teamId]);
+
+  const serverExpectedAmount = paymentInfo?.expected_amount;
+  const computedFallback = memberCount * REGISTRATION_FEE_PER_HEAD;
+  // Server value is authoritative when available
+  const authoritativeAmount = serverExpectedAmount !== undefined && serverExpectedAmount !== null
+    ? serverExpectedAmount 
+    : computedFallback;
+
+  // UTR Validation
+  const trimmedUtr = utrNumber.trim().toUpperCase();
+  const isUtrValid = UTR_REGEX.test(trimmedUtr);
+  const utrErrorMessage = useMemo(() => {
+    if (!utrNumber) return null;
+    if (trimmedUtr.length < 10) return 'Transaction ID must be at least 10 characters.';
+    if (trimmedUtr.length > 30) return 'Transaction ID cannot exceed 30 characters.';
+    if (!/^[A-Z0-9]+$/.test(trimmedUtr)) return 'Transaction ID must be alphanumeric (no spaces or special symbols).';
+    return null;
+  }, [utrNumber, trimmedUtr]);
+
+  const canSubmit = isUtrValid && hasConfirmedPaid && !submitting;
 
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalUtr = utrNumber.trim() || `TXN-${paymentInfo?.team_id || teamId}-${Date.now().toString().slice(-4)}`;
+    if (!isUtrValid) {
+      setError('Please provide a valid 10 to 30 character alphanumeric transaction ID / UTR.');
+      return;
+    }
+    if (!hasConfirmedPaid) {
+      setError('Please confirm that you have completed the UPI transfer before submitting.');
+      return;
+    }
 
     setSubmitting(true);
     setError(null);
     setSuccessMsg(null);
-    triggerComicSound('SUBMIT!');
+
+    const activeTeamId = paymentInfo?.team_id || teamId;
 
     try {
-      await store.submitPaymentProof(paymentInfo.team_id, {
-        utr_number: finalUtr,
-        amount_paid: Number(submittedAmount) || expectedAmount,
+      const res = await store.submitPaymentProof(activeTeamId, {
+        utr_number: trimmedUtr,
+        amount_paid: authoritativeAmount,
       });
 
-      setSuccessMsg(`Payment proof recorded (Ref: ${finalUtr})! Forwarded to treasurer for verification.`);
-      navigate(`/confirmation?id=${paymentInfo.team_id || teamId}`);
+      if (res && res.success) {
+        setSuccessMsg(`Payment proof recorded (Ref: ${trimmedUtr})! Forwarded to treasurer.`);
+        navigate(`/confirmation?id=${activeTeamId}`);
+      } else {
+        throw new Error(res?.message || 'Payment submission was not accepted.');
+      }
     } catch (err: any) {
-      setError(err.message || 'Error recording payment proof. Please try again.');
+      setError(err.message || 'Error recording payment proof. Please verify the transaction reference.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(PAYEE_NAME)}&am=${expectedAmount}&cu=INR&tn=${encodeURIComponent(`ZINNIA26-${paymentInfo?.team_id || teamId}`)}`;
-
   const paymentStatus = paymentInfo?.payment_status || 'AWAITING_PAYMENT';
-  const isVerified = paymentStatus === 'VERIFIED';
-  const isPending = paymentStatus === 'PENDING_VERIFICATION';
   const isRejected = paymentStatus === 'REJECTED';
+  const isPending = paymentStatus === 'PENDING_VERIFICATION';
 
   return (
     <div className="min-h-screen bg-[#08090A] text-[#EEEEEA] flex flex-col justify-between font-sans relative">
-      {/* Floating Sound FX Popup */}
-      {soundFX && (
-        <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[150] pointer-events-none animate-bounce">
-          <div className="px-6 py-2 bg-[#E5BD00] border-2 border-[#090A0B] shadow-[5px_5px_0px_#090A0B] rotate-6 sticker-pop">
-            <span className="font-display text-3xl sm:text-5xl text-[#D51F55] tracking-wider uppercase">
-              {soundFX}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Comic Halftone Decorator Background */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
-        <div className="comic-halftone -top-12 -left-12 opacity-25 scale-75" />
-        <div className="comic-halftone top-1/2 -right-16 opacity-25 scale-75" />
-      </div>
-
       {/* Top Navbar */}
       <WebsiteNavbar />
 
       {/* Main Content Area */}
       <main className="relative z-10 pt-4 sm:pt-6 pb-20 px-3 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6 w-full flex-1">
         
-        {/* Back Navigation Button (Desktop & Mobile) */}
+        {/* Navigation back to registration details */}
         <div className="flex items-center justify-start">
           <button
             type="button"
@@ -190,24 +180,24 @@ export const WebsitePaymentPage: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 bg-[#111214] hover:bg-[#1A1C20] border border-[#EEEEEA]/40 text-xs font-mono font-bold uppercase tracking-wider text-[#EEEEEA] hover:text-[#E5BD00] hover:border-[#E5BD00] transition-all shadow-[3px_3px_0px_#090A0B] rounded-xl active:translate-x-0.5 active:translate-y-0.5 cursor-pointer group"
           >
             <ArrowLeft className="w-4 h-4 text-[#E5BD00] group-hover:-translate-x-1 transition-transform" />
-            <span>BACK TO REGISTRATION DETAILS</span>
+            <span>EDIT SQUAD REGISTRATION</span>
           </button>
         </div>
 
-        {/* Header Panel */}
+        {/* Header Banner */}
         <div className="p-6 sm:p-8 bg-[#111214] border border-[#EEEEEA]/30 shadow-[6px_6px_0px_#090A0B] rounded-2xl relative overflow-visible">
           <div className="inline-block bg-[#E5BD00] text-[#090A0B] font-mono font-black text-xs uppercase tracking-wider px-3.5 py-1 border border-[#090A0B] shadow-[3px_3px_0px_#090A0B] -rotate-1 mb-3">
-            ⚡ OFFICIAL PAYMENT PORTAL // ZINNIA '26
+            ⚡ OFFICIAL PAYMENT GATEWAY // ZINNIA '26
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-display text-[#EEEEEA] tracking-tight uppercase leading-none drop-shadow-[3px_3px_0px_#090A0B]">
-            REGISTRATION FEE &amp; VERIFICATION
+          <h1 className="text-2xl sm:text-4xl font-display text-[#EEEEEA] tracking-tight uppercase leading-none drop-shadow-[3px_3px_0px_#090A0B]">
+            REGISTRATION FEE VERIFICATION
           </h1>
           <p className="font-mono text-xs sm:text-sm text-[#0FA9C6] font-semibold tracking-wide uppercase mt-2">
-            Scan via any UPI App, submit your 12-digit UTR reference, and unlock your official gate passes.
+            Screenshot or save the Treasurer QR, complete transfer in your UPI app, and submit your UTR reference.
           </p>
         </div>
 
-        {/* Team ID Search Form */}
+        {/* Team ID Search if not provided */}
         {!teamId && (
           <div className="p-6 sm:p-8 bg-[#111214] border border-[#EEEEEA]/30 shadow-[5px_5px_0px_#090A0B] rounded-2xl space-y-4 text-center">
             <div className="font-mono font-bold text-sm sm:text-base text-[#EEEEEA] uppercase tracking-wider">
@@ -216,7 +206,7 @@ export const WebsitePaymentPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row max-w-md mx-auto gap-2.5">
               <input
                 type="text"
-                placeholder="E.G. ZIN26-1045"
+                placeholder="E.G. ZIN-2026-1045"
                 className="flex-1 px-4 py-3 bg-[#08090A] border border-[#EEEEEA]/40 text-[#EEEEEA] font-mono text-sm font-bold uppercase rounded-xl shadow-[3px_3px_0px_#090A0B] focus:outline-none focus:border-[#E5BD00]"
                 onChange={(e) => setTeamId(e.target.value.trim().toUpperCase())}
               />
@@ -232,15 +222,26 @@ export const WebsitePaymentPage: React.FC = () => {
         )}
 
         {loading && (
-          <div className="p-12 text-center text-[#E5BD00] font-mono font-bold text-sm uppercase tracking-wider animate-pulse">
-            ⚡ RETRIEVING PAYMENT TELEMETRY &amp; RECORDS...
+          <div className="p-12 text-center text-[#E5BD00] font-mono font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>RETRIEVING PAYMENT TELEMETRY &amp; SERVER RECORDS...</span>
           </div>
         )}
 
         {error && (
-          <div className="p-4 bg-[#111214] border border-[#D51F55] text-[#D51F55] font-mono font-bold text-xs sm:text-sm uppercase tracking-wider rounded-xl flex items-center gap-2.5 shadow-[4px_4px_0px_#090A0B]">
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <span>{error}</span>
+          <div className="p-4 bg-[#111214] border border-[#D51F55] text-[#D51F55] font-mono font-bold text-xs sm:text-sm uppercase tracking-wider rounded-xl flex items-center justify-between gap-3 shadow-[4px_4px_0px_#090A0B]">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <span>{error}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => loadStatus(teamId)}
+              className="px-3 py-1 bg-[#D51F55]/20 hover:bg-[#D51F55]/40 text-[#EEEEEA] rounded-lg text-xs font-mono flex items-center gap-1 cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>RETRY</span>
+            </button>
           </div>
         )}
 
@@ -252,137 +253,235 @@ export const WebsitePaymentPage: React.FC = () => {
         )}
 
         {teamId && paymentInfo && !loading && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
             
-            {/* Left Column: Payment Card & QR */}
-            <div className="lg:col-span-5 bg-[#111214] border border-[#EEEEEA]/30 shadow-[6px_6px_0px_#090A0B] rounded-2xl p-6 space-y-5 flex flex-col items-center text-center">
-              <div className="w-full flex justify-between items-center pb-3 border-b border-[#EEEEEA]/20">
-                <span className="font-mono text-xs font-bold text-[#B8B8B2] uppercase tracking-wider">TEAM ID</span>
-                <span className="font-mono text-xs font-bold text-[#0FA9C6]">{paymentInfo.team_id}</span>
+            {/* LEFT / FIRST COLUMN ON MOBILE: QR CODE & PAYMENT DETAILS (Decision #1, #2) */}
+            <div className="lg:col-span-5 order-1 lg:order-1 bg-[#111214] border border-[#EEEEEA]/30 shadow-[6px_6px_0px_#090A0B] rounded-2xl p-5 sm:p-6 space-y-5 flex flex-col items-center text-center">
+              
+              {/* Header Info */}
+              <div className="w-full flex justify-between items-center pb-3 border-b border-[#EEEEEA]/20 font-mono text-xs">
+                <span className="font-bold text-[#B8B8B2] uppercase">TEAM ID</span>
+                <span className="font-black text-[#0FA9C6]">{paymentInfo.team_id}</span>
               </div>
 
+              {/* Amount Display (Server Authoritative) */}
               <div className="space-y-1">
-                <div className="font-mono font-bold text-sm text-[#EEEEEA] uppercase">{paymentInfo.team_name}</div>
+                <div className="font-mono font-bold text-xs text-[#EEEEEA] uppercase truncate max-w-[260px]">
+                  {paymentInfo.team_name}
+                </div>
                 <div className="font-display text-4xl sm:text-5xl text-[#E5BD00] uppercase tracking-wide drop-shadow-[3px_3px_0px_#090A0B]">
-                  ₹{expectedAmount}
+                  ₹{authoritativeAmount}
                 </div>
                 <div className="font-mono text-xs text-[#0FA9C6] font-bold uppercase tracking-wider">
-                  ₹250 × {memberCount} {memberCount === 1 ? 'MEMBER' : 'MEMBERS'} (₹250 PER HEAD)
+                  ₹{REGISTRATION_FEE_PER_HEAD} × {memberCount} {memberCount === 1 ? 'MEMBER' : 'MEMBERS'}
                 </div>
               </div>
 
-              {/* Official Payment QR Box */}
-              <div className="w-full flex flex-col items-center space-y-2 pt-1">
-                <div className="p-4 bg-[#EEEEEA] rounded-2xl border-2 border-[#090A0B] shadow-[6px_6px_0px_#090A0B] flex items-center justify-center">
-                  <QRCodeSVG
-                    value={upiUrl}
-                    size={180}
-                    level="H"
-                    includeMargin={false}
-                    fgColor="#090A0B"
-                    bgColor="#EEEEEA"
+              {/* Treasurer QR Code Image Slot (5.1) */}
+              <div className="w-full flex flex-col items-center space-y-3 pt-1">
+                <div className="p-3 sm:p-4 bg-white rounded-2xl border-2 border-[#090A0B] shadow-[6px_6px_0px_#090A0B] flex items-center justify-center">
+                  <img
+                    src={treasurerQrImg}
+                    alt="Official Treasurer UPI QR Code"
+                    className="w-56 h-56 sm:w-60 sm:h-60 object-contain rounded-lg"
                   />
                 </div>
-                <span className="font-mono text-[11px] text-[#B8B8B2] font-semibold uppercase tracking-wider">
-                  SCAN VIA GPAY / PHONEPE / PAYTM / ANY UPI
-                </span>
+
+                {/* Save QR Download Button */}
+                <a
+                  href={treasurerQrImg}
+                  download="Zinnia_2026_Treasurer_UPI_QR.png"
+                  className="w-full py-2.5 px-4 bg-[#17181C] hover:bg-[#EEEEEA] hover:text-[#090A0B] text-[#EEEEEA] border border-[#B8B8B2]/40 rounded-xl font-mono text-xs font-bold uppercase flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[2px_2px_0px_#090A0B]"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>SAVE QR IMAGE TO GALLERY</span>
+                </a>
               </div>
 
-              {/* UPI ID Box */}
-              <div className="w-full p-3 bg-[#08090A] border border-[#EEEEEA]/30 shadow-[3px_3px_0px_#090A0B] rounded-xl flex items-center justify-between">
-                <div className="text-left font-mono">
-                  <div className="text-[10px] text-[#B8B8B2] font-bold uppercase">PAY TO UPI ID</div>
-                  <div className="text-xs text-[#EEEEEA] font-bold">{UPI_ID}</div>
+              {/* UPI ID Fallback & Copy */}
+              <div className="w-full p-3 bg-[#08090A] border border-[#EEEEEA]/30 shadow-[3px_3px_0px_#090A0B] rounded-xl flex items-center justify-between gap-2">
+                <div className="text-left font-mono truncate">
+                  <div className="text-[10px] text-[#B8B8B2] font-bold uppercase">PAYEE UPI ID</div>
+                  <div className="text-xs text-[#EEEEEA] font-bold truncate">{TREASURER_PAYMENT_CONFIG.upiId}</div>
                 </div>
                 <button
                   type="button"
                   onClick={handleCopyUpi}
-                  className="px-3 py-1.5 bg-[#E5BD00] hover:bg-[#EEEEEA] text-[#090A0B] font-mono font-bold rounded-lg text-xs uppercase border border-[#090A0B] shadow-[2px_2px_0px_#090A0B] flex items-center gap-1 cursor-pointer transition-colors active:translate-x-0.5 active:translate-y-0.5"
+                  className="min-h-[36px] px-3 py-1.5 bg-[#E5BD00] hover:bg-[#EEEEEA] text-[#090A0B] font-mono font-bold rounded-lg text-xs uppercase border border-[#090A0B] shadow-[2px_2px_0px_#090A0B] flex items-center gap-1 cursor-pointer transition-colors shrink-0"
                 >
                   {copiedUpi ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : <Copy className="w-3.5 h-3.5 stroke-[2.5]" />}
                   <span>{copiedUpi ? 'COPIED' : 'COPY'}</span>
                 </button>
               </div>
 
-              {/* Instructions */}
-              <div className="w-full text-left space-y-1.5 font-mono text-xs text-[#B8B8B2] border-t border-[#EEEEEA]/20 pt-4 uppercase font-medium tracking-wide">
-                <div className="text-[#0FA9C6] font-bold">HOW TO COMPLETE PAYMENT:</div>
-                <p>1. Scan the QR code above with any UPI app.</p>
-                <p>2. Pay the total: <strong className="text-[#E5BD00]">₹{expectedAmount}</strong> (₹250 per squad member)</p>
-                <p>3. Copy any <strong className="text-[#EEEEEA]">Transaction / UTR Number</strong> from your receipt.</p>
-                <p>4. Submit the transaction number below for treasurer verification.</p>
+              {/* Screenshot-first Instructions (5.2) */}
+              <div className="w-full text-left space-y-2 font-mono text-xs text-[#B8B8B2] border-t border-[#EEEEEA]/20 pt-4 uppercase">
+                <div className="text-[#0FA9C6] font-black flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4" />
+                  <span>STEP-BY-STEP PAYMENT STEPS:</span>
+                </div>
+                <ol className="space-y-1.5 pl-1 list-decimal list-inside text-[11px] font-medium leading-relaxed">
+                  <li>
+                    <strong className="text-[#EEEEEA]">Screenshot this QR</strong> (or tap Save QR above).
+                  </li>
+                  <li>
+                    Open <strong className="text-[#E5BD00]">GPay / PhonePe / Paytm</strong> &rarr; Scan &rarr; <strong className="text-[#EEEEEA]">Choose from Gallery</strong>.
+                  </li>
+                  <li>
+                    Pay exactly <strong className="text-[#E5BD00]">₹{authoritativeAmount}</strong> to {TREASURER_PAYMENT_CONFIG.payeeName}.
+                  </li>
+                  <li>
+                    Return here and enter the <strong className="text-[#EEEEEA]">12-digit UTR / Ref Number</strong>.
+                  </li>
+                </ol>
               </div>
             </div>
 
-            {/* Right Column: UTR Submission Form */}
-            <div className="lg:col-span-7 space-y-6">
+            {/* RIGHT COLUMN / SECOND ON MOBILE: SUBMISSION FORM */}
+            <div className="lg:col-span-7 order-2 lg:order-2 space-y-6">
               
               <form onSubmit={handleSubmitProof} className="p-6 sm:p-8 bg-[#111214] border border-[#EEEEEA]/30 shadow-[6px_6px_0px_#090A0B] rounded-2xl space-y-5">
                 
+                {/* Rejection Alert */}
                 {isRejected && paymentInfo?.rejection_reason && (
-                  <div className="p-4 rounded-xl bg-[#D51F55]/15 border border-[#D51F55] text-[#D51F55] text-xs font-mono space-y-1">
-                    <span className="font-bold uppercase tracking-wider block">✕ TRANSACTION REJECTED BY TREASURER:</span>
-                    <p className="text-[#EEEEEA]">{paymentInfo.rejection_reason}</p>
-                    <span className="text-[10px] text-[#B8B8B2] block">Please enter a valid transaction reference below.</span>
+                  <div className="p-4 rounded-xl bg-[#D51F55]/15 border border-[#D51F55] text-[#D51F55] text-xs font-mono space-y-1.5">
+                    <span className="font-black uppercase tracking-wider flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>PAYMENT PROOF REJECTED BY TREASURER:</span>
+                    </span>
+                    <p className="text-[#EEEEEA] font-semibold">{paymentInfo.rejection_reason}</p>
+                    <span className="text-[11px] text-[#B8B8B2] block">
+                      Please double-check your bank receipt and submit your genuine 12-digit transaction ID.
+                    </span>
                   </div>
                 )}
 
-                <div className="border-b border-[#EEEEEA]/20 pb-3 flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-display text-xl sm:text-2xl text-[#EEEEEA] uppercase tracking-wide">
-                      SUBMIT PAYMENT PROOF
-                    </h3>
-                    <p className="font-mono text-xs text-[#0FA9C6] uppercase font-semibold tracking-wide mt-0.5">
-                      Enter any transaction reference for treasurer reconciliation
+                {/* Pending Verification Notice */}
+                {isPending && (
+                  <div className="p-4 rounded-xl bg-[#0FA9C6]/15 border border-[#0FA9C6] text-[#0FA9C6] text-xs font-mono space-y-1.5">
+                    <span className="font-black uppercase tracking-wider flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 shrink-0" />
+                      <span>PENDING TREASURER VERIFICATION</span>
+                    </span>
+                    <p className="text-[#EEEEEA]">
+                      Submitted Transaction Reference: <strong className="text-[#E5BD00] font-mono">{paymentInfo.utr_number}</strong>
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/confirmation?id=${teamId}`)}
+                      className="text-[#0FA9C6] underline font-bold mt-1 text-xs cursor-pointer block"
+                    >
+                      View Live Confirmation Status &rarr;
+                    </button>
                   </div>
+                )}
+
+                <div className="border-b border-[#EEEEEA]/20 pb-3">
+                  <h3 className="font-display text-xl sm:text-2xl text-[#EEEEEA] uppercase tracking-wide">
+                    SUBMIT TRANSACTION REFERENCE
+                  </h3>
+                  <p className="font-mono text-xs text-[#0FA9C6] uppercase font-semibold tracking-wide mt-0.5">
+                    Enter your genuine UPI transaction reference number
+                  </p>
                 </div>
 
-                <div className="space-y-3 font-mono text-xs uppercase">
-                  <div>
-                    <label className="block text-[#B8B8B2] mb-1 font-bold tracking-wider">
-                      TRANSACTION NUMBER / REFERENCE ID *
-                    </label>
+                <div className="space-y-4 font-mono text-xs uppercase">
+                  
+                  {/* UTR Field */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="utr-input" className="block text-[#B8B8B2] font-bold tracking-wider">
+                        TRANSACTION ID / UTR NUMBER <span className="text-[#D51F55]">*</span>
+                      </label>
+                      {isUtrValid && (
+                        <span className="text-[11px] text-[#10B981] font-bold flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          <span>VALID REFERENCE FORMAT</span>
+                        </span>
+                      )}
+                    </div>
+                    
                     <input
+                      id="utr-input"
                       type="text"
                       required
-                      placeholder="ENTER ANY TRANSACTION NUMBER (E.G. UPI REF, BANK ID)"
+                      maxLength={30}
+                      placeholder="ENTER 10–30 CHAR TRANSACTION ID (E.G. 423456789012)"
                       value={utrNumber}
-                      onChange={(e) => setUtrNumber(e.target.value.toUpperCase())}
-                      className="w-full px-4 py-3 bg-[#08090A] border border-[#EEEEEA]/40 text-[#EEEEEA] font-mono text-sm uppercase rounded-xl shadow-[3px_3px_0px_#090A0B] focus:outline-none focus:border-[#E5BD00]"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                        setUtrNumber(val);
+                        setError(null);
+                      }}
+                      className={`w-full min-h-[48px] px-4 py-3 bg-[#08090A] border text-[#EEEEEA] font-mono text-sm uppercase rounded-xl shadow-[3px_3px_0px_#090A0B] focus:outline-none transition-all ${
+                        isUtrValid 
+                          ? 'border-[#10B981] ring-1 ring-[#10B981]' 
+                          : utrErrorMessage 
+                            ? 'border-[#D51F55] ring-1 ring-[#D51F55]' 
+                            : 'border-[#EEEEEA]/40 focus:border-[#E5BD00]'
+                      }`}
                     />
+                    
+                    {utrErrorMessage && (
+                      <p className="text-[11px] font-mono text-[#D51F55] font-semibold">{utrErrorMessage}</p>
+                    )}
+                    <p className="text-[11px] text-[#B8B8B2]/80 lowercase font-normal">
+                      Usually 12 digits found in your Google Pay, PhonePe, or Paytm payment details under "UPI transaction ID" or "UTR".
+                    </p>
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
+                  {/* Fixed Amount Display */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
                       <label className="block text-[#B8B8B2] font-bold tracking-wider">
-                        TOTAL AMOUNT DUE (INR ₹)
+                        PAYABLE AMOUNT (AUTHORITATIVE SERVER VALUE)
                       </label>
-                      <span className="text-[10px] text-[#E5BD00] font-mono font-bold flex items-center gap-1">
-                        🔒 FIXED SQUAD FEE
+                      <span className="text-[10px] text-[#E5BD00] font-mono font-bold">
+                        🔒 VERIFIED INVOICE
                       </span>
                     </div>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        readOnly
-                        value={`₹${expectedAmount}`}
-                        className="w-full px-4 py-3 bg-[#17181C] border border-[#EEEEEA]/20 text-[#E5BD00] font-mono text-base font-bold rounded-xl shadow-[2px_2px_0px_#090A0B] cursor-not-allowed select-none focus:outline-none"
-                      />
-                    </div>
-                    <span className="block text-[10px] text-[#B8B8B2] mt-1 font-mono">
-                      (₹250 per member × {memberCount} registered member{memberCount > 1 ? 's' : ''})
+                    <input
+                      type="text"
+                      readOnly
+                      value={`₹${authoritativeAmount}`}
+                      className="w-full min-h-[48px] px-4 py-3 bg-[#17181C] border border-[#EEEEEA]/20 text-[#E5BD00] font-mono text-base font-bold rounded-xl shadow-[2px_2px_0px_#090A0B] cursor-not-allowed select-none focus:outline-none"
+                    />
+                    <span className="block text-[11px] text-[#B8B8B2] font-mono">
+                      (₹{REGISTRATION_FEE_PER_HEAD} per attendee × {memberCount} member{memberCount > 1 ? 's' : ''})
                     </span>
+                  </div>
+
+                  {/* Confirmation Checkbox (5.3) */}
+                  <div className="p-3.5 rounded-xl bg-[#08090A] border border-[#EEEEEA]/30">
+                    <label className="flex items-start gap-3 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={hasConfirmedPaid}
+                        onChange={(e) => setHasConfirmedPaid(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 rounded bg-[#111214] border-[#EEEEEA]/40 text-[#E5BD00] focus:ring-[#E5BD00] cursor-pointer"
+                      />
+                      <span className="text-xs text-[#EEEEEA] font-mono font-bold leading-tight">
+                        I confirm that I have transferred ₹{authoritativeAmount} to the treasurer via UPI and this transaction reference is genuine.
+                      </span>
+                    </label>
                   </div>
                 </div>
 
+                {/* Submit Button (Disabled until validated) */}
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="w-full py-3.5 bg-[#0FA9C6] hover:bg-[#E5BD00] text-[#090A0B] font-mono font-black text-sm uppercase tracking-wider border border-[#090A0B] shadow-[4px_4px_0px_#090A0B] rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5 disabled:opacity-50"
+                  disabled={!canSubmit}
+                  className={`w-full min-h-[48px] py-3.5 px-6 rounded-xl font-mono font-black text-sm uppercase tracking-wider border border-[#090A0B] shadow-[4px_4px_0px_#090A0B] flex items-center justify-center gap-2 transition-all active:translate-x-0.5 active:translate-y-0.5 cursor-pointer ${
+                    canSubmit 
+                      ? 'bg-[#0FA9C6] hover:bg-[#E5BD00] text-[#090A0B]' 
+                      : 'bg-[#17181C] text-[#B8B8B2]/50 border-[#B8B8B2]/20 cursor-not-allowed shadow-none'
+                  }`}
                 >
                   {submitting ? (
-                    <span>RECORDING PROOF...</span>
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>RECORDING TRANSACTION PROOF...</span>
+                    </>
                   ) : (
                     <>
                       <span>{isRejected ? 'RESUBMIT PAYMENT PROOF' : 'SUBMIT PAYMENT PROOF'}</span>
@@ -392,6 +491,13 @@ export const WebsitePaymentPage: React.FC = () => {
                 </button>
               </form>
 
+              {/* Assurance Card */}
+              <div className="p-4 rounded-xl bg-[#111214] border border-[#EEEEEA]/20 flex items-center gap-3 font-mono text-xs text-[#B8B8B2]">
+                <ShieldCheck className="w-5 h-5 text-[#10B981] shrink-0" />
+                <span>
+                  Once verified by the treasurer, unique digital QR gate passes with registered event telemetry and lunch tags will be emailed to all squad members.
+                </span>
+              </div>
             </div>
           </div>
         )}

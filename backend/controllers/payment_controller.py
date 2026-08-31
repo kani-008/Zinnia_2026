@@ -44,7 +44,7 @@ class PaymentController:
             utr_number=utr_number,
             submitted_amount=submitted_amount
         )
-        status_code = 200 if result.get("success") else 400
+        status_code = 200 if result.get("success") else (result.get("status_code") or 400)
         return jsonify(result), status_code
 
     @staticmethod

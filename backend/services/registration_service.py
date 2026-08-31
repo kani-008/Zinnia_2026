@@ -18,15 +18,15 @@ OFFICIAL_EVENT_REGISTRY = {
     "the-last-signal": {"id": "the-last-signal", "code": "02", "mission_name": "THE LAST SIGNAL", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
     "lost-at-sql": {"id": "lost-at-sql", "code": "03", "mission_name": "LOST AT SQL", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
     "gadget-codes": {"id": "gadget-codes", "code": "04", "mission_name": "GADGET CODES", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
-    "paper-presentation": {"id": "paper-presentation", "code": "05", "mission_name": "PAPER PRESENTATION", "team_size_min": 1, "team_size_max": 3, "status": "AVAILABLE"},
-    "borderland-at-gcee": {"id": "borderland-at-gcee", "code": "06", "mission_name": "BORDERLAND AT GCEE", "team_size_min": 2, "team_size_max": 4, "status": "AVAILABLE"},
-    "think-strike-and-win": {"id": "think-strike-and-win", "code": "07", "mission_name": "THINK, STRIKE AND WIN", "team_size_min": 2, "team_size_max": 3, "status": "AVAILABLE"},
+    "paper-presentation": {"id": "paper-presentation", "code": "05", "mission_name": "PAPER PRESENTATION", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
+    "borderland-at-gcee": {"id": "borderland-at-gcee", "code": "06", "mission_name": "BORDERLAND AT GCEE", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
+    "think-strike-and-win": {"id": "think-strike-and-win", "code": "07", "mission_name": "THINK, STRIKE AND WIN", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
     "plot-twist": {"id": "plot-twist", "code": "08", "mission_name": "PLOT TWIST", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
-    "short-flim": {"id": "short-flim", "code": "09", "mission_name": "SHORT FILM", "team_size_min": 1, "team_size_max": 5, "status": "AVAILABLE"},
+    "short-flim": {"id": "short-flim", "code": "09", "mission_name": "SHORT FILM", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
     # Aliases
-    "short-film": {"id": "short-flim", "code": "09", "mission_name": "SHORT FILM", "team_size_min": 1, "team_size_max": 5, "status": "AVAILABLE"},
-    "borderland-at-gce": {"id": "borderland-at-gcee", "code": "06", "mission_name": "BORDERLAND AT GCEE", "team_size_min": 2, "team_size_max": 4, "status": "AVAILABLE"},
-    "think-strike-win": {"id": "think-strike-and-win", "code": "07", "mission_name": "THINK, STRIKE AND WIN", "team_size_min": 2, "team_size_max": 3, "status": "AVAILABLE"}
+    "short-film": {"id": "short-flim", "code": "09", "mission_name": "SHORT FILM", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
+    "borderland-at-gce": {"id": "borderland-at-gcee", "code": "06", "mission_name": "BORDERLAND AT GCEE", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
+    "think-strike-win": {"id": "think-strike-and-win", "code": "07", "mission_name": "THINK, STRIKE AND WIN", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"}
 }
 
 FALLBACK_EVENTS = OFFICIAL_EVENT_REGISTRY
@@ -71,7 +71,7 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
         college = data.get("college", "").strip()
         department = data.get("department", "CSE").strip()
         year = str(data.get("year", "III")).strip()
-        selected_event_ids = data.get("selected_event_ids", [])
+        selected_event_ids = data.get("selected_event_ids") or data.get("registered_events") or []
         members = data.get("members", [])
 
         if not team_name:
@@ -230,11 +230,15 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
                 "email": m_email,
                 "phone": m_phone,
                 "is_leader": is_leader,
-                "passport_token": passport_token
+                "passport_token": passport_token,
+                "food_preference": m.get("food_preference") or "VEG"
             }
             created_members.append(member_row)
 
-        safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, created_members)
+        ok_m, resp_m = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, created_members)
+        if not ok_m and "food_preference" in str(resp_m):
+            members_no_food = [{k: v for k, v in m.items() if k != "food_preference"} for m in created_members]
+            safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, members_no_food)
 
         dispatch_result = None
         if expected_amount == 0:

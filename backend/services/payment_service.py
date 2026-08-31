@@ -71,22 +71,49 @@ def get_payment_record(team_id: str) -> Optional[Dict[str, Any]]:
         return res[0]
     return load_local_payments().get(team_id)
 
+def get_fee_per_head() -> int:
+    try:
+        return int(os.getenv("REGISTRATION_FEE_PER_HEAD", "250"))
+    except (ValueError, TypeError):
+        return 250
+
 def submit_payment_service(team_id: str, utr_number: str, submitted_amount: float) -> Dict[str, Any]:
     """
     Submits participant transaction reference / UTR for treasurer review.
-    Bypasses strict format checks to accept any transaction number.
-    Calculates expected amount as 250 per member.
+    Validates that UTR is 10–30 characters, alphanumeric, and not already used by another team.
     """
     headers = get_headers()
-    cleaned_utr = utr_number.strip().upper() if (utr_number and utr_number.strip()) else f"TXN-{team_id}"
-
     if not team_id:
-        return {"success": False, "error_code": "TEAM_NOT_FOUND", "message": "Team ID is required."}
+        return {"success": False, "status_code": 400, "error_code": "TEAM_NOT_FOUND", "message": "Team ID is required."}
 
-    # 1. Fetch team members to compute exact expected amount: member_count * 250
+    if not utr_number or not isinstance(utr_number, str):
+        return {"success": False, "status_code": 400, "error_code": "INVALID_UTR", "message": "Transaction reference / UTR is required."}
+
+    cleaned_utr = utr_number.strip().upper()
+    if len(cleaned_utr) < 10 or len(cleaned_utr) > 30 or not cleaned_utr.isalnum():
+        return {
+            "success": False,
+            "status_code": 400,
+            "error_code": "INVALID_UTR",
+            "message": "Transaction reference / UTR must be 10 to 30 alphanumeric characters (no spaces or special symbols)."
+        }
+
+    # Check if UTR is already used by another team in database
+    ok_u, res_u = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/team_payments?utr_number=eq.{cleaned_utr}&select=team_id,payment_status", headers)
+    if ok_u and isinstance(res_u, list):
+        other_teams = [p for p in res_u if p.get("team_id") != team_id]
+        if other_teams:
+            return {
+                "success": False,
+                "status_code": 409,
+                "error_code": "DUPLICATE_UTR",
+                "message": f"Transaction reference '{cleaned_utr}' has already been submitted by another team ({other_teams[0].get('team_id')}). Each payment proof must be unique."
+            }
+
+    # 1. Fetch team members to compute exact expected amount: member_count * REGISTRATION_FEE_PER_HEAD
+    per_member_fee = get_fee_per_head()
     ok_m, res_m = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/team_members?team_id=eq.{team_id}&select=id,name", headers)
     member_count = len(res_m) if (ok_m and isinstance(res_m, list) and len(res_m) > 0) else 1
-    per_member_fee = 250
     calculated_expected = max(per_member_fee, member_count * per_member_fee)
 
     if not submitted_amount or submitted_amount <= 0:
@@ -124,10 +151,10 @@ def submit_payment_service(team_id: str, utr_number: str, submitted_amount: floa
         "updated_at": now_iso
     }
     
-    # Save locally to ensure resilience regardless of Supabase table permissions
+    # Save locally to ensure resilience
     save_local_payment(team_id, pay_update)
 
-    # Try updating or creating payment record in Supabase
+    # Update or insert payment record in Supabase
     if get_payment_record(team_id):
         safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/team_payments?team_id=eq.{team_id}", headers, pay_update)
     else:
@@ -139,7 +166,7 @@ def submit_payment_service(team_id: str, utr_number: str, submitted_amount: floa
 
     return {
         "success": True,
-        "message": "Payment proof recorded successfully! Transaction number forwarded to treasurer for verification.",
+        "message": "Payment proof recorded successfully! Transaction reference forwarded to treasurer for verification.",
         "team_id": team_id,
         "payment_status": "PENDING_VERIFICATION",
         "utr_number": cleaned_utr,
@@ -215,7 +242,6 @@ def verify_payment_by_treasurer(team_id: str, action: str = "VERIFY", reason: st
         })
         # 2. Update teams
         safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}", headers, {
-            "payment": True,
             "payment_status": "VERIFIED"
         })
         # 3. Trigger passport email dispatch
@@ -246,7 +272,6 @@ def verify_payment_by_treasurer(team_id: str, action: str = "VERIFY", reason: st
             "updated_at": now_iso
         })
         safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}", headers, {
-            "payment": False,
             "payment_status": "REJECTED"
         })
         return {
