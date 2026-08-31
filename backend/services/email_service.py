@@ -16,8 +16,8 @@ from typing import Dict, Any, List, Optional
 # SMTP Configuration from Environment
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER", "")
-SMTP_PASS = os.getenv("SMTP_PASS", "") or os.getenv("SMTP_PASSWORD", "")
+SMTP_USER = os.getenv("SMTP_USER", "").strip()
+SMTP_PASS = (os.getenv("SMTP_PASS", "") or os.getenv("SMTP_PASSWORD", "")).replace(" ", "").strip()
 SMTP_FROM = os.getenv("SMTP_FROM", "Zinnia 2026 <zinnia2026@gcee.ac.in>")
 APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:5173").rstrip("/")
 
@@ -365,3 +365,220 @@ Please present your QR pass at the entrance gate and event venues.
     except Exception as e:
         print(f"[SMTP Error] Failed to deliver passport to {recipient_email}: {e}")
         return {"success": False, "status": "FAILED", "error": str(e), "recipient": recipient_email}
+
+def generate_payment_rejected_email_html(
+    member: Dict[str, Any],
+    team: Dict[str, Any],
+    reason: str,
+    resubmit_url: str
+) -> str:
+    """Creates a professional, supportive dark-themed HTML email for payment revision requests."""
+    member_name = member.get("name", "Participant")
+    team_id = team.get("team_id", "")
+    team_name = team.get("team_name", "Team")
+    utr_number = team.get("utr_number") or "Not Recorded"
+    expected_amount = team.get("expected_amount") or 250
+
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Zinnia 2026 — Payment Verification Update</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #08090A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #EEEEEA;">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #08090A; padding: 30px 10px;">
+        <tr>
+          <td align="center">
+            <!-- Main Card Container -->
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #111214; border: 2px solid #23262D; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);">
+              
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #1F242D 0%, #111214 100%); padding: 26px 20px; text-align: center; border-bottom: 2px solid #D51F55;">
+                  <div style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #FFFFFF; font-weight: 900; margin-bottom: 6px; background-color: #D51F55; display: inline-block; padding: 3px 10px; border-radius: 4px;">
+                    PAYMENT VERIFICATION UPDATE
+                  </div>
+                  <h1 style="margin: 4px 0 0 0; font-size: 26px; font-weight: 900; color: #FFFFFF; letter-spacing: 1px;">
+                    ZINNIA 2026
+                  </h1>
+                  <p style="margin: 6px 0 0 0; font-size: 13px; color: #B8B8B2; font-weight: 500;">
+                    Government College of Engineering, Erode
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Greeting & Context -->
+              <tr>
+                <td style="padding: 24px 24px 12px 24px;">
+                  <h2 style="margin: 0 0 8px 0; font-size: 18px; color: #FFFFFF; font-weight: 800;">
+                    Hello {member_name},
+                  </h2>
+                  <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #B8B8B2;">
+                    During the verification review for your team registration, the symposium treasurer was unable to verify the transaction reference provided.
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Details Box -->
+              <tr>
+                <td style="padding: 0 24px 16px 24px;">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #08090A; border: 1px solid #23262D; border-radius: 12px; padding: 16px;">
+                    <tr>
+                      <td style="padding: 6px 8px; font-size: 12px; color: #B8B8B2; font-weight: 600;">Team Name &amp; ID:</td>
+                      <td style="padding: 6px 8px; font-size: 12px; color: #FFFFFF; font-weight: 700; text-align: right;">{team_name} ({team_id})</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 6px 8px; font-size: 12px; color: #B8B8B2; font-weight: 600;">Submitted Transaction ID:</td>
+                      <td style="padding: 6px 8px; font-size: 12px; color: #E5BD00; font-family: monospace; font-weight: 700; text-align: right;">{utr_number}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 6px 8px; font-size: 12px; color: #B8B8B2; font-weight: 600;">Registration Fee Expected:</td>
+                      <td style="padding: 6px 8px; font-size: 12px; color: #0FA9C6; font-weight: 700; text-align: right;">₹{expected_amount}</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Reason Box -->
+              <tr>
+                <td style="padding: 0 24px 20px 24px;">
+                  <div style="background-color: rgba(213, 31, 85, 0.08); border-left: 4px solid #D51F55; border-radius: 4px; padding: 14px 16px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #D51F55; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px;">
+                      Treasurer Note / Reason:
+                    </div>
+                    <div style="font-size: 13px; color: #EEEEEA; line-height: 1.5; font-weight: 500;">
+                      {reason or 'The transaction ID could not be matched with incoming banking records.'}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Action Instructions -->
+              <tr>
+                <td style="padding: 0 24px 24px 24px; text-align: center;">
+                  <p style="margin: 0 0 16px 0; font-size: 13px; color: #B8B8B2; line-height: 1.5;">
+                    This usually happens if a digit was mistyped or the transfer was not received. You can easily submit a corrected transaction reference number using the secure link below:
+                  </p>
+                  
+                  <a href="{resubmit_url}" style="display: inline-block; background-color: #E5BD00; color: #090A0B; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 14px 28px; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 12px rgba(229, 189, 0, 0.3);">
+                    Submit Corrected Transaction ID &rarr;
+                  </a>
+                </td>
+              </tr>
+
+              <!-- Footer & Help -->
+              <tr>
+                <td style="background-color: #08090A; padding: 20px 24px; border-top: 1px solid #1F242D; font-size: 11px; color: #71767B; line-height: 1.5; text-align: center;">
+                  <p style="margin: 0 0 6px 0;">
+                    Need assistance? Reply directly to this email or reach the symposium coordination team at <a href="mailto:zinnia2026@gcee.ac.in" style="color: #0FA9C6; text-decoration: none;">zinnia2026@gcee.ac.in</a>.
+                  </p>
+                  <p style="margin: 0;">
+                    Zinnia 2026 &bull; Department of Computer Science &amp; Engineering &bull; GCE Erode
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    """
+
+def send_payment_rejected_email(
+    member: Dict[str, Any],
+    team: Dict[str, Any],
+    reason: str,
+    resubmit_url: str
+) -> Dict[str, Any]:
+    """
+    Constructs and dispatches the official payment rejection and revision notification email.
+    Contains no QR codes. Mirrors styling of passport emails with supportive, helpful guidance.
+    """
+    recipient_email = member.get("email", "").strip()
+    if not recipient_email:
+        return {"success": False, "status": "SKIPPED_NO_EMAIL", "error": "No email address found for participant."}
+
+    team_id = team.get("team_id", "")
+    team_name = team.get("team_name", "Team")
+    utr_number = team.get("utr_number") or "Not Recorded"
+    expected_amount = team.get("expected_amount") or 250
+
+    # 1. Plain text fallback
+    text_content = f"""
+ZINNIA 2026 — PAYMENT VERIFICATION UPDATE
+Government College of Engineering, Erode
+
+Hello {member.get('name', 'Participant')},
+
+During the verification review for your team registration, the symposium treasurer was unable to verify the transaction reference provided.
+
+Team Name & ID: {team_name} ({team_id})
+Submitted Transaction ID: {utr_number}
+Registration Fee Expected: ₹{expected_amount}
+
+Treasurer Reason:
+{reason or 'The transaction ID could not be matched with incoming banking records.'}
+
+This usually happens if a digit was mistyped or the payment was not received. You can submit a corrected transaction reference number here:
+{resubmit_url}
+
+Need assistance? Contact the coordination team at zinnia2026@gcee.ac.in.
+    """
+
+    # 2. Build HTML email
+    html_content = generate_payment_rejected_email_html(
+        member=member,
+        team=team,
+        reason=reason,
+        resubmit_url=resubmit_url
+    )
+
+    # 3. Build Multipart Email Message
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"Action Required: Payment Verification Update — {team_name} ({team_id})"
+    msg["From"] = SMTP_FROM
+    msg["To"] = recipient_email
+    msg.attach(MIMEText(text_content, "plain"))
+    msg.attach(MIMEText(html_content, "html"))
+
+    # 4. Deliver via SMTP
+    if not SMTP_USER or not SMTP_PASS or SMTP_USER.startswith("your_"):
+        simulation_allowed = os.getenv("ALLOW_EMAIL_SIMULATION", "false").lower() == "true"
+        message = f"SMTP is not configured. Rejection email was not sent to {recipient_email}."
+        if simulation_allowed:
+            print(f"[Email Sim] {message}")
+            return {
+                "success": False,
+                "status": "SIMULATED_NOT_SENT",
+                "recipient": recipient_email,
+                "error": message
+            }
+        return {
+            "success": False,
+            "status": "FAILED",
+            "recipient": recipient_email,
+            "error": message
+        }
+
+    try:
+        if SMTP_PORT == 465:
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg)
+
+        return {"success": True, "status": "REJECTION_SENT", "recipient": recipient_email}
+    except Exception as e:
+        print(f"[SMTP Error] Failed to deliver rejection email to {recipient_email}: {e}")
+        return {"success": False, "status": "FAILED", "error": str(e), "recipient": recipient_email}
+

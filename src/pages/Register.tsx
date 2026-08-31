@@ -3,7 +3,6 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { WebsiteFooter } from '../components/layout/Footer';
-import { REGISTRATION_FEE_PER_HEAD } from '../config/site';
 import { 
   ArrowRight, 
   AlertCircle, 
@@ -13,14 +12,14 @@ import {
   Trash2, 
   Cpu, 
   Sparkles,
-  Phone,
-  Mail,
-  Building2,
-  GraduationCap,
-  Calendar,
-  Check,
-  Info,
-  Loader2
+  Phone, 
+  Mail, 
+  Building2, 
+  GraduationCap, 
+  Calendar, 
+  Check, 
+  Info, 
+  Loader2 
 } from 'lucide-react';
 
 interface MemberInput {
@@ -133,10 +132,6 @@ export const WebsiteRegisterPage: React.FC = () => {
   const totalMembersCount = 1 + members.length;
   const additionalSlotsRequired = Math.max(0, minTeamSize - 1);
 
-  // Live Summary Stats
-  const vegCount = (leader.food_preference === 'VEG' ? 1 : 0) + members.filter(m => m.food_preference === 'VEG').length;
-  const nonVegCount = (leader.food_preference === 'NON_VEG' ? 1 : 0) + members.filter(m => m.food_preference === 'NON_VEG').length;
-  const computedTotalFee = totalMembersCount * REGISTRATION_FEE_PER_HEAD;
 
   const handleToggleEvent = (id: string) => {
     setRegisteredEvents(prev => {
@@ -903,52 +898,6 @@ export const WebsiteRegisterPage: React.FC = () => {
             </div>
           )}
 
-          {/* LIVE SUMMARY CARD (PHASE 2 FIX #5) */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#17181C] border border-[#E5BD00]/40 shadow-[3px_3px_0px_#090A0B] space-y-3">
-            <div className="flex items-center justify-between border-b border-[#B8B8B2]/20 pb-2.5">
-              <span className="text-xs font-mono font-bold text-[#E5BD00] uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#E5BD00]" />
-                <span>Registration Order Summary</span>
-              </span>
-              <span className="text-xs font-mono text-[#B8B8B2]">
-                ₹{REGISTRATION_FEE_PER_HEAD} / Head
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono">
-              <div className="bg-[#111214] p-2.5 rounded-xl border border-[#B8B8B2]/20">
-                <span className="block text-[11px] text-[#B8B8B2]">Events Chosen:</span>
-                <span className="font-bold text-[#EEEEEA]">
-                  {registeredEvents.length} Event{registeredEvents.length === 1 ? '' : 's'}
-                </span>
-              </div>
-
-              <div className="bg-[#111214] p-2.5 rounded-xl border border-[#B8B8B2]/20">
-                <span className="block text-[11px] text-[#B8B8B2]">Participants:</span>
-                <span className="font-bold text-[#EEEEEA]">
-                  {totalMembersCount} Member{totalMembersCount === 1 ? '' : 's'} ({vegCount} Veg, {nonVegCount} Non-Veg)
-                </span>
-              </div>
-
-              <div className="bg-[#111214] p-2.5 rounded-xl border border-[#E5BD00]/30 bg-[#E5BD00]/5">
-                <span className="block text-[11px] text-[#E5BD00] font-semibold">Total Payable:</span>
-                <span className="text-sm font-black text-[#E5BD00]">
-                  ₹{computedTotalFee}
-                </span>
-              </div>
-            </div>
-
-            {registeredEvents.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {selectedEventObjects.map(ev => (
-                  <span key={ev.id} className="px-2 py-0.5 rounded bg-[#08090A] border border-[#B8B8B2]/20 text-[11px] font-mono text-[#EEEEEA]">
-                    [{ev.code}] {ev.mission_name}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* SUBMIT BUTTON (Desktop + Mobile Sticky bar) */}
           <div className="pt-2">
             <button
@@ -963,7 +912,7 @@ export const WebsiteRegisterPage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <span>PROCEED TO PAYMENT (₹{computedTotalFee})</span>
+                  <span>PROCEED TO PAYMENT</span>
                   <ArrowRight className="w-4 h-4 stroke-[3]" />
                 </>
               )}
@@ -976,8 +925,7 @@ export const WebsiteRegisterPage: React.FC = () => {
           {/* Mobile Sticky Bar */}
           <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-[#08090A]/95 backdrop-blur-md border-t border-[#B8B8B2]/20 z-40 flex items-center justify-between gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
             <div className="font-mono leading-tight">
-              <span className="block text-[11px] text-[#B8B8B2]">{totalMembersCount} Member(s)</span>
-              <span className="text-sm font-black text-[#E5BD00]">₹{computedTotalFee}</span>
+              <span className="block text-xs font-bold text-[#EEEEEA] uppercase">{totalMembersCount} Member{totalMembersCount === 1 ? '' : 's'}</span>
             </div>
             <button
               type="submit"

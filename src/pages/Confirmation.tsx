@@ -199,17 +199,17 @@ export const WebsiteConfirmationPage: React.FC = () => {
           </div>
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-display text-[#EEEEEA] tracking-tight uppercase leading-none drop-shadow-[3px_3px_0px_#090A0B]">
             {isVerified 
-              ? 'PASSES APPROVED & DISPATCHED' 
+              ? 'PAYMENT VERIFIED' 
               : isRejected 
-                ? 'TRANSACTION REJECTED' 
+                ? 'PAYMENT REJECTED' 
                 : 'PAYMENT UNDER VERIFICATION'}
           </h1>
-          <p className="text-xs sm:text-sm font-mono text-[#0FA9C6] uppercase font-bold tracking-wide mt-2">
+          <p className="text-xs sm:text-sm font-mono text-[#0FA9C6] tracking-wide mt-2">
             {isVerified 
-              ? '✓ Your individual digital QR passes have been approved and emailed to all members.' 
+              ? 'Payment verified. Your QR passes have been emailed to all members.' 
               : isRejected
-                ? '✕ Your transaction proof was rejected. Please review the reason and resubmit below.'
-                : '⏳ Your transaction ID is awaiting confirmation from the symposium treasurer.'}
+                ? 'This usually means the transaction ID was incorrect or the payment was not received. You can submit a corrected transaction ID below.'
+                : "Your payment is being verified by the Zinnia treasurer coordinator. Once verified, your QR pass will be emailed to every member's registered email address."}
           </p>
         </div>
 
@@ -310,16 +310,19 @@ export const WebsiteConfirmationPage: React.FC = () => {
                   <AlertCircle className="w-5 h-5 shrink-0" />
                   <span>TRANSACTION PROOF REJECTED BY TREASURER</span>
                 </div>
-                <div className="p-3 bg-[#08090A] border border-[#D51F55]/40 rounded-xl text-[#EEEEEA]">
-                  <span className="text-[#B8B8B2] block text-[11px] mb-0.5 font-bold uppercase">REASON PROVIDED:</span>
-                  <p className="text-sm font-semibold">{paymentInfo?.rejection_reason || 'Unverified or mismatched transaction reference number.'}</p>
+                <div className="p-3.5 bg-[#08090A] border border-[#D51F55]/40 rounded-xl text-[#EEEEEA] space-y-2">
+                  <span className="text-[#B8B8B2] block text-[11px] font-bold uppercase">REASON PROVIDED:</span>
+                  <p className="text-sm font-semibold text-[#D51F55]">{paymentInfo?.rejection_reason || 'Unverified or mismatched transaction reference number.'}</p>
+                  <p className="text-xs text-[#B8B8B2] pt-1">
+                    This usually means the transaction ID was incorrect or the payment was not received. You can submit a corrected transaction ID below.
+                  </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => navigate(`/payment?id=${teamId}&edit=true`)}
                   className="w-full sm:w-auto px-6 py-3 bg-[#E5BD00] hover:bg-[#EEEEEA] text-[#090A0B] font-mono font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-[3px_3px_0px_#090A0B] flex items-center justify-center gap-2"
                 >
-                  <span>RESUBMIT TRANSACTION REFERENCE</span>
+                  <span>SUBMIT CORRECTED TRANSACTION ID</span>
                   <ArrowRight className="w-4 h-4 stroke-[3]" />
                 </button>
               </div>
@@ -330,10 +333,10 @@ export const WebsiteConfirmationPage: React.FC = () => {
               <div className="p-6 bg-[#10B981]/15 border-2 border-[#10B981] rounded-2xl font-mono space-y-3 shadow-[5px_5px_0px_#090A0B]">
                 <div className="flex items-center gap-2.5 text-[#10B981] font-black text-sm uppercase">
                   <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <span>PAYMENT VERIFIED &bull; PASSES ACTIVE</span>
+                  <span>PAYMENT VERIFIED</span>
                 </div>
                 <p className="text-xs text-[#EEEEEA] leading-relaxed">
-                  The treasurer has confirmed your payment. Digital QR credentials have been dispatched to all member emails. You can also view and present digital passes directly here.
+                  Payment verified. Your QR passes have been emailed to all members.
                 </p>
                 <div className="pt-1 flex flex-col sm:flex-row gap-3">
                   <button

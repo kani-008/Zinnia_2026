@@ -16,7 +16,8 @@ import {
   Download,
   Smartphone,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Receipt
 } from 'lucide-react';
 
 const UTR_REGEX = /^[A-Z0-9]{10,30}$/;
@@ -107,6 +108,36 @@ export const WebsitePaymentPage: React.FC = () => {
   const authoritativeAmount = isServerAmountLoaded
     ? serverExpectedAmount 
     : computedFallback;
+
+  // Breakdown details: events & food split
+  const allEvents = useMemo(() => store.getEvents(), []);
+
+  const teamMembers = useMemo(() => {
+    const localTeam = store.getTeamById(teamId);
+    if (localTeam?.members && localTeam.members.length > 0) {
+      return localTeam.members;
+    }
+    const storeMembers = store.getTeamMembers(teamId);
+    if (storeMembers && storeMembers.length > 0) {
+      return storeMembers;
+    }
+    return paymentInfo?.members || [];
+  }, [teamId, paymentInfo]);
+
+  const vegCount = useMemo(() => {
+    const list = teamMembers.filter((m: any) => (m.food_preference || 'VEG') === 'VEG');
+    return list.length > 0 ? list.length : (memberCount > 0 ? memberCount : 1);
+  }, [teamMembers, memberCount]);
+
+  const nonVegCount = useMemo(() => {
+    return teamMembers.filter((m: any) => m.food_preference === 'NON_VEG').length;
+  }, [teamMembers]);
+
+  const selectedEventObjects = useMemo(() => {
+    const localTeam = store.getTeamById(teamId);
+    const eventIds = localTeam?.registered_events || paymentInfo?.registered_events || [];
+    return allEvents.filter(e => eventIds.includes(e.id));
+  }, [teamId, paymentInfo, allEvents]);
 
   // Build UPI URI ONLY when authoritative server amount is positive
   const upiUri = useMemo(() => {
@@ -298,6 +329,64 @@ export const WebsitePaymentPage: React.FC = () => {
           <div className="p-4 bg-[#111214] border border-[#0FA9C6] text-[#0FA9C6] font-mono font-bold text-xs sm:text-sm uppercase tracking-wider rounded-xl flex items-center gap-2.5 shadow-[4px_4px_0px_#090A0B]">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <span>{successMsg}</span>
+          </div>
+        )}
+
+        {/* REGISTRATION SUMMARY CARD */}
+        {teamId && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#111214] border border-[#E5BD00]/40 shadow-[4px_4px_0px_#090A0B] space-y-3">
+            <div className="flex items-center justify-between border-b border-[#B8B8B2]/20 pb-2.5">
+              <span className="text-xs font-mono font-bold text-[#E5BD00] uppercase tracking-wider flex items-center gap-1.5">
+                <Receipt className="w-3.5 h-3.5 text-[#E5BD00]" />
+                <span>Registration Summary</span>
+              </span>
+              <span className="text-xs font-mono text-[#B8B8B2]">
+                ₹{REGISTRATION_FEE_PER_HEAD} / Head
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono">
+              <div className="bg-[#08090A] p-2.5 rounded-xl border border-[#B8B8B2]/20">
+                <span className="block text-[11px] text-[#B8B8B2]">Events Selected:</span>
+                <span className="font-bold text-[#EEEEEA]">
+                  {selectedEventObjects.length > 0 
+                    ? `${selectedEventObjects.length} Event${selectedEventObjects.length === 1 ? '' : 's'}`
+                    : 'Symposium Events'}
+                </span>
+              </div>
+
+              <div className="bg-[#08090A] p-2.5 rounded-xl border border-[#B8B8B2]/20">
+                <span className="block text-[11px] text-[#B8B8B2]">Participants:</span>
+                <span className="font-bold text-[#EEEEEA]">
+                  {memberCount} Member{memberCount === 1 ? '' : 's'}
+                  {vegCount + nonVegCount > 0 ? ` (${vegCount} Veg, ${nonVegCount} Non-Veg)` : ''}
+                </span>
+              </div>
+
+              <div className="bg-[#08090A] p-2.5 rounded-xl border border-[#E5BD00]/30 bg-[#E5BD00]/5">
+                <span className="block text-[11px] text-[#E5BD00] font-semibold">Total Registration Fee:</span>
+                <span className="text-sm font-black text-[#E5BD00]">
+                  {isServerAmountLoaded ? (
+                    `₹${authoritativeAmount}`
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs">
+                      <Loader2 className="w-3 h-3 animate-spin text-[#E5BD00]" />
+                      <span>Calculating...</span>
+                    </span>
+                  )}
+                </span>
+              </div>
+            </div>
+
+            {selectedEventObjects.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {selectedEventObjects.map(ev => (
+                  <span key={ev.id} className="px-2 py-0.5 rounded bg-[#17181C] border border-[#B8B8B2]/20 text-[11px] font-mono text-[#EEEEEA]">
+                    [{ev.code}] {ev.mission_name}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

@@ -259,28 +259,106 @@ def verify_payment_by_treasurer(team_id: str, action: str = "VERIFY", reason: st
         }
     else:
         # Rejection
+        reason_text = reason or "Invalid or unverified transaction reference."
         rec.update({
             "payment_status": "REJECTED",
-            "rejection_reason": reason or "Invalid or unverified transaction reference.",
+            "rejection_reason": reason_text,
             "updated_at": now_iso
         })
         save_local_payment(team_id, rec)
 
         safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/team_payments?team_id=eq.{team_id}", headers, {
             "payment_status": "REJECTED",
-            "rejection_reason": reason or "Invalid or unverified transaction reference.",
+            "rejection_reason": reason_text,
             "updated_at": now_iso
         })
         safe_supabase_patch(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}", headers, {
             "payment_status": "REJECTED"
         })
-        return {
+
+        # Fetch team members and dispatch rejection email to EACH member
+        email_errors = []
+        emails_sent = 0
+        dispatch_rows = []
+
+        try:
+            # 1. Fetch team members
+            r_mem = requests.get(f"{SUPABASE_URL}/rest/v1/team_members?team_id=eq.{team_id}&select=*", headers=headers)
+            members = r_mem.json() if r_mem.status_code == 200 and isinstance(r_mem.json(), list) else []
+
+            # 2. Fetch team info
+            r_tm = requests.get(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}&select=*", headers=headers)
+            team_data = r_tm.json()[0] if r_tm.status_code == 200 and len(r_tm.json()) > 0 else {"team_id": team_id, "team_name": f"Team {team_id}"}
+            team_data["utr_number"] = rec.get("utr_number")
+            team_data["expected_amount"] = rec.get("expected_amount", len(members) * 250 if members else 250)
+
+            from services.email_service import send_payment_rejected_email, APP_BASE_URL
+            resubmit_url = f"{APP_BASE_URL}/payment?id={team_id}&edit=true"
+
+            # Check previous rejection dispatches for idempotency (skip if already notified for current submission)
+            r_prev = requests.get(
+                f"{SUPABASE_URL}/rest/v1/passport_dispatch?channel=eq.EMAIL&provider_ref=eq.REJECTION_NOTICE&status=eq.REJECTION_SENT&select=member_id,created_at",
+                headers=headers
+            )
+            already_notified_members = set()
+            if r_prev.status_code == 200 and isinstance(r_prev.json(), list):
+                sub_time = rec.get("payment_submitted_at")
+                for disp in r_prev.json():
+                    if not sub_time or (disp.get("created_at") and disp["created_at"] >= sub_time):
+                        already_notified_members.add(disp.get("member_id"))
+
+            for m in members:
+                m_id = m.get("id")
+                if m_id in already_notified_members:
+                    continue
+
+                mail_res = send_payment_rejected_email(
+                    member=m,
+                    team=team_data,
+                    reason=reason_text,
+                    resubmit_url=resubmit_url
+                )
+
+                if mail_res.get("success"):
+                    emails_sent += 1
+                    dispatch_status = "REJECTION_SENT"
+                else:
+                    dispatch_status = "FAILED"
+                    email_errors.append(f"{m.get('email')}: {mail_res.get('error', 'Failed to dispatch email')}")
+
+                dispatch_rows.append({
+                    "member_id": m_id,
+                    "channel": "EMAIL",
+                    "status": dispatch_status,
+                    "provider_ref": "REJECTION_NOTICE",
+                    "error_message": mail_res.get("error"),
+                    "created_at": now_iso,
+                    "sent_at": now_iso if dispatch_status == "REJECTION_SENT" else None
+                })
+
+            if dispatch_rows:
+                try:
+                    requests.post(f"{SUPABASE_URL}/rest/v1/passport_dispatch", headers=headers, json=dispatch_rows)
+                except Exception as log_err:
+                    print(f"[Dispatch Log Notice] {log_err}")
+
+        except Exception as e:
+            email_errors.append(str(e))
+
+        response = {
             "success": True,
             "message": f"Team {team_id} payment rejected.",
             "team_id": team_id,
             "payment_status": "REJECTED",
-            "rejection_reason": reason
+            "rejection_reason": reason_text,
+            "emails_sent": emails_sent
         }
+
+        if email_errors:
+            response["email_warning"] = f"Payment rejected, but email notification failed: {'; '.join(email_errors)}"
+            response["email_failed"] = True
+
+        return response
 
 def get_pending_payments_service() -> Dict[str, Any]:
     """Fetch all pending payments awaiting treasurer verification."""
