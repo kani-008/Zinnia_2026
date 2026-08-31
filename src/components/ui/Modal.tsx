@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { X, Sparkles } from 'lucide-react';
-import { sound } from '../../services/sound';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -26,7 +25,6 @@ export const Modal: React.FC<ModalProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        sound.playKeyClick();
         onClose();
       }
     };
@@ -63,10 +61,7 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
 
           <button
-            onClick={() => {
-              sound.playKeyClick();
-              onClose();
-            }}
+            onClick={onClose}
             className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-4 h-4" />

@@ -1,7 +1,6 @@
 import React from 'react';
-import { EventMission } from '@packages/types/src';
-import { Clock, Users, ArrowUpRight, Trophy, Sparkles, Code2, Cpu } from 'lucide-react';
-import { sound } from '../../services/sound';
+import { EventMission } from '../../types';
+import { Clock, Users, ArrowUpRight, Trophy } from 'lucide-react';
 
 export interface MissionCardProps {
   mission: EventMission;
@@ -18,7 +17,6 @@ export const MissionCard: React.FC<MissionCardProps> = ({
 
   return (
     <div
-      onMouseEnter={() => sound.playHoverTone()}
       className="bento-card p-6 flex flex-col justify-between space-y-5 transition-all group hover:-translate-y-1.5 duration-300 h-full border border-white/10 hover:border-indigo-500/40"
     >
       <div className="space-y-4">
@@ -80,10 +78,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
       <div className="pt-4 border-t border-white/5 flex gap-2.5">
         <button
           type="button"
-          onClick={() => {
-            sound.playKeyClick();
-            onOpenDossier(mission);
-          }}
+          onClick={() => onOpenDossier(mission)}
           className="flex-1 py-2.5 rounded-full bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-center gap-1.5 transition-all text-xs font-semibold"
         >
           <span>Details</span>

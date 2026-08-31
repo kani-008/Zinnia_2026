@@ -1,6 +1,5 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
-import { sound } from '../../services/sound';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'PRIMARY' | 'NEON' | 'SECONDARY' | 'GHOST' | 'DANGER' | 'SUCCESS';
@@ -21,7 +20,6 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   disabled,
   onClick,
-  onMouseEnter,
   ...props
 }) => {
   const sizeStyles = {
@@ -39,26 +37,10 @@ export const Button: React.FC<ButtonProps> = ({
     SUCCESS: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 rounded-full'
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (disabled || isLoading) return;
-    if (variant === 'PRIMARY' || variant === 'NEON' || variant === 'SUCCESS') {
-      sound.playConfirmTone();
-    } else {
-      sound.playKeyClick();
-    }
-    onClick?.(e);
-  };
-
-  const handleHover = (e: React.MouseEvent<HTMLButtonElement>) => {
-    sound.playHoverTone();
-    onMouseEnter?.(e);
-  };
-
   return (
     <button
       disabled={disabled || isLoading}
-      onClick={handleClick}
-      onMouseEnter={handleHover}
+      onClick={onClick}
       className={`inline-flex items-center justify-center gap-2 rounded-full transition-all select-none disabled:opacity-50 disabled:cursor-not-allowed ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
       {...props}
     >
