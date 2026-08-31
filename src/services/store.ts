@@ -16,7 +16,7 @@ import { REGISTRATION_FEE_PER_HEAD } from '../config/site';
 const STORAGE_KEYS = {
   TEAMS: 'zin26_live_teams_v2',
   MEMBERS: 'zin26_live_members_v2',
-  EVENTS: 'zin26_live_events_v6',
+  EVENTS: 'zin26_live_events_v9',
   REGISTRATIONS: 'zin26_live_registrations_v2',
   ATTENDANCE: 'zin26_live_attendance_v2',
   CURRENT_TEAM: 'zin26_current_team_v2'
@@ -35,86 +35,80 @@ class ZinniaStore {
 
   private cleanLegacyStorage() {
     try {
-      [
-        'zin26_participants_v3',
-        'zin26_attendance_v3',
-        'zin26_registrations_v3',
-        'zin26_live_participants_v1',
-        'zin26_live_events_v2',
-        'zin26_live_events_v3',
-        'zin26_live_events_v4',
-        'zin26_live_events_v5',
-        'zin26_live_hand_bands_v2'
-      ].forEach(k => {
+      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1', 'zin26_live_events_v2', 'zin26_live_events_v3', 'zin26_live_events_v4', 'zin26_live_events_v5', 'zin26_live_events_v6', 'zin26_live_events_v7', 'zin26_live_events_v8'].forEach(k => {
         localStorage.removeItem(k);
+      });
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('zin26_live_events_') && k !== STORAGE_KEYS.EVENTS) {
+          localStorage.removeItem(k);
+        }
       });
     } catch {}
   }
 
-  private async fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-    const method = init?.method || 'GET';
-    let bodyPreview = '';
-    try {
-      if (init?.body && typeof init.body === 'string') {
-        bodyPreview = JSON.parse(init.body);
-      }
-    } catch {}
-
-    console.log(`[Store HTTP Request] 🌐 ${method} ${url}`, bodyPreview || init?.body || '');
-    try {
-      const res = await fetch(url, init);
-      const text = await res.text();
-      let data: any;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = { success: res.ok, message: text };
-      }
-      console.log(`[Store HTTP Response] 📥 ${res.status} ${url}:`, data);
-      return data as T;
-    } catch (err: any) {
-      console.error(`[Store HTTP Error] ❌ ${method} ${url}:`, err);
-      throw err;
-    }
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
+
+  notifySubscribers() {
+    this.listeners.forEach(fn => {
+      try { fn(); } catch (e) { console.error('Listener error:', e); }
+    });
+  }
+
+  private realTimeErrorCount = 0;
 
   private setupRealtimeSubscription() {
     if (!isRealtimeEnabled()) return;
+    if (this.realTimeChannel) return;
+    if (this.realTimeErrorCount >= 2) return;
+
     try {
-      if (this.realTimeChannel) {
+      const existingChannels = supabase.getChannels();
+      const existing = existingChannels.find(ch => ch.topic === 'realtime:public_team_db_sync' || ch.topic === 'public_team_db_sync');
+      if (existing) {
         try {
-          supabase.removeChannel(this.realTimeChannel);
-        } catch {}
-        this.realTimeChannel = null;
+          supabase.removeChannel(existing);
+        } catch (e) {}
       }
 
-      const channelName = `schema-db-changes-${Math.random().toString(36).substring(2, 7)}`;
-      this.realTimeChannel = supabase
-        .channel(channelName)
+      let isCleaningUp = false;
+      const channel = supabase.channel('public_team_db_sync');
+
+      channel
         .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'event_registrations' }, () => this.syncFromSupabase())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'team_payments' }, () => this.syncFromSupabase())
-        .subscribe();
-    } catch (err) {
-      console.warn('Realtime subscription error:', err);
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            this.realTimeErrorCount = 0;
+            return;
+          }
+          if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') && !isCleaningUp) {
+            isCleaningUp = true;
+            this.realTimeErrorCount += 1;
+            setTimeout(() => {
+              try {
+                supabase.removeChannel(channel);
+              } catch (e) {}
+              if (this.realTimeChannel === channel) {
+                this.realTimeChannel = null;
+              }
+            }, 0);
+          }
+        });
+
+      this.realTimeChannel = channel;
+    } catch (e) {
+      console.warn('[Store] Realtime setup skipped:', e);
     }
   }
 
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-
-  private notifySubscribers(): void {
-    this.listeners.forEach(fn => {
-      try { fn(); } catch (e) { console.error('Store listener error:', e); }
-    });
-  }
-
-  // --- SYNC FROM SUPABASE ---
-  async syncFromSupabase(): Promise<void> {
+  async syncFromSupabase() {
     if (!isSupabaseConfigured() || this.isSyncing) return;
     this.isSyncing = true;
 
@@ -1053,53 +1047,10 @@ class ZinniaStore {
     throw new Error(res?.error || res?.message || 'Payment verification failed.');
   }
 
-  async getPaymentStatus(teamId: string): Promise<{
-    success: boolean;
-    team_id?: string;
-    team_name?: string;
-    payment?: boolean;
-    payment_status?: string;
-    member_count?: number;
-    expected_amount?: number;
-    submitted_amount?: number;
-    utr_number?: string;
-    rejection_reason?: string;
-    message?: string;
-  }> {
-    return this.getPaymentStatusApi(teamId);
-  }
-
-  async submitPaymentProof(teamId: string, proof: { utr_number: string; amount_paid: number }): Promise<{
-    success: boolean;
-    message?: string;
-  }> {
-    return this.submitPaymentApi(teamId, proof.utr_number, proof.amount_paid);
-  }
-
   // --- EVENTS ---
   getEvents(filterType?: EventType): EventMission[] {
-    let events = this.getStorage<EventMission[]>(STORAGE_KEYS.EVENTS, OFFICIAL_MISSIONS);
-    if (!events || events.length === 0) {
-      events = OFFICIAL_MISSIONS;
-      this.setStorage(STORAGE_KEYS.EVENTS, events);
-    } else {
-      events = events.map(e => {
-        const official = OFFICIAL_MISSIONS.find(m => m.id === e.id || m.code === e.code);
-        return official 
-          ? {
-              ...e,
-              rules: official.rules,
-              team_size_min: official.team_size_min,
-              team_size_max: official.team_size_max,
-              coordinators: official.coordinators,
-              venue: official.venue,
-              schedule_time: official.schedule_time,
-              duration: official.duration,
-            }
-          : e;
-      });
-      this.setStorage(STORAGE_KEYS.EVENTS, events);
-    }
+    let events = OFFICIAL_MISSIONS;
+    this.setStorage(STORAGE_KEYS.EVENTS, events);
     if (filterType) {
       return events.filter(e => e.event_type === filterType);
     }
@@ -1141,15 +1092,6 @@ class ZinniaStore {
     }
 
     this.notifySubscribers();
-  }
-
-  // --- CURRENT USER ---
-  getCurrentTeam(): Team | null {
-    return this.getStorage(STORAGE_KEYS.CURRENT_TEAM, null);
-  }
-
-  setCurrentTeam(team: Team | null): void {
-    this.setStorage(STORAGE_KEYS.CURRENT_TEAM, team);
   }
 }
 

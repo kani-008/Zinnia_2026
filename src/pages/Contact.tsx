@@ -173,12 +173,12 @@ export const WebsiteContactPage: React.FC = () => {
                       <Phone className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-500 uppercase">General Helpline</p>
-                      <p className="font-bold text-zinc-200">+91 94451 98765</p>
+                      <p className="text-[10px] text-zinc-500 uppercase">Saran S (Student Coordinator)</p>
+                      <p className="font-bold text-zinc-200">+91 96299 93985</p>
                     </div>
                   </div>
                   <a
-                    href="tel:+919445198765"
+                    href="tel:+919629993985"
                     className="text-[11px] text-zinc-300 hover:text-white hover:border-zinc-500 font-semibold px-2.5 py-1 bg-[#22222C] border border-[#30303E] rounded transition-colors"
                   >
                     CALL
@@ -191,12 +191,12 @@ export const WebsiteContactPage: React.FC = () => {
                       <Phone className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-zinc-500 uppercase">Event Desk &amp; Registration</p>
-                      <p className="font-bold text-zinc-200">+91 98401 23456</p>
+                      <p className="text-[10px] text-zinc-500 uppercase">Bharani E K (Student Coordinator)</p>
+                      <p className="font-bold text-zinc-200">+91 88071 76399</p>
                     </div>
                   </div>
                   <a
-                    href="tel:+919840123456"
+                    href="tel:+918807176399"
                     className="text-[11px] text-zinc-300 hover:text-white hover:border-zinc-500 font-semibold px-2.5 py-1 bg-[#22222C] border border-[#30303E] rounded transition-colors"
                   >
                     CALL
@@ -206,7 +206,7 @@ export const WebsiteContactPage: React.FC = () => {
             </div>
 
             <div className="mt-5 pt-3.5 border-t border-[#B8B8B2]/20 text-[#B8B8B2] text-xs font-mono flex items-center justify-between">
-              <span>Operational Hours: 9:00 AM – 6:00 PM</span>
+              <span>Operational Hours: 11:00 AM – 4:00 PM</span>
               <span className="text-[#B8B8B2] font-medium flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#0FA9C6] inline-block" />
                 ONLINE DESK
@@ -267,7 +267,7 @@ export const WebsiteContactPage: React.FC = () => {
             </div>
           </div>
 
-          {/* CARD 3: Organizing Committee */}
+          {/* CARD 3: Student Coordinators */}
           <div className="bg-[#111214] border border-[#B8B8B2]/20 rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#090A0B]">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-lg bg-[#17181C] border border-[#B8B8B2]/30 text-[#E5BD00] flex items-center justify-center shrink-0">
@@ -275,42 +275,42 @@ export const WebsiteContactPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-comic font-black text-lg text-[#EEEEEA] uppercase tracking-wide">
-                  ORGANIZING COMMITTEE
+                  STUDENT COORDINATORS
                 </h3>
-                <p className="font-mono text-xs text-[#B8B8B2]">Symposium leadership &amp; coordinators</p>
+                <p className="font-mono text-xs text-[#B8B8B2]">Symposium event leads &amp; inquiries</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs font-mono">
-              {/* Staff Convener */}
+              {/* Coordinator 1: Saran S */}
               <div className="p-4 bg-[#181820] border border-[#2A2A36] rounded-lg space-y-1.5 hover:border-zinc-500 transition-colors">
                 <span className="text-[10px] text-[#F5D90A] font-bold tracking-widest uppercase">
-                  STAFF CONVENER
+                  STUDENT COORDINATOR
                 </span>
-                <h4 className="font-bold text-sm text-white">Dr. A. Senthil Kumar</h4>
-                <p className="text-zinc-400 text-[11px]">Professor &amp; Head, Dept of CSE</p>
+                <h4 className="font-bold text-sm text-white">Saran S</h4>
+                <p className="text-zinc-400 text-[11px]">Event Coordinator &bull; CSE</p>
                 <a
-                  href="tel:+919840123456"
+                  href="tel:+919629993985"
                   className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#F5D90A] transition-colors pt-1"
                 >
                   <Phone className="w-3 h-3 text-[#F5D90A]" />
-                  <span>+91 98401 23456</span>
+                  <span>+91 96299 93985</span>
                 </a>
               </div>
 
-              {/* Student Convener */}
+              {/* Coordinator 2: Bharani E K */}
               <div className="p-4 bg-[#181820] border border-[#2A2A36] rounded-lg space-y-1.5 hover:border-zinc-500 transition-colors">
                 <span className="text-[10px] text-[#F5D90A] font-bold tracking-widest uppercase">
-                  STUDENT CONVENER
+                  STUDENT COORDINATOR
                 </span>
-                <h4 className="font-bold text-sm text-white">R. Kanishkar</h4>
-                <p className="text-zinc-400 text-[11px]">Final Year CSE &bull; Student Lead</p>
+                <h4 className="font-bold text-sm text-white">Bharani E K</h4>
+                <p className="text-zinc-400 text-[11px]">Event Coordinator &bull; CSE</p>
                 <a
-                  href="tel:+919445198765"
+                  href="tel:+918807176399"
                   className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-[#F5D90A] transition-colors pt-1"
                 >
                   <Phone className="w-3 h-3 text-[#F5D90A]" />
-                  <span>+91 94451 98765</span>
+                  <span>+91 88071 76399</span>
                 </a>
               </div>
             </div>

@@ -1337,3 +1337,42 @@ body {
   }
 }
 
+/* Custom Sleek Dark Scrollbar & Hide Arrow Buttons */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #141417;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2E2E38;
+  border-radius: 6px;
+  border: 2px solid #141417;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9333EA;
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Custom Utility to hide scrollbars completely */
+.custom-no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.custom-no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
