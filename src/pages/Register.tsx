@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
 import { WebsiteNavbar } from '../components/layout/Navbar';
-import { WebsiteFooter } from '../components/layout/Footer';
 import { 
   ArrowRight, 
   AlertCircle, 
@@ -21,6 +20,15 @@ import {
   Info, 
   Loader2 
 } from 'lucide-react';
+import { FoodMark } from '../components/ui/FoodMark';
+import { SelectField } from '../components/ui/SelectField';
+
+const ACADEMIC_YEAR_OPTIONS = [
+  { value: 'I', label: '1st Year (B.E. / B.Tech)' },
+  { value: 'II', label: '2nd Year (B.E. / B.Tech)' },
+  { value: 'III', label: '3rd Year (B.E. / B.Tech)' },
+  { value: 'IV', label: '4th Year (B.E. / B.Tech)' }
+];
 
 interface MemberInput {
   name: string;
@@ -41,7 +49,7 @@ export const WebsiteRegisterPage: React.FC = () => {
   const [teamName, setTeamName] = useState('');
   const [college, setCollege] = useState('');
   const [department, setDepartment] = useState('');
-  const [year, setYear] = useState('III');
+  const [year, setYear] = useState('');
   const [registeredEvents, setRegisteredEvents] = useState<string[]>(() => {
     if (preselectedMission) return [preselectedMission];
     return [];
@@ -205,6 +213,14 @@ export const WebsiteRegisterPage: React.FC = () => {
       errors.events = `"${singleEvents[0].mission_name}" is a single-event only competition and cannot be combined with other events.`;
     }
 
+    if (!teamName.trim()) {
+      errors.team_name = 'Team name is required.';
+    }
+
+    if (!year) {
+      errors.year = 'Please choose your academic year.';
+    }
+
     // 2. Leader details validation
     if (!leader.name.trim()) {
       errors.leader_name = 'Leader full name is required.';
@@ -360,12 +376,7 @@ export const WebsiteRegisterPage: React.FC = () => {
         
         {/* Heading */}
         <div className="mb-7 text-center sm:text-left space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#111214] border border-[#B8B8B2]/30 text-xs font-mono text-[#E5BD00] font-semibold mb-1">
-            <span>ZINNIA '26</span>
-            <span className="w-1 h-1 rounded-full bg-[#E5BD00]" />
-            <span>GCE ERODE</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#EEEEEA] tracking-tight uppercase font-display">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#EEEEEA] tracking-[0.08em] uppercase font-display">
             Symposium Registration
           </h1>
           <p className="text-xs sm:text-sm text-[#B8B8B2] font-mono">
@@ -405,7 +416,7 @@ export const WebsiteRegisterPage: React.FC = () => {
                   </span>
                   <span>Select Events <span className="text-[#D51F55]">*</span></span>
                 </h2>
-                <p className="text-[11px] text-[#B8B8B2]/80 font-mono mt-0.5 ml-7">
+                <p className="text-xs sm:text-sm text-[#B8B8B2] font-mono mt-0.5 ml-7">
                   Choose competitions (Max 2 participants per event roster)
                 </p>
               </div>
@@ -454,9 +465,6 @@ export const WebsiteRegisterPage: React.FC = () => {
                           {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                         </div>
                         <div className="truncate text-xs font-mono">
-                          <span className={`font-semibold mr-1.5 ${isSelected ? 'text-[#E5BD00]' : 'text-[#B8B8B2]'}`}>
-                            [{e.code}]
-                          </span>
                           <span className="text-[#EEEEEA] font-medium">{e.mission_name}</span>
                         </div>
                       </div>
@@ -498,9 +506,6 @@ export const WebsiteRegisterPage: React.FC = () => {
                           {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                         </div>
                         <div className="truncate text-xs font-mono">
-                          <span className={`font-semibold mr-1.5 ${isSelected ? 'text-[#E5BD00]' : 'text-[#B8B8B2]'}`}>
-                            [{e.code}]
-                          </span>
                           <span className="text-[#EEEEEA] font-medium">{e.mission_name}</span>
                         </div>
                       </div>
@@ -521,18 +526,119 @@ export const WebsiteRegisterPage: React.FC = () => {
                 <span className="w-5 h-5 rounded bg-[#E5BD00] text-[#090A0B] text-[11px] font-black flex items-center justify-center font-mono">
                   2
                 </span>
-                <span>Team Leader &amp; College Credentials</span>
+                <span>College and Team Details</span>
               </h2>
-              <p className="text-[11px] text-[#B8B8B2]/80 font-mono mt-0.5 ml-7">
-                Primary registrant contact for passes, verification, and check-in
-              </p>
             </div>
 
             <div className="space-y-4 pt-1">
-              {/* Full Name */}
+              {/* College Name */}
+              <div data-field-id="college" className="space-y-1.5">
+                <label htmlFor="college-name" className="block text-xs text-[#B8B8B2] font-semibold font-mono">
+                  College / Institution Name <span className="text-[#D51F55]">*</span>
+                </label>
+                <div className="relative">
+                  <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8B8B2]/60 pointer-events-none" />
+                  <input
+                    id="college-name"
+                    type="text"
+                    value={college}
+                    onChange={(e) => {
+                      setCollege(e.target.value);
+                      setFieldErrors(prev => ({ ...prev, college: '' }));
+                    }}
+                    placeholder="Enter College/Institution Name"
+                    className={`w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none transition-all ${
+                      fieldErrors.college ? 'border-[#D51F55] ring-1 ring-[#D51F55]' : 'border-[#B8B8B2]/30'
+                    }`}
+                    required
+                  />
+                </div>
+                {fieldErrors.college && (
+                  <p className="text-[11px] font-mono text-[#D51F55]">{fieldErrors.college}</p>
+                )}
+              </div>
+
+              {/* Department & Academic Year */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div data-field-id="department" className="space-y-1.5">
+                  <label htmlFor="dept-name" className="block text-xs text-[#B8B8B2] font-semibold font-mono">
+                    Department <span className="text-[#D51F55]">*</span>
+                  </label>
+                  <div className="relative">
+                    <GraduationCap className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8B8B2]/60 pointer-events-none" />
+                    <input
+                      id="dept-name"
+                      type="text"
+                      value={department}
+                      onChange={(e) => {
+                        setDepartment(e.target.value);
+                        setFieldErrors(prev => ({ ...prev, department: '' }));
+                      }}
+                      placeholder="Enter Dept Name"
+                      className={`w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none transition-all ${
+                        fieldErrors.department ? 'border-[#D51F55] ring-1 ring-[#D51F55]' : 'border-[#B8B8B2]/30'
+                      }`}
+                      required
+                    />
+                  </div>
+                  {fieldErrors.department && (
+                    <p className="text-[11px] font-mono text-[#D51F55]">{fieldErrors.department}</p>
+                  )}
+                </div>
+
+                <div data-field-id="year" className="space-y-1.5">
+                  <label htmlFor="academic-year" className="block text-xs text-[#B8B8B2] font-semibold font-mono">
+                    Academic Year <span className="text-[#D51F55]">*</span>
+                  </label>
+                  <SelectField
+                    id="academic-year"
+                    value={year}
+                    options={ACADEMIC_YEAR_OPTIONS}
+                    onChange={(val) => {
+                      setYear(val);
+                      setFieldErrors(prev => ({ ...prev, year: '' }));
+                    }}
+                    placeholder="Choose academic year"
+                    hasError={!!fieldErrors.year}
+                    icon={<Calendar className="w-4 h-4 text-[#B8B8B2]/60" />}
+                  />
+                  {fieldErrors.year && (
+                    <p className="text-[11px] font-mono text-[#D51F55]">{fieldErrors.year}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Team Name */}
+              <div data-field-id="team_name" className="space-y-1.5">
+                <label htmlFor="team-name" className="block text-xs text-[#B8B8B2] font-semibold font-mono">
+                  Team Name <span className="text-[#D51F55]">*</span>
+                </label>
+                <div className="relative">
+                  <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8B8B2]/60 pointer-events-none" />
+                  <input
+                    id="team-name"
+                    type="text"
+                    value={teamName}
+                    onChange={(e) => {
+                      setTeamName(e.target.value);
+                      setFieldErrors(prev => ({ ...prev, team_name: '' }));
+                    }}
+                    placeholder="Enter Team Name"
+                    className={`w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none transition-all ${
+                      fieldErrors.team_name ? 'border-[#D51F55] ring-1 ring-[#D51F55]' : 'border-[#B8B8B2]/30'
+                    }`}
+                    required
+                  />
+                </div>
+                {fieldErrors.team_name && (
+                  <p className="text-[11px] font-mono text-[#D51F55]">{fieldErrors.team_name}</p>
+                )}
+              </div>
+
+              {/* Team Lead Name */}
               <div data-field-id="leader_name" className="space-y-1.5">
                 <label htmlFor="leader-name" className="block text-xs text-[#B8B8B2] font-semibold font-mono">
-                  Full Name <span className="text-[#D51F55]">*</span>
+                  Team Lead Name <span className="text-[#D51F55]">*</span>
                 </label>
                 <div className="relative">
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8B8B2]/60 pointer-events-none" />
@@ -545,7 +651,7 @@ export const WebsiteRegisterPage: React.FC = () => {
                       setLeader({ ...leader, name: e.target.value });
                       setFieldErrors(prev => ({ ...prev, leader_name: '' }));
                     }}
-                    placeholder="Enter full name"
+                    placeholder="Enter Full Name"
                     className={`w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none transition-all ${
                       fieldErrors.leader_name ? 'border-[#D51F55] ring-1 ring-[#D51F55]' : 'border-[#B8B8B2]/30'
                     }`}
@@ -574,7 +680,7 @@ export const WebsiteRegisterPage: React.FC = () => {
                         setLeader({ ...leader, email: e.target.value });
                         setFieldErrors(prev => ({ ...prev, leader_email: '' }));
                       }}
-                      placeholder="student@institution.edu"
+                      placeholder="Enter Mail ID"
                       className={`w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none transition-all ${
                         fieldErrors.leader_email ? 'border-[#D51F55] ring-1 ring-[#D51F55]' : 'border-[#B8B8B2]/30'
                       }`}
@@ -604,7 +710,7 @@ export const WebsiteRegisterPage: React.FC = () => {
                         setLeader({ ...leader, phone: val });
                         setFieldErrors(prev => ({ ...prev, leader_phone: '' }));
                       }}
-                      placeholder="e.g. 9876543210"
+                      placeholder="Enter Phone Number"
                       className={`w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none transition-all ${
                         fieldErrors.leader_phone ? 'border-[#D51F55] ring-1 ring-[#D51F55]' : 'border-[#B8B8B2]/30'
                       }`}
@@ -632,8 +738,8 @@ export const WebsiteRegisterPage: React.FC = () => {
                         : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30 hover:border-[#B8B8B2]/60'
                     }`}
                   >
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shrink-0" />
-                    <span>VEG 🌱</span>
+                    <FoodMark type="VEG" />
+                    <span>VEG</span>
                   </button>
 
                   <button
@@ -645,106 +751,13 @@ export const WebsiteRegisterPage: React.FC = () => {
                         : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30 hover:border-[#B8B8B2]/60'
                     }`}
                   >
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#D51F55] shrink-0" />
-                    <span>NON-VEG 🍗</span>
+                    <FoodMark type="NON_VEG" />
+                    <span>NON-VEG</span>
                   </button>
                 </div>
               </div>
 
-              {/* College Name */}
-              <div data-field-id="college" className="space-y-1.5">
-                <label htmlFor="college-name" className="block text-xs text-[#B8B8B2] font-semibold font-mono">
-                  College / Institution Name <span className="text-[#D51F55]">*</span>
-                </label>
-                <div className="relative">
-                  <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8B8B2]/60 pointer-events-none" />
-                  <input
-                    id="college-name"
-                    type="text"
-                    value={college}
-                    onChange={(e) => {
-                      setCollege(e.target.value);
-                      setFieldErrors(prev => ({ ...prev, college: '' }));
-                    }}
-                    placeholder="e.g. Government College of Engineering, Erode"
-                    className={`w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none transition-all ${
-                      fieldErrors.college ? 'border-[#D51F55] ring-1 ring-[#D51F55]' : 'border-[#B8B8B2]/30'
-                    }`}
-                    required
-                  />
-                </div>
-                {fieldErrors.college && (
-                  <p className="text-[11px] font-mono text-[#D51F55]">{fieldErrors.college}</p>
-                )}
-              </div>
 
-              {/* Department & Academic Year */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div data-field-id="department" className="space-y-1.5">
-                  <label htmlFor="dept-name" className="block text-xs text-[#B8B8B2] font-semibold font-mono">
-                    Department <span className="text-[#D51F55]">*</span>
-                  </label>
-                  <div className="relative">
-                    <GraduationCap className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8B8B2]/60 pointer-events-none" />
-                    <input
-                      id="dept-name"
-                      type="text"
-                      value={department}
-                      onChange={(e) => {
-                        setDepartment(e.target.value);
-                        setFieldErrors(prev => ({ ...prev, department: '' }));
-                      }}
-                      placeholder="e.g. CSE, IT, AIDS, ECE"
-                      className={`w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none transition-all ${
-                        fieldErrors.department ? 'border-[#D51F55] ring-1 ring-[#D51F55]' : 'border-[#B8B8B2]/30'
-                      }`}
-                      required
-                    />
-                  </div>
-                  {fieldErrors.department && (
-                    <p className="text-[11px] font-mono text-[#D51F55]">{fieldErrors.department}</p>
-                  )}
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="academic-year" className="block text-xs text-[#B8B8B2] font-semibold font-mono">
-                    Academic Year <span className="text-[#D51F55]">*</span>
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8B8B2]/60 pointer-events-none" />
-                    <select
-                      id="academic-year"
-                      value={year}
-                      onChange={(e) => setYear(e.target.value)}
-                      className="w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-[#08090A] border border-[#B8B8B2]/30 font-mono text-xs text-[#EEEEEA] focus:border-[#E5BD00] outline-none cursor-pointer"
-                    >
-                      <option value="I">1st Year (B.E. / B.Tech)</option>
-                      <option value="II">2nd Year (B.E. / B.Tech)</option>
-                      <option value="III">3rd Year (B.E. / B.Tech) [Default]</option>
-                      <option value="IV">4th Year (B.E. / B.Tech)</option>
-                      <option value="PG">Postgraduate (M.E. / M.Tech / MCA)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Team Name */}
-              <div className="space-y-1.5">
-                <label htmlFor="team-name" className="block text-xs text-[#B8B8B2] font-semibold font-mono">
-                  Team / Squad Name <span className="text-[#B8B8B2]/60 font-normal">(Optional)</span>
-                </label>
-                <div className="relative">
-                  <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8B8B2]/60 pointer-events-none" />
-                  <input
-                    id="team-name"
-                    type="text"
-                    value={teamName}
-                    onChange={(e) => setTeamName(e.target.value)}
-                    placeholder={`Default: ${leader.name.trim() || 'Attendee'}'s Team`}
-                    className="w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-xl bg-[#08090A] border border-[#B8B8B2]/30 font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none transition-all"
-                  />
-                </div>
-              </div>
             </div>
           </div>
 
@@ -756,15 +769,15 @@ export const WebsiteRegisterPage: React.FC = () => {
                 fieldErrors.team_size ? 'border-[#D51F55] ring-1 ring-[#D51F55]' : 'border-[#B8B8B2]/20'
               }`}
             >
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
                   <h2 className="text-sm font-bold text-[#EEEEEA] uppercase tracking-wider font-mono flex items-center gap-2">
                     <span className="w-5 h-5 rounded bg-[#E5BD00] text-[#090A0B] text-[11px] font-black flex items-center justify-center font-mono">
                       3
                     </span>
                     <span>Additional Team Member</span>
                   </h2>
-                  <p className="text-[11px] text-[#B8B8B2]/80 font-mono mt-0.5 ml-7">
+                  <p className="text-xs sm:text-sm text-[#B8B8B2] font-mono mt-0.5 ml-7">
                     {totalMembersCount} of {maxTeamSize} participant slot(s) filled
                   </p>
                 </div>
@@ -773,9 +786,9 @@ export const WebsiteRegisterPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleAddMemberSlot}
-                    className="min-h-[44px] px-3.5 py-2 rounded-xl bg-[#E5BD00] hover:bg-[#EEEEEA] text-[#090A0B] font-mono font-black text-xs flex items-center gap-1.5 cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5"
+                    className="shrink-0 min-h-[32px] px-2.5 py-1 rounded-lg bg-[#E5BD00] hover:bg-[#EEEEEA] text-[#090A0B] font-mono font-black text-[11px] flex items-center gap-1 cursor-pointer transition-all active:translate-x-0.5 active:translate-y-0.5"
                   >
-                    <Plus className="w-4 h-4 stroke-[3]" />
+                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
                     <span>Add Teammate</span>
                   </button>
                 )}
@@ -822,7 +835,7 @@ export const WebsiteRegisterPage: React.FC = () => {
                   {/* Explicit Mobile-Ready Stacked Inputs with Real Labels */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div data-field-id={`member_${idx}_name`} className="space-y-1">
-                      <label className="block text-[11px] text-[#B8B8B2] font-semibold font-mono">
+                      <label className="block text-xs sm:text-sm text-[#B8B8B2] font-semibold font-mono">
                         Full Name <span className="text-[#D51F55]">*</span>
                       </label>
                       <input
@@ -830,19 +843,19 @@ export const WebsiteRegisterPage: React.FC = () => {
                         autoComplete="name"
                         value={member.name}
                         onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
-                        placeholder="Member name"
+                        placeholder="Enter Full Name"
                         className={`w-full min-h-[44px] px-3 py-2 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none ${
                           fieldErrors[`member_${idx}_name`] ? 'border-[#D51F55]' : 'border-[#B8B8B2]/30'
                         }`}
                         required
                       />
                       {fieldErrors[`member_${idx}_name`] && (
-                        <p className="text-[11px] font-mono text-[#D51F55]">{fieldErrors[`member_${idx}_name`]}</p>
+                        <p className="text-xs sm:text-sm font-mono text-[#D51F55]">{fieldErrors[`member_${idx}_name`]}</p>
                       )}
                     </div>
 
                     <div data-field-id={`member_${idx}_email`} className="space-y-1">
-                      <label className="block text-[11px] text-[#B8B8B2] font-semibold font-mono">
+                      <label className="block text-xs sm:text-sm text-[#B8B8B2] font-semibold font-mono">
                         Email Address <span className="text-[#D51F55]">*</span>
                       </label>
                       <input
@@ -850,19 +863,19 @@ export const WebsiteRegisterPage: React.FC = () => {
                         autoComplete="email"
                         value={member.email}
                         onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
-                        placeholder="member@domain.com"
+                        placeholder="Enter Mail ID"
                         className={`w-full min-h-[44px] px-3 py-2 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none ${
                           fieldErrors[`member_${idx}_email`] ? 'border-[#D51F55]' : 'border-[#B8B8B2]/30'
                         }`}
                         required
                       />
                       {fieldErrors[`member_${idx}_email`] && (
-                        <p className="text-[11px] font-mono text-[#D51F55]">{fieldErrors[`member_${idx}_email`]}</p>
+                        <p className="text-xs sm:text-sm font-mono text-[#D51F55]">{fieldErrors[`member_${idx}_email`]}</p>
                       )}
                     </div>
 
                     <div data-field-id={`member_${idx}_phone`} className="space-y-1">
-                      <label className="block text-[11px] text-[#B8B8B2] font-semibold font-mono">
+                      <label className="block text-xs sm:text-sm text-[#B8B8B2] font-semibold font-mono">
                         Mobile Number <span className="text-[#D51F55]">*</span>
                       </label>
                       <input
@@ -875,21 +888,21 @@ export const WebsiteRegisterPage: React.FC = () => {
                           const val = e.target.value.replace(/\D/g, '').slice(0, 10);
                           handleMemberChange(idx, 'phone', val);
                         }}
-                        placeholder="10-digit mobile"
+                        placeholder="Enter Phone Number"
                         className={`w-full min-h-[44px] px-3 py-2 rounded-xl bg-[#08090A] border font-mono text-xs text-[#EEEEEA] placeholder:text-[#B8B8B2]/40 focus:border-[#E5BD00] outline-none ${
                           fieldErrors[`member_${idx}_phone`] ? 'border-[#D51F55]' : 'border-[#B8B8B2]/30'
                         }`}
                         required
                       />
                       {fieldErrors[`member_${idx}_phone`] && (
-                        <p className="text-[11px] font-mono text-[#D51F55]">{fieldErrors[`member_${idx}_phone`]}</p>
+                        <p className="text-xs sm:text-sm font-mono text-[#D51F55]">{fieldErrors[`member_${idx}_phone`]}</p>
                       )}
                     </div>
                   </div>
 
                   {/* Member Food Preference */}
                   <div className="pt-1 space-y-1">
-                    <label className="block text-[11px] text-[#B8B8B2] font-semibold font-mono">
+                    <label className="block text-xs sm:text-sm text-[#B8B8B2] font-semibold font-mono">
                       Lunch Preference (Member {idx + 2}) <span className="text-[#D51F55]">*</span>
                     </label>
                     <div className="grid grid-cols-2 gap-2.5">
@@ -902,8 +915,8 @@ export const WebsiteRegisterPage: React.FC = () => {
                             : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30'
                         }`}
                       >
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shrink-0" />
-                        <span>VEG 🌱</span>
+                        <FoodMark type="VEG" />
+                        <span>VEG</span>
                       </button>
                       <button
                         type="button"
@@ -914,8 +927,8 @@ export const WebsiteRegisterPage: React.FC = () => {
                             : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30'
                         }`}
                       >
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#D51F55] shrink-0" />
-                        <span>NON-VEG 🍗</span>
+                        <FoodMark type="NON_VEG" />
+                        <span>NON-VEG</span>
                       </button>
                     </div>
                   </div>
@@ -935,8 +948,8 @@ export const WebsiteRegisterPage: React.FC = () => {
             </div>
           )}
 
-          {/* SUBMIT BUTTON (Desktop + Mobile Sticky bar) */}
-          <div className="pt-2">
+          {/* SUBMIT BUTTON (desktop only - mobile uses the sticky bar below) */}
+          <div className="hidden sm:block pt-2">
             <button
               type="button"
               onClick={handleSubmit}
@@ -955,13 +968,13 @@ export const WebsiteRegisterPage: React.FC = () => {
                 </>
               )}
             </button>
-            <p className="text-center text-[11px] text-[#B8B8B2]/80 font-mono mt-2">
+            <p className="text-center text-xs sm:text-sm text-[#B8B8B2] font-mono mt-2">
               Individual digital QR passes will be generated &amp; dispatched upon treasurer approval.
             </p>
           </div>
 
           {/* Mobile Sticky Bar */}
-          <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-[#08090A]/95 backdrop-blur-md border-t border-[#B8B8B2]/20 z-40 flex items-center justify-between gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
+          <div className="sm:hidden fixed bottom-0 left-0 right-0 px-3 py-2 bg-[#08090A]/95 backdrop-blur-md border-t border-[#B8B8B2]/20 z-40 flex items-center justify-between gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
             <div className="font-mono leading-tight">
               <span className="block text-xs font-bold text-[#EEEEEA] uppercase">{totalMembersCount} Member{totalMembersCount === 1 ? '' : 's'}</span>
             </div>
@@ -969,7 +982,7 @@ export const WebsiteRegisterPage: React.FC = () => {
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#E5BD00] hover:bg-[#EEEEEA] text-[#090A0B] font-display font-black text-xs tracking-wider uppercase flex items-center gap-2 cursor-pointer shadow-[2px_2px_0px_#090A0B] disabled:opacity-60"
+              className="min-h-[clamp(2rem,9vw,2.25rem)] px-[clamp(0.875rem,4vw,1rem)] py-1.5 rounded-lg text-[clamp(10px,2.8vw,11px)] bg-[#E5BD00] hover:bg-[#EEEEEA] text-[#090A0B] font-display font-black tracking-wider uppercase flex items-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_#090A0B] disabled:opacity-60"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -984,8 +997,6 @@ export const WebsiteRegisterPage: React.FC = () => {
         </div>
       </main>
 
-      {/* Footer */}
-      <WebsiteFooter />
     </div>
   );
 };

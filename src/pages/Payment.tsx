@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { WebsiteNavbar } from '../components/layout/Navbar';
-import { WebsiteFooter } from '../components/layout/Footer';
 import { store } from '../services/store';
 import { TREASURER_PAYMENT_CONFIG, REGISTRATION_FEE_PER_HEAD } from '../config/site';
 import { QRCodeSVG } from 'qrcode.react';
@@ -13,11 +12,11 @@ import {
   ArrowRight, 
   ArrowLeft,
   ShieldCheck, 
-  Download,
   Smartphone,
   Loader2,
   RefreshCw,
-  Receipt
+  Receipt,
+  ChevronUp
 } from 'lucide-react';
 
 const UTR_REGEX = /^[A-Z0-9]{10,30}$/;
@@ -32,9 +31,9 @@ export const WebsitePaymentPage: React.FC = () => {
   const [paymentInfo, setPaymentInfo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [utrNumber, setUtrNumber] = useState('');
-  const [hasConfirmedPaid, setHasConfirmedPaid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [copiedUpi, setCopiedUpi] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -89,7 +88,6 @@ export const WebsitePaymentPage: React.FC = () => {
     setTimeout(() => setCopiedUpi(false), 2000);
   };
 
-  const qrContainerRef = useRef<HTMLDivElement>(null);
 
   // Authoritative server amount calculation
   const memberCount = useMemo(() => {
@@ -149,41 +147,6 @@ export const WebsitePaymentPage: React.FC = () => {
   }, [paymentInfo, isServerAmountLoaded, serverExpectedAmount, teamId]);
 
   // Render SVG QR to canvas and trigger download as PNG for mobile gallery
-  const handleDownloadQr = () => {
-    if (!qrContainerRef.current) return;
-    const svgElement = qrContainerRef.current.querySelector('svg');
-    if (!svgElement) return;
-
-    try {
-      const svgData = new XMLSerializer().serializeToString(svgElement);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-
-      canvas.width = 600;
-      canvas.height = 600;
-
-      img.onload = () => {
-        if (ctx) {
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          const pad = 40;
-          ctx.drawImage(img, pad, pad, canvas.width - pad * 2, canvas.height - pad * 2);
-          const pngUrl = canvas.toDataURL('image/png');
-          const a = document.createElement('a');
-          a.download = `Zinnia_2026_Payment_${paymentInfo?.team_id || teamId}.png`;
-          a.href = pngUrl;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        }
-      };
-      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
-    } catch (err) {
-      console.warn('QR download error:', err);
-    }
-  };
-
   // UTR Validation
   const trimmedUtr = utrNumber.trim().toUpperCase();
   const isUtrValid = UTR_REGEX.test(trimmedUtr);
@@ -195,7 +158,7 @@ export const WebsitePaymentPage: React.FC = () => {
     return null;
   }, [utrNumber, trimmedUtr]);
 
-  const canSubmit = isUtrValid && hasConfirmedPaid && !submitting;
+  const canSubmit = isUtrValid && !submitting;
 
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,11 +166,6 @@ export const WebsitePaymentPage: React.FC = () => {
       setError('Please provide a valid 10 to 30 character alphanumeric transaction ID / UTR.');
       return;
     }
-    if (!hasConfirmedPaid) {
-      setError('Please confirm that you have completed the UPI transfer before submitting.');
-      return;
-    }
-
     setSubmitting(true);
     setError(null);
     setSuccessMsg(null);
@@ -243,10 +201,10 @@ export const WebsitePaymentPage: React.FC = () => {
       <WebsiteNavbar />
 
       {/* Main Content Area */}
-      <main className="relative z-10 pt-4 sm:pt-6 pb-20 px-3 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6 w-full flex-1">
+      <main className="relative z-10 pt-4 sm:pt-6 pb-24 sm:pb-20 px-3 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6 w-full flex-1">
         
-        {/* Navigation back to registration details */}
-        <div className="flex items-center justify-start">
+        {/* Navigation back to registration details (desktop only) */}
+        <div className="hidden sm:flex items-center justify-start">
           <button
             type="button"
             onClick={() => {
@@ -265,16 +223,10 @@ export const WebsitePaymentPage: React.FC = () => {
         </div>
 
         {/* Header Banner */}
-        <div className="p-6 sm:p-8 bg-[#111214] border border-[#EEEEEA]/30 shadow-[6px_6px_0px_#090A0B] rounded-2xl relative overflow-visible">
-          <div className="inline-block bg-[#E5BD00] text-[#090A0B] font-mono font-black text-xs uppercase tracking-wider px-3.5 py-1 border border-[#090A0B] shadow-[3px_3px_0px_#090A0B] -rotate-1 mb-3">
-            ⚡ OFFICIAL PAYMENT GATEWAY // ZINNIA '26
-          </div>
-          <h1 className="text-2xl sm:text-4xl font-display text-[#EEEEEA] tracking-tight uppercase leading-none drop-shadow-[3px_3px_0px_#090A0B]">
+        <div className="px-1 py-1 relative overflow-visible">
+          <h1 className="text-[clamp(0.8rem,4vw,1.5rem)] sm:text-4xl whitespace-nowrap sm:whitespace-normal tracking-[0.08em] sm:tracking-[0.12em] font-display text-[#EEEEEA] uppercase leading-tight drop-shadow-[3px_3px_0px_#090A0B]">
             REGISTRATION FEE VERIFICATION
           </h1>
-          <p className="font-mono text-xs sm:text-sm text-[#0FA9C6] font-semibold tracking-wide uppercase mt-2">
-            Screenshot or save the Treasurer QR, complete transfer in your UPI app, and submit your UTR reference.
-          </p>
         </div>
 
         {/* Team ID Search if not provided */}
@@ -301,13 +253,6 @@ export const WebsitePaymentPage: React.FC = () => {
           </div>
         )}
 
-        {loading && (
-          <div className="p-12 text-center text-[#E5BD00] font-mono font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span>RETRIEVING PAYMENT TELEMETRY &amp; SERVER RECORDS...</span>
-          </div>
-        )}
-
         {error && (
           <div className="p-4 bg-[#111214] border border-[#D51F55] text-[#D51F55] font-mono font-bold text-xs sm:text-sm uppercase tracking-wider rounded-xl flex items-center justify-between gap-3 shadow-[4px_4px_0px_#090A0B]">
             <div className="flex items-center gap-2.5">
@@ -329,64 +274,6 @@ export const WebsitePaymentPage: React.FC = () => {
           <div className="p-4 bg-[#111214] border border-[#0FA9C6] text-[#0FA9C6] font-mono font-bold text-xs sm:text-sm uppercase tracking-wider rounded-xl flex items-center gap-2.5 shadow-[4px_4px_0px_#090A0B]">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <span>{successMsg}</span>
-          </div>
-        )}
-
-        {/* REGISTRATION SUMMARY CARD */}
-        {teamId && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#111214] border border-[#E5BD00]/40 shadow-[4px_4px_0px_#090A0B] space-y-3">
-            <div className="flex items-center justify-between border-b border-[#B8B8B2]/20 pb-2.5">
-              <span className="text-xs font-mono font-bold text-[#E5BD00] uppercase tracking-wider flex items-center gap-1.5">
-                <Receipt className="w-3.5 h-3.5 text-[#E5BD00]" />
-                <span>Registration Summary</span>
-              </span>
-              <span className="text-xs font-mono text-[#B8B8B2]">
-                ₹{REGISTRATION_FEE_PER_HEAD} / Head
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono">
-              <div className="bg-[#08090A] p-2.5 rounded-xl border border-[#B8B8B2]/20">
-                <span className="block text-[11px] text-[#B8B8B2]">Events Selected:</span>
-                <span className="font-bold text-[#EEEEEA]">
-                  {selectedEventObjects.length > 0 
-                    ? `${selectedEventObjects.length} Event${selectedEventObjects.length === 1 ? '' : 's'}`
-                    : 'Symposium Events'}
-                </span>
-              </div>
-
-              <div className="bg-[#08090A] p-2.5 rounded-xl border border-[#B8B8B2]/20">
-                <span className="block text-[11px] text-[#B8B8B2]">Participants:</span>
-                <span className="font-bold text-[#EEEEEA]">
-                  {memberCount} Member{memberCount === 1 ? '' : 's'}
-                  {vegCount + nonVegCount > 0 ? ` (${vegCount} Veg, ${nonVegCount} Non-Veg)` : ''}
-                </span>
-              </div>
-
-              <div className="bg-[#08090A] p-2.5 rounded-xl border border-[#E5BD00]/30 bg-[#E5BD00]/5">
-                <span className="block text-[11px] text-[#E5BD00] font-semibold">Total Registration Fee:</span>
-                <span className="text-sm font-black text-[#E5BD00]">
-                  {isServerAmountLoaded ? (
-                    `₹${authoritativeAmount}`
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-xs">
-                      <Loader2 className="w-3 h-3 animate-spin text-[#E5BD00]" />
-                      <span>Calculating...</span>
-                    </span>
-                  )}
-                </span>
-              </div>
-            </div>
-
-            {selectedEventObjects.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {selectedEventObjects.map(ev => (
-                  <span key={ev.id} className="px-2 py-0.5 rounded bg-[#17181C] border border-[#B8B8B2]/20 text-[11px] font-mono text-[#EEEEEA]">
-                    [{ev.code}] {ev.mission_name}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
@@ -419,7 +306,7 @@ export const WebsitePaymentPage: React.FC = () => {
               <div className="w-full flex flex-col items-center space-y-3 pt-1">
                 <div className="p-3 sm:p-4 bg-white rounded-2xl border-2 border-[#090A0B] shadow-[6px_6px_0px_#090A0B] flex items-center justify-center min-w-[240px] min-h-[240px]">
                   {paymentInfo && isServerAmountLoaded && upiUri ? (
-                    <div ref={qrContainerRef} className="flex items-center justify-center">
+                    <div className="flex items-center justify-center">
                       <QRCodeSVG
                         value={upiUri}
                         size={240}
@@ -439,27 +326,17 @@ export const WebsitePaymentPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Mobile Pay in UPI App Button */}
+                {/* Mobile Pay in UPI App Button (Hidden on Desktop) */}
                 {upiUri && (
                   <a
                     href={upiUri}
-                    className="w-full py-3 px-4 bg-[#0FA9C6] hover:bg-[#E5BD00] text-[#090A0B] border-2 border-[#090A0B] rounded-xl font-mono text-xs font-black uppercase flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[3px_3px_0px_#090A0B] active:translate-x-0.5 active:translate-y-0.5"
+                    className="sm:hidden w-full py-3 px-4 bg-[#0FA9C6] hover:bg-[#E5BD00] text-[#090A0B] border-2 border-[#090A0B] rounded-xl font-mono text-xs font-black uppercase flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[3px_3px_0px_#090A0B] active:translate-x-0.5 active:translate-y-0.5"
                   >
                     <Smartphone className="w-4 h-4" />
                     <span>PAY IN UPI APP (GPay / PhonePe)</span>
                   </a>
                 )}
 
-                {/* Save QR Download Button */}
-                <button
-                  type="button"
-                  onClick={handleDownloadQr}
-                  disabled={!upiUri}
-                  className="w-full py-2.5 px-4 bg-[#17181C] hover:bg-[#EEEEEA] hover:text-[#090A0B] text-[#EEEEEA] border border-[#B8B8B2]/40 rounded-xl font-mono text-xs font-bold uppercase flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[2px_2px_0px_#090A0B] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>SAVE QR IMAGE TO GALLERY</span>
-                </button>
               </div>
 
               {/* UPI ID Fallback & Copy */}
@@ -478,33 +355,68 @@ export const WebsitePaymentPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Screenshot-first Instructions (5.2) */}
-              <div className="w-full text-left space-y-2 font-mono text-xs text-[#B8B8B2] border-t border-[#EEEEEA]/20 pt-4 uppercase">
-                <div className="text-[#0FA9C6] font-black flex items-center gap-1.5">
-                  <Smartphone className="w-4 h-4" />
-                  <span>STEP-BY-STEP PAYMENT STEPS:</span>
-                </div>
-                <ol className="space-y-1.5 pl-1 list-decimal list-inside text-[11px] font-medium leading-relaxed">
-                  <li>
-                    Tap <strong className="text-[#0FA9C6]">PAY IN UPI APP</strong> (if paying on this phone) or <strong className="text-[#EEEEEA]">Screenshot / Save this QR</strong>.
-                  </li>
-                  <li>
-                    If scanning from gallery: Open <strong className="text-[#E5BD00]">GPay / PhonePe / Paytm</strong> &rarr; Scan &rarr; <strong className="text-[#EEEEEA]">Choose from Gallery</strong>.
-                  </li>
-                  <li>
-                    The payment amount of <strong className="text-[#E5BD00]">₹{authoritativeAmount}</strong> is already filled in and <strong className="text-[#EEEEEA]">must not be changed</strong>.
-                  </li>
-                  <li>
-                    Pay to <strong className="text-[#EEEEEA]">{TREASURER_PAYMENT_CONFIG.payeeName}</strong>, then return here and enter the <strong className="text-[#EEEEEA]">12-digit UTR / Ref Number</strong>.
-                  </li>
-                </ol>
-              </div>
             </div>
 
             {/* RIGHT COLUMN / SECOND ON MOBILE: SUBMISSION FORM */}
             <div className="lg:col-span-7 order-2 lg:order-2 space-y-6">
+
+              <div className="hidden sm:block p-4 sm:p-5 rounded-2xl bg-[#111214] border border-[#E5BD00]/40 shadow-[4px_4px_0px_#090A0B] space-y-3">
+                <div className="flex items-center justify-between border-b border-[#B8B8B2]/20 pb-2.5">
+                  <span className="text-xs font-mono font-bold text-[#E5BD00] uppercase tracking-wider flex items-center gap-1.5">
+                    <Receipt className="w-3.5 h-3.5 text-[#E5BD00]" />
+                    <span>Registration Summary</span>
+                  </span>
+                  <span className="text-xs font-mono text-[#B8B8B2]">
+                    ₹{REGISTRATION_FEE_PER_HEAD} / Head
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono">
+                  <div className="bg-[#08090A] p-2.5 rounded-xl border border-[#B8B8B2]/20">
+                    <span className="block text-[11px] text-[#B8B8B2]">Events Selected:</span>
+                    <span className="font-bold text-[#EEEEEA]">
+                      {selectedEventObjects.length > 0 
+                        ? `${selectedEventObjects.length} Event${selectedEventObjects.length === 1 ? '' : 's'}`
+                        : 'Symposium Events'}
+                    </span>
+                  </div>
+
+                  <div className="bg-[#08090A] p-2.5 rounded-xl border border-[#B8B8B2]/20">
+                    <span className="block text-[11px] text-[#B8B8B2]">Participants:</span>
+                    <span className="font-bold text-[#EEEEEA]">
+                      {memberCount} Member{memberCount === 1 ? '' : 's'}
+                      {vegCount + nonVegCount > 0 ? ` (${vegCount} Veg, ${nonVegCount} Non-Veg)` : ''}
+                    </span>
+                  </div>
+
+                  <div className="bg-[#08090A] p-2.5 rounded-xl border border-[#E5BD00]/30 bg-[#E5BD00]/5">
+                    <span className="block text-[11px] text-[#E5BD00] font-semibold">Total Registration Fee:</span>
+                    <span className="text-sm font-black text-[#E5BD00]">
+                      {isServerAmountLoaded ? (
+                        `₹${authoritativeAmount}`
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs">
+                          <Loader2 className="w-3 h-3 animate-spin text-[#E5BD00]" />
+                          <span>Calculating...</span>
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                {selectedEventObjects.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {selectedEventObjects.map(ev => (
+                      <span key={ev.id} className="px-2 py-0.5 rounded bg-[#17181C] border border-[#B8B8B2]/20 text-[11px] font-mono text-[#EEEEEA]">
+                        {ev.mission_name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               
-              <form onSubmit={handleSubmitProof} className="p-6 sm:p-8 bg-[#111214] border border-[#EEEEEA]/30 shadow-[6px_6px_0px_#090A0B] rounded-2xl space-y-5">
+              <form id="payment-proof-form" onSubmit={handleSubmitProof} className="p-6 sm:p-8 bg-[#111214] border border-[#EEEEEA]/30 shadow-[6px_6px_0px_#090A0B] rounded-2xl space-y-5">
                 
                 {/* Rejection Alert */}
                 {isRejected && paymentInfo?.rejection_reason && (
@@ -544,8 +456,8 @@ export const WebsitePaymentPage: React.FC = () => {
                   <h3 className="font-display text-xl sm:text-2xl text-[#EEEEEA] uppercase tracking-wide">
                     SUBMIT TRANSACTION REFERENCE
                   </h3>
-                  <p className="font-mono text-xs text-[#0FA9C6] uppercase font-semibold tracking-wide mt-0.5">
-                    Enter your genuine UPI transaction reference number
+                  <p className="hidden sm:block font-mono text-xs text-[#0FA9C6] uppercase font-semibold tracking-wide mt-0.5">
+                    Enter your UPI reference number
                   </p>
                 </div>
 
@@ -555,12 +467,12 @@ export const WebsitePaymentPage: React.FC = () => {
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label htmlFor="utr-input" className="block text-[#B8B8B2] font-bold tracking-wider">
-                        TRANSACTION ID / UTR NUMBER <span className="text-[#D51F55]">*</span>
+                        UTR / TRANSACTION ID <span className="text-[#D51F55]">*</span>
                       </label>
                       {isUtrValid && (
                         <span className="text-[11px] text-[#10B981] font-bold flex items-center gap-1">
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
-                          <span>VALID REFERENCE FORMAT</span>
+                          <span>VALID</span>
                         </span>
                       )}
                     </div>
@@ -570,7 +482,7 @@ export const WebsitePaymentPage: React.FC = () => {
                       type="text"
                       required
                       maxLength={30}
-                      placeholder="ENTER 10–30 CHAR TRANSACTION ID (E.G. 423456789012)"
+                      placeholder="E.G. 423456789012"
                       value={utrNumber}
                       onChange={(e) => {
                         const val = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
@@ -589,19 +501,16 @@ export const WebsitePaymentPage: React.FC = () => {
                     {utrErrorMessage && (
                       <p className="text-[11px] font-mono text-[#D51F55] font-semibold">{utrErrorMessage}</p>
                     )}
-                    <p className="text-[11px] text-[#B8B8B2]/80 lowercase font-normal">
-                      Usually 12 digits found in your Google Pay, PhonePe, or Paytm payment details under "UPI transaction ID" or "UTR".
-                    </p>
                   </div>
 
                   {/* Fixed Amount Display */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="block text-[#B8B8B2] font-bold tracking-wider">
-                        PAYABLE AMOUNT (AUTHORITATIVE SERVER VALUE)
+                        PAYABLE AMOUNT
                       </label>
                       <span className="text-[10px] text-[#E5BD00] font-mono font-bold">
-                        🔒 VERIFIED INVOICE
+                        🔒 LOCKED
                       </span>
                     </div>
                     <input
@@ -611,31 +520,17 @@ export const WebsitePaymentPage: React.FC = () => {
                       className="w-full min-h-[48px] px-4 py-3 bg-[#17181C] border border-[#EEEEEA]/20 text-[#E5BD00] font-mono text-base font-bold rounded-xl shadow-[2px_2px_0px_#090A0B] cursor-not-allowed select-none focus:outline-none"
                     />
                     <span className="block text-[11px] text-[#B8B8B2] font-mono">
-                      (₹{REGISTRATION_FEE_PER_HEAD} per attendee × {memberCount} member{memberCount > 1 ? 's' : ''})
+                      ₹{REGISTRATION_FEE_PER_HEAD} × {memberCount} member{memberCount > 1 ? 's' : ''}
                     </span>
                   </div>
 
-                  {/* Confirmation Checkbox (5.3) */}
-                  <div className="p-3.5 rounded-xl bg-[#08090A] border border-[#EEEEEA]/30">
-                    <label className="flex items-start gap-3 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={hasConfirmedPaid}
-                        onChange={(e) => setHasConfirmedPaid(e.target.checked)}
-                        className="mt-0.5 w-4 h-4 rounded bg-[#111214] border-[#EEEEEA]/40 text-[#E5BD00] focus:ring-[#E5BD00] cursor-pointer"
-                      />
-                      <span className="text-xs text-[#EEEEEA] font-mono font-bold leading-tight">
-                        I confirm that I have transferred ₹{authoritativeAmount} to the treasurer via UPI and this transaction reference is genuine.
-                      </span>
-                    </label>
-                  </div>
                 </div>
 
                 {/* Submit Button (Disabled until validated) */}
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className={`w-full min-h-[48px] py-3.5 px-6 rounded-xl font-mono font-black text-sm uppercase tracking-wider border border-[#090A0B] shadow-[4px_4px_0px_#090A0B] flex items-center justify-center gap-2 transition-all active:translate-x-0.5 active:translate-y-0.5 cursor-pointer ${
+                  className={`hidden sm:flex w-full min-h-[48px] py-3.5 px-6 rounded-xl font-mono font-black text-sm uppercase tracking-wider border border-[#090A0B] shadow-[4px_4px_0px_#090A0B] items-center justify-center gap-2 transition-all active:translate-x-0.5 active:translate-y-0.5 cursor-pointer ${
                     canSubmit 
                       ? 'bg-[#0FA9C6] hover:bg-[#E5BD00] text-[#090A0B]' 
                       : 'bg-[#17181C] text-[#B8B8B2]/50 border-[#B8B8B2]/20 cursor-not-allowed shadow-none'
@@ -655,20 +550,130 @@ export const WebsitePaymentPage: React.FC = () => {
                 </button>
               </form>
 
-              {/* Assurance Card */}
-              <div className="p-4 rounded-xl bg-[#111214] border border-[#EEEEEA]/20 flex items-center gap-3 font-mono text-xs text-[#B8B8B2]">
-                <ShieldCheck className="w-5 h-5 text-[#10B981] shrink-0" />
-                <span>
-                  Once verified by the treasurer, unique digital QR gate passes with registered event telemetry and lunch tags will be emailed to all squad members.
-                </span>
-              </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* Website Footer */}
-      <WebsiteFooter />
+      {/* Mobile Sticky Bar + expandable Registration Summary drawer */}
+      {teamId && paymentInfo && !loading && (
+        <>
+          {/* Tap-away backdrop while the drawer is open */}
+          {summaryOpen && (
+            <div
+              className="sm:hidden fixed inset-0 bg-[#08090A]/60 z-30"
+              onClick={() => setSummaryOpen(false)}
+            />
+          )}
+
+          <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#08090A]/95 backdrop-blur-md border-t border-[#B8B8B2]/20 shadow-[0_-4px_10px_rgba(0,0,0,0.5)]">
+
+            {/* Slide-up Registration Summary */}
+            <div
+              className={`overflow-hidden transition-[max-height] duration-300 ease-out ${
+                summaryOpen ? 'max-h-[65vh]' : 'max-h-0'
+              }`}
+            >
+              <div className="px-3 pt-3 pb-1 space-y-2.5 max-h-[65vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-[#B8B8B2]/20 pb-2">
+                  <span className="text-[11px] font-mono font-bold text-[#E5BD00] uppercase tracking-wider flex items-center gap-1.5">
+                    <Receipt className="w-3.5 h-3.5 text-[#E5BD00]" />
+                    <span>Registration Summary</span>
+                  </span>
+                  <span className="text-[11px] font-mono text-[#B8B8B2]">
+                    ₹{REGISTRATION_FEE_PER_HEAD} / Head
+                  </span>
+                </div>
+
+                <div className="space-y-2 text-xs font-mono">
+                  <div className="flex items-center justify-between bg-[#111214] px-2.5 py-2 rounded-lg border border-[#B8B8B2]/20">
+                    <span className="text-[11px] text-[#B8B8B2]">Events Selected</span>
+                    <span className="font-bold text-[#EEEEEA]">
+                      {selectedEventObjects.length > 0
+                        ? `${selectedEventObjects.length} Event${selectedEventObjects.length === 1 ? '' : 's'}`
+                        : 'Symposium Events'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-[#111214] px-2.5 py-2 rounded-lg border border-[#B8B8B2]/20">
+                    <span className="text-[11px] text-[#B8B8B2]">Participants</span>
+                    <span className="font-bold text-[#EEEEEA]">
+                      {memberCount} Member{memberCount === 1 ? '' : 's'}
+                      {vegCount + nonVegCount > 0 ? ` (${vegCount}V, ${nonVegCount}NV)` : ''}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-[#E5BD00]/5 px-2.5 py-2 rounded-lg border border-[#E5BD00]/30">
+                    <span className="text-[11px] text-[#E5BD00] font-semibold">Total Fee</span>
+                    <span className="text-sm font-black text-[#E5BD00]">
+                      {isServerAmountLoaded ? (
+                        `₹${authoritativeAmount}`
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs">
+                          <Loader2 className="w-3 h-3 animate-spin text-[#E5BD00]" />
+                          <span>Calculating...</span>
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                {selectedEventObjects.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pb-1">
+                    {selectedEventObjects.map(ev => (
+                      <span key={ev.id} className="px-2 py-0.5 rounded bg-[#17181C] border border-[#B8B8B2]/20 text-[10px] font-mono text-[#EEEEEA]">
+                        {ev.mission_name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* The bar itself */}
+            <div className="flex items-center justify-between gap-3 px-3 py-2">
+              <button
+                type="button"
+                onClick={() => setSummaryOpen(o => !o)}
+                aria-expanded={summaryOpen}
+                aria-label={summaryOpen ? 'Hide registration summary' : 'Show registration summary'}
+                className="flex items-center gap-1.5 font-mono leading-tight text-left cursor-pointer"
+              >
+                <span className="block">
+                  <span className="block text-[9px] font-bold text-[#B8B8B2] uppercase tracking-wide">Payable</span>
+                  <span className="block text-[13px] font-black text-[#E5BD00]">₹{authoritativeAmount}</span>
+                </span>
+                <ChevronUp
+                  className={`w-4 h-4 text-[#0FA9C6] shrink-0 transition-transform duration-300 ${
+                    summaryOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              <button
+                type="submit"
+                form="payment-proof-form"
+                disabled={!canSubmit}
+                className={`min-h-[clamp(2rem,9vw,2.25rem)] px-[clamp(0.875rem,4vw,1rem)] py-1.5 rounded-lg text-[clamp(10px,2.8vw,11px)] font-mono font-black uppercase tracking-wider border border-[#090A0B] shadow-[2px_2px_0px_#090A0B] flex items-center gap-1.5 transition-all ${
+                  canSubmit
+                    ? 'bg-[#0FA9C6] hover:bg-[#E5BD00] text-[#090A0B] cursor-pointer'
+                    : 'bg-[#17181C] text-[#B8B8B2]/50 border-[#B8B8B2]/20 cursor-not-allowed shadow-none'
+                }`}
+              >
+                {submitting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <span>{isRejected ? 'RESUBMIT' : 'SUBMIT'}</span>
+                    <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
     </div>
   );
 };

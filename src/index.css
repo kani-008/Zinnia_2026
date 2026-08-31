@@ -67,9 +67,13 @@ body {
    SKETCHED OFFSET COMIC BUTTON (Polygon Double-Box)
    ========================================================================= */
 .comic-button {
+  --cb-h: 52px;
+  --cb-box-w: 130px;
+  --cb-box-h: 42px;
+  --cb-font: 13.5px;
   position: relative;
-  width: 138px;
-  height: 52px;
+  width: var(--cb-w, 138px);
+  height: var(--cb-h);
   padding: 0;
   border: 0;
   background: transparent;
@@ -78,9 +82,13 @@ body {
 }
 
 .comic-button-cyan {
+  --cb-h: 52px;
+  --cb-box-w: 130px;
+  --cb-box-h: 42px;
+  --cb-font: 14px;
   position: relative;
-  width: 138px;
-  height: 52px;
+  width: var(--cb-w, 138px);
+  height: var(--cb-h);
   padding: 0;
   border: 0;
   background: transparent;
@@ -92,8 +100,8 @@ body {
   position: absolute;
   left: 5px;
   top: 6px;
-  width: 130px;
-  height: 42px;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
   background: #08090A;
   border: 2px solid #B8B8B2;
   clip-path: polygon(
@@ -112,8 +120,8 @@ body {
   position: absolute;
   left: 5px;
   top: 6px;
-  width: 130px;
-  height: 42px;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
   background: #08090A;
   border: 2px solid #0FA9C6;
   clip-path: polygon(
@@ -132,8 +140,8 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  width: 130px;
-  height: 42px;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
   background: #08090A;
   border: 2px solid #EEEEEA;
   color: #EEEEEA;
@@ -142,7 +150,7 @@ body {
   justify-content: center;
   gap: 5px;
   font-family: Arial, sans-serif;
-  font-size: 13.5px;
+  font-size: var(--cb-font);
   font-weight: 900;
   font-style: italic;
   clip-path: polygon(
@@ -158,12 +166,33 @@ body {
   transition: transform 0.12s ease;
 }
 
+/* Fluid variant: fills its container and scales with the viewport. */
+.comic-button-fluid {
+  --cb-w: 100%;
+  --cb-h: clamp(1.9rem, 8vw, 2.35rem);
+  --cb-box-w: calc(100% - 7px);
+  --cb-box-h: calc(var(--cb-h) - 8px);
+  --cb-font: clamp(0.55rem, 2.5vw, 0.7rem);
+  display: block;
+  width: 100%;
+}
+
+.comic-button-fluid .back-box,
+.comic-button-fluid .back-box-cyan {
+  left: 4px;
+  top: 5px;
+}
+
+.comic-button-fluid .lightning {
+  font-size: clamp(0.6rem, 2.7vw, 0.8rem);
+}
+
 .front-box-cyan {
   position: absolute;
   left: 0;
   top: 0;
-  width: 130px;
-  height: 42px;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
   background: #0FA9C6;
   border: 2px solid #090A0B;
   color: #090A0B;
@@ -172,7 +201,7 @@ body {
   justify-content: center;
   gap: 5px;
   font-family: Arial, sans-serif;
-  font-size: 14px;
+  font-size: var(--cb-font);
   font-weight: 900;
   font-style: italic;
   clip-path: polygon(
@@ -791,6 +820,30 @@ body {
   stroke-width: 1;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* REUSABLE HAND-DRAWN FRAME (same ink as the event cards) */
+.comic-frame-box {
+  position: relative;
+  background: transparent;
+}
+
+.comic-frame-box.tech {
+  --card-main: #0FA9C6;
+  --card-shadow: #08758A;
+  --card-inner: #0FA9C6;
+}
+
+.comic-frame-box.non-tech {
+  --card-main: #D51F55;
+  --card-shadow: #A81443;
+  --card-inner: #D51F55;
+}
+
+.comic-frame-box.special {
+  --card-main: #F5D90A;
+  --card-shadow: #8A7400;
+  --card-inner: #F5D90A;
 }
 
 /* NUMBER HOLDER TAG */

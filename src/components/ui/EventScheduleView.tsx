@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Clock, MapPin, Trophy, X, ArrowRight, Zap, Shield, Sparkles, Award, Cpu, Gamepad2, Layers } from 'lucide-react';
+import { Users, Clock, MapPin, Trophy, X, ArrowRight, Zap, Shield, Sparkles, Award } from 'lucide-react';
 import { EventMission } from '../../types';
+import { ComicFrame } from './ComicFrame';
 import { store } from '../../services/store';
 
 // Helper to trigger comic FX audio if available
@@ -32,7 +33,6 @@ export const EventScheduleView: React.FC<{
   onSelectEvent?: (event: EventMission) => void;
 }> = ({ onSelectEvent }) => {
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState<'ALL' | 'TECH' | 'NON_TECH'>('ALL');
   const [selectedEventModal, setSelectedEventModal] = useState<EventMission | null>(null);
 
   // Fetch official events from store
@@ -233,12 +233,8 @@ export const EventScheduleView: React.FC<{
     }
   ];
 
-  // Filter items based on active Tab
-  const filteredTimeline = masterTimelineItems.filter((item) => {
-    if (activeFilter === 'TECH') return item.category_type === 'TECH' || item.category_type === 'SPECIAL';
-    if (activeFilter === 'NON_TECH') return item.category_type === 'NON_TECH' || item.category_type === 'SPECIAL';
-    return true;
-  });
+  // No category filtering - every event is listed.
+  const filteredTimeline = masterTimelineItems;
 
   const getThemeStyles = (theme: 'cyan' | 'pink' | 'gold' | 'purple') => {
     switch (theme) {
@@ -295,85 +291,12 @@ export const EventScheduleView: React.FC<{
           SECTION HEADER
           ========================================================================= */}
       <div className="text-center space-y-3 relative z-10">
-        {/* Top Circuit Banner */}
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-[2px] w-12 sm:w-24 bg-gradient-to-r from-transparent via-[#3CE7FF] to-transparent" />
-          <div className="w-2 h-2 rounded-full bg-[#3CE7FF] animate-pulse" />
-          <span className="font-mono text-xs text-[#3CE7FF] tracking-widest uppercase font-bold px-3 py-1 bg-[#122D38] rounded-full border border-[#3CE7FF]/40">
-            MASTER TIMELINE FLOW
-          </span>
-          <div className="w-2 h-2 rounded-full bg-[#FF3366] animate-pulse" />
-          <div className="h-[2px] w-12 sm:w-24 bg-gradient-to-r from-transparent via-[#FF3366] to-transparent" />
-        </div>
-
         {/* Large Title */}
         <h2 className="font-display text-3xl sm:text-5xl md:text-6xl text-white tracking-wider uppercase flex items-center justify-center gap-2 sm:gap-4 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
           <span className="text-[#F5D90A]">⚡</span>
           <span>EVENT SCHEDULE</span>
           <span className="text-[#F5D90A]">⚡</span>
         </h2>
-
-        {/* Subtitle */}
-        <p className="font-comic text-sm sm:text-base md:text-lg text-[#F5D90A] tracking-wide font-bold">
-          "One Day. Nine Events. One Unforgettable Symposium."
-        </p>
-
-        {/* Timeline Flow Filter Tabs */}
-        <div className="flex items-center justify-center gap-2 pt-3 flex-wrap">
-          <button
-            onClick={() => {
-              triggerAudio();
-              setActiveFilter('ALL');
-            }}
-            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${
-              activeFilter === 'ALL'
-                ? 'bg-[#F5D90A] text-[#0D0D0F] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400]'
-                : 'bg-[#141417] text-[#A8A8AC] hover:text-white border-[#3A3A3E]'
-            }`}
-          >
-            <Layers className="w-4 h-4" />
-            <span>ALL EVENTS FLOW</span>
-            <span className="px-1.5 py-0.2 bg-[#0D0D0F] text-[#F5D90A] font-mono text-[10px] rounded font-black">
-              10
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              triggerAudio();
-              setActiveFilter('TECH');
-            }}
-            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${
-              activeFilter === 'TECH'
-                ? 'bg-[#3CE7FF] text-[#0D0D0F] border-[#3CE7FF] shadow-[3px_3px_0px_#1E8FA3]'
-                : 'bg-[#141417] text-[#A8A8AC] hover:text-white border-[#3A3A3E]'
-            }`}
-          >
-            <Cpu className="w-4 h-4" />
-            <span>TECHNICAL FLOW</span>
-            <span className="px-1.5 py-0.2 bg-[#0D0D0F] text-[#3CE7FF] font-mono text-[10px] rounded font-black">
-              5
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              triggerAudio();
-              setActiveFilter('NON_TECH');
-            }}
-            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${
-              activeFilter === 'NON_TECH'
-                ? 'bg-[#FF3366] text-white border-[#FF3366] shadow-[3px_3px_0px_#B01F45]'
-                : 'bg-[#141417] text-[#A8A8AC] hover:text-white border-[#3A3A3E]'
-            }`}
-          >
-            <Gamepad2 className="w-4 h-4" />
-            <span>NON-TECH FLOW</span>
-            <span className="px-1.5 py-0.2 bg-[#0D0D0F] text-[#FF3366] font-mono text-[10px] rounded font-black">
-              5
-            </span>
-          </button>
-        </div>
       </div>
 
       {/* =========================================================================
@@ -404,14 +327,17 @@ export const EventScheduleView: React.FC<{
                 <div className={`w-full sm:w-[calc(50%-2rem)] pl-10 sm:pl-0 ${isEven ? 'sm:text-right' : 'sm:order-2 sm:text-left'}`}>
                   <div
                     onClick={() => handleCardClick(item)}
-                    className={`p-4 sm:p-5 rounded-2xl border-2 ${styles.border} ${styles.cardBg} ${styles.glow} shadow-[5px_5px_0px_#000000] cursor-pointer transition-all duration-300 hover:-translate-y-1 relative group-hover:border-white`}
+                    className={`comic-frame-box ${
+                      item.category_type === 'TECH'
+                        ? 'tech'
+                        : item.category_type === 'NON_TECH'
+                          ? 'non-tech'
+                          : 'special'
+                    } p-5 sm:p-6 ${styles.cardBg} cursor-pointer transition-all duration-300 hover:-translate-y-1`}
                   >
+                    <ComicFrame />
                     {/* Header Row: Badge & Code */}
                     <div className={`flex items-center gap-2 ${isEven ? 'sm:justify-end' : 'sm:justify-start'}`}>
-                      <span className={`px-2.5 py-0.5 font-mono text-xs font-black rounded uppercase ${styles.badgeBg}`}>
-                        MISSION {item.code}
-                      </span>
-
                       {item.single_badge && (
                         <span className="px-2 py-0.5 bg-[#F5D90A] text-[#0D0D0F] font-mono font-black text-[10px] rounded uppercase shrink-0">
                           SINGLE EVENT
