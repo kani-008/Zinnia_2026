@@ -51,11 +51,46 @@ class ZinniaStore {
     } catch {}
   }
 
+  private async fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+    const method = init?.method || 'GET';
+    let bodyPreview = '';
+    try {
+      if (init?.body && typeof init.body === 'string') {
+        bodyPreview = JSON.parse(init.body);
+      }
+    } catch {}
+
+    console.log(`[Store HTTP Request] 🌐 ${method} ${url}`, bodyPreview || init?.body || '');
+    try {
+      const res = await fetch(url, init);
+      const text = await res.text();
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { success: res.ok, message: text };
+      }
+      console.log(`[Store HTTP Response] 📥 ${res.status} ${url}:`, data);
+      return data as T;
+    } catch (err: any) {
+      console.error(`[Store HTTP Error] ❌ ${method} ${url}:`, err);
+      throw err;
+    }
+  }
+
   private setupRealtimeSubscription() {
     if (!isRealtimeEnabled()) return;
     try {
+      if (this.realTimeChannel) {
+        try {
+          supabase.removeChannel(this.realTimeChannel);
+        } catch {}
+        this.realTimeChannel = null;
+      }
+
+      const channelName = `schema-db-changes-${Math.random().toString(36).substring(2, 7)}`;
       this.realTimeChannel = supabase
-        .channel('schema-db-changes')
+        .channel(channelName)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => this.syncFromSupabase())
@@ -476,6 +511,62 @@ class ZinniaStore {
     this.setCurrentTeam(teamObj);
     this.notifySubscribers();
     return teamObj;
+  }
+
+  // --- PAYMENT OPERATIONS ---
+  async getPaymentStatus(teamId: string): Promise<any> {
+    const cleaned = teamId.trim();
+    if (!cleaned) return { success: false, message: 'Invalid team ID' };
+
+    try {
+      const res = await this.fetchJson<any>(`/api/payment/status?team_id=${encodeURIComponent(cleaned)}`);
+      return res;
+    } catch (err: any) {
+      console.warn('[Store] getPaymentStatus API fallback:', err);
+      const local = this.getTeamById(cleaned);
+      if (local) {
+        return {
+          success: true,
+          team_id: local.team_id,
+          team_name: local.team_name,
+          payment: local.payment,
+          payment_status: local.payment_status || 'AWAITING_PAYMENT',
+          member_count: local.members?.length || 1,
+          members: local.members || [],
+          expected_amount: (local.members?.length || 1) * 250,
+          submitted_amount: (local.members?.length || 1) * 250
+        };
+      }
+      throw err;
+    }
+  }
+
+  async submitPaymentProof(
+    teamId: string,
+    payload: { utr_number: string; amount_paid: number }
+  ): Promise<any> {
+    const cleaned = teamId.trim();
+    const res = await this.fetchJson<any>('/api/payment/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        team_id: cleaned,
+        utr_number: payload.utr_number,
+        submitted_amount: payload.amount_paid
+      })
+    });
+
+    if (res && res.success) {
+      const teams = this.getTeams();
+      const idx = teams.findIndex(t => t.team_id.toUpperCase() === cleaned.toUpperCase());
+      if (idx !== -1) {
+        teams[idx].payment_status = 'PENDING_VERIFICATION';
+        this.setStorage(STORAGE_KEYS.TEAMS, teams);
+      }
+      this.notifySubscribers();
+    }
+
+    return res;
   }
 
   setCurrentTeam(team: Team | null) {

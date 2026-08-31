@@ -259,10 +259,21 @@ export const WebsiteRegisterPage: React.FC = () => {
       }
     });
 
+    console.log('[Register] 🔍 Validating form...', {
+      eventsCount: registeredEvents.length,
+      leaderName: leader.name,
+      leaderEmail: leader.email,
+      leaderPhone: leader.phone,
+      college,
+      department,
+      additionalMembersCount: members.length
+    });
+
     setFieldErrors(errors);
 
     if (Object.keys(errors).length > 0) {
       const firstKey = Object.keys(errors)[0];
+      console.warn('[Register] ⚠️ Form validation failed with errors:', errors);
       setGeneralError(errors[firstKey]);
 
       setTimeout(() => {
@@ -274,13 +285,19 @@ export const WebsiteRegisterPage: React.FC = () => {
       return false;
     }
 
+    console.log('[Register] ✅ Form validation passed!');
     setGeneralError(null);
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    console.log('[Register] 🚀 PROCEED TO PAYMENT button clicked!');
+
+    if (!validateForm()) {
+      console.warn('[Register] 🛑 Submission halted: validation errors present.');
+      return;
+    }
 
     setIsSubmitting(true);
     setGeneralError(null);
@@ -313,9 +330,15 @@ export const WebsiteRegisterPage: React.FC = () => {
       ];
       teamPayload.members = allMemberPayloads;
 
+      console.log('[Register] 📡 Sending registration request to backend:', teamPayload);
       const registeredTeam = await store.registerTeam(teamPayload, allMemberPayloads);
-      navigate(`/payment?id=${registeredTeam.team_id}`);
+      console.log('[Register] 🎉 Registration SUCCESS! Registered Team:', registeredTeam);
+
+      const targetUrl = `/payment?id=${registeredTeam.team_id}`;
+      console.log('[Register] ➡️ Navigating to payment page:', targetUrl);
+      navigate(targetUrl);
     } catch (err: any) {
+      console.error('[Register] ❌ Registration failed with error:', err);
       setGeneralError(err.message || 'Registration failed. Please review your details and try again.');
       setIsSubmitting(false);
       setTimeout(() => {
