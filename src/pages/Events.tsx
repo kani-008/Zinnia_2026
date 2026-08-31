@@ -318,25 +318,25 @@ export const WebsiteEventsPage: React.FC = () => {
       {selectedEvent && (
         <div
           onClick={() => setSelectedEvent(null)}
-          className="fixed inset-0 z-[100] bg-black/92 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] bg-black/92 backdrop-blur-md flex items-center justify-center p-2 sm:p-5 overflow-y-auto animate-in fade-in duration-200"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-[92%] sm:w-full max-w-2xl max-h-[88vh] sm:max-h-[90vh] overflow-y-auto bg-[#141417] border-[2.5px] sm:border-[3px] ${
+            className={`relative w-[96%] sm:w-full max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col bg-[#141417] border-[2.5px] sm:border-[3px] ${
               selectedEvent.id === 'prize-distribution'
                 ? 'border-[#9333EA] shadow-[0_0_25px_rgba(147,51,234,0.35)]'
                 : selectedEvent.event_type === 'TECH'
-                ? 'border-[#3CE7FF] shadow-[6px_6px_0px_#000000]'
-                : 'border-[#FF3366] shadow-[6px_6px_0px_#000000]'
-            } sm:shadow-[8px_8px_0px_#000000] p-4 sm:p-7 rounded-2xl space-y-4 sm:space-y-5 select-text mx-auto`}
+                ? 'border-[#3CE7FF] shadow-[4px_4px_0px_#000000]'
+                : 'border-[#FF3366] shadow-[4px_4px_0px_#000000]'
+            } sm:shadow-[8px_8px_0px_#000000] rounded-2xl select-text mx-auto my-auto overflow-hidden`}
           >
-            {/* Modal Header */}
-            <div className="space-y-2 border-b border-[#231A36] pb-3">
+            {/* Sticky Header */}
+            <div className="p-3 sm:p-5 border-b border-[#231A36] shrink-0 bg-[#141417] z-10 space-y-1 sm:space-y-2">
               <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1 min-w-0 flex-1">
+                <div className="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span
-                      className={`px-2.5 py-0.5 font-mono font-black text-xs rounded-md uppercase flex items-center gap-1 ${
+                      className={`px-2 py-0.5 font-mono font-black text-[10px] sm:text-xs rounded-md uppercase flex items-center gap-1 ${
                         selectedEvent.id === 'prize-distribution'
                           ? 'bg-[#A855F7] text-white'
                           : selectedEvent.event_type === 'TECH'
@@ -347,15 +347,15 @@ export const WebsiteEventsPage: React.FC = () => {
                       {selectedEvent.id === 'prize-distribution' && <Zap className="w-3.5 h-3.5 fill-current" />}
                       <span>{selectedEvent.code}</span>
                     </span>
-                    <span className="font-mono text-xs text-[#8E8A99] uppercase tracking-wider font-bold">
+                    <span className="font-mono text-[10px] sm:text-xs text-[#8E8A99] uppercase tracking-wider font-bold">
                       {selectedEvent.category}
                     </span>
                   </div>
-                  <h3 className="font-display text-2xl sm:text-3xl text-white uppercase tracking-wide leading-tight pt-0.5">
+                  <h3 className="font-display text-lg sm:text-3xl text-white uppercase tracking-wide leading-tight pt-0.5">
                     {selectedEvent.mission_name}
                   </h3>
                   <p
-                    className={`font-comic text-xs sm:text-sm font-bold tracking-wider ${
+                    className={`font-comic text-[11px] sm:text-sm font-bold tracking-wider ${
                       selectedEvent.id === 'prize-distribution'
                         ? 'text-[#C084FC]'
                         : selectedEvent.event_type === 'TECH'
@@ -368,7 +368,7 @@ export const WebsiteEventsPage: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setSelectedEvent(null)}
-                  className="p-2 bg-[#1C1629] hover:bg-[#A855F7] text-[#A8A8AC] hover:text-white rounded-full transition-colors cursor-pointer shrink-0"
+                  className="p-1.5 sm:p-2 bg-[#1C1629] hover:bg-[#A855F7] text-[#A8A8AC] hover:text-white rounded-full transition-colors cursor-pointer shrink-0"
                   aria-label="Close modal"
                 >
                   <X className="w-5 h-5" />
@@ -376,287 +376,214 @@ export const WebsiteEventsPage: React.FC = () => {
               </div>
 
               {/* Briefing Text directly under header rule */}
-              <p className="font-mono text-xs text-[#B0ACBC] uppercase leading-relaxed tracking-tight pt-1">
+              <p className="font-mono text-[10px] sm:text-xs text-[#B0ACBC] uppercase leading-relaxed tracking-tight pt-0.5">
                 {selectedEvent.description}
               </p>
             </div>
 
-            {/* Quick Meta Stats */}
-            {selectedEvent.id === 'prize-distribution' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-                <div className="p-3.5 bg-[#130E22] border border-[#2B1E48] rounded-xl flex items-center gap-3">
-                  <div className="p-2 bg-[#261E0A] border border-[#F5D90A]/30 rounded-lg text-[#F5D90A] shrink-0">
-                    <Clock className="w-5 h-5" />
+            {/* Scrollable Modal Content */}
+            <div className="p-3 sm:p-5 overflow-y-auto space-y-3 sm:space-y-4 flex-1 custom-scrollbar">
+              {/* Quick Meta Stats */}
+              {selectedEvent.id === 'prize-distribution' ? (
+                <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                  <div className="p-2 sm:p-3 bg-[#130E22] border border-[#2B1E48] rounded-xl flex items-center gap-2">
+                    <div className="p-1.5 bg-[#261E0A] border border-[#F5D90A]/30 rounded-lg text-[#F5D90A] shrink-0">
+                      <Clock className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[#8E8A99] text-[9px] uppercase font-bold tracking-wider">TIME</div>
+                      <div className="text-white font-bold text-[10px] sm:text-xs truncate">03:00 PM – 04:00 PM</div>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-[#8E8A99] text-[10px] uppercase font-bold tracking-wider">TIME</div>
-                    <div className="text-white font-bold text-xs sm:text-sm truncate">03:00 PM – 04:00 PM</div>
-                  </div>
-                </div>
-                <div className="p-3.5 bg-[#130E22] border border-[#2B1E48] rounded-xl flex items-center gap-3">
-                  <div className="p-2 bg-[#0A2228] border border-[#3CE7FF]/30 rounded-lg text-[#3CE7FF] shrink-0">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[#8E8A99] text-[10px] uppercase font-bold tracking-wider">VENUE</div>
-                    <div className="text-white font-bold text-xs sm:text-sm truncate">Main Auditorium</div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
-                <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <Users className="w-3 h-3 text-[#F5D90A]" /> TEAM SIZE
-                  </div>
-                  <div className="text-white font-bold mt-0.5">
-                    {selectedEvent.team_size_min}
-                    {selectedEvent.team_size_min !== selectedEvent.team_size_max ? ` - ${selectedEvent.team_size_max}` : ''} Members
+                  <div className="p-2 sm:p-3 bg-[#130E22] border border-[#2B1E48] rounded-xl flex items-center gap-2">
+                    <div className="p-1.5 bg-[#0A2228] border border-[#3CE7FF]/30 rounded-lg text-[#3CE7FF] shrink-0">
+                      <MapPin className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[#8E8A99] text-[9px] uppercase font-bold tracking-wider">VENUE</div>
+                      <div className="text-white font-bold text-[10px] sm:text-xs truncate">Main Auditorium</div>
+                    </div>
                   </div>
                 </div>
-                <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
+              ) : (
+                <div className="grid grid-cols-3 gap-1.5 text-[10px] sm:text-xs font-mono">
+                  <div className="p-1.5 sm:p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                    <div className="text-[#A8A8AC] text-[9px] sm:text-[10px] flex items-center gap-1">
+                      <Users className="w-3 h-3 text-[#F5D90A] shrink-0" /> <span className="truncate">TEAM SIZE</span>
+                    </div>
+                    <div className="text-white font-bold mt-0.5 text-[10px] sm:text-xs truncate">
+                      {selectedEvent.team_size_min}{selectedEvent.team_size_min !== selectedEvent.team_size_max ? `-${selectedEvent.team_size_max}` : ''} M
+                    </div>
                   </div>
-                  <div className="text-white font-bold mt-0.5 truncate">
-                    {selectedEvent.schedule_time}
+                  <div className="p-1.5 sm:p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                    <div className="text-[#A8A8AC] text-[9px] sm:text-[10px] flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-[#F5D90A] shrink-0" /> <span className="truncate">TIME</span>
+                    </div>
+                    <div className="text-white font-bold mt-0.5 text-[10px] sm:text-xs truncate">
+                      {selectedEvent.schedule_time}
+                    </div>
+                  </div>
+                  <div className="p-1.5 sm:p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                    <div className="text-[#A8A8AC] text-[9px] sm:text-[10px] flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-[#3CE7FF] shrink-0" /> <span className="truncate">VENUE</span>
+                    </div>
+                    <div className="text-white font-bold mt-0.5 text-[10px] sm:text-xs truncate">
+                      {selectedEvent.venue}
+                    </div>
                   </div>
                 </div>
-                <div className="col-span-2 sm:col-span-1 p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#3CE7FF]" /> VENUE
-                  </div>
-                  <div className="text-white font-bold mt-0.5 truncate">
-                    {selectedEvent.venue}
-                  </div>
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* PROGRAM (Only for Prize Distribution) */}
-            {selectedEvent.id === 'prize-distribution' && (
-              <div className="space-y-1.5">
-                <h4 className="font-mono text-xs text-[#C084FC] uppercase tracking-wider font-bold">
-                  // PROGRAM
-                </h4>
-                <div className="p-4 bg-[#130E22] border border-[#2B1E48] rounded-xl">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 font-mono text-xs text-[#D8D5E3]">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#C084FC] font-bold">•</span>
-                        <span>Welcome &amp; Opening</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#C084FC] font-bold">•</span>
-                        <span>Winner Recognition</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#C084FC] font-bold">•</span>
-                        <span>Certificate Distribution</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#C084FC] font-bold">•</span>
-                        <span>Trophy &amp; Shield Presentation</span>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#C084FC] font-bold">•</span>
-                        <span>Cash Prize Distribution</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#C084FC] font-bold">•</span>
-                        <span>Valedictory Address</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#C084FC] font-bold">•</span>
-                        <span>Closing Ceremony</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Prize Rewards */}
-            {selectedEvent.prizes && (
-              <div className="space-y-1.5">
-                <h4 className="font-mono text-xs text-[#C084FC] uppercase tracking-wider font-bold flex items-center gap-1.5">
-                  <Trophy className="w-4 h-4 text-[#C084FC]" /> PRIZE REWARDS
-                </h4>
-                <div className={`grid grid-cols-1 ${selectedEvent.id === 'prize-distribution' || !selectedEvent.prizes.third ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-3 text-xs`}>
-                  {/* 1st Prize Card - Gold Glowing Frame */}
-                  <div className="p-3.5 bg-[#151026] rounded-xl border-2 border-[#F5D90A] shadow-[0_0_15px_rgba(245,217,10,0.12)] flex items-center gap-3.5">
-                    <Trophy className="w-7 h-7 text-[#F5D90A] shrink-0" />
-                    <div className="space-y-0.5 min-w-0">
-                      <div className="text-[10px] font-mono font-black text-[#F5D90A] tracking-widest uppercase">
-                        1ST PRIZE
-                      </div>
-                      <div className="text-white font-display font-extrabold text-base sm:text-lg tracking-wide truncate">
-                        {selectedEvent.prizes.first}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 2nd Prize Card - Cyan Glowing Frame */}
-                  <div className="p-3.5 bg-[#151026] rounded-xl border-2 border-[#3CE7FF] shadow-[0_0_15px_rgba(60,231,255,0.12)] flex items-center gap-3.5">
-                    <ShieldCheck className="w-7 h-7 text-[#3CE7FF] shrink-0" />
-                    <div className="space-y-0.5 min-w-0">
-                      <div className="text-[10px] font-mono font-black text-[#3CE7FF] tracking-widest uppercase">
-                        2ND PRIZE
-                      </div>
-                      <div className="text-white font-display font-extrabold text-base sm:text-lg tracking-wide truncate">
-                        {selectedEvent.prizes.second}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 3rd Prize Card (Only for non-finale events) */}
-                  {selectedEvent.id !== 'prize-distribution' && selectedEvent.prizes.third && (
-                    <div className="p-3.5 bg-[#151026] rounded-xl border-2 border-[#FF3366] shadow-[0_0_15px_rgba(255,51,102,0.12)] flex items-center gap-3.5">
-                      <Trophy className="w-7 h-7 text-[#FF3366] shrink-0" />
-                      <div className="space-y-0.5 min-w-0">
-                        <div className="text-[10px] font-mono font-black text-[#FF3366] tracking-widest uppercase">
-                          3RD PRIZE
-                        </div>
-                        <div className="text-white font-display font-extrabold text-base sm:text-lg tracking-wide truncate">
-                          {selectedEvent.prizes.third}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Rules & Guidelines / Important */}
-            {selectedEvent.id === 'prize-distribution' ? (
-              <div className="space-y-1.5">
-                <h4 className="font-mono text-xs text-[#C084FC] uppercase tracking-wider font-bold">
-                  // IMPORTANT
-                </h4>
-                <div className="p-4 bg-[#130E22] border border-[#2B1E48] rounded-xl">
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 font-mono text-xs text-[#D8D5E3]">
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#C084FC] shrink-0 font-bold">•</span>
-                      <span>All winners must assemble at the Main Auditorium before the ceremony.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#C084FC] shrink-0 font-bold">•</span>
-                      <span>Prizes will be awarded according to the official event results.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#C084FC] shrink-0 font-bold">•</span>
-                      <span>Winners must be present to receive their prizes.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-[#C084FC] shrink-0 font-bold">•</span>
-                      <span>Maintain discipline throughout the ceremony.</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            ) : (
-              selectedEvent.rules && selectedEvent.rules.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
-                    // RULES &amp; GUIDELINES
-                  </h4>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1">
-                    {selectedEvent.rules.map((rule, rIdx) => (
-                      <li key={rIdx} className="flex items-start gap-2 text-xs font-comic text-[#C0C0C5]">
-                        <span className="text-[#3CE7FF] shrink-0 font-bold">•</span>
-                        <span>{rule}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )
-            )}
-
-            {/* Helpline & Coordinators */}
-            {selectedEvent.id === 'prize-distribution' ? (
-              <div className="space-y-1.5">
-                <h4 className="font-mono text-xs text-[#A8A8AC] uppercase tracking-wider font-bold">
-                  // HELP LINE &amp; COORDINATORS
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono">
-                  {/* OVERALL COORDINATORS */}
-                  <div className="p-3 bg-gradient-to-br from-purple-950/50 via-[#1A1A1E] to-[#141417] border border-purple-500/40 rounded-xl space-y-1.5 shadow-[0_0_10px_rgba(192,132,252,0.1)]">
-                    <div className="text-[10px] text-[#C084FC] uppercase font-extrabold tracking-wider flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#C084FC]" />
-                      <span>OVERALL COORDINATORS</span>
-                    </div>
-                    <div className="text-white text-[11px] space-y-1 pt-0.5">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="font-bold text-[#E5E5E5]">Saran S</span>
-                        <a href="tel:+919629993985" className="text-[#3CE7FF] font-bold hover:underline">
-                          +91 96299 93985
-                        </a>
-                      </div>
-                      <div className="flex items-center justify-between gap-1 border-t border-purple-500/20 pt-1">
-                        <span className="font-bold text-[#E5E5E5]">Bharani E K</span>
-                        <a href="tel:+918807176399" className="text-[#3CE7FF] font-bold hover:underline">
-                          +91 88071 76399
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* TECHNICAL COORDINATORS */}
-                  <div className="p-3 bg-gradient-to-br from-cyan-950/50 via-[#1A1A1E] to-[#141417] border border-cyan-500/40 rounded-xl space-y-1.5 shadow-[0_0_10px_rgba(60,231,255,0.1)]">
-                    <div className="text-[10px] text-[#3CE7FF] uppercase font-extrabold tracking-wider flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#3CE7FF]" />
-                      <span>TECHNICAL COORDINATORS</span>
-                    </div>
-                    <div className="text-white text-[11px] space-y-1 pt-0.5">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="font-bold text-[#E5E5E5]">Kishore E</span>
-                        <a href="tel:+918903664244" className="text-[#3CE7FF] font-bold hover:underline">
-                          +91 89036 64244
-                        </a>
-                      </div>
-                      <div className="flex items-center justify-between gap-1 border-t border-cyan-500/20 pt-1">
-                        <span className="font-bold text-[#E5E5E5]">Amisha</span>
-                        <a href="tel:+919360384877" className="text-[#3CE7FF] font-bold hover:underline">
-                          +91 93603 84877
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* NON-TECH COORDINATORS */}
-                  <div className="p-3 bg-gradient-to-br from-rose-950/50 via-[#1A1A1E] to-[#141417] border border-rose-500/40 rounded-xl space-y-1.5 shadow-[0_0_10px_rgba(255,51,102,0.1)]">
-                    <div className="text-[10px] text-[#FF3366] uppercase font-extrabold tracking-wider flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF3366]" />
-                      <span>NON-TECH COORDINATORS</span>
-                    </div>
-                    <div className="text-white text-[11px] space-y-1 pt-0.5">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="font-bold text-[#E5E5E5]">Jeo Justin</span>
-                        <a href="tel:+919043678257" className="text-[#3CE7FF] font-bold hover:underline">
-                          +91 90436 78257
-                        </a>
-                      </div>
-                      <div className="flex items-center justify-between gap-1 border-t border-rose-500/20 pt-1">
-                        <span className="font-bold text-[#E5E5E5]">Nandhini S</span>
-                        <a href="tel:+919042736307" className="text-[#3CE7FF] font-bold hover:underline">
-                          +91 90427 36307
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              selectedEvent.coordinators && selectedEvent.coordinators.length > 0 && (
+              {/* PROGRAM (Only for Prize Distribution) */}
+              {selectedEvent.id === 'prize-distribution' && (
                 <div className="space-y-1.5">
-                  <h4 className="font-mono text-xs text-[#A8A8AC] uppercase tracking-wider font-bold">
+                  <h4 className="font-mono text-[10px] sm:text-xs text-[#C084FC] uppercase tracking-wider font-bold">
+                    // PROGRAM
+                  </h4>
+                  <div className="p-2.5 sm:p-4 bg-[#130E22] border border-[#2B1E48] rounded-xl">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 font-mono text-[10px] sm:text-xs text-[#D8D5E3]">
+                      <div className="space-y-1 sm:space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Welcome &amp; Opening</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Winner Recognition</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Certificate Distribution</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Trophy &amp; Shield Presentation</span>
+                        </div>
+                      </div>
+                      <div className="space-y-1 sm:space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Cash Prize Distribution</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Valedictory Address</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Closing Ceremony</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Prize Rewards */}
+              {selectedEvent.prizes && (
+                <div className="space-y-1 sm:space-y-1.5">
+                  <h4 className="font-mono text-[10px] sm:text-xs text-[#C084FC] uppercase tracking-wider font-bold flex items-center gap-1.5">
+                    <Trophy className="w-3.5 h-3.5 text-[#C084FC]" /> PRIZE REWARDS
+                  </h4>
+                  <div className={`grid grid-cols-3 gap-1.5 sm:gap-3 text-xs`}>
+                    {/* 1st Prize Card */}
+                    <div className="p-1.5 sm:p-3 bg-[#151026] rounded-xl border border-[#F5D90A]/80 flex flex-col sm:flex-row items-center text-center sm:text-left gap-1 sm:gap-3">
+                      <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-[#F5D90A] shrink-0" />
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="text-[8px] sm:text-[10px] font-mono font-black text-[#F5D90A] tracking-widest uppercase">
+                          1ST PRIZE
+                        </div>
+                        <div className="text-white font-display font-extrabold text-[10px] sm:text-base tracking-wide truncate">
+                          {selectedEvent.prizes.first}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2nd Prize Card */}
+                    <div className="p-1.5 sm:p-3 bg-[#151026] rounded-xl border border-[#3CE7FF]/80 flex flex-col sm:flex-row items-center text-center sm:text-left gap-1 sm:gap-3">
+                      <ShieldCheck className="w-4 h-4 sm:w-6 sm:h-6 text-[#3CE7FF] shrink-0" />
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="text-[8px] sm:text-[10px] font-mono font-black text-[#3CE7FF] tracking-widest uppercase">
+                          2ND PRIZE
+                        </div>
+                        <div className="text-white font-display font-extrabold text-[10px] sm:text-base tracking-wide truncate">
+                          {selectedEvent.prizes.second}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3rd Prize Card */}
+                    {selectedEvent.id !== 'prize-distribution' && (
+                      <div className="p-1.5 sm:p-3 bg-[#151026] rounded-xl border border-[#FF3366]/80 flex flex-col sm:flex-row items-center text-center sm:text-left gap-1 sm:gap-3">
+                        <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-[#FF3366] shrink-0" />
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="text-[8px] sm:text-[10px] font-mono font-black text-[#FF3366] tracking-widest uppercase">
+                            3RD PRIZE
+                          </div>
+                          <div className="text-white font-display font-extrabold text-[10px] sm:text-base tracking-wide truncate">
+                            {selectedEvent.prizes.third || 'Certificate'}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Rules / Important */}
+              {selectedEvent.id === 'prize-distribution' ? (
+                <div className="space-y-1.5">
+                  <h4 className="font-mono text-[10px] sm:text-xs text-[#C084FC] uppercase tracking-wider font-bold">
+                    // IMPORTANT
+                  </h4>
+                  <div className="p-2.5 sm:p-3 bg-[#140F24] border border-purple-900/40 rounded-xl">
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 font-comic text-[10px] sm:text-xs text-[#D0D0D4]">
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                        <span>All winners must assemble at Main Auditorium before ceremony.</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                        <span>Prizes awarded according to official results.</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                        <span>Winners must be present to receive prizes.</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                        <span>Maintain discipline throughout ceremony.</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                selectedEvent.rules && selectedEvent.rules.length > 0 && (
+                  <div className="space-y-1">
+                    <h4 className="font-mono text-[10px] sm:text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
+                      // RULES &amp; GUIDELINES
+                    </h4>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-0.5">
+                      {selectedEvent.rules.map((rule, rIdx) => (
+                        <li key={rIdx} className="flex items-start gap-1 text-[10px] sm:text-[11px] font-comic text-[#C0C0C5] leading-tight">
+                          <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                          <span>{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              )}
+
+              {/* Helpline & Coordinators */}
+              {selectedEvent.coordinators && selectedEvent.coordinators.length > 0 && (
+                <div className="space-y-1 sm:space-y-1.5">
+                  <h4 className="font-mono text-[10px] sm:text-xs text-[#A8A8AC] uppercase tracking-wider font-bold">
                     // HELPLINE &amp; COORDINATORS
                   </h4>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {selectedEvent.coordinators.map((c, cIdx) => (
-                      <div key={cIdx} className="text-xs font-mono text-[#D0D0D4] flex items-center gap-1.5 bg-[#1A1A1E] px-2.5 py-1 rounded border border-[#2E2E33]">
+                      <div key={cIdx} className="text-[10px] sm:text-xs font-mono text-[#D0D0D4] flex items-center gap-1 bg-[#1A1A1E] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded border border-[#2E2E33]">
                         <span>{c.name} ({c.role}):</span>
                         {c.phone && (
                           <a href={`tel:${c.phone}`} className="text-[#3CE7FF] hover:underline font-bold">
@@ -667,27 +594,27 @@ export const WebsiteEventsPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              )
-            )}
+              )}
 
-            {/* Register CTA Button at the end of modal (Excluding Prize Distribution) */}
-            {selectedEvent.id !== 'prize-distribution' && (
-              <div className="pt-3 pb-1 border-t border-[#2A2A2E]">
-                <button
-                  onClick={() => {
-                    navigate(`/register?mission=${selectedEvent.id}`);
-                  }}
-                  className={`w-full py-3.5 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
-                    selectedEvent.event_type === 'TECH'
-                      ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
-                      : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
-                  }`}
-                >
-                  <span>REGISTER FOR {selectedEvent.mission_name}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+              {/* Register CTA Button at the end of modal (Excluding Prize Distribution) */}
+              {selectedEvent.id !== 'prize-distribution' && (
+                <div className="pt-3 pb-1 border-t border-[#2A2A2E]">
+                  <button
+                    onClick={() => {
+                      navigate(`/register?mission=${selectedEvent.id}`);
+                    }}
+                    className={`w-full py-3 sm:py-3.5 font-display text-xs sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
+                      selectedEvent.event_type === 'TECH'
+                        ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
+                        : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
+                    }`}
+                  >
+                    <span>REGISTER FOR {selectedEvent.mission_name}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -46,16 +46,44 @@ class ZinniaStore {
     } catch {}
   }
 
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  notifySubscribers() {
+    this.listeners.forEach(fn => {
+      try { fn(); } catch (e) { console.error('Listener error:', e); }
+    });
+  }
+
+  private realTimeErrorCount = 0;
+
   private setupRealtimeSubscription() {
     if (!isRealtimeEnabled()) return;
+    if (this.realTimeChannel) return;
+    if (this.realTimeErrorCount >= 2) return;
+
     try {
-      this.realTimeChannel = supabase
-        .channel('schema-db-changes')
+      const existingChannels = supabase.getChannels();
+      const existing = existingChannels.find(ch => ch.topic === 'realtime:public_team_db_sync' || ch.topic === 'public_team_db_sync');
+      if (existing) {
+        try {
+          supabase.removeChannel(existing);
+        } catch (e) {}
+      }
+
+      let isCleaningUp = false;
+      const channel = supabase.channel('public_team_db_sync');
+
+      channel
         .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'event_registrations' }, () => this.syncFromSupabase())
-        .subscribe((status, err) => {
+        .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
             this.realTimeErrorCount = 0;
             return;
@@ -76,7 +104,7 @@ class ZinniaStore {
 
       this.realTimeChannel = channel;
     } catch (e) {
-      // Silently handle channel initialization notices
+      console.warn('[Store] Realtime setup skipped:', e);
     }
   }
 
@@ -992,29 +1020,6 @@ class ZinniaStore {
     throw new Error(res?.error || res?.message || 'Payment verification failed.');
   }
 
-  async getPaymentStatus(teamId: string): Promise<{
-    success: boolean;
-    team_id?: string;
-    team_name?: string;
-    payment?: boolean;
-    payment_status?: string;
-    member_count?: number;
-    expected_amount?: number;
-    submitted_amount?: number;
-    utr_number?: string;
-    rejection_reason?: string;
-    message?: string;
-  }> {
-    return this.getPaymentStatusApi(teamId);
-  }
-
-  async submitPaymentProof(teamId: string, proof: { utr_number: string; amount_paid: number }): Promise<{
-    success: boolean;
-    message?: string;
-  }> {
-    return this.submitPaymentApi(teamId, proof.utr_number, proof.amount_paid);
-  }
-
   // --- EVENTS ---
   getEvents(filterType?: EventType): EventMission[] {
     let events = OFFICIAL_MISSIONS;
@@ -1060,15 +1065,6 @@ class ZinniaStore {
     }
 
     this.notifySubscribers();
-  }
-
-  // --- CURRENT USER ---
-  getCurrentTeam(): Team | null {
-    return this.getStorage(STORAGE_KEYS.CURRENT_TEAM, null);
-  }
-
-  setCurrentTeam(team: Team | null): void {
-    this.setStorage(STORAGE_KEYS.CURRENT_TEAM, team);
   }
 }
 
