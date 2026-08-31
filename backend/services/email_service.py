@@ -319,14 +319,33 @@ Please present your QR pass at the entrance gate and event venues.
     qr_image.add_header("Content-Disposition", "inline", filename="passport_qr.png")
     msg.attach(qr_image)
 
-    # 3. Deliver via SMTP (or log in dev environment if SMTP credentials are unconfigured)
+    # 3. Deliver via SMTP.
+    # Missing credentials is a FAILURE, not a simulated success. This previously
+    # returned success:True, which made trigger_passport_dispatch stamp
+    # passport_sent_at and report every pass as delivered while no mail was ever
+    # sent — leaving teams VERIFIED with zero emails and no visible error.
+    # Set ALLOW_EMAIL_SIMULATION=true explicitly for local development only.
     if not SMTP_USER or not SMTP_PASS or SMTP_USER.startswith("your_"):
-        print(f"[Email Sim] Would dispatch email to {recipient_email} via {SMTP_HOST}:{SMTP_PORT} (SMTP credentials unconfigured in .env)")
+        simulation_allowed = os.getenv("ALLOW_EMAIL_SIMULATION", "false").lower() == "true"
+        message = (
+            f"SMTP is not configured (SMTP_USER/SMTP_PASS missing or placeholder). "
+            f"No email was sent to {recipient_email}."
+        )
+        if simulation_allowed:
+            print(f"[Email Sim] {message} ALLOW_EMAIL_SIMULATION is on — reporting as simulated.")
+            return {
+                "success": False,
+                "status": "SIMULATED_NOT_SENT",
+                "recipient": recipient_email,
+                "error": message,
+                "message": "Development simulation — nothing was delivered."
+            }
+        print(f"[SMTP Error] {message}")
         return {
-            "success": True, 
-            "status": "SIMULATED_DEV", 
+            "success": False,
+            "status": "FAILED",
             "recipient": recipient_email,
-            "message": "Simulated dispatch in development mode (SMTP credentials pending in .env)."
+            "error": message
         }
 
     try:

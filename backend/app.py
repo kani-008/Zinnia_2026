@@ -11,8 +11,8 @@ from dotenv import load_dotenv
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Load server environment variables
-load_dotenv()
-load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+load_dotenv(override=True)
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"), override=True)
 
 from flask import Flask
 from flask_cors import CORS
@@ -57,8 +57,14 @@ def create_app() -> Flask:
     """Application Factory creating and configuring the Flask app instance."""
     app = Flask(__name__)
     
-    # 1. Enable CORS for frontend communication (allow dev ports 5173 and 5174)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # 1. Enable CORS for frontend communication.
+    # Set CORS_ORIGINS to a comma-separated allowlist in production, e.g.
+    #   CORS_ORIGINS=https://zinnia2026.example,https://admin.zinnia2026.example
+    # "*" is only the fallback for local development.
+    cors_origins = [
+        o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()
+    ] or ["*"]
+    CORS(app, resources={r"/api/*": {"origins": cors_origins}})
 
     # 2. Register Global Middlewares
     register_error_handlers(app)
@@ -78,7 +84,20 @@ app = create_app()
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))
-    host = os.getenv("HOST", "0.0.0.0")
+    host = os.getenv("HOST", "127.0.0.1")
     debug = os.getenv("DEBUG", "False").lower() == "true"
-    print(f"[*] Starting Zinnia 2026 Consolidated Server on http://localhost:{port}")
+
+    # The Werkzeug debugger allows arbitrary code execution through the browser.
+    # If bound to a public interface (0.0.0.0), automatically force debug=False.
+    if debug and host not in ("127.0.0.1", "localhost"):
+        print(f"[!] Security Notice: Automatically disabling DEBUG mode because HOST is bound to '{host}'.")
+        debug = False
+
+    if not debug:
+        print(
+            "[!] app.run() is a development server. For production use gunicorn:\n"
+            "    gunicorn --bind 0.0.0.0:%d --workers 4 'app:app'" % port
+        )
+
+    print(f"[*] Starting Zinnia 2026 Consolidated Server on http://{host}:{port}")
     app.run(host=host, port=port, debug=debug)

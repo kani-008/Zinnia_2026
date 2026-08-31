@@ -55,11 +55,30 @@ class PaymentController:
         """
         data = request.get_json(silent=True) or {}
         team_id = data.get("team_id")
-        action = data.get("action", "VERIFY").upper()
+        action = str(data.get("action", "VERIFY")).upper()
         reason = data.get("reason", "")
-        
+
         if not team_id:
             return jsonify({"success": False, "message": "team_id is required."}), 400
+
+        # Whitelist the action. verify_payment_by_treasurer treats anything that
+        # is not "VERIFY" as a rejection, so an unrecognised value used to
+        # silently REJECT a team's payment instead of erroring.
+        if action not in ("VERIFY", "REJECT"):
+            return jsonify({
+                "success": False,
+                "error_code": "INVALID_ACTION",
+                "message": f"Unsupported action '{action}'. Must be 'VERIFY' or 'REJECT'."
+            }), 400
+
+        # A rejection must say why — the participant sees this on the
+        # confirmation page and needs it to resubmit.
+        if action == "REJECT" and not str(reason).strip():
+            return jsonify({
+                "success": False,
+                "error_code": "REASON_REQUIRED",
+                "message": "A rejection reason is required so the team knows what to correct."
+            }), 400
 
         result = verify_payment_by_treasurer(team_id, action, reason)
         status_code = 200 if result.get("success") else 400

@@ -1,0 +1,9 @@
+{
+  "ZIN-2026-4439": {
+    "team_id": "ZIN-2026-4439",
+    "expected_amount": 500,
+    "submitted_amount": null,
+    "utr_number": null,
+    "payment_status": "AWAITING_PAYMENT"
+  }
+}

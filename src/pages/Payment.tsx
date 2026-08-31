@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { WebsiteFooter } from '../components/layout/Footer';
 import { store } from '../services/store';
 import { TREASURER_PAYMENT_CONFIG, REGISTRATION_FEE_PER_HEAD } from '../config/site';
-import treasurerQrImg from '../assets/treasurer-upi-qr.png';
+import { QRCodeSVG } from 'qrcode.react';
 import { 
   CheckCircle2, 
   Copy, 
@@ -88,6 +88,8 @@ export const WebsitePaymentPage: React.FC = () => {
     setTimeout(() => setCopiedUpi(false), 2000);
   };
 
+  const qrContainerRef = useRef<HTMLDivElement>(null);
+
   // Authoritative server amount calculation
   const memberCount = useMemo(() => {
     if (paymentInfo?.member_count && paymentInfo.member_count > 0) {
@@ -98,11 +100,58 @@ export const WebsitePaymentPage: React.FC = () => {
   }, [paymentInfo, teamId]);
 
   const serverExpectedAmount = paymentInfo?.expected_amount;
+  const isServerAmountLoaded = typeof serverExpectedAmount === 'number' && serverExpectedAmount > 0;
   const computedFallback = memberCount * REGISTRATION_FEE_PER_HEAD;
+  
   // Server value is authoritative when available
-  const authoritativeAmount = serverExpectedAmount !== undefined && serverExpectedAmount !== null
+  const authoritativeAmount = isServerAmountLoaded
     ? serverExpectedAmount 
     : computedFallback;
+
+  // Build UPI URI ONLY when authoritative server amount is positive
+  const upiUri = useMemo(() => {
+    if (!paymentInfo || !isServerAmountLoaded || serverExpectedAmount <= 0) {
+      return '';
+    }
+    const targetTeamId = paymentInfo?.team_id || teamId;
+    return `upi://pay?pa=${TREASURER_PAYMENT_CONFIG.upiId}&pn=${encodeURIComponent(TREASURER_PAYMENT_CONFIG.payeeName)}&am=${serverExpectedAmount}&cu=INR&tn=${encodeURIComponent('ZINNIA26-' + targetTeamId)}`;
+  }, [paymentInfo, isServerAmountLoaded, serverExpectedAmount, teamId]);
+
+  // Render SVG QR to canvas and trigger download as PNG for mobile gallery
+  const handleDownloadQr = () => {
+    if (!qrContainerRef.current) return;
+    const svgElement = qrContainerRef.current.querySelector('svg');
+    if (!svgElement) return;
+
+    try {
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      canvas.width = 600;
+      canvas.height = 600;
+
+      img.onload = () => {
+        if (ctx) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          const pad = 40;
+          ctx.drawImage(img, pad, pad, canvas.width - pad * 2, canvas.height - pad * 2);
+          const pngUrl = canvas.toDataURL('image/png');
+          const a = document.createElement('a');
+          a.download = `Zinnia_2026_Payment_${paymentInfo?.team_id || teamId}.png`;
+          a.href = pngUrl;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+      };
+      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    } catch (err) {
+      console.warn('QR download error:', err);
+    }
+  };
 
   // UTR Validation
   const trimmedUtr = utrNumber.trim().toUpperCase();
@@ -277,25 +326,51 @@ export const WebsitePaymentPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Treasurer QR Code Image Slot (5.1) */}
+              {/* Treasurer QR Code Slot */}
               <div className="w-full flex flex-col items-center space-y-3 pt-1">
-                <div className="p-3 sm:p-4 bg-white rounded-2xl border-2 border-[#090A0B] shadow-[6px_6px_0px_#090A0B] flex items-center justify-center">
-                  <img
-                    src={treasurerQrImg}
-                    alt="Official Treasurer UPI QR Code"
-                    className="w-56 h-56 sm:w-60 sm:h-60 object-contain rounded-lg"
-                  />
+                <div className="p-3 sm:p-4 bg-white rounded-2xl border-2 border-[#090A0B] shadow-[6px_6px_0px_#090A0B] flex items-center justify-center min-w-[240px] min-h-[240px]">
+                  {paymentInfo && isServerAmountLoaded && upiUri ? (
+                    <div ref={qrContainerRef} className="flex items-center justify-center">
+                      <QRCodeSVG
+                        value={upiUri}
+                        size={240}
+                        level="M"
+                        fgColor="#000000"
+                        bgColor="#FFFFFF"
+                        className="rounded-lg"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-[240px] h-[240px] flex flex-col items-center justify-center gap-3 text-[#090A0B]">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#0FA9C6]" />
+                      <span className="font-mono text-xs font-black uppercase tracking-wider">
+                        Verifying Server Fee...
+                      </span>
+                    </div>
+                  )}
                 </div>
 
+                {/* Mobile Pay in UPI App Button */}
+                {upiUri && (
+                  <a
+                    href={upiUri}
+                    className="w-full py-3 px-4 bg-[#0FA9C6] hover:bg-[#E5BD00] text-[#090A0B] border-2 border-[#090A0B] rounded-xl font-mono text-xs font-black uppercase flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[3px_3px_0px_#090A0B] active:translate-x-0.5 active:translate-y-0.5"
+                  >
+                    <Smartphone className="w-4 h-4" />
+                    <span>PAY IN UPI APP (GPay / PhonePe)</span>
+                  </a>
+                )}
+
                 {/* Save QR Download Button */}
-                <a
-                  href={treasurerQrImg}
-                  download="Zinnia_2026_Treasurer_UPI_QR.png"
-                  className="w-full py-2.5 px-4 bg-[#17181C] hover:bg-[#EEEEEA] hover:text-[#090A0B] text-[#EEEEEA] border border-[#B8B8B2]/40 rounded-xl font-mono text-xs font-bold uppercase flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[2px_2px_0px_#090A0B]"
+                <button
+                  type="button"
+                  onClick={handleDownloadQr}
+                  disabled={!upiUri}
+                  className="w-full py-2.5 px-4 bg-[#17181C] hover:bg-[#EEEEEA] hover:text-[#090A0B] text-[#EEEEEA] border border-[#B8B8B2]/40 rounded-xl font-mono text-xs font-bold uppercase flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[2px_2px_0px_#090A0B] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download className="w-4 h-4" />
                   <span>SAVE QR IMAGE TO GALLERY</span>
-                </a>
+                </button>
               </div>
 
               {/* UPI ID Fallback & Copy */}
@@ -322,16 +397,16 @@ export const WebsitePaymentPage: React.FC = () => {
                 </div>
                 <ol className="space-y-1.5 pl-1 list-decimal list-inside text-[11px] font-medium leading-relaxed">
                   <li>
-                    <strong className="text-[#EEEEEA]">Screenshot this QR</strong> (or tap Save QR above).
+                    Tap <strong className="text-[#0FA9C6]">PAY IN UPI APP</strong> (if paying on this phone) or <strong className="text-[#EEEEEA]">Screenshot / Save this QR</strong>.
                   </li>
                   <li>
-                    Open <strong className="text-[#E5BD00]">GPay / PhonePe / Paytm</strong> &rarr; Scan &rarr; <strong className="text-[#EEEEEA]">Choose from Gallery</strong>.
+                    If scanning from gallery: Open <strong className="text-[#E5BD00]">GPay / PhonePe / Paytm</strong> &rarr; Scan &rarr; <strong className="text-[#EEEEEA]">Choose from Gallery</strong>.
                   </li>
                   <li>
-                    Pay exactly <strong className="text-[#E5BD00]">₹{authoritativeAmount}</strong> to {TREASURER_PAYMENT_CONFIG.payeeName}.
+                    The payment amount of <strong className="text-[#E5BD00]">₹{authoritativeAmount}</strong> is already filled in and <strong className="text-[#EEEEEA]">must not be changed</strong>.
                   </li>
                   <li>
-                    Return here and enter the <strong className="text-[#EEEEEA]">12-digit UTR / Ref Number</strong>.
+                    Pay to <strong className="text-[#EEEEEA]">{TREASURER_PAYMENT_CONFIG.payeeName}</strong>, then return here and enter the <strong className="text-[#EEEEEA]">12-digit UTR / Ref Number</strong>.
                   </li>
                 </ol>
               </div>

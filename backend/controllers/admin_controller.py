@@ -105,11 +105,55 @@ class AdminController:
         # 3. Idempotently trigger passport email dispatch with QR
         dispatch_res = trigger_passport_dispatch(team_id)
 
+        # Report delivery honestly. The payment IS verified at this point, but a
+        # dispatch failure must be visible to the treasurer with a retry, not
+        # buried under a blanket "passes dispatched" message — otherwise a team
+        # sits VERIFIED with nobody holding a pass and no one aware of it.
+        results = dispatch_res.get("results") or []
+        failed = [
+            r for r in results
+            if isinstance(r, dict) and not r.get("success")
+        ]
+        sent = [
+            r for r in results
+            if isinstance(r, dict) and r.get("success") and r.get("status") != "SKIPPED_ALREADY_SENT"
+        ]
+        skipped = [
+            r for r in results
+            if isinstance(r, dict) and r.get("status") == "SKIPPED_ALREADY_SENT"
+        ]
+
+        if failed:
+            return jsonify({
+                "success": True,
+                "payment_status": "VERIFIED",
+                "team_id": team_id,
+                "dispatch_ok": False,
+                "error_code": "DISPATCH_FAILED",
+                "message": (
+                    f"Payment verified for team '{team_id}', but {len(failed)} of "
+                    f"{len(results)} passes FAILED to send. Use Resend to retry."
+                ),
+                "failed_recipients": [
+                    {"email": r.get("recipient") or r.get("email"), "error": r.get("error")}
+                    for r in failed
+                ],
+                "sent_count": len(sent),
+                "skipped_count": len(skipped),
+                "dispatch": dispatch_res
+            }), 200
+
         return jsonify({
             "success": True,
-            "message": f"Payment verified for team '{team_id}'. Official passes dispatched.",
-            "team_id": team_id,
             "payment_status": "VERIFIED",
+            "team_id": team_id,
+            "dispatch_ok": True,
+            "message": (
+                f"Payment verified for team '{team_id}'. "
+                f"{len(sent)} pass(es) sent, {len(skipped)} already delivered."
+            ),
+            "sent_count": len(sent),
+            "skipped_count": len(skipped),
             "dispatch": dispatch_res
         }), 200
 

@@ -1,9 +1,8 @@
 export const REGISTRATION_FEE_PER_HEAD = 250;
 
 export const TREASURER_PAYMENT_CONFIG = {
-  upiId: (import.meta.env.VITE_TREASURER_UPI_ID as string) || '9361817740@axl',
-  payeeName: (import.meta.env.VITE_TREASURER_PAYEE_NAME as string) || 'Treasurer, Zinnia 2026',
-  qrImagePath: '/src/assets/treasurer-upi-qr.png',
+  upiId: (import.meta.env.VITE_TREASURER_UPI_ID as string) || 'kanishkar.m06-1@oksbi',
+  payeeName: (import.meta.env.VITE_TREASURER_PAYEE_NAME as string) || 'Kanishkar M',
 };
 
 export const SITE_CONFIG = {
