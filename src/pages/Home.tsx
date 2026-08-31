@@ -264,8 +264,8 @@ export const WebsiteHomePage: React.FC = () => {
     return () => unsub();
   }, []);
 
-  const techEvents = events.filter((e) => e.event_type === 'TECH');
-  const nonTechEvents = events.filter((e) => e.event_type === 'NON_TECH');
+  const techEvents = events.filter((e) => e.event_type === 'TECH' && e.id !== 'prize-distribution');
+  const nonTechEvents = events.filter((e) => e.event_type === 'NON_TECH' && e.id !== 'prize-distribution');
 
   const triggerComicFX = (soundText: string) => {
     setInteractiveSoundText(soundText);
@@ -1686,23 +1686,25 @@ export const WebsiteHomePage: React.FC = () => {
               </div>
             )}
 
-            {/* Register CTA Button at the end of modal */}
-            <div className="pt-3 pb-1 border-t border-[#2A2A2E]">
-              <button
-                onClick={() => {
-                  triggerComicFX('DEPLOY!');
-                  navigate(`/register?mission=${selectedEvent.id}`);
-                }}
-                className={`w-full py-3.5 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
-                  selectedEvent.event_type === 'TECH'
-                    ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
-                    : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
-                }`}
-              >
-                <span>REGISTER FOR {selectedEvent.mission_name}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+            {/* Register CTA Button at the end of modal (Excluding Prize Distribution) */}
+            {selectedEvent.id !== 'prize-distribution' && (
+              <div className="pt-3 pb-1 border-t border-[#2A2A2E]">
+                <button
+                  onClick={() => {
+                    triggerComicFX('DEPLOY!');
+                    navigate(`/register?mission=${selectedEvent.id}`);
+                  }}
+                  className={`w-full py-3.5 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
+                    selectedEvent.event_type === 'TECH'
+                      ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
+                      : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
+                  }`}
+                >
+                  <span>REGISTER FOR {selectedEvent.mission_name}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -16,7 +16,7 @@ import { REGISTRATION_FEE_PER_HEAD } from '../config/site';
 const STORAGE_KEYS = {
   TEAMS: 'zin26_live_teams_v2',
   MEMBERS: 'zin26_live_members_v2',
-  EVENTS: 'zin26_live_events_v6',
+  EVENTS: 'zin26_live_events_v9',
   REGISTRATIONS: 'zin26_live_registrations_v2',
   ATTENDANCE: 'zin26_live_attendance_v2',
   CURRENT_TEAM: 'zin26_current_team_v2'
@@ -35,51 +35,81 @@ class ZinniaStore {
 
   private cleanLegacyStorage() {
     try {
-      [
-        'zin26_participants_v3',
-        'zin26_attendance_v3',
-        'zin26_registrations_v3',
-        'zin26_live_participants_v1',
-        'zin26_live_events_v2',
-        'zin26_live_events_v3',
-        'zin26_live_events_v4',
-        'zin26_live_events_v5',
-        'zin26_live_hand_bands_v2'
-      ].forEach(k => {
+      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1', 'zin26_live_events_v2', 'zin26_live_events_v3', 'zin26_live_events_v4', 'zin26_live_events_v5', 'zin26_live_events_v6', 'zin26_live_events_v7', 'zin26_live_events_v8'].forEach(k => {
         localStorage.removeItem(k);
+      });
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('zin26_live_events_') && k !== STORAGE_KEYS.EVENTS) {
+          localStorage.removeItem(k);
+        }
       });
     } catch {}
   }
 
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  notifySubscribers() {
+    this.listeners.forEach(fn => {
+      try { fn(); } catch (e) { console.error('Listener error:', e); }
+    });
+  }
+
+  private realTimeErrorCount = 0;
+
   private setupRealtimeSubscription() {
     if (!isRealtimeEnabled()) return;
+    if (this.realTimeChannel) return;
+    if (this.realTimeErrorCount >= 2) return;
+
     try {
-      this.realTimeChannel = supabase
-        .channel('schema-db-changes')
+      // Clean up existing channel with same topic name if already instantiated during HMR / re-render
+      const existingChannels = supabase.getChannels();
+      const existing = existingChannels.find(ch => ch.topic === 'realtime:public_team_db_sync' || ch.topic === 'public_team_db_sync');
+      if (existing) {
+        try {
+          supabase.removeChannel(existing);
+        } catch (e) {}
+      }
+
+      let isCleaningUp = false;
+      const channel = supabase.channel('public_team_db_sync');
+
+      channel
         .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'event_registrations' }, () => this.syncFromSupabase())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'team_payments' }, () => this.syncFromSupabase())
-        .subscribe();
-    } catch (err) {
-      console.warn('Realtime subscription error:', err);
+        .subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            this.realTimeErrorCount = 0;
+            return;
+          }
+          if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') && !isCleaningUp) {
+            isCleaningUp = true;
+            this.realTimeErrorCount += 1;
+            setTimeout(() => {
+              try {
+                supabase.removeChannel(channel);
+              } catch (e) {}
+              if (this.realTimeChannel === channel) {
+                this.realTimeChannel = null;
+              }
+            }, 0);
+          }
+        });
+
+      this.realTimeChannel = channel;
+    } catch (e) {
+      // Silently handle channel initialization notices
     }
   }
 
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-
-  private notifySubscribers(): void {
-    this.listeners.forEach(fn => {
-      try { fn(); } catch (e) { console.error('Store listener error:', e); }
-    });
-  }
-
-  // --- SYNC FROM SUPABASE ---
-  async syncFromSupabase(): Promise<void> {
+  async syncFromSupabase() {
     if (!isSupabaseConfigured() || this.isSyncing) return;
     this.isSyncing = true;
 
@@ -960,28 +990,8 @@ class ZinniaStore {
 
   // --- EVENTS ---
   getEvents(filterType?: EventType): EventMission[] {
-    let events = this.getStorage<EventMission[]>(STORAGE_KEYS.EVENTS, OFFICIAL_MISSIONS);
-    if (!events || events.length === 0) {
-      events = OFFICIAL_MISSIONS;
-      this.setStorage(STORAGE_KEYS.EVENTS, events);
-    } else {
-      events = events.map(e => {
-        const official = OFFICIAL_MISSIONS.find(m => m.id === e.id || m.code === e.code);
-        return official 
-          ? {
-              ...e,
-              rules: official.rules,
-              team_size_min: official.team_size_min,
-              team_size_max: official.team_size_max,
-              coordinators: official.coordinators,
-              venue: official.venue,
-              schedule_time: official.schedule_time,
-              duration: official.duration,
-            }
-          : e;
-      });
-      this.setStorage(STORAGE_KEYS.EVENTS, events);
-    }
+    let events = OFFICIAL_MISSIONS;
+    this.setStorage(STORAGE_KEYS.EVENTS, events);
     if (filterType) {
       return events.filter(e => e.event_type === filterType);
     }

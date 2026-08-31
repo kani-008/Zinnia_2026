@@ -143,13 +143,15 @@ OFFICIAL_CREDENTIALS = {
 
 def authenticate_admin(username_or_email: str, password: str) -> Dict[str, Any]:
     """Authenticates admin or coordinator against single-slug official matrix."""
-    cleaned_user = (username_or_email or "").strip().lower()
+    raw_user = (username_or_email or "").strip().lower()
     provided_pass = (password or "").strip()
 
-    if not cleaned_user or not provided_pass:
+    if not raw_user or not provided_pass:
         return {"success": False, "error_code": "INVALID_INPUT", "message": "Username and password are required."}
 
-    user_record = OFFICIAL_CREDENTIALS.get(cleaned_user)
+    # Extract username slug if email format was entered (e.g., admin@zinnia2026.edu -> admin)
+    cleaned_user = raw_user.split('@')[0] if '@' in raw_user else raw_user
+    user_record = OFFICIAL_CREDENTIALS.get(cleaned_user) or OFFICIAL_CREDENTIALS.get(raw_user)
 
     if not user_record:
         return {"success": False, "error_code": "INVALID_CREDENTIALS", "message": f"Invalid username '{cleaned_user}'."}

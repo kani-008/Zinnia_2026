@@ -5,5 +5,15 @@
     "submitted_amount": null,
     "utr_number": null,
     "payment_status": "AWAITING_PAYMENT"
+  },
+  "ZIN-2026-2485": {
+    "team_id": "ZIN-2026-2485",
+    "submitted_amount": 250.0,
+    "expected_amount": 250,
+    "utr_number": "DEMO20260831001",
+    "payment_status": "PENDING_VERIFICATION",
+    "rejection_reason": null,
+    "payment_submitted_at": "2026-08-31T12:10:28.742611+00:00",
+    "updated_at": "2026-08-31T12:10:28.742611+00:00"
   }
 }
