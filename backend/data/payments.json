@@ -93,5 +93,22 @@
     "rejection_reason": null,
     "payment_submitted_at": "2026-08-31T09:03:42.655772+00:00",
     "updated_at": "2026-08-31T09:03:42.655772+00:00"
+  },
+  "ZIN-2026-9463": {
+    "team_id": "ZIN-2026-9463",
+    "expected_amount": 500,
+    "submitted_amount": null,
+    "utr_number": null,
+    "payment_status": "AWAITING_PAYMENT"
+  },
+  "ZIN-2026-8887": {
+    "team_id": "ZIN-2026-8887",
+    "submitted_amount": 500.0,
+    "expected_amount": 500,
+    "utr_number": "UTR99967505001",
+    "payment_status": "PENDING_VERIFICATION",
+    "rejection_reason": null,
+    "payment_submitted_at": "2026-08-31T09:11:53.099165+00:00",
+    "updated_at": "2026-08-31T09:11:53.099165+00:00"
   }
 }

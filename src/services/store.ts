@@ -545,7 +545,6 @@ class ZinniaStore {
             phone: m.phone,
             is_leader: m.is_leader,
             passport_token: m.passport_token,
-            food_collected: false,
             created_at: m.created_at
           }))
         );

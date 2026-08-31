@@ -46,17 +46,19 @@ def safe_supabase_get(url: str, headers: dict) -> Tuple[bool, Any]:
         print(f"[Supabase REST Notice] GET failed ({url}): {e}")
         return False, []
 
-def safe_supabase_post(url: str, headers: dict, json_data: Any) -> Tuple[bool, Any]:
+def safe_supabase_post(url: str, headers: dict, json_data: Any, log_error: bool = True) -> Tuple[bool, Any]:
     try:
         req_headers = dict(headers)
         req_headers["Prefer"] = "return=representation"
         r = requests.post(url, headers=req_headers, json=json_data, timeout=5)
         if r.status_code in (200, 201):
             return True, r.json() if r.text else {}
-        print(f"[Supabase POST Error] HTTP {r.status_code}: {r.text}")
+        if log_error:
+            print(f"[Supabase POST Error] HTTP {r.status_code}: {r.text}")
         return False, {"status_code": r.status_code, "text": r.text}
     except Exception as e:
-        print(f"[Supabase POST Exception] {e}")
+        if log_error:
+            print(f"[Supabase POST Exception] {e}")
         return False, {"error": str(e)}
 
 def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -235,7 +237,7 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
             }
             created_members.append(member_row)
 
-        ok_m, resp_m = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, created_members)
+        ok_m, resp_m = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, created_members, log_error=False)
         if not ok_m and "food_preference" in str(resp_m):
             members_no_food = [{k: v for k, v in m.items() if k != "food_preference"} for m in created_members]
             safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, members_no_food)
