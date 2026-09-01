@@ -13,6 +13,12 @@ import { generateTeamId, generateMemberId } from '../utils/participant-id';
 import { supabase, isSupabaseConfigured, isRealtimeEnabled } from '../lib/supabase';
 import { REGISTRATION_FEE_PER_HEAD } from '../config/site';
 
+// Origin of the Flask backend. Leave VITE_API_URL unset for local dev so the
+// requests stay relative and Vite's /api proxy forwards them. Set it to the
+// backend origin (e.g. https://api.zinnia2026.example) when the frontend and
+// backend are deployed separately.
+const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) || '').replace(/\/+$/, '');
+
 const STORAGE_KEYS = {
   TEAMS: 'zin26_live_teams_v2',
   MEMBERS: 'zin26_live_members_v2',
@@ -804,7 +810,7 @@ class ZinniaStore {
 
   // --- ASYNC BACKEND API CHECK-IN & PAYMENT HANDLERS ---
   private async fetchJson<T = any>(url: string, options?: RequestInit): Promise<T> {
-    const res = await fetch(url, options);
+    const res = await fetch(url.startsWith('/') ? `${API_BASE}${url}` : url, options);
     const contentType = res.headers.get('content-type') || '';
     let data: any = null;
     if (contentType.includes('application/json')) {
