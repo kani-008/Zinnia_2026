@@ -5,8 +5,11 @@ import React from 'react';
  * wear the same border. Stretches to its parent via preserveAspectRatio="none";
  * the parent supplies the colours through .comic-frame-box.
  */
+// The viewBox is cropped tight to the ink (which spans ~13..248 x ~8..309 of
+// the original 260x320 art) so the strokes land near the box edges. That keeps
+// the inset small and predictable, so normal padding always clears the line.
 export const ComicFrame: React.FC = () => (
-  <svg className="card-svg-frame" viewBox="0 0 260 320" preserveAspectRatio="none" aria-hidden="true">
+  <svg className="card-svg-frame" viewBox="10 5 242 309" preserveAspectRatio="none" aria-hidden="true">
     {/* dark offset registration */}
     <path
       className="card-shadow"

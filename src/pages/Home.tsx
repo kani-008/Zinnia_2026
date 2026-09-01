@@ -304,7 +304,7 @@ export const WebsiteHomePage: React.FC = () => {
   // overflow-x-clip (not hidden) contains the bleeding comic doodles without
   // turning this into a scroll container, which would break the sticky navbar.
   return (
-    <div className="relative w-full min-h-screen overflow-x-clip bg-transparent text-[#EEEEEA] flex flex-col justify-between px-2 sm:px-4 md:px-6 pt-1 pb-4 select-none scroll-smooth">
+    <div className="relative w-full min-h-screen overflow-x-clip bg-transparent text-[#EEEEEA] flex flex-col justify-between pb-4 select-none scroll-smooth">
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">

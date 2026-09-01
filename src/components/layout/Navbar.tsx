@@ -116,30 +116,37 @@ export const WebsiteNavbar: React.FC = () => {
             </MagneticElement>
           </div>
 
-          {/* Mobile Menu Button: three bars that rotate into a cross */}
+          {/* Mobile Menu Button: three bars that rotate into a cross.
+              The wrapper carries sm:hidden - a display utility on the button
+              itself loses to .comic-icon-button. */}
+          <div className="sm:hidden">
           <button
             type="button"
-            className="sm:hidden relative flex flex-col items-center justify-center gap-1 w-9 h-9 bg-[#111214] border-2 border-[#EEEEEA]/80 shadow-[2px_2px_0px_#090A0B] cursor-pointer active:scale-95 transition-transform"
+            className="comic-icon-button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-expanded={mobileMenuOpen}
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           >
-            <span
-              className={`block h-[2px] w-4.5 bg-[#EEEEEA] rounded-full transition-transform duration-300 ease-out ${
-                mobileMenuOpen ? 'translate-y-[6px] rotate-45' : ''
-              }`}
-            />
-            <span
-              className={`block h-[2px] w-4.5 bg-[#EEEEEA] rounded-full transition-opacity duration-200 ${
-                mobileMenuOpen ? 'opacity-0' : 'opacity-100'
-              }`}
-            />
-            <span
-              className={`block h-[2px] w-4.5 bg-[#EEEEEA] rounded-full transition-transform duration-300 ease-out ${
-                mobileMenuOpen ? '-translate-y-[6px] -rotate-45' : ''
-              }`}
-            />
+            <span className="back-box" />
+            <span className="front-box">
+              <span
+                className={`block h-[2px] w-4 bg-[#EEEEEA] rounded-full transition-transform duration-300 ease-out ${
+                  mobileMenuOpen ? 'translate-y-[5px] rotate-45' : ''
+                }`}
+              />
+              <span
+                className={`block h-[2px] w-4 bg-[#EEEEEA] rounded-full transition-opacity duration-200 ${
+                  mobileMenuOpen ? 'opacity-0' : 'opacity-100'
+                }`}
+              />
+              <span
+                className={`block h-[2px] w-4 bg-[#EEEEEA] rounded-full transition-transform duration-300 ease-out ${
+                  mobileMenuOpen ? '-translate-y-[5px] -rotate-45' : ''
+                }`}
+              />
+            </span>
           </button>
+          </div>
 
           {/* Desktop Comic Navigation Tabs with Magnetic Pull */}
           <nav className="hidden sm:flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
@@ -196,17 +203,24 @@ export const WebsiteNavbar: React.FC = () => {
           aria-hidden={!mobileMenuOpen}
         >
           {/* Close button lives inside the panel, so it slides in with it */}
+          {/* Wrapper does the positioning: .comic-icon-button is position:relative
+              for its own back/front boxes, which would beat an `absolute` class. */}
+          <div className="absolute top-3 right-3 z-10">
           <button
             type="button"
-            className="absolute top-2.5 right-3 flex flex-col items-center justify-center gap-1 w-9 h-9 bg-[#111214] border-2 border-[#EEEEEA]/80 shadow-[2px_2px_0px_#090A0B] cursor-pointer active:scale-95 transition-transform"
+            className="comic-icon-button"
             onClick={() => setMobileMenuOpen(false)}
             tabIndex={mobileMenuOpen ? 0 : -1}
             aria-label="Close navigation menu"
           >
-            <span className="block h-[2px] w-4.5 bg-[#EEEEEA] rounded-full translate-y-[6px] rotate-45" />
-            <span className="block h-[2px] w-4.5 bg-[#EEEEEA] rounded-full opacity-0" />
-            <span className="block h-[2px] w-4.5 bg-[#EEEEEA] rounded-full -translate-y-[6px] -rotate-45" />
+            <span className="back-box" />
+            <span className="front-box">
+              <span className="block h-[2px] w-4 bg-[#EEEEEA] rounded-full translate-y-[5px] rotate-45" />
+              <span className="block h-[2px] w-4 bg-[#EEEEEA] rounded-full opacity-0" />
+              <span className="block h-[2px] w-4 bg-[#EEEEEA] rounded-full -translate-y-[5px] -rotate-45" />
+            </span>
           </button>
+          </div>
 
           <button
             className="comic-button comic-button-fluid"

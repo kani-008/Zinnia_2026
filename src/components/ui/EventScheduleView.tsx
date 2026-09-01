@@ -333,7 +333,7 @@ export const EventScheduleView: React.FC<{
                         : item.category_type === 'NON_TECH'
                           ? 'non-tech'
                           : 'special'
-                    } p-5 sm:p-6 ${styles.cardBg} cursor-pointer transition-all duration-300 hover:-translate-y-1`}
+                    } px-[7.5%] py-5 ${styles.cardBg} cursor-pointer transition-all duration-300 hover:-translate-y-1`}
                   >
                     <ComicFrame />
                     {/* Header Row: Badge & Code */}
@@ -355,12 +355,12 @@ export const EventScheduleView: React.FC<{
                     </h3>
 
                     {/* Tagline */}
-                    <p className={`font-comic text-xs font-bold mt-0.5 ${styles.text}`}>
+                    <p className={`font-mono text-xs font-bold mt-0.5 ${styles.text}`}>
                       {item.tagline}
                     </p>
 
                     {/* Brief Description */}
-                    <p className="font-comic text-xs text-[#C0C0C5] mt-2 line-clamp-2 leading-relaxed">
+                    <p className="font-mono text-xs text-[#C0C0C5] mt-2 line-clamp-2 leading-relaxed">
                       {item.description}
                     </p>
 

@@ -1,11 +1,23 @@
 @import "tailwindcss";
 
-:root {
-  --font-comic: 'Bangers', cursive, sans-serif;
+/* =========================================================================
+   TYPE SYSTEM - three families, no more:
+     1. Luckiest Guy  -> display headings
+     2. Bangers       -> comic accents (buttons, stickers, badges)
+     3. JetBrains Mono -> every piece of running text and UI label
+   The older aliases are kept so existing classes keep working, but they
+   now resolve to one of the three above.
+   ========================================================================= */
+@theme {
   --font-display: 'Luckiest Guy', cursive, sans-serif;
-  --font-bungee: 'Bungee', cursive, sans-serif;
-  --font-marker: 'Permanent Marker', cursive, sans-serif;
-  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-comic: 'Bangers', cursive, sans-serif;
+  --font-sans: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  --font-bungee: var(--font-display);
+  --font-marker: var(--font-comic);
 }
 
 html {
@@ -149,9 +161,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: var(--cb-font);
-  font-weight: 900;
+  font-weight: 800;
   font-style: italic;
   clip-path: polygon(
     1% 4%,
@@ -187,6 +199,31 @@ body {
   font-size: clamp(0.6rem, 2.7vw, 0.8rem);
 }
 
+/* Square icon button wearing the same double-box comic border as the menu items */
+.comic-icon-button {
+  --cb-h: clamp(1.75rem, 7.5vw, 2rem);
+  --cb-w: var(--cb-h);
+  --cb-box-w: calc(var(--cb-h) - 5px);
+  --cb-box-h: calc(var(--cb-h) - 5px);
+  position: relative;
+  width: var(--cb-w);
+  height: var(--cb-h);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.comic-icon-button .back-box {
+  left: 3px;
+  top: 4px;
+}
+
+.comic-icon-button .front-box {
+  flex-direction: column;
+  gap: 3px;
+}
+
 .front-box-cyan {
   position: absolute;
   left: 0;
@@ -200,9 +237,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: var(--cb-font);
-  font-weight: 900;
+  font-weight: 800;
   font-style: italic;
   clip-path: polygon(
     1% 4%,
@@ -859,7 +896,7 @@ body {
   justify-content: center;
   background: var(--card-main);
   color: #090A0B;
-  font-family: "Arial Narrow", "Roboto Condensed", var(--font-comic), Arial, sans-serif;
+  font-family: var(--font-comic);
   font-size: 19px;
   font-weight: 900;
   transform: rotate(-4deg);
