@@ -1,11 +1,23 @@
 @import "tailwindcss";
 
-:root {
-  --font-comic: 'Bangers', cursive, sans-serif;
+/* =========================================================================
+   TYPE SYSTEM - three families, no more:
+     1. Luckiest Guy  -> display headings
+     2. Bangers       -> comic accents (buttons, stickers, badges)
+     3. JetBrains Mono -> every piece of running text and UI label
+   The older aliases are kept so existing classes keep working, but they
+   now resolve to one of the three above.
+   ========================================================================= */
+@theme {
   --font-display: 'Luckiest Guy', cursive, sans-serif;
-  --font-bungee: 'Bungee', cursive, sans-serif;
-  --font-marker: 'Permanent Marker', cursive, sans-serif;
-  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-comic: 'Bangers', cursive, sans-serif;
+  --font-sans: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  --font-bungee: var(--font-display);
+  --font-marker: var(--font-comic);
 }
 
 html {
@@ -67,9 +79,13 @@ body {
    SKETCHED OFFSET COMIC BUTTON (Polygon Double-Box)
    ========================================================================= */
 .comic-button {
+  --cb-h: 52px;
+  --cb-box-w: 130px;
+  --cb-box-h: 42px;
+  --cb-font: 13.5px;
   position: relative;
-  width: 138px;
-  height: 52px;
+  width: var(--cb-w, 138px);
+  height: var(--cb-h);
   padding: 0;
   border: 0;
   background: transparent;
@@ -78,9 +94,13 @@ body {
 }
 
 .comic-button-cyan {
+  --cb-h: 52px;
+  --cb-box-w: 130px;
+  --cb-box-h: 42px;
+  --cb-font: 14px;
   position: relative;
-  width: 138px;
-  height: 52px;
+  width: var(--cb-w, 138px);
+  height: var(--cb-h);
   padding: 0;
   border: 0;
   background: transparent;
@@ -92,8 +112,8 @@ body {
   position: absolute;
   left: 5px;
   top: 6px;
-  width: 130px;
-  height: 42px;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
   background: #08090A;
   border: 2px solid #B8B8B2;
   clip-path: polygon(
@@ -112,8 +132,8 @@ body {
   position: absolute;
   left: 5px;
   top: 6px;
-  width: 130px;
-  height: 42px;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
   background: #08090A;
   border: 2px solid #0FA9C6;
   clip-path: polygon(
@@ -132,8 +152,8 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  width: 130px;
-  height: 42px;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
   background: #08090A;
   border: 2px solid #EEEEEA;
   color: #EEEEEA;
@@ -141,9 +161,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  font-family: Arial, sans-serif;
-  font-size: 13.5px;
-  font-weight: 900;
+  font-family: var(--font-sans);
+  font-size: var(--cb-font);
+  font-weight: 800;
   font-style: italic;
   clip-path: polygon(
     1% 4%,
@@ -158,12 +178,58 @@ body {
   transition: transform 0.12s ease;
 }
 
+/* Fluid variant: fills its container and scales with the viewport. */
+.comic-button-fluid {
+  --cb-w: 100%;
+  --cb-h: clamp(1.9rem, 8vw, 2.35rem);
+  --cb-box-w: calc(100% - 7px);
+  --cb-box-h: calc(var(--cb-h) - 8px);
+  --cb-font: clamp(0.55rem, 2.5vw, 0.7rem);
+  display: block;
+  width: 100%;
+}
+
+.comic-button-fluid .back-box,
+.comic-button-fluid .back-box-cyan {
+  left: 4px;
+  top: 5px;
+}
+
+.comic-button-fluid .lightning {
+  font-size: clamp(0.6rem, 2.7vw, 0.8rem);
+}
+
+/* Square icon button wearing the same double-box comic border as the menu items */
+.comic-icon-button {
+  --cb-h: clamp(1.75rem, 7.5vw, 2rem);
+  --cb-w: var(--cb-h);
+  --cb-box-w: calc(var(--cb-h) - 5px);
+  --cb-box-h: calc(var(--cb-h) - 5px);
+  position: relative;
+  width: var(--cb-w);
+  height: var(--cb-h);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.comic-icon-button .back-box {
+  left: 3px;
+  top: 4px;
+}
+
+.comic-icon-button .front-box {
+  flex-direction: column;
+  gap: 3px;
+}
+
 .front-box-cyan {
   position: absolute;
   left: 0;
   top: 0;
-  width: 130px;
-  height: 42px;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
   background: #0FA9C6;
   border: 2px solid #090A0B;
   color: #090A0B;
@@ -171,9 +237,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 900;
+  font-family: var(--font-sans);
+  font-size: var(--cb-font);
+  font-weight: 800;
   font-style: italic;
   clip-path: polygon(
     1% 4%,
@@ -793,6 +859,30 @@ body {
   stroke-linejoin: round;
 }
 
+/* REUSABLE HAND-DRAWN FRAME (same ink as the event cards) */
+.comic-frame-box {
+  position: relative;
+  background: transparent;
+}
+
+.comic-frame-box.tech {
+  --card-main: #0FA9C6;
+  --card-shadow: #08758A;
+  --card-inner: #0FA9C6;
+}
+
+.comic-frame-box.non-tech {
+  --card-main: #D51F55;
+  --card-shadow: #A81443;
+  --card-inner: #D51F55;
+}
+
+.comic-frame-box.special {
+  --card-main: #F5D90A;
+  --card-shadow: #8A7400;
+  --card-inner: #F5D90A;
+}
+
 /* NUMBER HOLDER TAG */
 .comic-number-holder {
   position: absolute;
@@ -806,7 +896,7 @@ body {
   justify-content: center;
   background: var(--card-main);
   color: #090A0B;
-  font-family: "Arial Narrow", "Roboto Condensed", var(--font-comic), Arial, sans-serif;
+  font-family: var(--font-comic);
   font-size: 19px;
   font-weight: 900;
   transform: rotate(-4deg);
@@ -1282,5 +1372,44 @@ body {
     top: 17px;
     height: 26px;
   }
+}
+
+/* Custom Sleek Dark Scrollbar & Hide Arrow Buttons */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #141417;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2E2E38;
+  border-radius: 6px;
+  border: 2px solid #141417;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9333EA;
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Custom Utility to hide scrollbars completely */
+.custom-no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.custom-no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 

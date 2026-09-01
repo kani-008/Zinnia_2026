@@ -13,10 +13,16 @@ import { generateTeamId, generateMemberId } from '../utils/participant-id';
 import { supabase, isSupabaseConfigured, isRealtimeEnabled } from '../lib/supabase';
 import { REGISTRATION_FEE_PER_HEAD } from '../config/site';
 
+// Origin of the Flask backend. Leave VITE_API_URL unset for local dev so the
+// requests stay relative and Vite's /api proxy forwards them. Set it to the
+// backend origin (e.g. https://api.zinnia2026.example) when the frontend and
+// backend are deployed separately.
+const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) || '').replace(/\/+$/, '');
+
 const STORAGE_KEYS = {
   TEAMS: 'zin26_live_teams_v2',
   MEMBERS: 'zin26_live_members_v2',
-  EVENTS: 'zin26_live_events_v6',
+  EVENTS: 'zin26_live_events_v9',
   REGISTRATIONS: 'zin26_live_registrations_v2',
   ATTENDANCE: 'zin26_live_attendance_v2',
   CURRENT_TEAM: 'zin26_current_team_v2'
@@ -35,51 +41,80 @@ class ZinniaStore {
 
   private cleanLegacyStorage() {
     try {
-      [
-        'zin26_participants_v3',
-        'zin26_attendance_v3',
-        'zin26_registrations_v3',
-        'zin26_live_participants_v1',
-        'zin26_live_events_v2',
-        'zin26_live_events_v3',
-        'zin26_live_events_v4',
-        'zin26_live_events_v5',
-        'zin26_live_hand_bands_v2'
-      ].forEach(k => {
+      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1', 'zin26_live_events_v2', 'zin26_live_events_v3', 'zin26_live_events_v4', 'zin26_live_events_v5', 'zin26_live_events_v6', 'zin26_live_events_v7', 'zin26_live_events_v8'].forEach(k => {
         localStorage.removeItem(k);
+      });
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('zin26_live_events_') && k !== STORAGE_KEYS.EVENTS) {
+          localStorage.removeItem(k);
+        }
       });
     } catch {}
   }
 
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  notifySubscribers() {
+    this.listeners.forEach(fn => {
+      try { fn(); } catch (e) { console.error('Listener error:', e); }
+    });
+  }
+
+  private realTimeErrorCount = 0;
+
   private setupRealtimeSubscription() {
     if (!isRealtimeEnabled()) return;
+    if (this.realTimeChannel) return;
+    if (this.realTimeErrorCount >= 2) return;
+
     try {
-      this.realTimeChannel = supabase
-        .channel('schema-db-changes')
+      const existingChannels = supabase.getChannels();
+      const existing = existingChannels.find(ch => ch.topic === 'realtime:public_team_db_sync' || ch.topic === 'public_team_db_sync');
+      if (existing) {
+        try {
+          supabase.removeChannel(existing);
+        } catch (e) {}
+      }
+
+      let isCleaningUp = false;
+      const channel = supabase.channel('public_team_db_sync');
+
+      channel
         .on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => this.syncFromSupabase())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'event_registrations' }, () => this.syncFromSupabase())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'team_payments' }, () => this.syncFromSupabase())
-        .subscribe();
-    } catch (err) {
-      console.warn('Realtime subscription error:', err);
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            this.realTimeErrorCount = 0;
+            return;
+          }
+          if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') && !isCleaningUp) {
+            isCleaningUp = true;
+            this.realTimeErrorCount += 1;
+            setTimeout(() => {
+              try {
+                supabase.removeChannel(channel);
+              } catch (e) {}
+              if (this.realTimeChannel === channel) {
+                this.realTimeChannel = null;
+              }
+            }, 0);
+          }
+        });
+
+      this.realTimeChannel = channel;
+    } catch (e) {
+      console.warn('[Store] Realtime setup skipped:', e);
     }
   }
 
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-
-  private notifySubscribers(): void {
-    this.listeners.forEach(fn => {
-      try { fn(); } catch (e) { console.error('Store listener error:', e); }
-    });
-  }
-
-  // --- SYNC FROM SUPABASE ---
-  async syncFromSupabase(): Promise<void> {
+  async syncFromSupabase() {
     if (!isSupabaseConfigured() || this.isSyncing) return;
     this.isSyncing = true;
 
@@ -240,8 +275,13 @@ class ZinniaStore {
     }));
   }
 
-  getTeamMembers(): TeamMember[] {
-    return this.getStorage<TeamMember[]>(STORAGE_KEYS.MEMBERS, []);
+  getTeamMembers(teamId?: string): TeamMember[] {
+    const all = this.getStorage<TeamMember[]>(STORAGE_KEYS.MEMBERS, []);
+    if (teamId) {
+      const cleaned = teamId.trim().toUpperCase();
+      return all.filter(m => m.team_id && m.team_id.toUpperCase() === cleaned);
+    }
+    return all;
   }
 
   getTeamById(teamId: string): Team | undefined {
@@ -450,8 +490,23 @@ class ZinniaStore {
       throw new Error(apiRes?.message || 'Registration rejected by server. Please check your details and try again.');
     }
 
+    const teamId = apiRes.team_id || apiRes.team?.team_id;
+    const membersWithIds: TeamMember[] = (apiRes.members || apiRes.team?.members || teamData.members || []).map(
+      (m: any, idx: number) => ({
+        id: m.id || `ATT-${(teamId || '').replace('ZIN-', '')}-${idx + 1}`,
+        team_id: teamId,
+        name: m.name,
+        email: m.email,
+        phone: m.phone,
+        is_leader: m.is_leader ?? idx === 0,
+        food_preference: m.food_preference || 'VEG',
+        passport_token: m.passport_token || '',
+        created_at: new Date().toISOString()
+      })
+    );
+
     const teamObj: Team = {
-      team_id: apiRes.team_id || apiRes.team?.team_id,
+      team_id: teamId,
       team_name: apiRes.team_name || apiRes.team?.team_name || teamData.team_name,
       college: teamData.college,
       department: teamData.department,
@@ -459,23 +514,86 @@ class ZinniaStore {
       registered_events: teamData.registered_events,
       payment: false,
       payment_status: 'AWAITING_PAYMENT',
-      members: apiRes.members || apiRes.team?.members || [],
+      members: membersWithIds,
       created_at: new Date().toISOString()
     };
 
     const teams = this.getTeams();
-    teams.unshift(teamObj);
+    const existingIdx = teams.findIndex(t => t.team_id === teamId);
+    if (existingIdx >= 0) {
+      teams[existingIdx] = teamObj;
+    } else {
+      teams.unshift(teamObj);
+    }
     this.setStorage(STORAGE_KEYS.TEAMS, teams);
 
-    const curMembers = this.getTeamMembers();
-    if (teamObj.members && teamObj.members.length > 0) {
-      curMembers.push(...teamObj.members);
-      this.setStorage(STORAGE_KEYS.MEMBERS, curMembers);
-    }
+    const curMembers = this.getTeamMembers().filter(m => m.team_id !== teamId);
+    curMembers.push(...membersWithIds);
+    this.setStorage(STORAGE_KEYS.MEMBERS, curMembers);
 
     this.setCurrentTeam(teamObj);
     this.notifySubscribers();
     return teamObj;
+  }
+
+  // --- PAYMENT OPERATIONS ---
+  async getPaymentStatus(teamId: string): Promise<any> {
+    const cleaned = teamId.trim();
+    if (!cleaned) return { success: false, message: 'Invalid team ID' };
+
+    try {
+      const res = await this.fetchJson<any>(`/api/payment/status?team_id=${encodeURIComponent(cleaned)}`);
+      if (res && res.success) {
+        return res;
+      }
+    } catch (err: any) {
+      console.warn('[Store] getPaymentStatus API fallback:', err);
+    }
+
+    const local = this.getTeamById(cleaned);
+    if (local) {
+      return {
+        success: true,
+        team_id: local.team_id,
+        team_name: local.team_name,
+        payment: local.payment,
+        payment_status: local.payment_status || 'AWAITING_PAYMENT',
+        member_count: local.members?.length || 1,
+        members: local.members || [],
+        registered_events: local.registered_events || [],
+        expected_amount: (local.members?.length || 1) * 250,
+        submitted_amount: (local.members?.length || 1) * 250
+      };
+    }
+    return { success: false, message: `Team ${cleaned} not found.` };
+  }
+
+  async submitPaymentProof(
+    teamId: string,
+    payload: { utr_number: string; amount_paid: number }
+  ): Promise<any> {
+    const cleaned = teamId.trim();
+    const res = await this.fetchJson<any>('/api/payment/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        team_id: cleaned,
+        utr_number: payload.utr_number,
+        submitted_amount: payload.amount_paid
+      })
+    });
+
+    if (res && res.success) {
+      const teams = this.getTeams();
+      const idx = teams.findIndex(t => t.team_id.toUpperCase() === cleaned.toUpperCase());
+      if (idx !== -1) {
+        teams[idx].payment_status = 'PENDING_VERIFICATION';
+        this.setStorage(STORAGE_KEYS.TEAMS, teams);
+      }
+      this.notifySubscribers();
+    }
+
+    return res;
   }
 
   setCurrentTeam(team: Team | null) {
@@ -692,7 +810,7 @@ class ZinniaStore {
 
   // --- ASYNC BACKEND API CHECK-IN & PAYMENT HANDLERS ---
   private async fetchJson<T = any>(url: string, options?: RequestInit): Promise<T> {
-    const res = await fetch(url, options);
+    const res = await fetch(url.startsWith('/') ? `${API_BASE}${url}` : url, options);
     const contentType = res.headers.get('content-type') || '';
     let data: any = null;
     if (contentType.includes('application/json')) {
@@ -935,53 +1053,10 @@ class ZinniaStore {
     throw new Error(res?.error || res?.message || 'Payment verification failed.');
   }
 
-  async getPaymentStatus(teamId: string): Promise<{
-    success: boolean;
-    team_id?: string;
-    team_name?: string;
-    payment?: boolean;
-    payment_status?: string;
-    member_count?: number;
-    expected_amount?: number;
-    submitted_amount?: number;
-    utr_number?: string;
-    rejection_reason?: string;
-    message?: string;
-  }> {
-    return this.getPaymentStatusApi(teamId);
-  }
-
-  async submitPaymentProof(teamId: string, proof: { utr_number: string; amount_paid: number }): Promise<{
-    success: boolean;
-    message?: string;
-  }> {
-    return this.submitPaymentApi(teamId, proof.utr_number, proof.amount_paid);
-  }
-
   // --- EVENTS ---
   getEvents(filterType?: EventType): EventMission[] {
-    let events = this.getStorage<EventMission[]>(STORAGE_KEYS.EVENTS, OFFICIAL_MISSIONS);
-    if (!events || events.length === 0) {
-      events = OFFICIAL_MISSIONS;
-      this.setStorage(STORAGE_KEYS.EVENTS, events);
-    } else {
-      events = events.map(e => {
-        const official = OFFICIAL_MISSIONS.find(m => m.id === e.id || m.code === e.code);
-        return official 
-          ? {
-              ...e,
-              rules: official.rules,
-              team_size_min: official.team_size_min,
-              team_size_max: official.team_size_max,
-              coordinators: official.coordinators,
-              venue: official.venue,
-              schedule_time: official.schedule_time,
-              duration: official.duration,
-            }
-          : e;
-      });
-      this.setStorage(STORAGE_KEYS.EVENTS, events);
-    }
+    let events = OFFICIAL_MISSIONS;
+    this.setStorage(STORAGE_KEYS.EVENTS, events);
     if (filterType) {
       return events.filter(e => e.event_type === filterType);
     }
@@ -1023,15 +1098,6 @@ class ZinniaStore {
     }
 
     this.notifySubscribers();
-  }
-
-  // --- CURRENT USER ---
-  getCurrentTeam(): Team | null {
-    return this.getStorage(STORAGE_KEYS.CURRENT_TEAM, null);
-  }
-
-  setCurrentTeam(team: Team | null): void {
-    this.setStorage(STORAGE_KEYS.CURRENT_TEAM, team);
   }
 }
 

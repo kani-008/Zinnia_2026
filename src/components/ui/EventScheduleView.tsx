@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Clock, MapPin, Trophy, X, ArrowRight, Zap, Shield, Sparkles, Award, Cpu, Gamepad2, Layers } from 'lucide-react';
+import { Users, Clock, MapPin, Trophy, X, ArrowRight, Zap, Shield, Sparkles, Award } from 'lucide-react';
 import { EventMission } from '../../types';
+import { ComicFrame } from './ComicFrame';
 import { store } from '../../services/store';
 
 // Helper to trigger comic FX audio if available
@@ -32,7 +33,6 @@ export const EventScheduleView: React.FC<{
   onSelectEvent?: (event: EventMission) => void;
 }> = ({ onSelectEvent }) => {
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState<'ALL' | 'TECH' | 'NON_TECH'>('ALL');
   const [selectedEventModal, setSelectedEventModal] = useState<EventMission | null>(null);
 
   // Fetch official events from store
@@ -233,12 +233,8 @@ export const EventScheduleView: React.FC<{
     }
   ];
 
-  // Filter items based on active Tab
-  const filteredTimeline = masterTimelineItems.filter((item) => {
-    if (activeFilter === 'TECH') return item.category_type === 'TECH' || item.category_type === 'SPECIAL';
-    if (activeFilter === 'NON_TECH') return item.category_type === 'NON_TECH' || item.category_type === 'SPECIAL';
-    return true;
-  });
+  // No category filtering - every event is listed.
+  const filteredTimeline = masterTimelineItems;
 
   const getThemeStyles = (theme: 'cyan' | 'pink' | 'gold' | 'purple') => {
     switch (theme) {
@@ -295,85 +291,12 @@ export const EventScheduleView: React.FC<{
           SECTION HEADER
           ========================================================================= */}
       <div className="text-center space-y-3 relative z-10">
-        {/* Top Circuit Banner */}
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-[2px] w-12 sm:w-24 bg-gradient-to-r from-transparent via-[#3CE7FF] to-transparent" />
-          <div className="w-2 h-2 rounded-full bg-[#3CE7FF] animate-pulse" />
-          <span className="font-mono text-xs text-[#3CE7FF] tracking-widest uppercase font-bold px-3 py-1 bg-[#122D38] rounded-full border border-[#3CE7FF]/40">
-            MASTER TIMELINE FLOW
-          </span>
-          <div className="w-2 h-2 rounded-full bg-[#FF3366] animate-pulse" />
-          <div className="h-[2px] w-12 sm:w-24 bg-gradient-to-r from-transparent via-[#FF3366] to-transparent" />
-        </div>
-
         {/* Large Title */}
         <h2 className="font-display text-3xl sm:text-5xl md:text-6xl text-white tracking-wider uppercase flex items-center justify-center gap-2 sm:gap-4 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
           <span className="text-[#F5D90A]">⚡</span>
           <span>EVENT SCHEDULE</span>
           <span className="text-[#F5D90A]">⚡</span>
         </h2>
-
-        {/* Subtitle */}
-        <p className="font-comic text-sm sm:text-base md:text-lg text-[#F5D90A] tracking-wide font-bold">
-          "One Day. Nine Events. One Unforgettable Symposium."
-        </p>
-
-        {/* Timeline Flow Filter Tabs */}
-        <div className="flex items-center justify-center gap-2 pt-3 flex-wrap">
-          <button
-            onClick={() => {
-              triggerAudio();
-              setActiveFilter('ALL');
-            }}
-            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${
-              activeFilter === 'ALL'
-                ? 'bg-[#F5D90A] text-[#0D0D0F] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400]'
-                : 'bg-[#141417] text-[#A8A8AC] hover:text-white border-[#3A3A3E]'
-            }`}
-          >
-            <Layers className="w-4 h-4" />
-            <span>ALL EVENTS FLOW</span>
-            <span className="px-1.5 py-0.2 bg-[#0D0D0F] text-[#F5D90A] font-mono text-[10px] rounded font-black">
-              10
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              triggerAudio();
-              setActiveFilter('TECH');
-            }}
-            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${
-              activeFilter === 'TECH'
-                ? 'bg-[#3CE7FF] text-[#0D0D0F] border-[#3CE7FF] shadow-[3px_3px_0px_#1E8FA3]'
-                : 'bg-[#141417] text-[#A8A8AC] hover:text-white border-[#3A3A3E]'
-            }`}
-          >
-            <Cpu className="w-4 h-4" />
-            <span>TECHNICAL FLOW</span>
-            <span className="px-1.5 py-0.2 bg-[#0D0D0F] text-[#3CE7FF] font-mono text-[10px] rounded font-black">
-              5
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              triggerAudio();
-              setActiveFilter('NON_TECH');
-            }}
-            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${
-              activeFilter === 'NON_TECH'
-                ? 'bg-[#FF3366] text-white border-[#FF3366] shadow-[3px_3px_0px_#B01F45]'
-                : 'bg-[#141417] text-[#A8A8AC] hover:text-white border-[#3A3A3E]'
-            }`}
-          >
-            <Gamepad2 className="w-4 h-4" />
-            <span>NON-TECH FLOW</span>
-            <span className="px-1.5 py-0.2 bg-[#0D0D0F] text-[#FF3366] font-mono text-[10px] rounded font-black">
-              5
-            </span>
-          </button>
-        </div>
       </div>
 
       {/* =========================================================================
@@ -404,14 +327,17 @@ export const EventScheduleView: React.FC<{
                 <div className={`w-full sm:w-[calc(50%-2rem)] pl-10 sm:pl-0 ${isEven ? 'sm:text-right' : 'sm:order-2 sm:text-left'}`}>
                   <div
                     onClick={() => handleCardClick(item)}
-                    className={`p-4 sm:p-5 rounded-2xl border-2 ${styles.border} ${styles.cardBg} ${styles.glow} shadow-[5px_5px_0px_#000000] cursor-pointer transition-all duration-300 hover:-translate-y-1 relative group-hover:border-white`}
+                    className={`comic-frame-box ${
+                      item.category_type === 'TECH'
+                        ? 'tech'
+                        : item.category_type === 'NON_TECH'
+                          ? 'non-tech'
+                          : 'special'
+                    } px-[7.5%] py-5 ${styles.cardBg} cursor-pointer transition-all duration-300 hover:-translate-y-1`}
                   >
+                    <ComicFrame />
                     {/* Header Row: Badge & Code */}
                     <div className={`flex items-center gap-2 ${isEven ? 'sm:justify-end' : 'sm:justify-start'}`}>
-                      <span className={`px-2.5 py-0.5 font-mono text-xs font-black rounded uppercase ${styles.badgeBg}`}>
-                        MISSION {item.code}
-                      </span>
-
                       {item.single_badge && (
                         <span className="px-2 py-0.5 bg-[#F5D90A] text-[#0D0D0F] font-mono font-black text-[10px] rounded uppercase shrink-0">
                           SINGLE EVENT
@@ -429,12 +355,12 @@ export const EventScheduleView: React.FC<{
                     </h3>
 
                     {/* Tagline */}
-                    <p className={`font-comic text-xs font-bold mt-0.5 ${styles.text}`}>
+                    <p className={`font-mono text-xs font-bold mt-0.5 ${styles.text}`}>
                       {item.tagline}
                     </p>
 
                     {/* Brief Description */}
-                    <p className="font-comic text-xs text-[#C0C0C5] mt-2 line-clamp-2 leading-relaxed">
+                    <p className="font-mono text-xs text-[#C0C0C5] mt-2 line-clamp-2 leading-relaxed">
                       {item.description}
                     </p>
 
@@ -483,230 +409,273 @@ export const EventScheduleView: React.FC<{
       {selectedEventModal && (
         <div
           onClick={() => setSelectedEventModal(null)}
-          className="fixed inset-0 z-[100] bg-black/92 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-hidden animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] bg-black/92 backdrop-blur-md flex items-center justify-center p-2 sm:p-5 overflow-y-auto animate-in fade-in duration-200"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] overflow-y-auto overscroll-contain bg-[#141417] border-[3px] ${
+            className={`relative w-[96%] sm:w-full max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col bg-[#0B0715] border-[2.5px] sm:border-[3px] ${
               selectedEventModal.id === 'prize-distribution'
-                ? 'border-[#9333EA]'
+                ? 'border-[#A855F7]/80 shadow-[0_0_40px_rgba(168,85,247,0.25)]'
                 : selectedEventModal.event_type === 'TECH'
-                ? 'border-[#3CE7FF]'
-                : 'border-[#FF3366]'
-            } shadow-[8px_8px_0px_#000000] p-4 sm:p-5 rounded-2xl space-y-3 select-text my-auto`}
+                ? 'border-[#3CE7FF] shadow-[4px_4px_0px_#000000]'
+                : 'border-[#FF3366] shadow-[4px_4px_0px_#000000]'
+            } sm:shadow-[8px_8px_0px_#000000] rounded-2xl select-text mx-auto my-auto overflow-hidden`}
           >
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-[#2A2A2E] pb-2.5">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 font-mono font-black text-[11px] rounded uppercase ${
-                    selectedEventModal.id === 'prize-distribution'
-                      ? 'bg-[#9333EA] text-white'
-                      : selectedEventModal.event_type === 'TECH'
-                      ? 'bg-[#3CE7FF] text-[#0D0D0F]'
-                      : 'bg-[#FF3366] text-white'
-                  }`}>
-                    {selectedEventModal.code}
-                  </span>
-                  <span className="font-mono text-[11px] text-[#A8A8AC] uppercase">
-                    {selectedEventModal.category}
-                  </span>
+            {/* Sticky Header */}
+            <div className="p-3 sm:p-5 border-b border-[#231A36] shrink-0 bg-[#0B0715] z-10 space-y-1 sm:space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`px-2 py-0.5 font-mono font-black text-[10px] sm:text-xs rounded-md uppercase flex items-center gap-1 ${
+                        selectedEventModal.id === 'prize-distribution'
+                          ? 'bg-[#A855F7] text-white'
+                          : selectedEventModal.event_type === 'TECH'
+                          ? 'bg-[#3CE7FF] text-[#0D0D0F]'
+                          : 'bg-[#FF3366] text-white'
+                      }`}
+                    >
+                      {selectedEventModal.id === 'prize-distribution' && <Zap className="w-3.5 h-3.5 fill-current" />}
+                      <span>{selectedEventModal.code}</span>
+                    </span>
+                    <span className="font-mono text-[10px] sm:text-xs text-[#8E8A99] uppercase tracking-wider font-bold">
+                      {selectedEventModal.category}
+                    </span>
+                  </div>
+                  <h3 className="font-display text-lg sm:text-3xl text-white uppercase tracking-wide leading-tight pt-0.5">
+                    {selectedEventModal.mission_name}
+                  </h3>
+                  <p
+                    className={`font-comic text-[11px] sm:text-sm font-bold tracking-wider ${
+                      selectedEventModal.id === 'prize-distribution'
+                        ? 'text-[#C084FC]'
+                        : selectedEventModal.event_type === 'TECH'
+                        ? 'text-[#3CE7FF]'
+                        : 'text-[#FF3366]'
+                    }`}
+                  >
+                    {selectedEventModal.tagline || selectedEventModal.title}
+                  </p>
                 </div>
-                <h3 className="font-display text-xl sm:text-2xl text-white uppercase tracking-wide">
-                  {selectedEventModal.mission_name}
-                </h3>
-                <p className={`font-comic text-xs font-bold ${
-                  selectedEventModal.id === 'prize-distribution'
-                    ? 'text-[#C084FC]'
-                    : selectedEventModal.event_type === 'TECH'
-                    ? 'text-[#3CE7FF]'
-                    : 'text-[#FF3366]'
-                }`}>
-                  {selectedEventModal.tagline || selectedEventModal.title}
-                </p>
+                <button
+                  onClick={() => setSelectedEventModal(null)}
+                  className="p-1.5 sm:p-2 bg-[#1C1629] hover:bg-[#A855F7] text-[#A8A8AC] hover:text-white rounded-full transition-colors cursor-pointer shrink-0"
+                  aria-label="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={() => setSelectedEventModal(null)}
-                className="p-1 bg-[#222226] hover:bg-[#FF3366] text-[#F2F2F0] hover:text-white rounded-lg transition-colors cursor-pointer"
-              >
-                <X className="w-4.5 h-4.5" />
-              </button>
-            </div>
 
-            {/* Quick Meta Stats (Only 2 wider balanced boxes for Prize Distribution) */}
-            {selectedEventModal.id === 'prize-distribution' ? (
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
-                  </div>
-                  <div className="text-white font-bold mt-0.5 text-xs sm:text-sm truncate">
-                    03:00 PM – 04:00 PM
-                  </div>
-                </div>
-                <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#C084FC]" /> VENUE
-                  </div>
-                  <div className="text-white font-bold mt-0.5 text-xs sm:text-sm truncate">
-                    Main Auditorium
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs font-mono">
-                <div className="p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <Users className="w-3 h-3 text-[#F5D90A]" /> TEAM SIZE
-                  </div>
-                  <div className="text-white font-bold mt-0.5 text-xs">
-                    {selectedEventModal.team_size_min}{selectedEventModal.team_size_min !== selectedEventModal.team_size_max ? ` - ${selectedEventModal.team_size_max}` : ''} Members
-                  </div>
-                </div>
-                <div className="p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-[#F5D90A]" /> TIME
-                  </div>
-                  <div className="text-white font-bold mt-0.5 text-xs truncate">
-                    {selectedEventModal.schedule_time}
-                  </div>
-                </div>
-                <div className="col-span-2 sm:col-span-1 p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
-                  <div className="text-[#A8A8AC] text-[10px] flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#3CE7FF]" /> VENUE
-                  </div>
-                  <div className="text-white font-bold mt-0.5 text-xs truncate">
-                    {selectedEventModal.venue || 'TBA'}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Description */}
-            <div className="space-y-1">
-              <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
-                // BRIEFING
-              </h4>
-              <p className="font-comic text-xs text-[#D0D0D4] leading-relaxed">
+              {/* Briefing Text directly under header rule */}
+              <p className="font-mono text-[10px] sm:text-xs text-[#B0ACBC] uppercase leading-relaxed tracking-tight pt-0.5">
                 {selectedEventModal.description}
               </p>
             </div>
 
-            {/* Rules */}
-            {selectedEventModal.rules && selectedEventModal.rules.length > 0 && (
-              <div className="space-y-1">
-                <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
-                  // RULES & GUIDELINES
-                </h4>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5">
-                  {selectedEventModal.rules.map((rule, rIdx) => (
-                    <li key={rIdx} className="flex items-start gap-1.5 text-[11px] font-comic text-[#C0C0C5] leading-tight">
-                      <span className="text-[#C084FC] shrink-0 font-bold">•</span>
-                      <span>{rule}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Cash Prizes */}
-            {selectedEventModal.prizes && (
-              <div className="p-2 sm:p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-xl space-y-1.5">
-                <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
-                  <Trophy className="w-3 h-3 text-[#F5D90A]" /> PRIZE REWARDS
-                </h4>
-                <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
-                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[9px] text-[#A8A8AC]">1ST PRIZE</div>
-                    <div className="text-[#F5D90A] font-bold text-xs mt-0.5">{selectedEventModal.prizes.first}</div>
-                  </div>
-                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[9px] text-[#A8A8AC]">2ND PRIZE</div>
-                    <div className="text-white font-bold text-xs mt-0.5">{selectedEventModal.prizes.second}</div>
-                  </div>
-                  <div className="p-1.5 bg-[#222228] rounded border border-[#3A3A40]">
-                    <div className="text-[9px] text-[#A8A8AC]">3RD PRIZE</div>
-                    <div className="text-[#A8A8AC] font-bold text-xs mt-0.5">{selectedEventModal.prizes.third}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Coordinators */}
-            {selectedEventModal.id === 'prize-distribution' ? (
-              <div className="space-y-2">
-                <h4 className="font-mono text-[10px] text-[#A8A8AC] uppercase tracking-wider font-bold">
-                  // EVENT COORDINATORS
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-mono">
-                  {/* OVERALL COORDINATOR */}
-                  <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg space-y-1">
-                    <div className="text-[10px] text-[#C084FC] uppercase font-bold tracking-wider">
-                      OVERALL COORDINATOR
+            {/* Scrollable Modal Content */}
+            <div className="p-3 sm:p-5 overflow-y-auto space-y-3 sm:space-y-4 flex-1 custom-scrollbar">
+              {/* Quick Meta Stats */}
+              {selectedEventModal.id === 'prize-distribution' ? (
+                <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                  <div className="p-2 sm:p-3 bg-[#130E22] border border-[#2B1E48] rounded-xl flex items-center gap-2">
+                    <div className="p-1.5 bg-[#261E0A] border border-[#F5D90A]/30 rounded-lg text-[#F5D90A] shrink-0">
+                      <Clock className="w-3.5 h-3.5" />
                     </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Saran S: </span>
-                      <a href="tel:+919629993985" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 96299 93985
-                      </a>
-                    </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Bharani E K: </span>
-                      <a href="tel:+918807176399" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 88071 76399
-                      </a>
+                    <div className="min-w-0">
+                      <div className="text-[#8E8A99] text-[9px] uppercase font-bold tracking-wider">TIME</div>
+                      <div className="text-white font-bold text-[10px] sm:text-xs truncate">03:00 PM – 04:00 PM</div>
                     </div>
                   </div>
-
-                  {/* TECHNICAL EVENT */}
-                  <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg space-y-1">
-                    <div className="text-[10px] text-[#3CE7FF] uppercase font-bold tracking-wider">
-                      TECHNICAL EVENT
+                  <div className="p-2 sm:p-3 bg-[#130E22] border border-[#2B1E48] rounded-xl flex items-center gap-2">
+                    <div className="p-1.5 bg-[#0A2228] border border-[#3CE7FF]/30 rounded-lg text-[#3CE7FF] shrink-0">
+                      <MapPin className="w-3.5 h-3.5" />
                     </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Kishore E: </span>
-                      <a href="tel:+918903664244" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 89036 64244
-                      </a>
-                    </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Amisha S: </span>
-                      <a href="tel:+919360384877" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 93603 84877
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* NON TECHNICAL EVENT */}
-                  <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg space-y-1">
-                    <div className="text-[10px] text-[#FF3366] uppercase font-bold tracking-wider">
-                      NON TECHNICAL EVENT
-                    </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Jeo Justin J K: </span>
-                      <a href="tel:+919043678257" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 90436 78257
-                      </a>
-                    </div>
-                    <div className="text-[#D0D0D4]">
-                      <span>Nandhini S: </span>
-                      <a href="tel:+919042736307" className="text-[#3CE7FF] font-bold hover:underline">
-                        +91 90427 36307
-                      </a>
+                    <div className="min-w-0">
+                      <div className="text-[#8E8A99] text-[9px] uppercase font-bold tracking-wider">VENUE</div>
+                      <div className="text-white font-bold text-[10px] sm:text-xs truncate">Main Auditorium</div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              selectedEventModal.coordinators && selectedEventModal.coordinators.length > 0 && (
-                <div className="space-y-1">
-                  <h4 className="font-mono text-[10px] text-[#A8A8AC] uppercase tracking-wider font-bold">
-                    // EVENT COORDINATORS
+              ) : (
+                <div className="grid grid-cols-3 gap-1.5 text-[10px] sm:text-xs font-mono">
+                  <div className="p-1.5 sm:p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                    <div className="text-[#A8A8AC] text-[9px] sm:text-[10px] flex items-center gap-1">
+                      <Users className="w-3 h-3 text-[#F5D90A] shrink-0" /> <span className="truncate">TEAM SIZE</span>
+                    </div>
+                    <div className="text-white font-bold mt-0.5 text-[10px] sm:text-xs truncate">
+                      {selectedEventModal.team_size_min}{selectedEventModal.team_size_min !== selectedEventModal.team_size_max ? `-${selectedEventModal.team_size_max}` : ''} M
+                    </div>
+                  </div>
+                  <div className="p-1.5 sm:p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                    <div className="text-[#A8A8AC] text-[9px] sm:text-[10px] flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-[#F5D90A] shrink-0" /> <span className="truncate">TIME</span>
+                    </div>
+                    <div className="text-white font-bold mt-0.5 text-[10px] sm:text-xs truncate">
+                      {selectedEventModal.schedule_time}
+                    </div>
+                  </div>
+                  <div className="p-1.5 sm:p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
+                    <div className="text-[#A8A8AC] text-[9px] sm:text-[10px] flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-[#3CE7FF] shrink-0" /> <span className="truncate">VENUE</span>
+                    </div>
+                    <div className="text-white font-bold mt-0.5 text-[10px] sm:text-xs truncate">
+                      {selectedEventModal.venue || 'TBA'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* PROGRAM (Only for Prize Distribution) */}
+              {selectedEventModal.id === 'prize-distribution' && (
+                <div className="space-y-1.5">
+                  <h4 className="font-mono text-[10px] sm:text-xs text-[#C084FC] uppercase tracking-wider font-bold">
+                    // PROGRAM
                   </h4>
-                  <div className="flex flex-col items-start gap-1.5">
+                  <div className="p-2.5 sm:p-4 bg-[#130E22] border border-[#2B1E48] rounded-xl">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 font-mono text-[10px] sm:text-xs text-[#D8D5E3]">
+                      <div className="space-y-1 sm:space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Welcome &amp; Opening</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Winner Recognition</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Certificate Distribution</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Trophy &amp; Shield Presentation</span>
+                        </div>
+                      </div>
+                      <div className="space-y-1 sm:space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Cash Prize Distribution</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Valedictory Address</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#C084FC] font-bold">•</span>
+                          <span>Closing Ceremony</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Prize Rewards */}
+              {selectedEventModal.prizes && (
+                <div className="space-y-1 sm:space-y-1.5">
+                  <h4 className="font-mono text-[10px] sm:text-xs text-[#C084FC] uppercase tracking-wider font-bold flex items-center gap-1.5">
+                    <Trophy className="w-3.5 h-3.5 text-[#C084FC]" /> PRIZE REWARDS
+                  </h4>
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-3 text-xs">
+                    {/* 1st Prize Card */}
+                    <div className="p-1.5 sm:p-3 bg-[#151026] rounded-xl border border-[#F5D90A]/80 flex flex-col sm:flex-row items-center text-center sm:text-left gap-1 sm:gap-3">
+                      <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-[#F5D90A] shrink-0" />
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="text-[8px] sm:text-[10px] font-mono font-black text-[#F5D90A] tracking-widest uppercase">
+                          1ST PRIZE
+                        </div>
+                        <div className="text-white font-display font-extrabold text-[10px] sm:text-base tracking-wide truncate">
+                          {selectedEventModal.prizes.first}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2nd Prize Card */}
+                    <div className="p-1.5 sm:p-3 bg-[#151026] rounded-xl border border-[#3CE7FF]/80 flex flex-col sm:flex-row items-center text-center sm:text-left gap-1 sm:gap-3">
+                      <ShieldCheck className="w-4 h-4 sm:w-6 sm:h-6 text-[#3CE7FF] shrink-0" />
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="text-[8px] sm:text-[10px] font-mono font-black text-[#3CE7FF] tracking-widest uppercase">
+                          2ND PRIZE
+                        </div>
+                        <div className="text-white font-display font-extrabold text-[10px] sm:text-base tracking-wide truncate">
+                          {selectedEventModal.prizes.second}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3rd Prize Card */}
+                    {selectedEventModal.id !== 'prize-distribution' && (
+                      <div className="p-1.5 sm:p-3 bg-[#151026] rounded-xl border border-[#FF3366]/80 flex flex-col sm:flex-row items-center text-center sm:text-left gap-1 sm:gap-3">
+                        <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-[#FF3366] shrink-0" />
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="text-[8px] sm:text-[10px] font-mono font-black text-[#FF3366] tracking-widest uppercase">
+                            3RD PRIZE
+                          </div>
+                          <div className="text-white font-display font-extrabold text-[10px] sm:text-base tracking-wide truncate">
+                            {selectedEventModal.prizes.third || 'Certificate'}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Rules / Important */}
+              {selectedEventModal.id === 'prize-distribution' ? (
+                <div className="space-y-1.5">
+                  <h4 className="font-mono text-[10px] sm:text-xs text-[#C084FC] uppercase tracking-wider font-bold">
+                    // IMPORTANT
+                  </h4>
+                  <div className="p-2.5 sm:p-3 bg-[#140F24] border border-purple-900/40 rounded-xl">
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 font-comic text-[10px] sm:text-xs text-[#D0D0D4]">
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                        <span>All winners must assemble at Main Auditorium before ceremony.</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                        <span>Prizes awarded according to official results.</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                        <span>Winners must be present to receive prizes.</span>
+                      </li>
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                        <span>Maintain discipline throughout ceremony.</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                selectedEventModal.rules && selectedEventModal.rules.length > 0 && (
+                  <div className="space-y-1">
+                    <h4 className="font-mono text-[10px] sm:text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
+                      // RULES &amp; GUIDELINES
+                    </h4>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-0.5">
+                      {selectedEventModal.rules.map((rule, rIdx) => (
+                        <li key={rIdx} className="flex items-start gap-1 text-[10px] sm:text-[11px] font-comic text-[#C0C0C5] leading-tight">
+                          <span className="text-[#C084FC] shrink-0 font-bold">•</span>
+                          <span>{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              )}
+
+              {/* Helpline & Coordinators */}
+              {selectedEventModal.coordinators && selectedEventModal.coordinators.length > 0 && (
+                <div className="space-y-1 sm:space-y-1.5">
+                  <h4 className="font-mono text-[10px] sm:text-xs text-[#A8A8AC] uppercase tracking-wider font-bold">
+                    // HELPLINE &amp; COORDINATORS
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {selectedEventModal.coordinators.map((c, cIdx) => (
-                      <div key={cIdx} className="text-[11px] font-mono text-[#D0D0D4] flex items-center gap-1 bg-[#1A1A1E] px-2 py-0.5 rounded border border-[#2E2E33]">
-                        <span>{c.name}{c.phone ? ':' : ''}</span>
+                      <div key={cIdx} className="text-[10px] sm:text-xs font-mono text-[#D0D0D4] flex items-center gap-1 bg-[#1A1A1E] px-2 py-0.5 sm:px-2.5 sm:py-1 rounded border border-[#2E2E33]">
+                        <span>{c.name} ({c.role}):</span>
                         {c.phone && (
                           <a href={`tel:${c.phone}`} className="text-[#3CE7FF] hover:underline font-bold">
                             {c.phone}
@@ -716,18 +685,18 @@ export const EventScheduleView: React.FC<{
                     ))}
                   </div>
                 </div>
-              )
-            )}
+              )}
+            </div>
 
-            {/* Modal Register CTA Button (Hidden for Prize Distribution) */}
+            {/* Sticky CTA Footer */}
             {selectedEventModal.id !== 'prize-distribution' && (
-              <div className="pt-1">
+              <div className="p-2.5 sm:p-3.5 bg-[#0B0715] border-t border-[#231A36] shrink-0 z-10">
                 <button
                   onClick={() => {
                     triggerAudio();
                     navigate(`/register?mission=${selectedEventModal.id}`);
                   }}
-                  className={`w-full py-2.5 font-display text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
+                  className={`w-full py-2.5 sm:py-3.5 font-display text-xs sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[3px_3px_0px_#000000] sm:shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
                     selectedEventModal.event_type === 'TECH'
                       ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
                       : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'

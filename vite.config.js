@@ -16,6 +16,12 @@ export default defineConfig({
     }
   },
   server: {
+    // The Flask backend writes JSON into backend/data/ on every registration.
+    // Those files live under the project root, so without this the watcher
+    // fires a full page reload mid-request and aborts the in-flight fetch.
+    watch: {
+      ignored: ['**/backend/**']
+    },
     host: true,
     port: 5173,
     proxy: {

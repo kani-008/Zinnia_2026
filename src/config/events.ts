@@ -323,5 +323,41 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     },
     status: 'AVAILABLE',
     icon_name: 'camera'
+  },
+  {
+    id: 'prize-distribution',
+    code: 'FINALE',
+    mission_name: 'PRIZE DISTRIBUTION',
+    title: 'Prize Distribution',
+    tagline: 'HONOR. VICTORY. CELEBRATION.',
+    event_type: 'NON_TECH',
+    category: 'VALEDICTORY',
+    clearance_level: 'SPECIAL',
+    team_size_min: 0,
+    team_size_max: 0,
+    schedule_time: '03:00 PM – 04:00 PM',
+    duration: '1 hr',
+    venue: 'Main Auditorium',
+    description: 'Celebrate the winners of ZINNIA \'26 with the presentation of trophies, shields, certificates, and cash prizes, marking the grand conclusion of the symposium.',
+    rules: [
+      'All winners must assemble at the Main Auditorium before the ceremony.',
+      'Winners must be present to receive their prizes.',
+      'Prizes will be awarded according to the official event results.',
+      'Maintain discipline throughout the ceremony.'
+    ],
+    coordinators: [
+      { name: 'Saran S', role: 'OVERALL COORDINATOR', phone: '+91 96299 93985' },
+      { name: 'Bharani E K', role: 'OVERALL COORDINATOR', phone: '+91 88071 76399' },
+      { name: 'Kishore E', role: 'TECHNICAL COORDINATOR', phone: '+91 89036 64244' },
+      { name: 'Amisha', role: 'TECHNICAL COORDINATOR', phone: '+91 93603 84877' },
+      { name: 'Jeo Justin', role: 'NON-TECH COORDINATOR', phone: '+91 90436 78257' },
+      { name: 'Nandhini S', role: 'NON-TECH COORDINATOR', phone: '+91 90427 36307' }
+    ],
+    prizes: {
+      first: '₹30,000 + Cash Prize',
+      second: 'Merit Shield'
+    },
+    status: 'AVAILABLE',
+    icon_name: 'trophy'
   }
 ];

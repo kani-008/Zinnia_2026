@@ -18,11 +18,15 @@ class PaymentController:
     def get_status():
         """GET /api/payment/status?team_id=... — Fetch live payment details."""
         team_id = request.args.get("team_id") or request.args.get("id", "")
+        print(f"\n[Backend API] 📥 GET /api/payment/status?team_id={team_id}")
         if not team_id:
+            print("[Backend API] ❌ GET /api/payment/status -> HTTP 400 | Missing team_id")
             return jsonify({"success": False, "error_code": "TEAM_NOT_FOUND", "message": "Missing team_id parameter."}), 400
 
         result = get_payment_status_service(team_id)
-        return jsonify(result), 200
+        status_code = 200 if result.get("success") else 404
+        print(f"[Backend API] 📤 GET /api/payment/status -> HTTP {status_code} | Result: {result}\n")
+        return jsonify(result), status_code
 
     @staticmethod
     def submit_payment():
@@ -33,6 +37,7 @@ class PaymentController:
         data = request.get_json(silent=True) or {}
         team_id = data.get("team_id")
         utr_number = data.get("utr_number")
+        print(f"\n[Backend API] 📥 POST /api/payment/submit received: {data}")
         
         try:
             submitted_amount = float(data.get("submitted_amount", 0))
@@ -45,6 +50,7 @@ class PaymentController:
             submitted_amount=submitted_amount
         )
         status_code = 200 if result.get("success") else (result.get("status_code") or 400)
+        print(f"[Backend API] 📤 POST /api/payment/submit -> HTTP {status_code} | Result: {result}\n")
         return jsonify(result), status_code
 
     @staticmethod

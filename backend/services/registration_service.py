@@ -149,6 +149,7 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
             }
 
         for email in member_emails:
+            # 1. Check verified main table (team_members)
             ok, res = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/team_members?email=eq.{email}&select=id,name", headers)
             if ok and isinstance(res, list) and len(res) > 0:
                 existing = res[0]
@@ -157,63 +158,22 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
                     "error_code": "DUPLICATE_EMAIL",
                     "message": f"Email '{email}' is already registered by attendee '{existing.get('name')}'."
                 }
-
-        team_id = generate_team_id()
-        team_row = {
-            "team_id": team_id,
-            "team_name": team_name,
-            "college": college,
-            "department": department,
-            "year": year,
-            "registered_events": selected_event_ids,
-            "payment_status": "AWAITING_PAYMENT"
-        }
-        ok_t, res_t = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/teams", headers, team_row)
-        if not ok_t:
-            err_text = res_t.get("text", "") if isinstance(res_t, dict) else str(res_t)
-            print(f"[Supabase DB Write Error] Team registration failed for {team_id}: {err_text}")
-            if "row-level security" in err_text.lower() or "42501" in err_text:
+            
+            # 2. Check unverified staging table (pending_registration_emails)
+            ok_pe, res_pe = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/pending_registration_emails?email=eq.{email}&select=email,team_id", headers)
+            if ok_pe and isinstance(res_pe, list) and len(res_pe) > 0:
                 return {
                     "success": False,
-                    "error_code": "RLS_POLICY_ERROR",
-                    "message": "Database write blocked by Row Level Security (RLS). Please run fix_supabase_schema_and_rls.sql in Supabase SQL Editor or disable RLS on tables."
+                    "error_code": "DUPLICATE_EMAIL",
+                    "message": f"Email '{email}' is already registered in pending queue (Team {res_pe[0].get('team_id')})."
                 }
-            return {
-                "success": False,
-                "error_code": "DB_INSERTION_FAILED",
-                "message": f"Failed to store registration in database: {err_text}"
-            }
 
-        payment_row = {
-            "team_id": team_id,
-            "expected_amount": expected_amount,
-            "submitted_amount": None,
-            "utr_number": None,
-            "payment_status": "AWAITING_PAYMENT"
-        }
-        safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_payments", headers, payment_row)
-        try:
-            from services.payment_service import save_local_payment
-            save_local_payment(team_id, payment_row)
-        except Exception:
-            pass
+        team_id = generate_team_id()
 
-        event_reg_rows = [
-            {
-                "team_id": team_id,
-                "event_id": ev["id"],
-                "team_name": team_name
-            }
-            for ev in validated_events
-        ]
-        if event_reg_rows:
-            safe_supabase_post(f"{SUPABASE_URL}/rest/v1/event_registrations", headers, event_reg_rows)
-
-        created_members = []
+        formatted_members = []
         leader_assigned = False
 
         for idx, m in enumerate(members):
-            m_id = f"ATT-{team_id[-4:]}-{idx+1}"
             m_name = m.get("name", "").strip()
             m_email = m.get("email", "").strip().lower()
             m_phone = m.get("phone", "").strip()
@@ -224,43 +184,80 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
                     is_leader = True
                     leader_assigned = True
 
-            passport_token = secrets.token_hex(16)
-            member_row = {
-                "id": m_id,
-                "team_id": team_id,
+            formatted_members.append({
                 "name": m_name,
                 "email": m_email,
                 "phone": m_phone,
                 "is_leader": is_leader,
-                "passport_token": passport_token,
-                "food_preference": m.get("food_preference") or "VEG"
-            }
-            created_members.append(member_row)
+                "food_preference": (m.get("food_preference") or "VEG").upper()
+            })
 
-        ok_m, resp_m = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, created_members, log_error=False)
-        if not ok_m and "food_preference" in str(resp_m):
-            members_no_food = [{k: v for k, v in m.items() if k != "food_preference"} for m in created_members]
-            safe_supabase_post(f"{SUPABASE_URL}/rest/v1/team_members", headers, members_no_food)
+        # Insert to staging table: pending_registrations
+        pending_row = {
+            "team_id": team_id,
+            "team_name": team_name,
+            "college": college,
+            "department": department,
+            "year": year,
+            "registered_events": selected_event_ids,
+            "members": formatted_members,
+            "utr_number": None,
+            "submitted_amount": None,
+            "expected_amount": expected_amount,
+            "payment_status": "AWAITING_PAYMENT"
+        }
 
-        dispatch_result = None
-        if expected_amount == 0:
+        ok_p, res_p = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/pending_registrations", headers, pending_row)
+        if not ok_p:
+            err_text = res_p.get("text", "") if isinstance(res_p, dict) else str(res_p)
+            print(f"[Supabase Staging Write Error] Pending registration failed for {team_id}: {err_text}")
+            if "row-level security" in err_text.lower() or "42501" in err_text:
+                return {
+                    "success": False,
+                    "error_code": "RLS_POLICY_ERROR",
+                    "message": "Database write blocked by Row Level Security (RLS). Please ensure 002_pending_registrations.sql was run in Supabase SQL Editor."
+                }
+            # Fallback to local storage if staging table is being created
             try:
-                from services.passport_service import trigger_passport_dispatch
-                requests.patch(f"{SUPABASE_URL}/rest/v1/teams?team_id=eq.{team_id}", headers=headers, json={"payment_status": "VERIFIED"})
-                requests.patch(f"{SUPABASE_URL}/rest/v1/team_payments?team_id=eq.{team_id}", headers=headers, json={"payment_status": "VERIFIED"})
-                dispatch_result = trigger_passport_dispatch(team_id)
-            except Exception as e:
-                print(f"[Registration Dispatch Notice] Free auto-dispatch notice: {e}")
+                from services.payment_service import save_local_payment
+                save_local_payment(team_id, pending_row)
+            except Exception:
+                pass
+
+        # Insert to staging email uniqueness table: pending_registration_emails
+        email_rows = [{"email": m["email"].lower(), "team_id": team_id} for m in formatted_members]
+        ok_e, res_e = safe_supabase_post(f"{SUPABASE_URL}/rest/v1/pending_registration_emails", headers, email_rows, log_error=False)
+        if not ok_e and ok_p:
+            err_e_text = str(res_e)
+            # Roll back the pending_registrations row unconditionally
+            requests.delete(f"{SUPABASE_URL}/rest/v1/pending_registrations?team_id=eq.{team_id}", headers=headers)
+            if "unique" in err_e_text.lower() or "duplicate" in err_e_text.lower() or "23505" in err_e_text:
+                return {
+                    "success": False,
+                    "error_code": "DUPLICATE_EMAIL",
+                    "message": "One or more email addresses are already registered in a pending registration."
+                }
+            return {
+                "success": False,
+                "error_code": "REGISTRATION_FAILED",
+                "message": f"Failed to reserve registration details: {err_e_text}"
+            }
+
+        # Backup local cache
+        try:
+            from services.payment_service import save_local_payment
+            save_local_payment(team_id, pending_row)
+        except Exception:
+            pass
 
         return {
             "success": True,
             "team_id": team_id,
             "team_name": team_name,
-            "members": created_members,
+            "members": formatted_members,
             "registered_events": selected_event_ids,
             "expected_amount": expected_amount,
-            "payment_status": "AWAITING_PAYMENT" if expected_amount > 0 else "VERIFIED",
-            "dispatch_status": bool(dispatch_result)
+            "payment_status": "AWAITING_PAYMENT"
         }
 
     except Exception as e:
