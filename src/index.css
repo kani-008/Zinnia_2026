@@ -1,0 +1,1415 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   TYPE SYSTEM - three families, no more:
+     1. Luckiest Guy  -> display headings
+     2. Bangers       -> comic accents (buttons, stickers, badges)
+     3. JetBrains Mono -> every piece of running text and UI label
+   The older aliases are kept so existing classes keep working, but they
+   now resolve to one of the three above.
+   ========================================================================= */
+@theme {
+  --font-display: 'Luckiest Guy', cursive, sans-serif;
+  --font-comic: 'Bangers', cursive, sans-serif;
+  --font-sans: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  --font-bungee: var(--font-display);
+  --font-marker: var(--font-comic);
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: #08090A;
+  color: #EEEEEA;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  background-color: #08090A;
+  color: #EEEEEA;
+  -webkit-overflow-scrolling: touch;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tech HUD Cyber Background Utilities */
+.bg-tech-hud {
+  background-image: url('/tech_hud_bg.png');
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Comic Fonts Utilities */
+.font-comic {
+  font-family: var(--font-comic);
+  letter-spacing: 0.05em;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-bungee {
+  font-family: var(--font-bungee);
+}
+
+.font-marker {
+  font-family: var(--font-marker);
+}
+
+/* =========================================================================
+   SKETCHED OFFSET COMIC BUTTON (Polygon Double-Box)
+   ========================================================================= */
+.comic-button {
+  --cb-h: 52px;
+  --cb-box-w: 130px;
+  --cb-box-h: 42px;
+  --cb-font: 13.5px;
+  position: relative;
+  width: var(--cb-w, 138px);
+  height: var(--cb-h);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.comic-button-cyan {
+  --cb-h: 52px;
+  --cb-box-w: 130px;
+  --cb-box-h: 42px;
+  --cb-font: 14px;
+  position: relative;
+  width: var(--cb-w, 138px);
+  height: var(--cb-h);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.back-box {
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
+  background: #08090A;
+  border: 2px solid #B8B8B2;
+  clip-path: polygon(
+    2% 5%,
+    97% 1%,
+    100% 7%,
+    98% 94%,
+    95% 98%,
+    4% 100%,
+    0% 92%
+  );
+  z-index: 1;
+}
+
+.back-box-cyan {
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
+  background: #08090A;
+  border: 2px solid #0FA9C6;
+  clip-path: polygon(
+    2% 5%,
+    97% 1%,
+    100% 7%,
+    98% 94%,
+    95% 98%,
+    4% 100%,
+    0% 92%
+  );
+  z-index: 1;
+}
+
+.front-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
+  background: #08090A;
+  border: 2px solid #EEEEEA;
+  color: #EEEEEA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-family: var(--font-sans);
+  font-size: var(--cb-font);
+  font-weight: 800;
+  font-style: italic;
+  clip-path: polygon(
+    1% 4%,
+    98% 1%,
+    100% 6%,
+    98% 94%,
+    96% 98%,
+    3% 96%,
+    1% 91%
+  );
+  z-index: 2;
+  transition: transform 0.12s ease;
+}
+
+/* Fluid variant: fills its container and scales with the viewport. */
+.comic-button-fluid {
+  --cb-w: 100%;
+  --cb-h: clamp(1.9rem, 8vw, 2.35rem);
+  --cb-box-w: calc(100% - 7px);
+  --cb-box-h: calc(var(--cb-h) - 8px);
+  --cb-font: clamp(0.55rem, 2.5vw, 0.7rem);
+  display: block;
+  width: 100%;
+}
+
+.comic-button-fluid .back-box,
+.comic-button-fluid .back-box-cyan {
+  left: 4px;
+  top: 5px;
+}
+
+.comic-button-fluid .lightning {
+  font-size: clamp(0.6rem, 2.7vw, 0.8rem);
+}
+
+/* Square icon button wearing the same double-box comic border as the menu items */
+.comic-icon-button {
+  --cb-h: clamp(1.75rem, 7.5vw, 2rem);
+  --cb-w: var(--cb-h);
+  --cb-box-w: calc(var(--cb-h) - 5px);
+  --cb-box-h: calc(var(--cb-h) - 5px);
+  position: relative;
+  width: var(--cb-w);
+  height: var(--cb-h);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.comic-icon-button .back-box {
+  left: 3px;
+  top: 4px;
+}
+
+.comic-icon-button .front-box {
+  flex-direction: column;
+  gap: 3px;
+}
+
+.front-box-cyan {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--cb-box-w);
+  height: var(--cb-box-h);
+  background: #0FA9C6;
+  border: 2px solid #090A0B;
+  color: #090A0B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-family: var(--font-sans);
+  font-size: var(--cb-font);
+  font-weight: 800;
+  font-style: italic;
+  clip-path: polygon(
+    1% 4%,
+    98% 1%,
+    100% 6%,
+    98% 94%,
+    96% 98%,
+    3% 96%,
+    1% 91%
+  );
+  z-index: 2;
+  transition: transform 0.12s ease, background-color 0.15s ease;
+}
+
+.lightning {
+  color: #E5BD00;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.comic-button:hover .front-box,
+.comic-button-cyan:hover .front-box-cyan {
+  transform: translate(-1px, -1px);
+}
+
+.comic-button-cyan:hover .front-box-cyan {
+  background: #E5BD00;
+}
+
+.comic-button:active .front-box,
+.comic-button-cyan:active .front-box-cyan {
+  transform: translate(5px, 6px);
+}
+
+/* =========================================================================
+   HERO CTA: HAND-INKED COMIC PANEL (REGISTER FOR ZINNIA)
+   ========================================================================= */
+.comic-cta-wrapper {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  user-select: none;
+}
+
+.comic-cta-back {
+  position: absolute;
+  left: 7px;
+  top: 9px;
+  width: 100%;
+  height: 100%;
+  background: #08090A;
+  border: 2px solid #B8B8B2;
+  clip-path: polygon(
+    1.2% 4.5%,
+    98.5% 1%,
+    100% 6.5%,
+    98.5% 95.5%,
+    96% 99%,
+    3.5% 98.5%,
+    0.5% 92.5%
+  );
+  z-index: 1;
+}
+
+.comic-cta-front {
+  position: relative;
+  width: 100%;
+  background: #0FA9C6;
+  border: 2.5px solid #090A0B;
+  color: #090A0B;
+  clip-path: polygon(
+    0.8% 3.5%,
+    99.2% 1.2%,
+    100% 5.8%,
+    99% 94.5%,
+    96.5% 98.5%,
+    3% 97.2%,
+    0.8% 92%
+  );
+  z-index: 2;
+  transition: transform 0.12s ease, background-color 0.15s ease;
+}
+
+.comic-cta-wrapper:hover .comic-cta-front {
+  transform: translate(-2px, -2px);
+  background-color: #E5BD00;
+}
+
+.comic-cta-wrapper:active .comic-cta-front {
+  transform: translate(7px, 9px);
+}
+
+/* =========================================================================
+   HERO 100VH VIEWPORT ADAPTIVE CONTAINER (Preserves Exact Proportions)
+   ========================================================================= */
+.hero-viewport-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+}
+
+@media (min-width: 1024px) and (max-height: 920px) {
+  .hero-viewport-container {
+    transform: scale(0.92);
+    transform-origin: top center;
+    margin-bottom: -5vh;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 800px) {
+  .hero-viewport-container {
+    transform: scale(0.84);
+    transform-origin: top center;
+    margin-bottom: -12vh;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 720px) {
+  .hero-viewport-container {
+    transform: scale(0.76);
+    transform-origin: top center;
+    margin-bottom: -18vh;
+  }
+}
+
+/* Halftone Dot Pattern */
+.comic-halftone {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+
+  background-image: radial-gradient(circle,
+      rgba(255, 255, 255, .28) 1.5px,
+      transparent 1.6px);
+
+  background-size: 12px 12px;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
+  pointer-events: none;
+}
+
+.bg-halftone-dots {
+  background-image: radial-gradient(#090A0B 18%, transparent 20%);
+  background-position: 0 0, 8px 8px;
+  background-size: 16px 16px;
+}
+
+.bg-halftone-dots-cyan {
+  background-image: radial-gradient(#0FA9C6 22%, transparent 24%);
+  background-position: 0 0, 6px 6px;
+  background-size: 12px 12px;
+}
+
+.bg-halftone-dots-yellow {
+  background-image: radial-gradient(#E5BD00 25%, transparent 27%);
+  background-position: 0 0, 6px 6px;
+  background-size: 12px 12px;
+}
+
+.bg-halftone-dots-magenta {
+  background-image: radial-gradient(#D51F55 22%, transparent 24%);
+  background-position: 0 0, 6px 6px;
+  background-size: 12px 12px;
+}
+
+/* Comic Crosshatch Texture */
+.bg-comic-hatch {
+  background: repeating-linear-gradient(45deg,
+      transparent,
+      transparent 6px,
+      rgba(0, 0, 0, 0.12) 6px,
+      rgba(0, 0, 0, 0.12) 7.5px);
+}
+
+.bg-comic-hatch-dense {
+  background:
+    repeating-linear-gradient(45deg,
+      transparent,
+      transparent 4px,
+      rgba(0, 0, 0, 0.15) 4px,
+      rgba(0, 0, 0, 0.15) 5px),
+    repeating-linear-gradient(-45deg,
+      transparent,
+      transparent 4px,
+      rgba(0, 0, 0, 0.15) 4px,
+      rgba(0, 0, 0, 0.15) 5px);
+}
+
+/* Comic Speedlines / Sunburst */
+.bg-comic-sunburst {
+  background: repeating-conic-gradient(from 0deg,
+      #E5BD00 0deg 10deg,
+      #C29F00 10deg 20deg);
+}
+
+.bg-comic-sunburst-cyan {
+  background: repeating-conic-gradient(from 0deg,
+      #0FA9C6 0deg 8deg,
+      #08758A 8deg 16deg);
+}
+
+/* Hard 2D Comic Shadows */
+.shadow-comic-sm {
+  box-shadow: 3px 3px 0px #090A0B;
+}
+
+.shadow-comic {
+  box-shadow: 5px 5px 0px #090A0B;
+}
+
+.shadow-comic-lg {
+  box-shadow: 8px 8px 0px #090A0B;
+}
+
+.shadow-comic-xl {
+  box-shadow: 12px 12px 0px #090A0B;
+}
+
+.shadow-comic-yellow {
+  box-shadow: 6px 6px 0px #E5BD00, 6px 6px 0px 3px #090A0B;
+}
+
+.shadow-comic-cyan {
+  box-shadow: 6px 6px 0px #0FA9C6, 6px 6px 0px 3px #090A0B;
+}
+
+/* Comic Text Stroke Outline */
+.text-stroke-comic {
+  -webkit-text-stroke: 3px #090A0B;
+  text-shadow: 4px 4px 0px #090A0B;
+}
+
+.text-stroke-comic-sm {
+  -webkit-text-stroke: 1.5px #090A0B;
+  text-shadow: 2px 2px 0px #090A0B;
+}
+
+/* Floating Toy Animation for Ultron Register Transition */
+@keyframes ultronToyFloat {
+  0% {
+    transform: scale(0.3) translateY(120px) rotate(-15deg);
+    opacity: 0;
+  }
+  18% {
+    transform: scale(1.15) translateY(-15px) rotate(6deg);
+    opacity: 1;
+  }
+  45% {
+    transform: scale(1.0) translateY(-35px) rotate(-6deg);
+  }
+  75% {
+    transform: scale(1.08) translateY(-10px) rotate(4deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.25) translateY(-140px) rotate(15deg);
+    opacity: 0;
+  }
+}
+
+.animate-ultron-toy-float {
+  animation: ultronToyFloat 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes comicPulseGlow {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
+}
+
+@keyframes secSnapAnim {
+  0%   { transform: rotate(1.2deg) scale(1); }
+  35%  { transform: rotate(0.4deg) scale(0.97) translateY(1px); }
+  70%  { transform: rotate(1.6deg) scale(1.02) translateY(-1px); }
+  100% { transform: rotate(1.2deg) scale(1); }
+}
+
+.sec-box-snap {
+  animation: secSnapAnim 160ms ease-out;
+}
+
+/* Mini Ultron Toys Swarm Explosion Keyframes */
+@keyframes miniUltronSwarm {
+  0% {
+    transform: scale(0.2) translateY(50px) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1) translateY(-10px) rotate(var(--toy-rot, 12deg));
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.1) translateY(-40px) rotate(calc(var(--toy-rot, 12deg) * -1));
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(0.3) translateY(-120px) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+.animate-mini-ultron-swarm {
+  animation: miniUltronSwarm 1.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes glitterTwinkle {
+  0%, 100% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.4) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+.animate-glitter-twinkle {
+  animation: glitterTwinkle 1.2s ease-in-out infinite;
+}
+
+.text-stroke-comic-lg {
+  -webkit-text-stroke: 4.5px #090A0B;
+  text-shadow: 6px 6px 0px #090A0B;
+}
+
+/* Comic Interactive Button Pop */
+.btn-comic {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-comic:hover {
+  box-shadow: 8px 8px 0px #090A0B;
+}
+
+/* Tactile Paper Sticker Pop Hover with Overshoot Bouncy Cubic-Bezier Ease */
+.sticker-pop {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+
+.sticker-pop:hover {
+  transform: scale(1.08) rotate(-2deg) !important;
+  box-shadow: 5px 5px 0px #090A0B;
+}
+
+.sticker-pop-alt {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+
+.sticker-pop-alt:hover {
+  transform: scale(1.08) rotate(3deg) !important;
+  box-shadow: 5px 5px 0px #090A0B;
+}
+
+/* Infinite Marquee Ticker */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 25s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Scroll Reveal (Ease-out-expo cubic-bezier curve) */
+.scroll-reveal-init {
+  opacity: 0;
+  transform: translateY(40px) scale(0.95);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.scroll-reveal-visible {
+  opacity: 1 !important;
+  transform: translateY(0px) scale(1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal-init {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* Jagged Hand-Drawn Borders (Clip Paths & Borders) */
+.comic-panel-skew-1 {
+  clip-path: polygon(0.5% 1%, 99.2% 0.3%, 99.8% 99.2%, 0.2% 98.6%);
+}
+
+.comic-panel-skew-2 {
+  clip-path: polygon(0.8% 0.4%, 99.5% 1.2%, 98.8% 99.5%, 0.4% 99.1%);
+}
+
+/* Animated Web Spider Horizontal Crawling Across Input Field */
+@keyframes spiderTraverse {
+  0% {
+    left: 12px;
+    transform: translateY(-50%) scaleX(1) rotate(0deg);
+  }
+  24% {
+    transform: translateY(-56%) scaleX(1) rotate(6deg);
+  }
+  48% {
+    left: calc(100% - 30px);
+    transform: translateY(-50%) scaleX(1) rotate(0deg);
+  }
+  50% {
+    left: calc(100% - 30px);
+    transform: translateY(-50%) scaleX(-1) rotate(0deg);
+  }
+  74% {
+    transform: translateY(-56%) scaleX(-1) rotate(-6deg);
+  }
+  98% {
+    left: 12px;
+    transform: translateY(-50%) scaleX(-1) rotate(0deg);
+  }
+  100% {
+    left: 12px;
+    transform: translateY(-50%) scaleX(1) rotate(0deg);
+  }
+}
+
+.animate-spider-traverse {
+  animation: spiderTraverse 7s ease-in-out infinite;
+}
+
+.animate-spider-traverse-fast {
+  animation: spiderTraverse 3.5s ease-in-out infinite;
+}
+
+/* Eye-Catching Continuous Spider Movement */
+@keyframes spiderActiveMove {
+  0% {
+    transform: translateY(0px) rotate(-8deg) scale(1);
+  }
+  20% {
+    transform: translateY(-4px) rotate(10deg) scale(1.12);
+  }
+  40% {
+    transform: translateY(3px) rotate(-12deg) scale(0.95);
+  }
+  60% {
+    transform: translateY(-5px) rotate(8deg) scale(1.08);
+  }
+  80% {
+    transform: translateY(2px) rotate(-6deg) scale(1.02);
+  }
+  100% {
+    transform: translateY(0px) rotate(-8deg) scale(1);
+  }
+}
+
+.animate-spider-always-move {
+  animation: spiderActiveMove 2.2s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* Animated Web Shooting from Right Spider to Left Side */
+@keyframes webShootFromRight {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+    transform-origin: right center;
+  }
+  60% {
+    transform: scaleX(1.04);
+    opacity: 0.85;
+    transform-origin: right center;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.7;
+    transform-origin: right center;
+  }
+}
+
+.animate-web-shoot-left {
+  animation: webShootFromRight 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: right center;
+}
+
+/* Continuous Electric Silk Flow Animation */
+@keyframes webSilkFlow {
+  0% {
+    stroke-dashoffset: 72;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-web-flow {
+  stroke-dasharray: 14 6;
+  animation: webSilkFlow 0.8s linear infinite;
+}
+
+.animate-web-flow-fast {
+  stroke-dasharray: 14 6;
+  animation: webSilkFlow 0.5s linear infinite;
+}
+
+/* 100px Silk Light Flow Animation */
+@keyframes webSilkFlow100 {
+  0% {
+    stroke-dashoffset: 140;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-web-flow-100 {
+  stroke-dasharray: 100 40;
+  animation: webSilkFlow100 0.6s linear infinite;
+}
+
+/* =========================================================
+   HAND-DRAWN COMIC EVENT CARD (Tech & Non-Tech)
+========================================================= */
+
+.comic-card-wrapper {
+  --cyan: #0FA9C6;
+  --cyan-dark: #08758A;
+  --cyan-shadow: #08758A;
+  --cyan-inner: #0FA9C6;
+  --cyan-dark-ink: #090A0B;
+
+  --pink: #D51F55;
+  --pink-dark: #A81443;
+  --pink-shadow: #A81443;
+  --pink-inner: #D51F55;
+  --pink-dark-ink: #090A0B;
+
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  background: transparent;
+  cursor: pointer;
+  transform: rotate(-0.45deg);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.comic-card-wrapper.tech {
+  --card-main: var(--cyan);
+  --card-shadow: var(--cyan-shadow);
+  --card-inner: var(--cyan-inner);
+  --card-dark: var(--cyan-dark-ink);
+}
+
+.comic-card-wrapper.non-tech {
+  --card-main: var(--pink);
+  --card-shadow: var(--pink-shadow);
+  --card-inner: var(--pink-inner);
+  --card-dark: var(--pink-dark-ink);
+}
+
+.comic-card-wrapper:hover {
+  transform: translateY(-5px) scale(1.025) rotate(0deg);
+}
+
+/* MAIN HAND-DRAWN CARD SVG */
+.card-svg-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.card-svg-frame .card-shadow {
+  fill: none;
+  stroke: var(--card-shadow);
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+.card-svg-frame .card-main {
+  fill: none;
+  stroke: var(--card-main);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.card-svg-frame .card-inner {
+  fill: none;
+  stroke: var(--card-inner);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* REUSABLE HAND-DRAWN FRAME (same ink as the event cards) */
+.comic-frame-box {
+  position: relative;
+  background: transparent;
+}
+
+.comic-frame-box.tech {
+  --card-main: #0FA9C6;
+  --card-shadow: #08758A;
+  --card-inner: #0FA9C6;
+}
+
+.comic-frame-box.non-tech {
+  --card-main: #D51F55;
+  --card-shadow: #A81443;
+  --card-inner: #D51F55;
+}
+
+.comic-frame-box.special {
+  --card-main: #F5D90A;
+  --card-shadow: #8A7400;
+  --card-inner: #F5D90A;
+}
+
+/* NUMBER HOLDER TAG */
+.comic-number-holder {
+  position: absolute;
+  top: 0px;
+  left: -2px;
+  width: 58px;
+  height: 47px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-main);
+  color: #090A0B;
+  font-family: var(--font-comic);
+  font-size: 19px;
+  font-weight: 900;
+  transform: rotate(-4deg);
+  clip-path: polygon(
+    3% 8%,
+    17% 4%,
+    33% 5%,
+    49% 2%,
+    66% 4%,
+    82% 2%,
+    97% 7%,
+    94% 27%,
+    97% 47%,
+    94% 69%,
+    87% 92%,
+    69% 97%,
+    51% 94%,
+    34% 98%,
+    16% 94%,
+    5% 87%,
+    2% 67%,
+    5% 48%,
+    2% 28%
+  );
+  pointer-events: none;
+}
+
+.comic-number-holder::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1.4px solid var(--card-dark);
+  clip-path: polygon(
+    4% 8%,
+    22% 4%,
+    41% 6%,
+    61% 3%,
+    91% 7%,
+    96% 28%,
+    93% 49%,
+    96% 72%,
+    89% 94%,
+    68% 91%,
+    47% 95%,
+    25% 92%,
+    7% 94%,
+    3% 72%,
+    6% 49%,
+    3% 28%
+  );
+  pointer-events: none;
+}
+
+.comic-number-holder::after {
+  content: "";
+  position: absolute;
+  right: -11px;
+  top: 4px;
+  width: 16px;
+  height: 2px;
+  background: var(--card-main);
+  transform: rotate(10deg);
+  pointer-events: none;
+}
+
+.comic-number-holder .number-text {
+  position: relative;
+  z-index: 5;
+  transform: translate(-1px, -1px);
+}
+
+/* NUMBER HOLDER TAIL */
+.comic-number-tail {
+  position: absolute;
+  left: 5px;
+  top: 39px;
+  width: 34px;
+  height: 18px;
+  z-index: 8;
+  background: var(--card-main);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    72% 100%,
+    34% 66%
+  );
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+
+.comic-number-tail::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  width: 23px;
+  height: 2px;
+  background: var(--card-dark);
+  transform: rotate(-12deg);
+}
+
+/* COMIC SCRIBBLES AROUND CARD */
+.comic-card-mark {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.comic-card-mark.one {
+  right: -2px;
+  top: 1px;
+  width: 35px;
+  height: 16px;
+}
+
+.comic-card-mark.one::before,
+.comic-card-mark.one::after {
+  content: "";
+  position: absolute;
+  height: 1.7px;
+  background: var(--card-main);
+  border-radius: 50%;
+}
+
+.comic-card-mark.one::before {
+  width: 24px;
+  right: 0;
+  top: 5px;
+  transform: rotate(-4deg);
+}
+
+.comic-card-mark.one::after {
+  width: 14px;
+  right: 7px;
+  top: 11px;
+  transform: rotate(4deg);
+}
+
+.comic-card-mark.two {
+  left: -1px;
+  bottom: -2px;
+  width: 38px;
+  height: 16px;
+}
+
+.comic-card-mark.two::before,
+.comic-card-mark.two::after {
+  content: "";
+  position: absolute;
+  height: 1.6px;
+  background: var(--card-main);
+}
+
+.comic-card-mark.two::before {
+  width: 22px;
+  left: 0;
+  top: 4px;
+  transform: rotate(4deg);
+}
+
+.comic-card-mark.two::after {
+  width: 14px;
+  left: 8px;
+  top: 10px;
+  transform: rotate(-5deg);
+}
+
+@media (max-width: 600px) {
+  .comic-number-holder {
+    width: 46px;
+    height: 38px;
+    font-size: 15px;
+  }
+
+  .comic-number-tail {
+    top: 32px;
+    width: 28px;
+    height: 15px;
+  }
+}
+
+/* =========================================================
+   TORN PAPER DIVIDER
+========================================================= */
+
+.torn-paper {
+  position: relative;
+  width: 100%;
+  height: 58px;
+  overflow: visible;
+  isolation: isolate;
+  transform: rotate(-0.05deg);
+}
+
+/* SHADOW UNDER THE PAPER */
+.torn-paper::before {
+  content: "";
+  position: absolute;
+  left: -1%;
+  top: 17px;
+  width: 102%;
+  height: 29px;
+  background: #090A0B;
+  opacity: 0.8;
+  filter: blur(1.5px);
+  clip-path: polygon(
+    0% 42%,
+    4% 37%,
+    8% 45%,
+    12% 34%,
+    17% 44%,
+    22% 51%,
+    27% 39%,
+    31% 46%,
+    36% 34%,
+    41% 48%,
+    46% 40%,
+    51% 54%,
+    56% 42%,
+    61% 36%,
+    66% 49%,
+    71% 41%,
+    76% 55%,
+    81% 38%,
+    86% 47%,
+    91% 35%,
+    96% 51%,
+    100% 44%,
+    100% 79%,
+    96% 71%,
+    92% 82%,
+    87% 68%,
+    82% 80%,
+    77% 67%,
+    72% 86%,
+    67% 72%,
+    62% 83%,
+    57% 69%,
+    52% 85%,
+    47% 71%,
+    42% 88%,
+    37% 73%,
+    32% 81%,
+    27% 69%,
+    22% 86%,
+    17% 70%,
+    12% 82%,
+    7% 68%,
+    3% 77%,
+    0% 68%
+  );
+  z-index: 1;
+}
+
+/* MAIN PAPER */
+.torn-paper::after {
+  content: "";
+  position: absolute;
+  left: -1%;
+  top: 7px;
+  width: 102%;
+  height: 32px;
+  background: #EEEEEA;
+  clip-path: polygon(
+    0% 47%,
+    2% 41%,
+    5% 44%,
+    8% 33%,
+    11% 39%,
+    14% 36%,
+    17% 49%,
+    20% 43%,
+    24% 30%,
+    27% 36%,
+    30% 45%,
+    33% 40%,
+    36% 50%,
+    39% 35%,
+    42% 43%,
+    45% 38%,
+    48% 51%,
+    51% 44%,
+    54% 34%,
+    57% 41%,
+    60% 37%,
+    63% 48%,
+    66% 42%,
+    69% 31%,
+    72% 38%,
+    75% 46%,
+    78% 40%,
+    81% 52%,
+    84% 43%,
+    87% 35%,
+    90% 42%,
+    93% 31%,
+    96% 38%,
+    98% 45%,
+    100% 39%,
+    100% 69%,
+    98% 75%,
+    95% 64%,
+    92% 81%,
+    89% 71%,
+    86% 77%,
+    83% 66%,
+    80% 84%,
+    77% 72%,
+    74% 79%,
+    71% 68%,
+    68% 88%,
+    65% 73%,
+    62% 81%,
+    59% 69%,
+    56% 78%,
+    53% 67%,
+    50% 86%,
+    47% 74%,
+    44% 81%,
+    41% 70%,
+    38% 83%,
+    35% 68%,
+    32% 77%,
+    29% 65%,
+    26% 82%,
+    23% 71%,
+    20% 79%,
+    17% 67%,
+    14% 84%,
+    11% 70%,
+    8% 76%,
+    5% 65%,
+    2% 73%,
+    0% 67%
+  );
+  z-index: 2;
+}
+
+/* LOOSE PAPER FIBERS */
+.fiber {
+  position: absolute;
+  z-index: 4;
+  display: block;
+  background: #B8B8B2;
+  pointer-events: none;
+}
+
+.fiber.left {
+  width: 82px;
+  height: 4px;
+  left: 10%;
+  top: 31px;
+  transform: rotate(-1deg);
+  clip-path: polygon(
+    0 45%,
+    14% 14%,
+    28% 62%,
+    43% 22%,
+    58% 67%,
+    73% 17%,
+    100% 46%,
+    83% 76%,
+    66% 43%,
+    47% 83%,
+    29% 49%,
+    13% 87%
+  );
+}
+
+.fiber.center {
+  width: 56px;
+  height: 4px;
+  left: 46%;
+  top: 34px;
+  transform: rotate(2deg);
+  clip-path: polygon(
+    0 48%,
+    19% 18%,
+    38% 61%,
+    57% 27%,
+    78% 70%,
+    100% 36%,
+    100% 72%,
+    79% 88%,
+    59% 52%,
+    37% 91%,
+    16% 57%
+  );
+}
+
+.fiber.right {
+  width: 76px;
+  height: 3px;
+  right: 8%;
+  top: 30px;
+  transform: rotate(-2deg);
+  clip-path: polygon(
+    0 44%,
+    17% 19%,
+    31% 62%,
+    49% 29%,
+    67% 69%,
+    85% 20%,
+    100% 46%,
+    81% 78%,
+    63% 47%,
+    44% 84%,
+    22% 49%
+  );
+}
+
+.fiber.flap {
+  width: 27px;
+  height: 7px;
+  left: 71%;
+  top: 35px;
+  transform: rotate(5deg);
+  clip-path: polygon(
+    0 32%,
+    23% 4%,
+    51% 43%,
+    76% 14%,
+    100% 42%,
+    78% 76%,
+    49% 53%,
+    21% 91%
+  );
+}
+
+/* SMALL PAPER SPECKS */
+.speck {
+  position: absolute;
+  z-index: 5;
+  width: 3px;
+  height: 2px;
+  background: #B8B8B2;
+  pointer-events: none;
+}
+
+.speck.a {
+  left: 23%;
+  top: 34px;
+  transform: rotate(17deg);
+}
+
+.speck.b {
+  left: 58%;
+  top: 37px;
+  transform: rotate(-9deg);
+}
+
+.speck.c {
+  right: 19%;
+  top: 33px;
+  transform: rotate(14deg);
+}
+
+.speck.d {
+  right: 7%;
+  top: 29px;
+  width: 2px;
+}
+
+@media (max-width: 600px) {
+  .torn-paper {
+    height: 48px;
+  }
+  .torn-paper::after {
+    height: 27px;
+    top: 8px;
+  }
+  .torn-paper::before {
+    top: 17px;
+    height: 26px;
+  }
+}
+
+/* Custom Sleek Dark Scrollbar & Hide Arrow Buttons */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #141417;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2E2E38;
+  border-radius: 6px;
+  border: 2px solid #141417;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9333EA;
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Custom Utility to hide scrollbars completely */
+.custom-no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.custom-no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+

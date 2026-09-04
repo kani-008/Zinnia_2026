@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300f0ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZINNIA 2026 </title>
+    <meta name="description" content="Official platform for ZINNIA 2026: Black Cipher Investigation, Temporal Core Overload, Technical Operations, Digital Symposium Passport, and QR verification." />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&family=JetBrains+Mono:wght@400;500;700;800&display=block" rel="stylesheet">
+    <script>
+      // Edge Copilot extension performance observer safety guard
+      (function() {
+        if (typeof window !== 'undefined' && window.performance) {
+          var dummyEntry = { startTime: 0, duration: 0, name: '', entryType: 'navigation' };
+          ['getEntriesByType', 'getEntriesByName', 'getEntries'].forEach(function(method) {
+            if (typeof window.performance[method] === 'function') {
+              var orig = window.performance[method];
+              window.performance[method] = function() {
+                try {
+                  var res = orig.apply(this, arguments) || [];
+                  if (typeof Proxy !== 'undefined') {
+                    return new Proxy(res, {
+                      get: function(target, prop) {
+                        if ((prop === '0' || prop === 0) && (!target[0] || target.length === 0)) {
+                          return dummyEntry;
+                        }
+                        var val = target[prop];
+                        if (typeof val === 'function') return val.bind(target);
+                        return val;
+                      }
+                    });
+                  }
+                  return res;
+                } catch (e) {
+                  return [dummyEntry];
+                }
+              };
+            }
+          });
+        }
+      })();
+    </script>
+  </head>
+  <body class="bg-[#0D0D0F] text-[#F2F2F0] antialiased selection:bg-[#F5D90A] selection:text-black overflow-x-hidden min-h-screen">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
