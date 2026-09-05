@@ -1,0 +1,28 @@
+{
+  "ZIN-2026-6925": {
+    "team_id": "ZIN-2026-6925",
+    "team_name": "DEMO",
+    "college": "GCEE",
+    "department": "CSE",
+    "year": "IV",
+    "registered_events": [
+      "debugging"
+    ],
+    "members": [
+      {
+        "name": "Tamilvani S",
+        "email": "limatinav2005@gmail.com",
+        "phone": "8987654321",
+        "is_leader": true,
+        "food_preference": "NON_VEG"
+      }
+    ],
+    "utr_number": "DEMO20260831023",
+    "submitted_amount": 250.0,
+    "expected_amount": 250,
+    "payment_status": "REJECTED",
+    "rejection_reason": "Incorrect UTR reference or amount does not match bank statement credit records.",
+    "created_at": "2026-09-04T15:08:27.542268+00:00",
+    "updated_at": "2026-09-04T15:18:53.06605+00:00"
+  }
+}

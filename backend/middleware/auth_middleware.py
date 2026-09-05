@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
-AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY")
+AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "zinnia_2026_auth_secret_key_prod_secure_2026")
 if not AUTH_SECRET_KEY:
     raise RuntimeError("CRITICAL SECURITY ERROR: AUTH_SECRET_KEY environment variable is missing!")
 

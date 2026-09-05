@@ -5,6 +5,19 @@ Configures CORS, registers middleware, attaches modular route blueprints, and la
 
 import os
 import sys
+
+# Ensure stdout and stderr handle utf-8 gracefully on Windows without crashing
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
+    except Exception:
+        pass
+
 from dotenv import load_dotenv
 
 # Ensure backend root is on python path

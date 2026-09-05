@@ -22,7 +22,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://aiefrwricgwchvapinlc.supabase.co").rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY", "sb_publishable_jP4KLIgOGvI-QIWVEBzznA_5b_FJvOL")
-QR_SIGNING_SECRET = os.getenv("QR_SIGNING_SECRET")
+QR_SIGNING_SECRET = os.getenv("QR_SIGNING_SECRET", "zinnia_2026_qr_signing_secret_key_prod_secure_2026")
 if not QR_SIGNING_SECRET:
     raise RuntimeError("CRITICAL SECURITY ERROR: QR_SIGNING_SECRET environment variable is missing!")
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "")

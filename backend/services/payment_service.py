@@ -48,7 +48,15 @@ def load_local_payments() -> Dict[str, Any]:
     try:
         if os.path.exists(DATA_FILE):
             with open(DATA_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+                elif isinstance(data, list):
+                    res = {}
+                    for item in data:
+                        if isinstance(item, dict) and item.get("team_id"):
+                            res[item["team_id"]] = item
+                    return res
     except Exception:
         pass
     return {}
