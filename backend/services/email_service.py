@@ -165,7 +165,7 @@ def generate_passport_email_html(
                             {member_name} { '(LEADER)' if is_leader else '' }
                           </div>
                           <div style="font-size: 12px; font-family: monospace; color: #E5BD00; margin-top: 4px;">
-                            TEAM: {team_name} &bull; ID: {team_id}
+                            USER ID: {member_id or team_id} &bull; TEAM: {team_name} ({team_id})
                           </div>
                           <div style="font-size: 11px; color: #B8B8B2; margin-top: 2px;">
                             {college}
@@ -238,6 +238,254 @@ def generate_passport_email_html(
     </html>
     """
     return html
+
+def generate_registration_success_email_html(
+    member: Dict[str, Any],
+    team: Dict[str, Any],
+    registered_events: List[Any],
+    user_id: str
+) -> str:
+    """Creates a registration success HTML email without any QR code, showing User ID and status."""
+    member_name = member.get("name", "Participant")
+    team_id = team.get("team_id", "")
+    team_name = team.get("team_name", "Team")
+    college = team.get("college", "GCE Erode")
+    is_leader = member.get("is_leader", False)
+    
+    # Generate event breakdown table rows
+    events_html = ""
+    if registered_events:
+        for ev in registered_events:
+            ev_obj = ev.get("events") if isinstance(ev, dict) and isinstance(ev.get("events"), dict) else (ev if isinstance(ev, dict) else {})
+            ev_title = ev_obj.get("mission_name") or ev_obj.get("title") or ev_obj.get("name") or str(ev)
+            ev_category = ev_obj.get("category", "Track").upper() if isinstance(ev_obj, dict) else "TRACK"
+            ev_venue = ev_obj.get("venue", "Main Campus") if isinstance(ev_obj, dict) else "Main Campus"
+            ev_time = ev_obj.get("schedule_time", "Event Day") if isinstance(ev_obj, dict) else "Event Day"
+            
+            events_html += f"""
+            <tr style="border-bottom: 1px solid #1f242d;">
+                <td style="padding: 12px 8px; font-weight: 700; color: #EEEEEA; font-size: 13px;">
+                    {ev_title}
+                    <div style="font-size: 11px; color: #0FA9C6; font-weight: 500; margin-top: 2px;">{ev_category}</div>
+                </td>
+                <td style="padding: 12px 8px; color: #B8B8B2; font-size: 12px;">{ev_venue}</td>
+                <td style="padding: 12px 8px; color: #E5BD00; font-size: 12px; font-family: monospace; font-weight: 600;">{ev_time}</td>
+            </tr>
+            """
+    else:
+        events_html = """
+        <tr>
+            <td colspan="3" style="padding: 14px; text-align: center; color: #B8B8B2; font-size: 13px;">
+                Registered for General Symposium Access & Technical Tracks
+            </td>
+        </tr>
+        """
+
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Zinnia 2026 — Registration Successful</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #08090A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #EEEEEA;">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #08090A; padding: 30px 10px;">
+        <tr>
+          <td align="center">
+            <!-- Main Card Container -->
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #111214; border: 2px solid #23262D; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);">
+              
+              <!-- Header -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 26px 20px; text-align: center;">
+                  <div style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #08090A; font-weight: 900; margin-bottom: 6px; background-color: #FFFFFF; display: inline-block; padding: 3px 10px; border-radius: 4px;">
+                    REGISTRATION SUCCESSFUL
+                  </div>
+                  <h1 style="margin: 4px 0 0 0; font-size: 28px; font-weight: 900; color: #FFFFFF; letter-spacing: 1px;">
+                    ZINNIA 2026
+                  </h1>
+                  <p style="margin: 6px 0 0 0; font-size: 13px; color: #EEEEEA; font-weight: 500;">
+                    Government College of Engineering, Erode
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Attendee Greeting -->
+              <tr>
+                <td style="padding: 24px 20px 12px 20px;">
+                  <p style="margin: 0 0 8px 0; font-size: 16px; color: #EEEEEA;">
+                    Hello <strong style="color: #E5BD00;">{member_name}</strong>,
+                  </p>
+                  <p style="margin: 0 0 16px 0; font-size: 13px; color: #B8B8B2; line-height: 1.5;">
+                    Your registration for <strong>Zinnia 2026</strong> has been completed successfully! Here are your official registration details.
+                  </p>
+
+                  <!-- Registration User ID Box (NO QR CODE) -->
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #08090A; border: 2px solid #10B981; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                    <tr>
+                      <td style="padding: 20px 16px;">
+                        <div style="font-size: 11px; font-family: monospace; color: #10B981; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">
+                          OFFICIAL REGISTRATION USER ID
+                        </div>
+
+                        <div style="font-size: 24px; font-family: monospace; font-weight: 900; color: #E5BD00; letter-spacing: 2px; padding: 10px 16px; background-color: #17181C; border-radius: 8px; display: inline-block; margin-bottom: 12px; border: 1px dashed #E5BD00;">
+                          {user_id}
+                        </div>
+
+                        <!-- Participant Info Strip -->
+                        <div style="margin-top: 4px;">
+                          <div style="font-size: 16px; font-weight: 800; color: #EEEEEA; text-transform: uppercase;">
+                            {member_name} { '(LEADER)' if is_leader else '' }
+                          </div>
+                          <div style="font-size: 12px; font-family: monospace; color: #0FA9C6; margin-top: 4px;">
+                            TEAM: {team_name} &bull; TEAM ID: {team_id}
+                          </div>
+                          <div style="font-size: 11px; color: #B8B8B2; margin-top: 2px;">
+                            {college}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Registered Events List -->
+                  <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; font-family: monospace; color: #0FA9C6; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+                      REGISTERED COMPETITION TRACKS
+                    </div>
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #08090A; border: 1px solid #23262D; border-radius: 8px;">
+                      <thead>
+                        <tr style="border-bottom: 1px solid #23262D; background-color: #17181C;">
+                          <th align="left" style="padding: 8px; font-size: 10px; font-family: monospace; color: #B8B8B2; text-transform: uppercase;">TRACK</th>
+                          <th align="left" style="padding: 8px; font-size: 10px; font-family: monospace; color: #B8B8B2; text-transform: uppercase;">VENUE</th>
+                          <th align="left" style="padding: 8px; font-size: 10px; font-family: monospace; color: #B8B8B2; text-transform: uppercase;">TIME</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {events_html}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <!-- Next Steps & QR Pass Info -->
+                  <div style="background-color: #17181C; border-left: 3px solid #0FA9C6; padding: 14px 16px; border-radius: 4px; margin-bottom: 20px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #0FA9C6; text-transform: uppercase; margin-bottom: 6px;">
+                      NEXT STEPS &amp; QR PASS ISSUANCE
+                    </div>
+                    <p style="margin: 0; font-size: 12px; color: #EEEEEA; line-height: 1.5;">
+                      Once your registration payment is verified and approved by the symposium admin panel, your official entry <strong>QR Code Gate Pass</strong> will be generated and dispatched to your email address along with your User ID (<strong style="color: #E5BD00;">{user_id}</strong>).
+                    </p>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #08090A; padding: 16px 20px; text-align: center; border-top: 1px solid #23262D;">
+                  <p style="margin: 0; font-size: 10px; color: #71717A; font-family: monospace;">
+                    ZINNIA 2026 &bull; Department of Computer Science and Engineering<br/>
+                    Government College of Engineering, Erode &bull; Support: zinnia2026@gcee.ac.in
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    """
+    return html
+
+def send_registration_success_email(
+    member: Dict[str, Any],
+    team: Dict[str, Any],
+    registered_events: List[Any],
+    user_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Dispatches a registration success confirmation email with User ID and team details (NO QR CODE).
+    """
+    recipient_email = member.get("email", "").strip()
+    if not recipient_email:
+        return {"success": False, "status": "SKIPPED_NO_EMAIL", "error": "No email address found for participant."}
+
+    resolved_user_id = user_id or member.get("id") or team.get("team_id", "ZIN-2026")
+    team_name = team.get("team_name", "Team")
+    team_id = team.get("team_id", "")
+
+    # 1. Plain text content
+    text_content = f"""
+ZINNIA 2026 — REGISTRATION SUCCESSFUL
+Government College of Engineering, Erode
+
+Hello {member.get('name', 'Participant')},
+
+Your registration for Zinnia 2026 has been completed successfully!
+
+YOUR REGISTRATION USER ID: {resolved_user_id}
+Team: {team_name} ({team_id})
+
+Note: Your official QR Code Gate Pass will be generated and dispatched to your email once the admin approves your registration in the admin panel.
+
+Support: zinnia2026@gcee.ac.in
+    """
+
+    # 2. Build HTML content
+    html_content = generate_registration_success_email_html(
+        member=member,
+        team=team,
+        registered_events=registered_events,
+        user_id=resolved_user_id
+    )
+
+    # 3. Build Multipart Email Message (No QR code attachment)
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"✅ Registration Successful — {member.get('name', 'Participant')} (User ID: {resolved_user_id})"
+    msg["From"] = SMTP_FROM
+    msg["To"] = recipient_email
+    msg.attach(MIMEText(text_content, "plain"))
+    msg.attach(MIMEText(html_content, "html"))
+
+    # 4. Deliver via SMTP
+    if not SMTP_USER or not SMTP_PASS or SMTP_USER.startswith("your_"):
+        simulation_allowed = os.getenv("ALLOW_EMAIL_SIMULATION", "false").lower() == "true"
+        message = f"SMTP is not configured. Registration email was not sent to {recipient_email}."
+        if simulation_allowed:
+            print(f"[Email Sim] {message}")
+            return {
+                "success": False,
+                "status": "SIMULATED_NOT_SENT",
+                "recipient": recipient_email,
+                "error": message
+            }
+        return {
+            "success": False,
+            "status": "FAILED",
+            "recipient": recipient_email,
+            "error": message
+        }
+
+    try:
+        if SMTP_PORT == 465:
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg)
+
+        return {"success": True, "status": "REGISTRATION_EMAIL_SENT", "recipient": recipient_email}
+    except Exception as e:
+        print(f"[SMTP Error] Failed to deliver registration success email to {recipient_email}: {e}")
+        return {"success": False, "status": "FAILED", "error": str(e), "recipient": recipient_email}
+
 
 def send_participant_passport_email(
     member: Dict[str, Any],

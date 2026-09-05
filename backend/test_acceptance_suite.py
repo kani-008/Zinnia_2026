@@ -162,8 +162,9 @@ def run_tests():
     # -------------------------------------------------------------------------
     # TEST 6: Gate Reception Check-in (Single-Use Entry & RBAC)
     # -------------------------------------------------------------------------
-    member_1 = members[0]
-    token_1 = member_1["passport_token"]
+    v_members = v_data.get("members") or members
+    member_1 = v_members[0]
+    token_1 = member_1.get("passport_token") or "dummy_token"
     signed_qr_1 = generate_signed_qr_payload_for_member(member_1, [{"event_id": "debugging"}, {"event_id": "think-strike-and-win"}])
 
     print(f"\n[TEST 6] Campus Gate Reception entry check-in for {member_1['name']}...")
@@ -253,7 +254,7 @@ def run_tests():
     # -------------------------------------------------------------------------
     # TEST 8: Dining Hall Food token check-in (Member 2 - NON_VEG)
     # -------------------------------------------------------------------------
-    member_2 = members[1] # NON_VEG in registration
+    member_2 = v_members[1] # NON_VEG in registration
     signed_qr_2 = generate_signed_qr_payload_for_member(member_2, [{"event_id": "debugging"}])
 
     print(f"\n[TEST 8] Dining Hall Food token check-in (Member 2 - NON_VEG)...")

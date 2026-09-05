@@ -169,6 +169,7 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
                 }
 
         team_id = generate_team_id()
+        clean_team_num = team_id.replace("ZIN-", "")
 
         formatted_members = []
         leader_assigned = False
@@ -184,7 +185,10 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
                     is_leader = True
                     leader_assigned = True
 
+            member_id = f"ATT-{clean_team_num}-{idx+1}"
+
             formatted_members.append({
+                "id": member_id,
                 "name": m_name,
                 "email": m_email,
                 "phone": m_phone,
@@ -249,6 +253,19 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
             save_local_payment(team_id, pending_row)
         except Exception:
             pass
+
+        # Dispatch Registration Success Email (NO QR CODE - contains User ID & status message)
+        try:
+            from services.email_service import send_registration_success_email
+            for m in formatted_members:
+                send_registration_success_email(
+                    member=m,
+                    team=pending_row,
+                    registered_events=validated_events,
+                    user_id=m.get("id")
+                )
+        except Exception as email_err:
+            print(f"[Registration Email Notice] Could not dispatch registration success email: {email_err}")
 
         return {
             "success": True,
