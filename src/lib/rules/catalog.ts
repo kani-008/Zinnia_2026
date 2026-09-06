@@ -181,8 +181,10 @@ export const EVENTS: Record<EventCode, EventDef> = {
     name: 'Short Film',
     category: 'NON_TECH',
     type: 'ONLINE',
+    // Exactly 1 (ruling of 4 September 2026): online, no block, no count, so
+    // team size affects no rule. Mirrors rules_engine.EVENTS["SHORT_FILM"].
     minTeam: 1,
-    maxTeam: 3,
+    maxTeam: 1,
     capacity: null,
     durationMin: 0,
     window: null,

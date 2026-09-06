@@ -141,8 +141,12 @@ EVENTS: Dict[str, EventDef] = {
         3, 3, None, 60, None, ("B3", "B4"), True, _CLOSES_DEFAULT,
     ),
     "SHORT_FILM": EventDef(
+        # Team of exactly 1 (ruling of 4 September 2026). It is online, occupies
+        # no block and counts toward no limit, so team composition affects no
+        # rule - which is why it is registered individually rather than as a
+        # team. Keep in step with src/lib/rules/catalog.ts and zin26.events.
         "SHORT_FILM", "Short Film", "NON_TECH", "ONLINE",
-        1, 3, None, 0, None, (), False, _CLOSES_SHORT_FILM,
+        1, 1, None, 0, None, (), False, _CLOSES_SHORT_FILM,
     ),
 }
 
