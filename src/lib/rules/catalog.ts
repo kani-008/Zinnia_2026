@@ -112,7 +112,9 @@ export const EVENTS: Record<EventCode, EventDef> = {
     name: 'Lost in SQL',
     category: 'TECH',
     type: 'RUNNING',
-    // Team of exactly 2 — mirrors the server engine and zin26.events.
+    // Solo — per the coordinators' team-size list of 6 September 2026, which
+    // superseded migration 005_lost_in_sql_team_of_two.sql. Mirrors the
+    // server engine, zin26.events and src/config/events.ts.
     minTeam: 1,
     maxTeam: 1,
     capacity: null,
