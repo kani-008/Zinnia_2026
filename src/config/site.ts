@@ -1,5 +1,10 @@
 export const REGISTRATION_FEE_PER_HEAD = 250;
 
+// Walk-in registration at the venue on the event day. Online stays 250; the
+// difference is the incentive to register ahead. Display only - the backend
+// still records the online fee, walk-ins are handled at the desk.
+export const ON_SPOT_REGISTRATION_FEE = 300;
+
 export const TREASURER_PAYMENT_CONFIG = {
   upiId: (import.meta.env.VITE_TREASURER_UPI_ID as string) || 'shachinpr29@okicici',
   payeeName: (import.meta.env.VITE_TREASURER_PAYEE_NAME as string) || 'SHACHIN P R',

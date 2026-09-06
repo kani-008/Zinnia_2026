@@ -14,6 +14,7 @@ import priceSvg from '../assets/price.svg';
 import { Users, Clock, MapPin, ArrowRight, Trophy, Zap, Shield, Sparkles, Layers, Terminal, Gamepad2, Award, X, Phone, CheckCircle2, Mail, Send, Menu, ChevronDown, Crown } from 'lucide-react';
 import { EventScheduleView } from '../components/ui/EventScheduleView';
 import { ComicHandDrawnCard } from '../components/events/ComicHandDrawnCard';
+import { RegistrationFeeCallout } from '../components/hero/RegistrationFeeCallout';
 import { EventMission } from '../types';
 
 const renderPrizeContent = (prizeText?: string, textColor = 'text-white') => {
@@ -832,6 +833,9 @@ export const WebsiteHomePage: React.FC = () => {
                 </div>
               </MagneticElement>
             </div>
+
+            {/* Fee sticker (mobile) — ₹250 online vs ₹300 on the spot */}
+            <RegistrationFeeCallout className="relative z-20 w-full px-1 -mt-1 mb-2" />
           </div>
 
           {/* Desktop: Title + Badges + Register CTA */}
@@ -916,6 +920,9 @@ export const WebsiteHomePage: React.FC = () => {
                 </div>
               </MagneticElement>
             </div>
+
+            {/* Fee sticker (desktop) — ₹250 online vs ₹300 on the spot */}
+            <RegistrationFeeCallout className="mt-4 w-full max-w-xl" />
           </div>
 
           {/* RIGHT: Megaphone */}
@@ -1290,7 +1297,81 @@ export const WebsiteHomePage: React.FC = () => {
         </div>
 
         {/* -------------------------------------------------------------
-            1. TECHNICAL EVENTS ROW (01 - 04) [PRINTED CYAN]
+            1. MEGA EVENT (01) [PRINTED PURPLE]
+
+            Gadget Codes is the flagship, so it opens the section: the page now
+            reads 01 (mega) -> 02-05 (technical) -> 06-09 (non-technical). It
+            used to sit in the technical row wearing a yellow "MEGA EVENT"
+            sticker; it has its own purple tier instead, so the section title
+            carries the billing and the sticker is gone. One card, so the row is
+            centred and the card is given a wider box rather than being
+            stretched across four empty columns.
+            ------------------------------------------------------------- */}
+        {megaEvents.length > 0 && (
+          <div className="mb-10 sm:mb-16">
+            {/* Subheading: ★ MEGA EVENT ───□ */}
+            <div className="flex items-center gap-2 mb-4 sm:mb-6">
+              <span className="font-mono font-bold text-sm xs:text-base sm:text-lg text-[#C084FC] tracking-wider flex items-center gap-2">
+                <span>★</span>
+                <span>MEGA EVENT</span>
+                <span className="inline-block w-8 sm:w-12 h-[1.5px] bg-[#C084FC]" />
+                <span className="inline-block w-2.5 h-2.5 border-[1.5px] border-[#C084FC]" />
+              </span>
+            </div>
+
+            <div className="flex justify-center">
+              {megaEvents.map((e) => (
+                <div key={e.id} className="w-full max-w-[300px] sm:max-w-[340px] lg:max-w-[380px]">
+                  <ComicHandDrawnCard
+                    code={e.code}
+                    variant="mega"
+                    onClick={() => {
+                      triggerComicFX('MEGA!');
+                      setSelectedEvent(e);
+                    }}
+                  >
+                    {/* Same chip line-art as before, inked in the tier's purple */}
+                    <div className="w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center text-[#C084FC] group-hover:scale-110 transition-transform my-auto">
+                      <svg
+                        className="w-16 h-16 sm:w-24 sm:h-24"
+                        viewBox="0 0 64 64"
+                        fill="none"
+                        stroke="#C084FC"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <rect x="19" y="19" width="26" height="26" rx="4" />
+                        <rect x="26" y="26" width="12" height="12" rx="2" fill="#C084FC" fillOpacity="0.2" />
+                        <path d="M24 9V19M32 9V19M40 9V19" />
+                        <path d="M24 45V55M32 45V55M40 45V55" />
+                        <path d="M9 24H19M9 32H19M9 40H19" />
+                        <path d="M45 24H55M45 32H55M45 40H55" />
+                      </svg>
+                    </div>
+
+                    {/* Title & tagline — unchanged copy */}
+                    <div className="w-full mt-auto">
+                      <h3 className="font-sans font-black text-base xs:text-lg sm:text-xl text-[#EEEEEA] uppercase tracking-wider group-hover:text-[#C084FC] transition-colors leading-tight flex items-center justify-center gap-1.5">
+                        <Crown className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-[#C084FC]" strokeWidth={2.6} />
+                        <span>GADGET CODES</span>
+                      </h3>
+                      <span className="text-[10px] sm:text-xs text-[#C084FC] font-mono tracking-normal normal-case block mt-0.5">
+                        (Single event)
+                      </span>
+                      <p className="font-mono text-[10px] sm:text-[11px] text-[#B8B8B2] mt-2 leading-tight whitespace-pre-line">
+                        {e.tagline || e.title}
+                      </p>
+                    </div>
+                  </ComicHandDrawnCard>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* -------------------------------------------------------------
+            2. TECHNICAL EVENTS ROW (02 - 05) [PRINTED CYAN]
             ------------------------------------------------------------- */}
         <div className="mb-10 sm:mb-16">
           {/* Subheading: → TECHNICAL EVENTS ───□ */}
@@ -1417,79 +1498,6 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* -------------------------------------------------------------
-            2. MEGA EVENT (05) [PRINTED PURPLE]
-
-            Gadget Codes used to sit in the technical row wearing a yellow
-            "MEGA EVENT" sticker. It now has its own tier between the two
-            rows, so the section title carries the billing and the sticker is
-            gone. The purple is the prize-distribution palette, reused exactly.
-            One card, so the row is centred and the card is given a wider box
-            rather than being stretched across four empty columns.
-            ------------------------------------------------------------- */}
-        {megaEvents.length > 0 && (
-          <div className="mb-10 sm:mb-16">
-            {/* Subheading: ★ MEGA EVENT ───□ */}
-            <div className="flex items-center gap-2 mb-4 sm:mb-6">
-              <span className="font-mono font-bold text-sm xs:text-base sm:text-lg text-[#C084FC] tracking-wider flex items-center gap-2">
-                <span>★</span>
-                <span>MEGA EVENT</span>
-                <span className="inline-block w-8 sm:w-12 h-[1.5px] bg-[#C084FC]" />
-                <span className="inline-block w-2.5 h-2.5 border-[1.5px] border-[#C084FC]" />
-              </span>
-            </div>
-
-            <div className="flex justify-center">
-              {megaEvents.map((e) => (
-                <div key={e.id} className="w-full max-w-[300px] sm:max-w-[340px] lg:max-w-[380px]">
-                  <ComicHandDrawnCard
-                    code={e.code}
-                    variant="mega"
-                    onClick={() => {
-                      triggerComicFX('MEGA!');
-                      setSelectedEvent(e);
-                    }}
-                  >
-                    {/* Same chip line-art as before, inked in the tier's purple */}
-                    <div className="w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center text-[#C084FC] group-hover:scale-110 transition-transform my-auto">
-                      <svg
-                        className="w-16 h-16 sm:w-24 sm:h-24"
-                        viewBox="0 0 64 64"
-                        fill="none"
-                        stroke="#C084FC"
-                        strokeWidth="2.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <rect x="19" y="19" width="26" height="26" rx="4" />
-                        <rect x="26" y="26" width="12" height="12" rx="2" fill="#C084FC" fillOpacity="0.2" />
-                        <path d="M24 9V19M32 9V19M40 9V19" />
-                        <path d="M24 45V55M32 45V55M40 45V55" />
-                        <path d="M9 24H19M9 32H19M9 40H19" />
-                        <path d="M45 24H55M45 32H55M45 40H55" />
-                      </svg>
-                    </div>
-
-                    {/* Title & tagline — unchanged copy */}
-                    <div className="w-full mt-auto">
-                      <h3 className="font-sans font-black text-base xs:text-lg sm:text-xl text-[#EEEEEA] uppercase tracking-wider group-hover:text-[#C084FC] transition-colors leading-tight flex items-center justify-center gap-1.5">
-                        <Crown className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-[#C084FC]" strokeWidth={2.6} />
-                        <span>GADGET CODES</span>
-                      </h3>
-                      <span className="text-[10px] sm:text-xs text-[#C084FC] font-mono tracking-normal normal-case block mt-0.5">
-                        (Single event)
-                      </span>
-                      <p className="font-mono text-[10px] sm:text-[11px] text-[#B8B8B2] mt-2 leading-tight whitespace-pre-line">
-                        {e.tagline || e.title}
-                      </p>
-                    </div>
-                  </ComicHandDrawnCard>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* -------------------------------------------------------------
             3. NON-TECHNICAL EVENTS ROW (06 - 09) [PRINTED PINK] + DOODLES

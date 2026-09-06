@@ -199,8 +199,11 @@ class ZinniaStore {
         // fields (status, venue, timings). Starting from the cache instead would
         // pin whatever an older build had stored.
         const mergedEvents = OFFICIAL_MISSIONS.map(base => {
-          const matched = dbEvents.find(db => 
-            (db.code && db.code.toString().padStart(2, '0') === base.code) ||
+          // Match by stable identity only. The display code is a presentation
+          // number that has been renumbered (Gadget Codes is now 01) and no
+          // longer lines up with the legacy table's codes; matching on it would
+          // hand one event another event's name.
+          const matched = dbEvents.find(db =>
             (db.id && db.id.toLowerCase() === base.id.toLowerCase()) ||
             (db.mission_name && db.mission_name.toLowerCase() === base.mission_name.toLowerCase()) ||
             (db.title && db.title.toLowerCase() === base.title.toLowerCase())

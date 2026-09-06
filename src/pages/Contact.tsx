@@ -54,7 +54,7 @@ const FROM_ERODE: BusRun[] = [
   { time: '8:30 AM', service: 'Town Govt Bus 5B' },
 ];
 
-/** Pink group — departures from Chithode. */
+/** Yellow group — departures from Chithode. */
 const FROM_CHITHODE: BusRun[] = [
   { time: '8:15 – 8:20 AM', service: 'Route Bus' },
   { time: '8:30 – 8:35 AM', service: 'Town Govt Bus' },
@@ -79,15 +79,25 @@ interface Ping {
   y: number;
 }
 
-const BusRunRow: React.FC<{ run: BusRun; tone: 'cyan' | 'pink' }> = ({ run, tone }) => (
-  <li className="flex items-center justify-between gap-4 border-b border-[#23262D]">
+/**
+ * One row of the timetable.
+ *
+ * The departure time used to be inked in the group's accent colour, which read
+ * as a dim red/rose smudge on the dark panel — exactly the thing people squint
+ * at on a phone at a bus stop. The time is now near-white (#F4F4F0) on its own
+ * dark chip, roughly 15:1 against the panel, and the accent survives as the
+ * chip's border and the bus icon. Colour still groups the rows; contrast does
+ * the reading.
+ */
+const BusRunRow: React.FC<{ run: BusRun; tone: 'cyan' | 'yellow' }> = ({ run, tone }) => (
+  <li className="flex items-center justify-between gap-3 border-b border-[#23262D] py-1.5">
     <span className="flex items-center gap-2 font-mono text-xs text-[#EEEEEA]">
-      <Bus size={13} className={tone === 'cyan' ? 'text-[#0FA9C6]' : 'text-[#D51F55]'} />
+      <Bus size={13} className={tone === 'cyan' ? 'text-[#0FA9C6]' : 'text-[#E5BD00]'} />
       {run.service}
     </span>
     <span
-      className={`shrink-0 font-comic text-sm font-bold tracking-wide ${
-        tone === 'cyan' ? 'text-[#0FA9C6]' : 'text-[#D51F55]'
+      className={`shrink-0 border bg-[#191B1F] px-2 py-0.5 font-comic text-sm font-bold tracking-wide text-[#F4F4F0] ${
+        tone === 'cyan' ? 'border-[#0FA9C6]/70' : 'border-[#E5BD00]/70'
       }`}
     >
       {run.time}
@@ -303,17 +313,18 @@ export const WebsiteContactPage: React.FC = () => {
                   </ul>
                 </div>
 
-                {/* FROM CHITHODE — pink, matching non-technical events */}
-                <div className="border-2 border-[#D51F55]/40 bg-[#111214] pad-box">
-                  <div className="mb-3 flex items-center gap-2 border-b-2 border-[#D51F55]/30 pb-2.5">
-                    <Bus size={15} className="text-[#D51F55] shrink-0" />
-                    <h4 className="font-comic text-sm uppercase tracking-wider text-[#D51F55]">
+                {/* FROM CHITHODE — yellow: the pink read poorly on the dark panel, and the
+                    timetable is something people squint at on a phone at a bus stop */}
+                <div className="border-2 border-[#E5BD00]/50 bg-[#111214] pad-box">
+                  <div className="mb-3 flex items-center gap-2 border-b-2 border-[#E5BD00]/40 pb-2.5">
+                    <Bus size={15} className="text-[#E5BD00] shrink-0" />
+                    <h4 className="font-comic text-sm uppercase tracking-wider text-[#E5BD00]">
                       From Chithode
                     </h4>
                   </div>
                   <ul className="row-list">
                     {FROM_CHITHODE.map((run) => (
-                      <BusRunRow key={`${run.time}-${run.service}`} run={run} tone="pink" />
+                      <BusRunRow key={`${run.time}-${run.service}`} run={run} tone="yellow" />
                     ))}
                   </ul>
                 </div>
@@ -328,7 +339,7 @@ export const WebsiteContactPage: React.FC = () => {
                   {EXTRA_NOTES.map((note) => (
                     <li
                       key={note}
-                      className="flex items-start gap-2 font-mono text-[11px] leading-relaxed text-[#B8B8B2]"
+                      className="flex items-start gap-2 font-mono text-[11px] leading-relaxed text-[#D3D3CE]"
                     >
                       <span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-[#E5BD00]" />
                       {note}
