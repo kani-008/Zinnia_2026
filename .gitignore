@@ -52,3 +52,6 @@ Thumbs.db
 *.sw?
 .env
 .env.*
+
+# The template is meant to be committed; the real files above are not.
+!.env.example

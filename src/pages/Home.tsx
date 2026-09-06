@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
+import { loadSession } from '../lib/participant/api';
 import { WebsiteFooter } from '../components/layout/Footer';
 import robotMascot from '../assets/1.svg';
 import megaphoneSvg from '../assets/megaphone.svg';
@@ -193,6 +194,7 @@ const calculateTimeLeft = () => {
 
 export const WebsiteHomePage: React.FC = () => {
   const navigate = useNavigate();
+  const signedIn = Boolean(loadSession());
   const location = useLocation();
 
   // Real-time ticking countdown to September 24, 2026 (calculated instantly without initial dummy values)
@@ -399,14 +401,17 @@ export const WebsiteHomePage: React.FC = () => {
             </button>
           </MagneticElement>
 
-          {/* Register Navbar Magnetic Button */}
-          <MagneticElement strength={0.35} onClick={() => navigate('/register')}>
+          {/* Register / Dashboard Navbar Magnetic Button */}
+          <MagneticElement
+            strength={0.35}
+            onClick={() => navigate(signedIn ? '/participant/dashboard' : '/register')}
+          >
             <button className="comic-button-cyan" type="button">
               {/* FIXED BOTTOM BOX */}
               <span className="back-box-cyan" />
               {/* MOVING TOP BOX */}
               <span className="front-box-cyan">
-                <span>REGISTER</span>
+                <span>{signedIn ? 'DASHBOARD' : 'REGISTER'}</span>
               </span>
             </button>
           </MagneticElement>

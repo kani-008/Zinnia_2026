@@ -10,6 +10,7 @@ import random
 import secrets
 import datetime
 import requests
+from urllib.parse import quote
 from typing import Dict, Any, List, Tuple
 from services.passport_service import get_headers, SUPABASE_URL
 
@@ -150,7 +151,7 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
 
         for email in member_emails:
             # 1. Check verified main table (team_members)
-            ok, res = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/team_members?email=eq.{email}&select=id,name", headers)
+            ok, res = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/team_members?email=eq.{quote(email, safe='')}&select=id,name", headers)
             if ok and isinstance(res, list) and len(res) > 0:
                 existing = res[0]
                 return {
@@ -160,7 +161,7 @@ def register_team_service(data: Dict[str, Any]) -> Dict[str, Any]:
                 }
             
             # 2. Check unverified staging table (pending_registration_emails)
-            ok_pe, res_pe = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/pending_registration_emails?email=eq.{email}&select=email,team_id", headers)
+            ok_pe, res_pe = safe_supabase_get(f"{SUPABASE_URL}/rest/v1/pending_registration_emails?email=eq.{quote(email, safe='')}&select=email,team_id", headers)
             if ok_pe and isinstance(res_pe, list) and len(res_pe) > 0:
                 return {
                     "success": False,

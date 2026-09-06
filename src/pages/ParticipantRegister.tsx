@@ -60,10 +60,21 @@ export const ParticipantRegisterPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
+  // The server names the offending field AND explains it. Keeping only the
+  // field key turned the control pink but left the generic hint underneath,
+  // so "this email is already registered" never reached the person reading it.
+  const [fieldMessage, setFieldMessage] = useState<string | null>(null);
+
+  /** The message for one field, or null when the error belongs elsewhere. */
+  const errorFor = (key: string) => (fieldError === key ? fieldMessage : null);
 
   const set = <K extends keyof ParticipantDetails>(key: K, value: ParticipantDetails[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-    if (fieldError === key) setFieldError(null);
+    if (fieldError === key) {
+      setFieldError(null);
+      setFieldMessage(null);
+      setError(null);
+    }
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -73,6 +84,7 @@ export const ParticipantRegisterPage: React.FC = () => {
     setSubmitting(true);
     setError(null);
     setFieldError(null);
+    setFieldMessage(null);
 
     const result = await registerParticipant({
       ...form,
@@ -86,8 +98,14 @@ export const ParticipantRegisterPage: React.FC = () => {
     setSubmitting(false);
 
     if (!result.success) {
-      setError(result.message);
-      if (result.field) setFieldError(result.field);
+      if (result.field) {
+        setFieldError(result.field);
+        setFieldMessage(result.message);
+        // Shown against the field, so the banner would just repeat it.
+        document.getElementById(result.field)?.focus();
+      } else {
+        setError(result.message);
+      }
       return;
     }
 
@@ -130,7 +148,7 @@ export const ParticipantRegisterPage: React.FC = () => {
 
         <form onSubmit={onSubmit}>
           <ComicPanel tone="cyan" bodyClassName="space-y-6">
-            <ComicField label="Full name" htmlFor="name">
+            <ComicField label="Full name" htmlFor="name" error={errorFor('name')}>
               <ComicInput
                 id="name"
                 invalid={fieldError === 'name'}
@@ -142,7 +160,7 @@ export const ParticipantRegisterPage: React.FC = () => {
               />
             </ComicField>
 
-            <ComicField label="College" htmlFor="college">
+            <ComicField label="College" htmlFor="college" error={errorFor('college')}>
               <ComicInput
                 id="college"
                 invalid={fieldError === 'college'}
@@ -154,7 +172,7 @@ export const ParticipantRegisterPage: React.FC = () => {
             </ComicField>
 
             <div className="grid gap-6 sm:grid-cols-2">
-              <ComicField label="Department" htmlFor="department">
+              <ComicField label="Department" htmlFor="department" error={errorFor('department')}>
                 <ComicInput
                   id="department"
                   invalid={fieldError === 'department'}
@@ -165,7 +183,7 @@ export const ParticipantRegisterPage: React.FC = () => {
                 />
               </ComicField>
 
-              <ComicField label="Year" htmlFor="year">
+              <ComicField label="Year" htmlFor="year" error={errorFor('year')}>
                 <ComicSelect
                   id="year"
                   invalid={fieldError === 'year'}
@@ -184,6 +202,7 @@ export const ParticipantRegisterPage: React.FC = () => {
             <ComicField
               label="Email"
               htmlFor="email"
+              error={errorFor('email')}
               hint="Your verification code, registration code and pass all go here. Use an address you can actually open."
             >
               <ComicInput
@@ -198,7 +217,7 @@ export const ParticipantRegisterPage: React.FC = () => {
               />
             </ComicField>
 
-            <ComicField label="Phone" htmlFor="phone">
+            <ComicField label="Phone" htmlFor="phone" error={errorFor('phone')}>
               <ComicInput
                 id="phone"
                 inputMode="numeric"

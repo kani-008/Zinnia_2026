@@ -75,6 +75,25 @@ def check_zin26_schema():
     print("[zin26 Error] Participant routes (/api/participant/*) will fail until this is fixed.")
 
 
+def check_public_url():
+    """
+    Every link a participant receives — the login link, the pass link, the
+    payment resubmit link — is built from APP_BASE_URL. If it is unset the
+    default is localhost, and those emails go out pointing at a developer
+    machine with nothing to say so. Fail loudly at startup instead.
+    """
+    base = os.getenv("APP_BASE_URL", "").strip()
+    if not base:
+        print("[!] APP_BASE_URL is NOT SET. Emailed links will point at "
+              "http://localhost:5173 and will not work for participants.")
+    elif "localhost" in base or "127.0.0.1" in base:
+        print(f"[!] APP_BASE_URL is {base} — fine for local work, but if this "
+              f"process sends real participant email those links are dead. "
+              f"Set it to the public site URL.")
+    else:
+        print(f"[URL] Participant links will point at {base}")
+
+
 def create_app() -> Flask:
     """Application Factory creating and configuring the Flask app instance."""
     app = Flask(__name__)
@@ -100,6 +119,9 @@ def create_app() -> Flask:
 
     # 4. Check DB Connection
     check_db_connection()
+
+    # 5. Check the URL that goes into every participant email
+    check_public_url()
     check_zin26_schema()
 
     return app

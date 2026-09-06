@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import zinniaSvg from '../../assets/zinnia.svg';
+import { clearSession, loadSession } from '../../lib/participant/api';
 
 interface MagneticElementProps {
   children: React.ReactNode;
@@ -54,6 +55,26 @@ export const WebsiteNavbar: React.FC = () => {
   const [interactiveSoundText, setInteractiveSoundText] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // The 30-day session already survives a refresh, but the bar always showed
+  // LOGIN / REGISTER — so a signed-in participant had every reason to think
+  // they had been logged out. Re-read on navigation, and on `storage` so
+  // signing out in one tab updates the others.
+  const [signedIn, setSignedIn] = useState(() => Boolean(loadSession()));
+
+  useEffect(() => {
+    setSignedIn(Boolean(loadSession()));
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const sync = () => setSignedIn(Boolean(loadSession()));
+    window.addEventListener('storage', sync);
+    window.addEventListener('focus', sync);
+    return () => {
+      window.removeEventListener('storage', sync);
+      window.removeEventListener('focus', sync);
+    };
+  }, []);
+
   const triggerComicFX = (txt: string) => {
     setInteractiveSoundText(txt);
     setTimeout(() => setInteractiveSoundText(null), 800);
@@ -82,6 +103,12 @@ export const WebsiteNavbar: React.FC = () => {
       navigate('/participant/login');
     } else if (target === 'register') {
       navigate('/register');
+    } else if (target === 'dashboard') {
+      navigate('/participant/dashboard');
+    } else if (target === 'logout') {
+      clearSession();
+      setSignedIn(false);
+      navigate('/', { replace: true });
     }
   };
 
@@ -175,23 +202,35 @@ export const WebsiteNavbar: React.FC = () => {
               </button>
             </MagneticElement>
 
-            {/* LOGIN TAB — secondary action: cyan OUTLINE, dark fill, so the
-                solid REGISTER beside it stays the dominant CTA. */}
-            <MagneticElement strength={0.3} onClick={() => handleNavClick('login', 'LOGIN!')}>
+            {/* Signed in: the pair becomes LOG OUT + DASHBOARD, keeping the
+                same outline/solid weighting so the dominant CTA is still the
+                thing you most likely came to do. */}
+            <MagneticElement
+              strength={0.3}
+              onClick={() =>
+                signedIn ? handleNavClick('logout', 'BYE!') : handleNavClick('login', 'LOGIN!')
+              }
+            >
               <button className="comic-button" type="button">
                 <span className="back-box-cyan" />
                 <span className="front-box outline-cyan">
-                  <span>LOGIN</span>
+                  <span>{signedIn ? 'LOG OUT' : 'LOGIN'}</span>
                 </span>
               </button>
             </MagneticElement>
 
-            {/* REGISTER TAB */}
-            <MagneticElement strength={0.35} onClick={() => handleNavClick('register', 'REGISTER!')}>
+            <MagneticElement
+              strength={0.35}
+              onClick={() =>
+                signedIn
+                  ? handleNavClick('dashboard', 'DASHBOARD!')
+                  : handleNavClick('register', 'REGISTER!')
+              }
+            >
               <button className="comic-button-cyan" type="button">
                 <span className="back-box-cyan" />
                 <span className="front-box-cyan">
-                  <span>REGISTER</span>
+                  <span>{signedIn ? 'DASHBOARD' : 'REGISTER'}</span>
                 </span>
               </button>
             </MagneticElement>
@@ -278,11 +317,13 @@ export const WebsiteNavbar: React.FC = () => {
             className="comic-button comic-button-fluid"
             type="button"
             tabIndex={mobileMenuOpen ? 0 : -1}
-            onClick={() => handleNavClick('login', 'LOGIN!')}
+            onClick={() =>
+              signedIn ? handleNavClick('logout', 'BYE!') : handleNavClick('login', 'LOGIN!')
+            }
           >
             <span className="back-box-cyan" />
             <span className="front-box outline-cyan">
-              <span>LOGIN</span>
+              <span>{signedIn ? 'LOG OUT' : 'LOGIN'}</span>
             </span>
           </button>
 
@@ -290,11 +331,15 @@ export const WebsiteNavbar: React.FC = () => {
             className="comic-button-cyan comic-button-fluid"
             type="button"
             tabIndex={mobileMenuOpen ? 0 : -1}
-            onClick={() => handleNavClick('register', 'REGISTER!')}
+            onClick={() =>
+              signedIn
+                ? handleNavClick('dashboard', 'DASHBOARD!')
+                : handleNavClick('register', 'REGISTER!')
+            }
           >
             <span className="back-box-cyan" />
             <span className="front-box-cyan">
-              <span>REGISTER</span>
+              <span>{signedIn ? 'DASHBOARD' : 'REGISTER'}</span>
             </span>
           </button>
         </aside>

@@ -166,7 +166,7 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
     email = str(data["email"]).strip().lower()
     phone = re.sub(r"\D", "", str(data["phone"]))
 
-    existing = db.select_one("participants", f"select=user_id,email&email=eq.{email}")
+    existing = db.select_one("participants", f"select=user_id,email&email=eq.{db.enc(email)}")
     if existing:
         return {
             "success": False,

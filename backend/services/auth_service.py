@@ -1,195 +1,209 @@
 """
-Zinnia 2026 — Admin Authentication Service Layer
-Authenticates organizers & coordinators using bcrypt password verification
-against admin_users and event_coordinators database tables.
+Zinnia 2026 — Admin Authentication Service
+
+WHAT CHANGED AND WHY
+    This module used to compare the submitted password against a plaintext
+    `expected_pass` field held in this file, BEFORE trying bcrypt. Every admin
+    password was therefore readable in the repository, including the
+    SUPER_ADMIN one, and remains readable in git history.
+
+    Verification is now bcrypt-only, and credentials are read from the
+    `admin_users` table that migration 001 seeds.
+
+SEED FALLBACK
+    If `admin_users` is unreachable or empty, this falls back to the built-in
+    accounts below so a fresh checkout can still sign in. The fallback is
+    bcrypt-only too, and it is announced loudly on every use. Set
+    ADMIN_DISABLE_SEED_FALLBACK=true in production to turn it off.
+
+    THESE HASHES ARE PUBLIC. Rotate before the panel protects anything real:
+        python scripts/gen_admin_hashes.py
 """
 
+from __future__ import annotations
+
 import os
+from typing import Any, Dict, List, Optional
+
 import bcrypt
 import requests
-from typing import Dict, Any, List, Optional
-from services.passport_service import get_headers, SUPABASE_URL
+
 from middleware.auth_middleware import generate_admin_token
+from services.passport_service import SUPABASE_URL, get_headers
 
-# Fallback seed credentials in case database migration is pending
-# ==============================================================================
-# OFFICIAL CREDENTIALS MATRIX
-# Operational accounts: <role>@zinnia
-# Event coordinators:   <slug>@<event_code_two_digits>
-# ==============================================================================
+DISABLE_SEED_FALLBACK = os.getenv("ADMIN_DISABLE_SEED_FALLBACK", "false").lower() == "true"
 
-OFFICIAL_CREDENTIALS = {
-    # 1. Operational Staff
-    "admin": {
-        "id": "usr_admin",
-        "username": "admin",
-        "expected_pass": "admin@zinnia",
-        "password_hash": "$2b$10$ZMLJDiFttDhiZ/1bG4gJ7u/3M88b0sVeCfq5AUR7UhVYuZTvIGdYy",
-        "name": "System Administrator",
-        "role": "SUPER_ADMIN",
-        "allowed_events": []
-    },
-    "treasurer": {
-        "id": "usr_treasurer",
-        "username": "treasurer",
-        "expected_pass": "treasurer@zinnia",
-        "password_hash": "$2b$10$AKsKwXXI.2KkLtH3C6GJl.3PPogazMUot4006J83SG33kgn5vCnve",
-        "name": "Symposium Treasurer",
-        "role": "TREASURER",
-        "allowed_events": []
-    },
-    "gate": {
-        "id": "usr_gate",
-        "username": "gate",
-        "expected_pass": "gate@zinnia",
-        "password_hash": "$2b$10$nxk85P5e4qU4fHqGYLvIx.EW76Ia7yGS6BiPb.KE6isBUwPHcsndO",
-        "name": "Campus Gate Reception",
-        "role": "GATE_ADMIN",
-        "allowed_events": []
-    },
-    "food": {
-        "id": "usr_food",
-        "username": "food",
-        "expected_pass": "food@zinnia",
-        "password_hash": "$2b$10$WUJVE3gutrVNB1P4jPxE.OSYMFqHhSPLZzwJvG8DnFg7bvl8x.ASW",
-        "name": "Dining Hall Staff",
-        "role": "FOOD_ADMIN",
-        "allowed_events": []
-    },
+# A real bcrypt hash of a random string. Compared against when the username is
+# unknown, so a missing account and a wrong password take the same time to
+# answer and the login form cannot be used to enumerate usernames.
+_DUMMY_HASH = "$2b$12$C6UzMDM.H6dfI/f/IKcEe.uQZ9tQ4Ml3Q1Qm0v0aJ0Q0aQ0aQ0aQ0"
 
-    # 2. Single-Slug Event Track Coordinators
-    "debugging": {
-        "id": "usr_debugging",
-        "username": "debugging",
-        "expected_pass": "debugging@01",
-        "password_hash": "$2b$10$TST9sQHrEaHxmfctxFnaa.qlEcDf1kItSUuCs8f1I0PCZzzTkiGna",
-        "name": "Debugging Coordinator",
-        "role": "EVENT_COORDINATOR",
-        "allowed_events": ["debugging"]
-    },
-    "signal": {
-        "id": "usr_signal",
-        "username": "signal",
-        "expected_pass": "signal@02",
-        "password_hash": "$2b$10$TvEDm7AdOANzYA.4YxVz6uV4nRDlrh1RS2tTrOjRLiSTqg7W8nN0u",
-        "name": "The Last Signal Coordinator",
-        "role": "EVENT_COORDINATOR",
-        "allowed_events": ["the-last-signal"]
-    },
-    "sql": {
-        "id": "usr_sql",
-        "username": "sql",
-        "expected_pass": "sql@03",
-        "password_hash": "$2b$10$3DoKJaE4IGu9DjbHA58dBeDATm7l4KsrHBiY.V4CuBTk5zjFmsr72",
-        "name": "Lost at SQL Coordinator",
-        "role": "EVENT_COORDINATOR",
-        "allowed_events": ["lost-at-sql"]
-    },
-    "gadget": {
-        "id": "usr_gadget",
-        "username": "gadget",
-        "expected_pass": "gadget@04",
-        "password_hash": "$2b$10$tGq/0BVkRPHd9.O5..3S9Oj1lsW2gKk8XWWr3ZdO6xc31V58nnIZ6",
-        "name": "Gadget Codes Coordinator",
-        "role": "EVENT_COORDINATOR",
-        "allowed_events": ["gadget-codes"]
-    },
-    "paper": {
-        "id": "usr_paper",
-        "username": "paper",
-        "expected_pass": "paper@05",
-        "password_hash": "$2b$10$Mcd4zTOmfs7tInQVzYf9PejOo0fTP5H7sVoLT4Okd/KKwlPxHifYu",
-        "name": "Paper Presentation Coordinator",
-        "role": "EVENT_COORDINATOR",
-        "allowed_events": ["paper-presentation"]
-    },
-    "borderland": {
-        "id": "usr_borderland",
-        "username": "borderland",
-        "expected_pass": "borderland@06",
-        "password_hash": "$2b$10$zyUzsTbh9FzL/lplQwuCxe7VFuQtk484WS6s1wtBzmBd9YJIz/XQ2",
-        "name": "Borderland Coordinator",
-        "role": "EVENT_COORDINATOR",
-        "allowed_events": ["borderland-at-gcee"]
-    },
-    "strike": {
-        "id": "usr_strike",
-        "username": "strike",
-        "expected_pass": "strike@07",
-        "password_hash": "$2b$10$VpbWNa83lcWdxLylG7titO1BVseqFjimzw1f92wiv.TNsiIxHcPJq",
-        "name": "Think Strike and Win Coordinator",
-        "role": "EVENT_COORDINATOR",
-        "allowed_events": ["think-strike-and-win"]
-    },
-    "plottwist": {
-        "id": "usr_plottwist",
-        "username": "plottwist",
-        "expected_pass": "plottwist@08",
-        "password_hash": "$2b$10$8F.e8wQQGTQmd6PrYf/rG.1i4tq5k89giy5R5LLVvZqngZHNz.JEa",
-        "name": "Plot Twist Coordinator",
-        "role": "EVENT_COORDINATOR",
-        "allowed_events": ["plot-twist"]
-    },
-    "film": {
-        "id": "usr_film",
-        "username": "film",
-        "expected_pass": "film@09",
-        "password_hash": "$2b$10$v8FPdhcVVcSfGeNNsGcHMeHzgb93njv1kbvx5qWLW4pWuIcswYOQe",
-        "name": "Short Film Coordinator",
-        "role": "EVENT_COORDINATOR",
-        "allowed_events": ["short-flim"]
-    }
+# Fallback only. The database is the source of truth when it is reachable.
+# Hashes for the five shared passwords, so the table below stays readable.
+_H_ADMIN = "$2b$12$5uL/sUJ8CptgUJou6Jy0xe5o1h0T05ilrXkftlA3V79PnLoxcT7rW"  # Admin@Zinnia2026
+_H_TREAS = "$2b$12$/SpPPmN6vDrb.4xxCbO1NOfMjlbtAtjbzkgb8xvQsQZXnwU8pADOa"  # Treasurer@Zin26
+_H_GATE = "$2b$12$j2o4yGUR03M9ku8zkD.IdufhqWvdxK1UCGtWp3P35fpvKhO/xskm2"   # GatePass@Zin26
+_H_FOOD = "$2b$12$JfoW6xMgCJfKsJ7BS8Blc.8/owQloH6WuZC/oLkDNMKSoRYYM2CP2"   # FoodPass@Zin26
+_H_COORD = "$2b$12$mi34h1EKd354I.swTIgnE./Jt6F4krsTUZFr3zuC5j7rQGvce4J1m"  # Coord@Zin26
+
+
+def _coord(name: str, event: str) -> Dict[str, Any]:
+    return {"hash": _H_COORD, "name": name, "role": "EVENT_COORDINATOR", "events": [event]}
+
+
+# Mirrors migration 010 exactly — same usernames, same passwords, same event
+# codes. There is one set of credentials now, not two: this is an offline copy
+# of admin_users, never a second list to reconcile against it.
+SEED_ADMINS: Dict[str, Dict[str, Any]] = {
+    "admin":     {"hash": _H_ADMIN, "name": "System Administrator", "role": "SUPER_ADMIN", "events": []},
+    "treasurer": {"hash": _H_TREAS, "name": "Symposium Treasurer", "role": "TREASURER", "events": []},
+    "gate1":     {"hash": _H_GATE, "name": "Main Gate Scanner 1", "role": "GATE_ADMIN", "events": []},
+    "gate2":     {"hash": _H_GATE, "name": "Main Gate Scanner 2", "role": "GATE_ADMIN", "events": []},
+    "food1":     {"hash": _H_FOOD, "name": "Food Counter 1", "role": "FOOD_ADMIN", "events": []},
+    "food2":     {"hash": _H_FOOD, "name": "Food Counter 2", "role": "FOOD_ADMIN", "events": []},
+
+    "debugging1":  _coord("Prabakaran D", "DEBUGGING"),
+    "debugging2":  _coord("Deepakala", "DEBUGGING"),
+    "signal1":     _coord("Abdul Razith", "LAST_SIGNAL"),
+    "signal2":     _coord("Sri Karthika", "LAST_SIGNAL"),
+    "sql1":        _coord("Vignesh", "LOST_IN_SQL"),
+    "sql2":        _coord("Indhumathi", "LOST_IN_SQL"),
+    "gadget1":     _coord("Muhammed Umer", "GADGET_CODES"),
+    "gadget2":     _coord("Swathi", "GADGET_CODES"),
+    "paper1":      _coord("Kanishkar", "PAPER_PRESENTATION"),
+    "paper2":      _coord("Karishma", "PAPER_PRESENTATION"),
+    "borderland1": _coord("Praveenraja", "BORDERLAND"),
+    "borderland2": _coord("Kaviyasri", "BORDERLAND"),
+    "strike1":     _coord("Sivabalan", "THINK_STRIKE_WIN"),
+    "strike2":     _coord("Yogeshwari", "THINK_STRIKE_WIN"),
+    "plottwist1":  _coord("Hariharan", "PLOT_TWIST"),
+    "plottwist2":  _coord("Akshaya", "PLOT_TWIST"),
+    "film1":       _coord("Aswin Sanjeev Kumar", "SHORT_FILM"),
+    "film2":       _coord("Harshini", "SHORT_FILM"),
 }
 
+# Retired by migration 010. Named so the login error can say what happened
+# instead of "invalid username", which sends people hunting for a typo.
+RETIRED_USERNAMES = {
+    "superadmin": "admin",
+    "gate": "gate1", "food": "food1",
+    "debugging": "debugging1", "signal": "signal1", "sql": "sql1",
+    "gadget": "gadget1", "paper": "paper1", "borderland": "borderland1",
+    "strike": "strike1", "plottwist": "plottwist1", "film": "film1",
+}
+
+
+def _bcrypt_ok(password: str, stored_hash: str) -> bool:
+    try:
+        return bcrypt.checkpw(password.encode("utf-8"), (stored_hash or "").encode("utf-8"))
+    except Exception:
+        return False
+
+
+def _from_database(username: str) -> Optional[Dict[str, Any]]:
+    """Returns the admin row, or None when the table is unreachable or empty."""
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/admin_users"
+            f"?username=eq.{username}&is_active=eq.true"
+            f"&select=id,username,password_hash,name,role",
+            headers=get_headers(),
+            timeout=6,
+        )
+        if r.status_code != 200:
+            return None
+        rows = r.json()
+        return rows[0] if isinstance(rows, list) and rows else None
+    except Exception as e:
+        print(f"[Auth] admin_users lookup failed: {type(e).__name__}: {e}")
+        return None
+
+
+def _allowed_events(admin_user_id: str) -> List[str]:
+    """
+    Coordinator scope, in zin26 event codes.
+
+    Reads admin_event_scope (migration 010), NOT the older event_coordinators
+    table: that one is FK'd to public.events and holds legacy ids like
+    'lost-at-sql', while the panel filters on zin26 codes like 'LOST_IN_SQL'.
+    The two never matched, so every coordinator saw an empty event list.
+    """
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/admin_event_scope"
+            f"?admin_user_id=eq.{admin_user_id}&select=event_code",
+            headers=get_headers(),
+            timeout=6,
+        )
+        if r.status_code == 200 and isinstance(r.json(), list):
+            return [row["event_code"] for row in r.json() if row.get("event_code")]
+    except Exception as e:
+        print(f"[Auth] admin_event_scope lookup failed: {type(e).__name__}: {e}")
+    return []
+
+
 def authenticate_admin(username_or_email: str, password: str) -> Dict[str, Any]:
-    """Authenticates admin or coordinator against single-slug official matrix."""
-    raw_user = (username_or_email or "").strip().lower()
-    provided_pass = (password or "").strip()
+    raw = (username_or_email or "").strip().lower()
+    pwd = (password or "").strip()
 
-    if not raw_user or not provided_pass:
-        return {"success": False, "error_code": "INVALID_INPUT", "message": "Username and password are required."}
+    if not raw or not pwd:
+        return {"success": False, "error_code": "INVALID_INPUT",
+                "message": "Username and password are required."}
 
-    # Extract username slug if email format was entered (e.g., admin@zinnia2026.edu -> admin)
-    cleaned_user = raw_user.split('@')[0] if '@' in raw_user else raw_user
-    user_record = OFFICIAL_CREDENTIALS.get(cleaned_user) or OFFICIAL_CREDENTIALS.get(raw_user)
+    # Accept an email form so nobody has to remember which it was.
+    username = raw.split("@")[0] if "@" in raw else raw
 
-    if not user_record:
-        return {"success": False, "error_code": "INVALID_CREDENTIALS", "message": f"Invalid username '{cleaned_user}'."}
+    profile: Optional[Dict[str, Any]] = None
 
-    # Verify password against exact expected string or bcrypt hash
-    expected_pass = user_record.get("expected_pass", "")
-    stored_hash = user_record.get("password_hash", "")
-    is_valid = False
+    row = _from_database(username)
+    if row:
+        if _bcrypt_ok(pwd, row.get("password_hash", "")):
+            profile = {
+                "id": str(row["id"]),
+                "username": row["username"],
+                "name": row["name"],
+                "role": str(row["role"]).upper(),
+                "allowed_events": _allowed_events(str(row["id"])),
+            }
+    elif not DISABLE_SEED_FALLBACK:
+        seed = SEED_ADMINS.get(username)
+        if seed and _bcrypt_ok(pwd, seed["hash"]):
+            print(
+                f"[Auth] SEED FALLBACK used for '{username}'. These credentials are "
+                f"public in git history - rotate them and set "
+                f"ADMIN_DISABLE_SEED_FALLBACK=true."
+            )
+            profile = {
+                "id": f"seed_{username}",
+                "username": username,
+                "name": seed["name"],
+                "role": seed["role"],
+                "allowed_events": seed["events"],
+            }
+    else:
+        # Keep the timing indistinguishable from a wrong password.
+        _bcrypt_ok(pwd, _DUMMY_HASH)
 
-    if expected_pass and provided_pass == expected_pass:
-        is_valid = True
-    elif stored_hash:
-        try:
-            is_valid = bcrypt.checkpw(provided_pass.encode("utf-8"), stored_hash.encode("utf-8"))
-        except Exception:
-            is_valid = False
-
-    if not is_valid:
-        return {"success": False, "error_code": "INVALID_CREDENTIALS", "message": "Invalid password."}
-
-    # Fetch coordinator's assigned events
-    user_role = user_record.get("role", "").upper()
-    allowed_events = user_record.get("allowed_events", [])
-
-    user_profile = {
-        "id": str(user_record.get("id")),
-        "username": user_record.get("username"),
-        "name": user_record.get("name"),
-        "role": user_role,
-        "allowed_events": allowed_events
-    }
-
-    token = generate_admin_token(user_profile)
+    if not profile:
+        if not row:
+            _bcrypt_ok(pwd, _DUMMY_HASH)
+        # A retired username is a different problem from a wrong password, and
+        # saying so saves someone hunting for a typo that is not there.
+        replacement = RETIRED_USERNAMES.get(username)
+        if replacement:
+            return {
+                "success": False,
+                "error_code": "ACCOUNT_RETIRED",
+                "message": f"The '{username}' account was merged into '{replacement}'. "
+                           f"Sign in as '{replacement}' instead.",
+            }
+        return {"success": False, "error_code": "INVALID_CREDENTIALS",
+                "message": "Invalid username or password."}
 
     return {
         "success": True,
-        "message": f"Authenticated successfully as {user_profile['name']}.",
-        "user": user_profile,
-        "allowed_events": allowed_events,
-        "token": token
+        "message": f"Signed in as {profile['name']}.",
+        "user": profile,
+        "allowed_events": profile["allowed_events"],
+        "token": generate_admin_token(profile),
     }

@@ -1,8 +1,21 @@
 export const REGISTRATION_FEE_PER_HEAD = 250;
 
+// Where the registration fee is collected. VITE_TREASURER_* override these, so
+// the account can be changed per environment without a code edit.
+//
+// The fallbacks exist because there is no safe way to fail here: without them a
+// missing env var renders "—" for the UPI id and builds a QR with an empty
+// payee, so every participant is stopped at the payment step with nothing on
+// screen explaining why.
+//
+// The trade-off is that a wrong or missing env var now pays the account below
+// instead of failing loudly. If the treasurer ever changes, update BOTH this
+// constant and the deployment's env var — and note the amount and payee shown
+// on the payment screen come from here too, so they can never disagree with
+// the QR beside them.
 export const TREASURER_PAYMENT_CONFIG = {
-  upiId: (import.meta.env.VITE_TREASURER_UPI_ID as string) || 'shachinpr29@okicici',
-  payeeName: (import.meta.env.VITE_TREASURER_PAYEE_NAME as string) || 'SHACHIN P R',
+  upiId: (import.meta.env.VITE_TREASURER_UPI_ID as string) || 'kanishkar.m06-1@oksbi',
+  payeeName: (import.meta.env.VITE_TREASURER_PAYEE_NAME as string) || 'Kanishkar M',
 };
 
 // Participants' WhatsApp group invite (D11).

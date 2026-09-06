@@ -16,6 +16,7 @@ import os
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
+from urllib.parse import quote
 
 from services.passport_service import SUPABASE_URL, SUPABASE_KEY
 
@@ -42,6 +43,26 @@ def write_headers(prefer: str = "return=representation") -> Dict[str, str]:
     h["Content-Profile"] = SCHEMA
     h["Prefer"] = prefer
     return h
+
+
+def enc(value: Any) -> str:
+    """
+    Percent-encode a value going into a PostgREST filter.
+
+    Filter values are interpolated straight into the query string, so an
+    unencoded value can be misread or can change the query outright:
+
+        +   is decoded as a SPACE, so email=eq.a+b@x.com silently matches
+            nothing — the bug that made duplicate-email pre-checks miss every
+            address using plus-addressing
+        &   ends the parameter, so a value can append filters of its own
+        ,   separates values inside in.(...) and and/or groups
+        %   starts an escape sequence and corrupts the rest of the value
+
+    safe='' encodes everything except the unreserved set, which PostgREST
+    decodes back to the original string.
+    """
+    return quote(str(value), safe="")
 
 
 def _url(table: str, query: str = "") -> str:
@@ -120,6 +141,35 @@ def delete(table: str, query: str) -> List[Dict[str, Any]]:
     if r.status_code not in (200, 204):
         raise Zin26Error(f"delete {table} failed: HTTP {r.status_code} {r.text[:200]}")
     return (r.json() or []) if r.text else []
+
+
+def rpc(fn: str, payload: Optional[Dict[str, Any]] = None) -> Any:
+    """
+    Call a PL/pgSQL function in the zin26 schema.
+
+    This is the only way to get a transaction out of PostgREST: two helper
+    calls above are two HTTP requests and are NOT atomic. Anything that must
+    not race — claiming the last seat in an event — belongs in a function and
+    is invoked here.
+
+    Functions are reached with Content-Profile (they are POSTed), not
+    Accept-Profile, which is why this does not go through read_headers().
+    """
+    r = requests.post(
+        _url(f"rpc/{fn}"), headers=write_headers(), json=payload or {}, timeout=TIMEOUT
+    )
+    if r.status_code not in (200, 201, 204):
+        # P0001 is the RAISE EXCEPTION path in our own functions: the message is
+        # written for a participant, so it is surfaced rather than swallowed.
+        detail = ""
+        try:
+            detail = (r.json() or {}).get("message", "")
+        except Exception:
+            detail = r.text[:200]
+        raise Zin26Error(detail or f"rpc {fn} failed: HTTP {r.status_code}",
+                         status=400 if r.status_code == 400 else 500,
+                         code="RPC_REJECTED" if detail else "RPC_ERROR")
+    return r.json() if r.text else None
 
 
 def count(table: str, query: str = "select=*") -> int:

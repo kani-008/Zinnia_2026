@@ -119,17 +119,17 @@ class ZinniaStore {
     this.isSyncing = true;
 
     try {
-      // 1. Fetch live teams
-      const { data: dbTeams, error: tErr } = await supabase
-        .from('teams')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      // 2. Fetch live team members
-      const { data: dbMembers, error: mErr } = await supabase
-        .from('team_members')
-        .select('*')
-        .order('created_at', { ascending: true });
+      // Migration 004 revoked anon access to every participant table; only
+      // `events` is still publicly readable. These four requests therefore
+      // always came back 401 and the merge below always fell through to the
+      // local copy — four failed requests per page load, cluttering the
+      // console and masking real errors. Skipped rather than made and
+      // discarded. The live participant flow reads none of this; it goes
+      // through lib/participant/api.ts against the zin26 schema.
+      const dbTeams: any[] | null = null;
+      const tErr = null;
+      const dbMembers: any[] | null = null;
+      const mErr = null;
 
       const localTeams = this.getStorage<Team[]>(STORAGE_KEYS.TEAMS, []);
       const localMembers = this.getStorage<TeamMember[]>(STORAGE_KEYS.MEMBERS, []);
@@ -223,24 +223,8 @@ class ZinniaStore {
         this.setStorage(STORAGE_KEYS.EVENTS, mergedEvents);
       }
 
-      // 4. Fetch live event registrations
-      const { data: dbRegs, error: rErr } = await supabase
-        .from('event_registrations')
-        .select('*');
-
-      if (!rErr && dbRegs) {
-        this.setStorage(STORAGE_KEYS.REGISTRATIONS, dbRegs);
-      }
-
-      // 5. Fetch live attendance
-      const { data: dbAttendance, error: aErr } = await supabase
-        .from('attendance')
-        .select('*')
-        .order('scanned_at', { ascending: false });
-
-      if (!aErr && dbAttendance) {
-        this.setStorage(STORAGE_KEYS.ATTENDANCE, dbAttendance);
-      }
+      // event_registrations and attendance are revoked from anon too (see the
+      // note above), so the locally cached copies are left as they are.
 
       this.notifySubscribers();
     } catch (e) {

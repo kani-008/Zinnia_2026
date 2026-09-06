@@ -1,3 +1,7 @@
+# Root requirements — this is what Vercel's Python runtime installs for the
+# serverless function in api/index.py. Keep it in step with backend/requirements.txt
+# (same file, copied here because Vercel looks for it at the project root).
+#
 flask>=2.3.0
 flask-cors>=5.0.0
 requests>=2.31.0

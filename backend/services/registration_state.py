@@ -67,7 +67,7 @@ def resolve_participant(
     if user_id:
         return db.select_one("participants", f"select={PARTICIPANT_FIELDS}&user_id=eq.{user_id}")
     if email:
-        return db.select_one("participants", f"select={PARTICIPANT_FIELDS}&email=eq.{email}")
+        return db.select_one("participants", f"select={PARTICIPANT_FIELDS}&email=eq.{db.enc(email)}")
     return None
 
 

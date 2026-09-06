@@ -25,8 +25,8 @@ import {
   X,
 } from 'lucide-react';
 
+import { QRCodeSVG } from 'qrcode.react';
 import { WebsiteNavbar } from '../components/layout/Navbar';
-import upiQrImage from '../assets/upi-qr-shachin.jpeg';
 import {
   REGISTRATION_FEE_PER_HEAD,
   REGISTRATION_STEPS,
@@ -68,6 +68,22 @@ export const ParticipantPaymentPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Which field a validation complaint belongs to. The page-level alert sits
+  // above a long form, so on a phone it scrolls out of sight and pressing
+  // Submit looks like it did nothing at all.
+  const [fieldError, setFieldError] = useState<'utr' | 'screenshot' | null>(null);
+
+  /** Put the message on the field and bring that field into view. */
+  const failField = (field: 'utr' | 'screenshot', message: string) => {
+    setError(message);
+    setFieldError(field);
+    const target =
+      field === 'utr'
+        ? document.getElementById('utr')
+        : document.querySelector('label[for="screenshot"]');
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (field === 'utr') (target as HTMLInputElement | null)?.focus({ preventScroll: true });
+  };
   const [showForm, setShowForm] = useState(false);
 
   const rid = status?.registration_id ?? registrationId;
@@ -138,21 +154,36 @@ export const ParticipantPaymentPage: React.FC = () => {
     }
     setProof(file);
     setProofPreview(URL.createObjectURL(file));
+    setFieldError((f) => (f === 'screenshot' ? null : f));
+    setError(null);
   };
+
+  // upi://pay is the standard intent every Indian UPI app understands.
+  // Amount and note are prefilled so the participant cannot mistype either.
+  // pa is NOT percent-encoded: a VPA is already URL-safe, and turning its "@"
+  // into %40 makes some UPI apps fail to parse the intent. Matches the legacy
+  // payment page, which has been scanned in production.
+  const upiLink = `upi://pay?pa=${TREASURER_PAYMENT_CONFIG.upiId ?? ''}`
+    + `&pn=${encodeURIComponent(TREASURER_PAYMENT_CONFIG.payeeName ?? '')}`
+    + `&am=${status?.expected_amount || REGISTRATION_FEE_PER_HEAD}`
+    + `&cu=INR`
+    + `&tn=${encodeURIComponent('ZINNIA26 ' + (status?.user_id || ''))}`;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting || !rid) return;
 
+    setFieldError(null);
+
     const cleaned = utr.trim();
     if (!UTR_REGEX.test(cleaned)) {
-      setError('Enter the UTR / transaction reference exactly as your payment app shows it.');
+      failField('utr', 'Enter the UTR / transaction reference exactly as your payment app shows it.');
       return;
     }
 
     const proofOnFile = Boolean(status?.payment?.screenshot_url);
     if (!proof && !proofOnFile) {
-      setError('Attach a screenshot of the payment - the treasurer verifies against it.');
+      failField('screenshot', 'Attach a screenshot of the payment — the treasurer verifies against it.');
       return;
     }
 
@@ -397,7 +428,7 @@ export const ParticipantPaymentPage: React.FC = () => {
           </ComicAlert>
         )}
 
-        {error && <ComicAlert tone="pink" className="mb-6">{error}</ComicAlert>}
+        {error && !fieldError && <ComicAlert tone="pink" className="mb-6">{error}</ComicAlert>}
 
         <ComicPanel tone="yellow" className="mb-6">
           <div className="flex items-baseline justify-between gap-4">
@@ -413,12 +444,15 @@ export const ParticipantPaymentPage: React.FC = () => {
           </p>
 
           <div className="mt-6 flex flex-col items-center gap-5 sm:flex-row sm:items-start">
-            <div className="w-full max-w-[280px] shrink-0 bg-white p-2 border-[3px] border-[#090A0B] shadow-[5px_5px_0px_#090A0B] -rotate-1 sticker-pop sm:w-[240px] sm:p-2.5">
-              <img
-                src={upiQrImage}
-                alt="UPI payment QR for SHACHIN P R (shachinpr29@okicici)"
-                className="block h-auto w-full select-none"
-                draggable={false}
+            <div className="w-full max-w-[280px] shrink-0 bg-white p-3 border-[3px] border-[#090A0B] shadow-[5px_5px_0px_#090A0B] -rotate-1 sticker-pop sm:w-[240px]">
+              {/* Built from TREASURER_PAYMENT_CONFIG, the same source as the UPI
+                  id printed beside it. A static image could not follow that
+                  config, so scanning and copying could pay different accounts. */}
+              <QRCodeSVG
+                value={upiLink}
+                level="M"
+                className="block h-auto w-full"
+                aria-label={`UPI payment QR for ${TREASURER_PAYMENT_CONFIG.payeeName}`}
               />
             </div>
 
@@ -448,6 +482,7 @@ export const ParticipantPaymentPage: React.FC = () => {
         <form onSubmit={onSubmit}>
           <ComicPanel tone="cyan" bodyClassName="space-y-6">
             <ComicField
+              error={fieldError === 'utr' ? error : null}
               label="UTR / transaction reference"
               htmlFor="utr"
               hint="Your payment app calls this the UTR, RRN, or transaction ID."
@@ -464,6 +499,7 @@ export const ParticipantPaymentPage: React.FC = () => {
             <ComicField
               label="Payment screenshot"
               htmlFor="screenshot"
+              error={fieldError === 'screenshot' ? error : null}
               hint={
                 status.payment?.screenshot_url && !proof
                   ? 'A screenshot is already on file. Choose a new one only if you want to replace it.'

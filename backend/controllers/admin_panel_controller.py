@@ -1,0 +1,276 @@
+"""
+Zinnia 2026 — Admin Panel Controller
+
+Thin: parse the request, call the service, jsonify. Every response keeps the
+{success, message, error_code, ...payload} envelope the rest of the API uses,
+because the frontend's adminFetch wrapper depends on it being uniform.
+"""
+
+from __future__ import annotations
+
+import re
+
+from flask import Response, g, jsonify, request, send_file
+
+from services import admin_panel_service as svc
+from services import audit_service
+from services import export_service
+from services.zin26_db import Zin26Error
+
+
+def _fail(e: Exception):
+    """zin26 errors carry a participant-facing message and a status."""
+    if isinstance(e, Zin26Error):
+        raw = e.message or ""
+        # PGRST205/PGRST202: the view or function this screen reads does not
+        # exist. Almost always means migration 009 has not been applied, and a
+        # raw PostgREST 404 sends people looking for the wrong problem.
+        if "PGRST205" in raw or "PGRST202" in raw or "Could not find the function" in raw:
+            # Take the name from "Could not find the table/function 'X'".
+            # PostgREST also emits a "Perhaps you meant 'zin26.event_blocks'"
+            # hint, and matching the first quoted name picks up that suggestion
+            # instead of the thing that is actually absent.
+            missing = ""
+            m = (
+                re.search(r"Could not find the (?:table|view) '([^']+)'", raw)
+                or re.search(r"Could not find the function ([a-z0-9_.]+)", raw)
+                or re.search(r"^\w+ ([a-z0-9_]+) failed", raw)
+            )
+            if m:
+                missing = f" ({m.group(1)} is missing)"
+            return jsonify({
+                "success": False,
+                "error_code": "MIGRATION_MISSING",
+                "message": (
+                    f"This screen's database views have not been created yet{missing}. "
+                    f"Check that the zin26 schema is exposed in Supabase (Settings -> API -> Exposed schemas), "
+                    f"then reload."
+                ),
+            }), 503
+        return jsonify({"success": False, "error_code": e.code, "message": e.message}), e.status
+    print(f"[AdminPanel] unhandled: {type(e).__name__}: {e}")
+    return jsonify({
+        "success": False,
+        "error_code": "INTERNAL_ERROR",
+        "message": "Something went wrong. Please try again.",
+    }), 500
+
+
+class AdminPanelController:
+    # ---------------------------------------------------------------- session
+    @staticmethod
+    def me():
+        return jsonify({"success": True, "user": g.admin}), 200
+
+    # -------------------------------------------------------------- dashboard
+    @staticmethod
+    def dashboard():
+        try:
+            mode = request.args.get("mode", "registration")
+            return jsonify(svc.dashboard(mode, g.admin)), 200
+        except Exception as e:
+            return _fail(e)
+
+    # ----------------------------------------------------------------- events
+    @staticmethod
+    def list_events():
+        try:
+            return jsonify(svc.list_events(g.admin)), 200
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def patch_event(code: str):
+        try:
+            body = request.get_json(silent=True) or {}
+            res = svc.set_capacity(
+                code,
+                capacity=body.get("capacity", "__unset__"),
+                reg_closes_at=body.get("reg_closes_at", "__unset__"),
+                capacity_unit=body.get("capacity_unit"),
+            )
+            return jsonify(res), 200 if res.get("success") else 400
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def close_event(code: str):
+        try:
+            body = request.get_json(silent=True) or {}
+            res = svc.set_open(code, is_open=False, reason=body.get("reason", ""))
+            return jsonify(res), 200 if res.get("success") else 400
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def open_event(code: str):
+        try:
+            body = request.get_json(silent=True) or {}
+            res = svc.set_open(
+                code,
+                is_open=True,
+                reason=body.get("reason", ""),
+                acknowledge_overfill=bool(body.get("acknowledge_overfill")),
+            )
+            return jsonify(res), 200 if res.get("success") else 409
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def event_roster(code: str):
+        try:
+            res = svc.event_roster(code, g.admin)
+            return jsonify(res), 200 if res.get("success") else 403
+        except Exception as e:
+            return _fail(e)
+
+    # --------------------------------------------------------------- payments
+    @staticmethod
+    def payments():
+        try:
+            return jsonify(svc.payments_queue(
+                status=request.args.get("status", "PENDING"),
+                q=request.args.get("q", ""),
+                flag=request.args.get("flag", ""),
+                page=int(request.args.get("page", 1) or 1),
+            )), 200
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def payment_detail(user_id: str):
+        try:
+            res = svc.payment_detail(user_id)
+            return jsonify(res), 200 if res.get("success") else 404
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def payment_screenshot(user_id: str):
+        try:
+            res = svc.screenshot_url(user_id)
+            return jsonify(res), 200 if res.get("success") else 404
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def approve_payment(user_id: str):
+        try:
+            res = svc.review_payment(user_id, approve=True)
+            return jsonify(res), 200 if res.get("success") else 400
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def reject_payment(user_id: str):
+        try:
+            body = request.get_json(silent=True) or {}
+            reason = (body.get("reason") or "").strip()
+            if not reason:
+                return jsonify({
+                    "success": False,
+                    "error_code": "REASON_REQUIRED",
+                    "message": "A reason is required - it is sent to the participant.",
+                }), 400
+            res = svc.review_payment(user_id, approve=False, reason=reason)
+            return jsonify(res), 200 if res.get("success") else 400
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def resend_pass(user_id: str):
+        try:
+            res = svc.resend_pass(user_id)
+            return jsonify(res), 200 if res.get("success") else 400
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def bulk_approve():
+        try:
+            body = request.get_json(silent=True) or {}
+            res = svc.bulk_approve(body.get("user_ids") or [])
+            return jsonify(res), 200 if res.get("success") else 400
+        except Exception as e:
+            return _fail(e)
+
+    # ---------------------------------------------------------------- exports
+    @staticmethod
+    def export_preview():
+        try:
+            body = request.get_json(silent=True) or {}
+            return jsonify(export_service.preview(
+                body.get("sheets") or [], body.get("filters") or {}, g.admin
+            )), 200
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def export_workbook():
+        try:
+            body = request.get_json(silent=True) or {}
+            buf, filename, _counts = export_service.build_workbook(
+                sheets=body.get("sheets") or ["participants"],
+                filters=body.get("filters") or {},
+                admin=g.admin,
+                only_event=body.get("event") or "",
+            )
+            return send_file(
+                buf,
+                as_attachment=True,
+                download_name=filename,
+                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def export_event(code: str):
+        try:
+            admin = g.admin
+            if (admin.get("role") or "").upper() == "EVENT_COORDINATOR" \
+                    and code not in (admin.get("allowed_events") or []):
+                return jsonify({"success": False, "error_code": "FORBIDDEN",
+                                "message": "You are not a coordinator for this event."}), 403
+            buf, filename, _ = export_service.build_workbook(
+                sheets=["events"], filters={}, admin=admin, only_event=code
+            )
+            return send_file(
+                buf,
+                as_attachment=True,
+                download_name=filename,
+                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        except Exception as e:
+            return _fail(e)
+
+    # --------------------------------------------------------------- settings
+    @staticmethod
+    def get_settings():
+        try:
+            return jsonify(svc.get_settings()), 200
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
+    def patch_settings():
+        try:
+            body = request.get_json(silent=True) or {}
+            res = svc.update_settings(body.get("settings") or body)
+            return jsonify(res), 200 if res.get("success") else 400
+        except Exception as e:
+            return _fail(e)
+
+    # ------------------------------------------------------------------ audit
+    @staticmethod
+    def audit():
+        try:
+            return jsonify({
+                "success": True,
+                "entries": audit_service.recent(
+                    limit=int(request.args.get("limit", 50) or 50),
+                    offset=int(request.args.get("offset", 0) or 0),
+                ),
+            }), 200
+        except Exception as e:
+            return _fail(e)

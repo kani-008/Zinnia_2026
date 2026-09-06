@@ -14,6 +14,7 @@ import hmac
 import hashlib
 import datetime
 import requests
+from urllib.parse import quote
 from typing import Dict, Any, Optional, Tuple, List
 from dotenv import load_dotenv
 
@@ -156,7 +157,7 @@ def lookup_member(identifier: str) -> Tuple[Optional[Dict[str, Any]], Optional[D
     # 3. By email
     if not members:
         r = requests.get(
-            f"{SUPABASE_URL}/rest/v1/team_members?email=eq.{cleaned}&select=*",
+            f"{SUPABASE_URL}/rest/v1/team_members?email=eq.{quote(cleaned, safe='')}&select=*",
             headers=headers
         )
         members = r.json() if r.status_code == 200 and isinstance(r.json(), list) else []
@@ -482,10 +483,15 @@ def process_food_checkin(
 # ==============================================================================
 def trigger_passport_dispatch(
     team_id: str,
-    app_base_url: str = "http://localhost:5173",
+    app_base_url: str = "",
     force_resend: bool = False
 ) -> Dict[str, Any]:
-    from services.email_service import send_participant_passport_email
+    # Default to the configured site URL, not a literal. Three of this
+    # function's four callers pass nothing, so a hardcoded default here is
+    # the value that actually reaches participants' inboxes.
+    from services.email_service import APP_BASE_URL, send_participant_passport_email
+
+    app_base_url = (app_base_url or APP_BASE_URL).rstrip("/")
     headers = get_headers()
 
     # 1. Fetch team members

@@ -243,11 +243,15 @@ def send_participant_passport_email(
     member: Dict[str, Any],
     team: Dict[str, Any],
     registered_events: List[Dict[str, Any]],
-    app_base_url: str = "http://localhost:5173",
+    app_base_url: str = "",
     force_resend: bool = False
 ) -> Dict[str, Any]:
     """
     Constructs and sends the official passport email with CID-embedded QR code.
+
+    app_base_url falls back to the configured APP_BASE_URL rather than to a
+    localhost literal - links in a real email must never point at a developer
+    machine.
     Enforces idempotency unless force_resend is True.
     """
     recipient_email = member.get("email", "").strip()
@@ -267,7 +271,8 @@ def send_participant_passport_email(
     
     qr_payload_str = generate_signed_qr_payload_for_member(member, registered_events)
     png_bytes = generate_qr_png_bytes(qr_payload_str)
-    passport_link = f"{app_base_url}/passport?token={member.get('passport_token') or member.get('id')}"
+    base = (app_base_url or APP_BASE_URL).rstrip("/")
+    passport_link = f"{base}/passport?token={member.get('passport_token') or member.get('id')}"
 
     # 2. Build Multipart Email Message
     msg = MIMEMultipart("related")
