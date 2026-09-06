@@ -95,8 +95,8 @@ export const EventScheduleView: React.FC<{
       code: '02',
       mission_name: 'DEBUGGING',
       start_time: '11:00 AM',
-      time_display: '11:00 AM – 12:30 PM',
-      duration: '1 hr 30 mins',
+      time_display: '11:00 AM – 01:00 PM',
+      duration: '2 hrs',
       category_type: 'TECH',
       color_theme: 'cyan',
       venue: 'Auditorium 1st floor',
@@ -108,8 +108,8 @@ export const EventScheduleView: React.FC<{
       code: '03',
       mission_name: 'THE LAST SIGNAL',
       start_time: '11:00 AM',
-      time_display: '11:00 AM – 12:30 PM',
-      duration: '1 hr 30 mins',
+      time_display: '11:00 AM – 01:00 PM',
+      duration: '2 hrs',
       category_type: 'TECH',
       color_theme: 'cyan',
       venue: '104 class room',
@@ -121,14 +121,14 @@ export const EventScheduleView: React.FC<{
       code: '01',
       mission_name: 'GADGET CODES',
       start_time: '11:00 AM',
-      time_display: '11:00 AM – 02:30 PM',
-      duration: '3 hrs 30 mins',
+      time_display: '11:00 AM – 03:00 PM',
+      duration: '3 hrs',
       category_type: 'TECH',
       color_theme: 'cyan',
       single_badge: true,
       venue: 'CC1 lab',
-      tagline: 'Program. Wire. Automate.',
-      description: 'Technical quiz, 30-sec team code swaps, and QR passcode fragments puzzle hunt.'
+      tagline: 'Code. Solve. Win.',
+      description: 'Test your coding speed, logic and problem-solving skills in this ultimate technical challenge.'
     },
     {
       id: 'paper-presentation',
@@ -139,7 +139,7 @@ export const EventScheduleView: React.FC<{
       duration: '4 hrs',
       category_type: 'TECH',
       color_theme: 'cyan',
-      venue: 'IT & CSE Seminar Hall',
+      venue: 'Seminar Hall',
       tagline: 'Ideas that speak. Impact that lasts.',
       description: 'Present original research manuscripts, architectural discoveries, and innovative engineering paradigms.'
     },
@@ -149,10 +149,10 @@ export const EventScheduleView: React.FC<{
       mission_name: 'BORDERLAND @ GCEE',
       start_time: '12:00 PM',
       time_display: '12:00 PM – 03:00 PM',
-      duration: '3 hrs',
+      duration: '2 hrs',
       category_type: 'NON_TECH',
       color_theme: 'pink',
-      venue: '101, 102 class room',
+      venue: 'CSE Dept',
       tagline: 'Survive. Strategize. Dominate.',
       description: 'Survive strategic mini-games in Round 1 to extend your visa for the Borderland Hunt.'
     },
@@ -160,12 +160,12 @@ export const EventScheduleView: React.FC<{
       id: 'think-strike-and-win',
       code: '07',
       mission_name: 'THINK, STRIKE AND WIN',
-      start_time: '12:00 PM',
-      time_display: '12:00 PM – 02:30 PM',
-      duration: '2 hrs 30 mins',
+      start_time: '02:00 PM',
+      time_display: '02:00 PM – 03:00 PM',
+      duration: '1 hr',
       category_type: 'NON_TECH',
       color_theme: 'pink',
-      venue: '103 class room',
+      venue: 'CSE Dept',
       tagline: 'Think fast. Strike sharp. Win all.',
       description: 'Solve logical MCQs, picture connection links, and mystery answer deduction clues.'
     },
@@ -173,9 +173,9 @@ export const EventScheduleView: React.FC<{
       id: 'lost-at-sql',
       code: '04',
       mission_name: 'LOST AT SQL',
-      start_time: '01:30 PM',
-      time_display: '01:30 PM – 03:00 PM',
-      duration: '1 hr 30 mins',
+      start_time: '02:00 PM',
+      time_display: '02:00 PM – 03:00 PM',
+      duration: '1 hr',
       category_type: 'TECH',
       color_theme: 'cyan',
       venue: 'CC2 lab',
@@ -186,12 +186,12 @@ export const EventScheduleView: React.FC<{
       id: 'plot-twist',
       code: '08',
       mission_name: 'PLOT TWIST',
-      start_time: '01:30 PM',
-      time_display: '01:30 PM – 03:00 PM',
-      duration: '1 hr 30 mins',
+      start_time: '02:00 PM',
+      time_display: '02:00 PM - 03:00 PM',
+      duration: '1 hr',
       category_type: 'NON_TECH',
       color_theme: 'pink',
-      venue: '103 class room',
+      venue: 'CSE Dept',
       tagline: 'Expect the unexpected.',
       description: "Read an incomplete, original story and figure out its real (hidden) climax across 2 deduction rounds with twists and hint advantages."
     },
@@ -199,12 +199,12 @@ export const EventScheduleView: React.FC<{
       id: 'short-flim',
       code: '09',
       mission_name: 'SHORT FILM',
-      start_time: '01:30 PM',
-      time_display: '01:30 PM – 02:30 PM',
-      duration: '1 hr',
+      start_time: '02:30 PM',
+      time_display: '02:30 PM – 03:00 PM',
+      duration: '30 mins',
       category_type: 'NON_TECH',
       color_theme: 'pink',
-      venue: 'Main Stage',
+      venue: 'Auditorium',
       tagline: 'Freeze moments. Frame stories.',
       description: "Create an original short film based on one of the given themes:\n1) Value of time\n2) Two shadows moving in the same direction\n3) \"Sometimes the biggest obstacle isn't the obstacle in the world—it’s the doubt you accepted from it.\"\n\nTell a meaningful story through visuals, characters, and emotions while keeping the narrative clear and engaging."
     }
@@ -311,7 +311,7 @@ export const EventScheduleView: React.FC<{
             <Layers className="w-4 h-4" />
             <span>ALL EVENTS FLOW</span>
             <span className="px-1.5 py-0.2 bg-[#0D0D0F] text-[#F5D90A] font-mono text-[10px] rounded font-black">
-              10
+              9
             </span>
           </button>
 
@@ -347,7 +347,7 @@ export const EventScheduleView: React.FC<{
             <Gamepad2 className="w-4 h-4" />
             <span>NON-TECH FLOW</span>
             <span className="px-1.5 py-0.2 bg-[#0D0D0F] text-[#FF3366] font-mono text-[10px] rounded font-black">
-              5
+              4
             </span>
           </button>
         </div>
