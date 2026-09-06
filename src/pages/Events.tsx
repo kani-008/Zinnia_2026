@@ -3,6 +3,7 @@ import { RegistrationPassCard } from '../components/events/RegistrationPassCard'
 import { Link, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
+import { loadSession } from '../lib/participant/api';
 import { EventMission } from '../types';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { EventScheduleView } from '../components/ui/EventScheduleView';
@@ -60,6 +61,13 @@ const triggerAudio = () => {
 
 export const WebsiteEventsPage: React.FC = () => {
   const navigate = useNavigate();
+
+  // Someone already registered does not need the sign-up form again — their
+  // event picking happens on the dashboard, which is also the only place that
+  // knows what they already hold.
+  const signedIn = Boolean(loadSession());
+  const goRegister = (missionId: string) =>
+    navigate(signedIn ? '/participant/dashboard' : `/register?mission=${missionId}`);
   const [activeTab, setActiveTab] = useState<'ALL' | 'TECH' | 'NON_TECH'>('ALL');
   const [events, setEvents] = useState<EventMission[]>(() => store.getEvents());
   const [selectedEvent, setSelectedEvent] = useState<EventMission | null>(null);
@@ -181,9 +189,7 @@ export const WebsiteEventsPage: React.FC = () => {
           </div>
 
           <button
-            onClick={() => {
-              navigate(`/register?mission=${e.id}`);
-            }}
+            onClick={() => goRegister(e.id)}
             className={`w-full py-2.5 px-3 font-display text-xs tracking-wider uppercase font-bold flex items-center justify-center gap-2 border-[2px] transition-all shadow-[3px_3px_0px_#000000] rounded-lg active:translate-x-0.5 active:translate-y-0.5 cursor-pointer ${
               e.is_mega
                 ? 'bg-[#141417] text-[#C084FC] border-[#9333EA] hover:bg-[#9333EA] hover:text-white'
@@ -554,16 +560,14 @@ export const WebsiteEventsPage: React.FC = () => {
             {/* Register CTA Button at the end of modal */}
             <div className="pt-3 pb-1 border-t border-[#2A2A2E]">
               <button
-                onClick={() => {
-                  navigate(`/register?mission=${selectedEvent.id}`);
-                }}
+                onClick={() => goRegister(selectedEvent.id)}
                 className={`w-full py-3.5 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
                   selectedEvent.event_type === 'TECH'
                     ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
                     : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
                 }`}
               >
-                <span>REGISTER FOR {selectedEvent.mission_name}</span>
+                <span>{signedIn ? 'PICK THIS IN YOUR DASHBOARD' : `REGISTER FOR ${selectedEvent.mission_name}`}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

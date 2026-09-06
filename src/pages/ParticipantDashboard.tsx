@@ -36,6 +36,7 @@ import {
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { ComicHandDrawnCard } from '../components/events/ComicHandDrawnCard';
 import { EVENTS } from '../lib/rules/catalog';
+import { OFFICIAL_MISSIONS } from '../config/events';
 import {
   cancelRegistration,
   clearSession,
@@ -75,8 +76,29 @@ interface DashboardData {
 const cardVariant = (code: EventCode): 'tech' | 'non-tech' =>
   EVENTS[code]?.category === 'NON_TECH' ? 'non-tech' : 'tech';
 
+/**
+ * zin26 event code -> the id used by OFFICIAL_MISSIONS in src/config/events.ts.
+ * The rule engine and the marketing catalog were written at different times and
+ * never shared identifiers; this is the one place that bridges them.
+ */
+const MISSION_ID: Record<string, string> = {
+  DEBUGGING: 'debugging',
+  LAST_SIGNAL: 'the-last-signal',
+  LOST_IN_SQL: 'lost-at-sql',
+  GADGET_CODES: 'gadget-codes',
+  PAPER_PRESENTATION: 'paper-presentation',
+  BORDERLAND: 'borderland-at-gcee',
+  THINK_STRIKE_WIN: 'think-strike-and-win',
+  PLOT_TWIST: 'plot-twist',
+  SHORT_FILM: 'short-flim',
+};
+
+const missionFor = (code: string) =>
+  OFFICIAL_MISSIONS.find((m) => m.id === MISSION_ID[code]);
+
 export const ParticipantDashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const [openCard, setOpenCard] = useState<string | null>(null);
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -506,6 +528,43 @@ export const ParticipantDashboardPage: React.FC = () => {
                       <h3 className="font-display text-lg uppercase leading-tight text-[#EEEEEA] sm:text-xl">
                         {card.name}
                       </h3>
+
+                      {/* What the event actually is. Participants were having to
+                          leave the dashboard for the marketing page to find out. */}
+                      {(() => {
+                        const mission = missionFor(card.event_code);
+                        if (!mission) return null;
+                        const open = openCard === card.event_code;
+                        return (
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => setOpenCard(open ? null : card.event_code)}
+                              aria-expanded={open}
+                              className="font-mono text-[10.5px] font-bold uppercase tracking-[0.15em] text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
+                            >
+                              {open ? 'Hide details' : 'What is this?'}
+                            </button>
+                            {open && (
+                              <div className="mt-2 space-y-2 text-left">
+                                <p className="font-mono text-[11px] leading-relaxed text-[#B8B8B2]">
+                                  {mission.description}
+                                </p>
+                                <p className="font-mono text-[10.5px] text-[#71767B]">
+                                  {mission.schedule_time} · {mission.venue}
+                                </p>
+                                {mission.rules?.length > 0 && (
+                                  <ul className="list-disc space-y-1 pl-4 font-mono text-[10.5px] leading-relaxed text-[#71767B]">
+                                    {mission.rules.slice(0, 4).map((r) => (
+                                      <li key={r}>{r}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* The reason is the feature. Never collapse this to "unavailable". */}
                       {locked && card.reason && (

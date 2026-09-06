@@ -123,10 +123,13 @@ EVENTS: Dict[str, EventDef] = {
         1, 1, None, 30, MORNING, (), True, _CLOSES_DEFAULT,
     ),
     "LOST_IN_SQL": EventDef(
-        # Team of exactly 2 (min_team == max_team == 2). Mirrors
-        # zin26.events.min_team/max_team for this code; keep the two in step.
+        # Individual event (min_team == max_team == 1), per the coordinators'
+        # team-size list of 6 September 2026. This SUPERSEDES migration
+        # 005_lost_in_sql_team_of_two.sql, which had set it to a pair.
+        # Mirrors src/lib/rules/catalog.ts and zin26.events; move all three
+        # together or the browser offers a size the server rejects.
         "LOST_IN_SQL", "Lost in SQL", "TECH", "RUNNING",
-        2, 2, None, 30, AFTERNOON, (), True, _CLOSES_DEFAULT,
+        1, 1, None, 30, AFTERNOON, (), True, _CLOSES_DEFAULT,
     ),
     "BORDERLAND": EventDef(
         "BORDERLAND", "Borderland @ GCEE", "NON_TECH", "FIXED",

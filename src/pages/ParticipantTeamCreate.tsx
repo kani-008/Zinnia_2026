@@ -116,8 +116,10 @@ export const ParticipantTeamCreatePage: React.FC = () => {
   };
 
   const addSlot = () => {
-    setCodes((prev) => [...prev, '']);
-    setSlots((prev) => [...prev, { status: 'empty' }]);
+    // Cap on the number of ROWS. The button is hidden at the limit, but guard
+    // here too so the cap holds however the function is reached.
+    setCodes((prev) => (prev.length + 1 >= spec.max ? prev : [...prev, '']));
+    setSlots((prev) => (prev.length + 1 >= spec.max ? prev : [...prev, { status: 'empty' }]));
   };
 
   const removeSlot = (index: number) => {
@@ -182,7 +184,13 @@ export const ParticipantTeamCreatePage: React.FC = () => {
   }
 
   // +1 for the captain, who is not one of these fields.
+  // Two different counts, and using one for both was the bug: `total` counts
+  // people actually named (captain + filled codes) and drives validation, while
+  // `rows` counts the fields on screen and decides whether another can be added.
+  // Gating the add button on `total` meant four empty fields still read as a
+  // team of one, so "Add another teammate" never went away.
   const total = codes.filter((c) => c.trim()).length + 1;
+  const rows = codes.length + 1;
   const sizeOk = total >= spec.min && total <= spec.max;
   const anyBlocked = slots.some((s) => s.status === 'blocked' || s.status === 'error');
   const canSubmit = Boolean(teamName.trim()) && sizeOk && !anyBlocked && !submitting;
@@ -287,7 +295,7 @@ export const ParticipantTeamCreatePage: React.FC = () => {
                 })}
               </div>
 
-              {total < spec.max && (
+              {rows < spec.max && (
                 <button
                   type="button"
                   onClick={addSlot}

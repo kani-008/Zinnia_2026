@@ -202,7 +202,7 @@ INSERT INTO zin26.events
 VALUES
     ('DEBUGGING',          'Debugging',          'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'MORNING',   false, true, '2026-09-22T23:59:59+05:30', 1),
     ('LAST_SIGNAL',        'The Last Signal',    'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'MORNING',   false, true, '2026-09-22T23:59:59+05:30', 2),
-    ('LOST_IN_SQL',        'Lost in SQL',        'TECH',     'RUNNING', 2, 2, NULL, false, true,   30, 'AFTERNOON', false, true, '2026-09-22T23:59:59+05:30', 3),
+    ('LOST_IN_SQL',        'Lost in SQL',        'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'AFTERNOON', false, true, '2026-09-22T23:59:59+05:30', 3),
     ('GADGET_CODES',       'Gadget Codes',       'TECH',     'FIXED',   2, 2, NULL, false, true,  180, NULL,        true,  true, '2026-09-22T23:59:59+05:30', 4),
     -- 2 panels x 12 fifteen-minute slots is exactly what the timeline holds,
     -- so capacity is fixed rather than coordinator-editable.

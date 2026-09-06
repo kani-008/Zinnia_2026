@@ -28,8 +28,8 @@ const triggerAudio = () => {
   try {
     const audio = new Audio('/pop.mp3');
     audio.volume = 0.3;
-    audio.play().catch(() => {});
-  } catch {}
+    audio.play().catch(() => { });
+  } catch { }
 };
 
 export interface TimelineFlowItem {
@@ -99,7 +99,7 @@ export const EventScheduleView: React.FC<{
       duration: '2 hrs',
       category_type: 'TECH',
       color_theme: 'cyan',
-      venue: 'Auditorium 1st floor',
+      venue: 'CSE Dept',
       tagline: 'Find. Fix. Conquer.',
       description: 'Find bugs, identify system failures, fix faulty code, and restore programs to working condition.'
     },
@@ -112,7 +112,7 @@ export const EventScheduleView: React.FC<{
       duration: '2 hrs',
       category_type: 'TECH',
       color_theme: 'cyan',
-      venue: '104 class room',
+      venue: 'CSE Dept',
       tagline: 'Decode. Transmit. Survive.',
       description: 'Intercept, decrypt, and decode corrupted signal packets through cryptographic puzzles.'
     },
@@ -302,11 +302,10 @@ export const EventScheduleView: React.FC<{
               triggerAudio();
               setActiveFilter('ALL');
             }}
-            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${
-              activeFilter === 'ALL'
+            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${activeFilter === 'ALL'
                 ? 'bg-[#F5D90A] text-[#0D0D0F] border-[#F5D90A] shadow-[3px_3px_0px_#8A7400]'
                 : 'bg-[#141417] text-[#A8A8AC] hover:text-white border-[#3A3A3E]'
-            }`}
+              }`}
           >
             <Layers className="w-4 h-4" />
             <span>ALL EVENTS FLOW</span>
@@ -320,11 +319,10 @@ export const EventScheduleView: React.FC<{
               triggerAudio();
               setActiveFilter('TECH');
             }}
-            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${
-              activeFilter === 'TECH'
+            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${activeFilter === 'TECH'
                 ? 'bg-[#3CE7FF] text-[#0D0D0F] border-[#3CE7FF] shadow-[3px_3px_0px_#1E8FA3]'
                 : 'bg-[#141417] text-[#A8A8AC] hover:text-white border-[#3A3A3E]'
-            }`}
+              }`}
           >
             <Cpu className="w-4 h-4" />
             <span>TECHNICAL FLOW</span>
@@ -338,11 +336,10 @@ export const EventScheduleView: React.FC<{
               triggerAudio();
               setActiveFilter('NON_TECH');
             }}
-            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${
-              activeFilter === 'NON_TECH'
+            className={`px-4 py-2 font-comic text-xs sm:text-sm uppercase font-black rounded-xl border-[2px] transition-all cursor-pointer flex items-center gap-2 ${activeFilter === 'NON_TECH'
                 ? 'bg-[#FF3366] text-white border-[#FF3366] shadow-[3px_3px_0px_#B01F45]'
                 : 'bg-[#141417] text-[#A8A8AC] hover:text-white border-[#3A3A3E]'
-            }`}
+              }`}
           >
             <Gamepad2 className="w-4 h-4" />
             <span>NON-TECH FLOW</span>
@@ -464,25 +461,23 @@ export const EventScheduleView: React.FC<{
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] overflow-y-auto overscroll-contain bg-[#141417] border-[3px] ${
-              selectedEventModal.id === 'prize-distribution'
+            className={`relative w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] overflow-y-auto overscroll-contain bg-[#141417] border-[3px] ${selectedEventModal.id === 'prize-distribution'
                 ? 'border-[#9333EA]'
                 : selectedEventModal.event_type === 'TECH'
-                ? 'border-[#3CE7FF]'
-                : 'border-[#FF3366]'
-            } shadow-[8px_8px_0px_#000000] p-4 sm:p-5 rounded-2xl space-y-3 select-text my-auto`}
+                  ? 'border-[#3CE7FF]'
+                  : 'border-[#FF3366]'
+              } shadow-[8px_8px_0px_#000000] p-4 sm:p-5 rounded-2xl space-y-3 select-text my-auto`}
           >
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[#2A2A2E] pb-2.5">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 font-mono font-black text-[11px] rounded uppercase ${
-                    selectedEventModal.id === 'prize-distribution'
+                  <span className={`px-2 py-0.5 font-mono font-black text-[11px] rounded uppercase ${selectedEventModal.id === 'prize-distribution'
                       ? 'bg-[#9333EA] text-white'
                       : selectedEventModal.event_type === 'TECH'
-                      ? 'bg-[#3CE7FF] text-[#0D0D0F]'
-                      : 'bg-[#FF3366] text-white'
-                  }`}>
+                        ? 'bg-[#3CE7FF] text-[#0D0D0F]'
+                        : 'bg-[#FF3366] text-white'
+                    }`}>
                     {selectedEventModal.code}
                   </span>
                   <span className="font-mono text-[11px] text-[#A8A8AC] uppercase">
@@ -492,13 +487,12 @@ export const EventScheduleView: React.FC<{
                 <h3 className="font-display text-xl sm:text-2xl text-white uppercase tracking-wide">
                   {selectedEventModal.mission_name}
                 </h3>
-                <p className={`font-comic text-xs font-bold ${
-                  selectedEventModal.id === 'prize-distribution'
+                <p className={`font-comic text-xs font-bold ${selectedEventModal.id === 'prize-distribution'
                     ? 'text-[#C084FC]'
                     : selectedEventModal.event_type === 'TECH'
-                    ? 'text-[#3CE7FF]'
-                    : 'text-[#FF3366]'
-                }`}>
+                      ? 'text-[#3CE7FF]'
+                      : 'text-[#FF3366]'
+                  }`}>
                   {selectedEventModal.tagline || selectedEventModal.title}
                 </p>
               </div>
@@ -714,11 +708,10 @@ export const EventScheduleView: React.FC<{
                     triggerAudio();
                     navigate(`/register?mission=${selectedEventModal.id}`);
                   }}
-                  className={`w-full py-2.5 font-display text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
-                    selectedEventModal.event_type === 'TECH'
+                  className={`w-full py-2.5 font-display text-xs sm:text-sm tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${selectedEventModal.event_type === 'TECH'
                       ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
                       : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
-                  }`}
+                    }`}
                 >
                   <span>REGISTER FOR {selectedEventModal.mission_name}</span>
                   <ArrowRight className="w-4 h-4" />
