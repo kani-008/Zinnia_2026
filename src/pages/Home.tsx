@@ -1362,7 +1362,7 @@ export const WebsiteHomePage: React.FC = () => {
                         <span>GADGET CODES</span>
                       </h3>
                       <span className="text-[10px] sm:text-xs text-[#C084FC] font-mono tracking-normal normal-case block mt-0.5">
-                        (Single event)
+                        (MEGA EVENT)
                       </span>
                       <p className="font-mono text-[10px] sm:text-[11px] text-[#B8B8B2] mt-2 leading-tight whitespace-pre-line">
                         {e.tagline || e.title}
@@ -1734,7 +1734,7 @@ export const WebsiteHomePage: React.FC = () => {
               <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
                 // BRIEFING
               </h4>
-              <p className="font-comic text-xs sm:text-sm text-[#D0D0D4] leading-relaxed">
+              <p className="font-comic text-xs sm:text-sm text-[#D0D0D4] leading-relaxed whitespace-pre-line">
                 {selectedEvent.description}
               </p>
             </div>

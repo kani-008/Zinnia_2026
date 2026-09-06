@@ -475,7 +475,7 @@ export const WebsiteEventsPage: React.FC = () => {
               <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
                 // BRIEFING
               </h4>
-              <p className="font-comic text-xs sm:text-sm text-[#D0D0D4] leading-relaxed">
+              <p className="font-comic text-xs sm:text-sm text-[#D0D0D4] leading-relaxed whitespace-pre-line">
                 {selectedEvent.description}
               </p>
             </div>

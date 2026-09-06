@@ -193,7 +193,7 @@ export const EventScheduleView: React.FC<{
       color_theme: 'pink',
       venue: '103 class room',
       tagline: 'Expect the unexpected.',
-      description: 'Analyze complex mystery stories, unlock puzzle hints, and reach the deduction finale.'
+      description: "Read an incomplete, original story and figure out its real (hidden) climax across 2 deduction rounds with twists and hint advantages."
     },
     {
       id: 'short-flim',
@@ -206,7 +206,7 @@ export const EventScheduleView: React.FC<{
       color_theme: 'pink',
       venue: 'Main Stage',
       tagline: 'Freeze moments. Frame stories.',
-      description: 'Create an original short film inspired by time, perspective, and self-doubt. Tell a meaningful story through visuals, characters, and emotions while keeping the narrative clear and engaging.'
+      description: "Create an original short film based on one of the given themes:\n1) Value of time\n2) Two shadows moving in the same direction\n3) \"Sometimes the biggest obstacle isn't the obstacle in the world—it’s the doubt you accepted from it.\"\n\nTell a meaningful story through visuals, characters, and emotions while keeping the narrative clear and engaging."
     }
   ];
 
@@ -391,7 +391,7 @@ export const EventScheduleView: React.FC<{
 
                       {item.single_badge && (
                         <span className="px-2 py-0.5 bg-[#F5D90A] text-[#0D0D0F] font-mono font-black text-[10px] rounded uppercase shrink-0">
-                          SINGLE EVENT
+                          MEGA EVENT
                         </span>
                       )}
 
@@ -564,7 +564,7 @@ export const EventScheduleView: React.FC<{
               <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold">
                 // BRIEFING
               </h4>
-              <p className="font-comic text-xs text-[#D0D0D4] leading-relaxed">
+              <p className="font-comic text-xs text-[#D0D0D4] leading-relaxed whitespace-pre-line">
                 {selectedEventModal.description}
               </p>
             </div>

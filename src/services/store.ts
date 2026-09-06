@@ -1,9 +1,9 @@
-import { 
-  Team, 
-  TeamMember, 
-  Participant, 
-  EventMission, 
-  AttendanceRecord, 
+import {
+  Team,
+  TeamMember,
+  Participant,
+  EventMission,
+  AttendanceRecord,
   EventRegistration,
   PrizePosition,
   EventType
@@ -22,7 +22,7 @@ const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) || '').re
 const STORAGE_KEYS = {
   TEAMS: 'zin26_live_teams_v2',
   MEMBERS: 'zin26_live_members_v2',
-  EVENTS: 'zin26_live_events_v10',
+  EVENTS: 'zin26_live_events_v12',
   REGISTRATIONS: 'zin26_live_registrations_v2',
   ATTENDANCE: 'zin26_live_attendance_v2',
   CURRENT_TEAM: 'zin26_current_team_v2'
@@ -41,7 +41,7 @@ class ZinniaStore {
 
   private cleanLegacyStorage() {
     try {
-      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1', 'zin26_live_events_v2', 'zin26_live_events_v3', 'zin26_live_events_v4', 'zin26_live_events_v5', 'zin26_live_events_v6', 'zin26_live_events_v7', 'zin26_live_events_v8', 'zin26_live_events_v9'].forEach(k => {
+      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1', 'zin26_live_events_v2', 'zin26_live_events_v3', 'zin26_live_events_v4', 'zin26_live_events_v5', 'zin26_live_events_v6', 'zin26_live_events_v7', 'zin26_live_events_v8', 'zin26_live_events_v9', 'zin26_live_events_v10', 'zin26_live_events_v11'].forEach(k => {
         localStorage.removeItem(k);
       });
       Object.keys(localStorage).forEach(k => {
@@ -49,7 +49,7 @@ class ZinniaStore {
           localStorage.removeItem(k);
         }
       });
-    } catch {}
+    } catch { }
   }
 
   subscribe(listener: () => void): () => void {
@@ -78,7 +78,7 @@ class ZinniaStore {
       if (existing) {
         try {
           supabase.removeChannel(existing);
-        } catch (e) {}
+        } catch (e) { }
       }
 
       let isCleaningUp = false;
@@ -100,7 +100,7 @@ class ZinniaStore {
             setTimeout(() => {
               try {
                 supabase.removeChannel(channel);
-              } catch (e) {}
+              } catch (e) { }
               if (this.realTimeChannel === channel) {
                 this.realTimeChannel = null;
               }
@@ -336,7 +336,7 @@ class ZinniaStore {
   getParticipants(): Participant[] {
     const teams = this.getTeams();
     const result: Participant[] = [];
-    
+
     teams.forEach(team => {
       if (team.members && team.members.length > 0) {
         team.members.forEach(member => {
@@ -605,8 +605,8 @@ class ZinniaStore {
     }
 
     const team = lookup.team || (lookup.member ? this.getTeamById(lookup.member.team_id) : undefined);
-    const member = targetMemberId 
-      ? this.getMemberById(targetMemberId) 
+    const member = targetMemberId
+      ? this.getMemberById(targetMemberId)
       : (lookup.member || team?.members?.[0]);
 
     if (!team || !member) {
@@ -683,8 +683,8 @@ class ZinniaStore {
     const team = lookup.team || this.getTeamById(member.team_id);
 
     if (member.food_collected) {
-      const timeStr = member.food_collected_at 
-        ? new Date(member.food_collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+      const timeStr = member.food_collected_at
+        ? new Date(member.food_collected_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : 'earlier';
       return {
         success: false,
@@ -805,7 +805,7 @@ class ZinniaStore {
     if (contentType.includes('application/json')) {
       try {
         data = await res.json();
-      } catch {}
+      } catch { }
     }
     if (!res.ok) {
       const errMsg = data?.reason || data?.error || data?.message || `Server HTTP Error ${res.status}`;
@@ -940,7 +940,7 @@ class ZinniaStore {
     if (!teamId || teamId === 'undefined' || teamId === 'null') {
       return { success: false, message: 'No valid Team ID provided.' };
     }
-    
+
     try {
       const data = await this.fetchJson<any>(`/api/payment/status?team_id=${encodeURIComponent(teamId.trim())}`);
       if (data && data.success) {
