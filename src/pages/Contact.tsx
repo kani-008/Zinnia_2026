@@ -38,8 +38,10 @@ interface Coordinator {
 }
 
 const COORDINATORS: Coordinator[] = [
-  { name: 'Vijayanand', role: 'Staff Coordinator', phone: '+91 98765 43287', dial: '+919876543287' },
   { name: 'Saran S', role: 'Student Coordinator', phone: '+91 96299 93985', dial: '+919629993985' },
+  { name: 'Kishore E', role: 'Student Coordinator', phone: '+91 89036 64244', dial: '+918903664244' },
+  { name: 'Bharani E K', role: 'Student Coordinator', phone: '+91 88071 76399', dial: '+918807176399' },
+  { name: 'Nandhini S', role: 'Student Coordinator', phone: '+91 90427 36307', dial: '+919042736307' },
 ];
 
 interface BusRun {
@@ -96,9 +98,8 @@ const BusRunRow: React.FC<{ run: BusRun; tone: 'cyan' | 'yellow' }> = ({ run, to
       {run.service}
     </span>
     <span
-      className={`shrink-0 border bg-[#191B1F] px-2 py-0.5 font-comic text-sm font-bold tracking-wide text-[#F4F4F0] ${
-        tone === 'cyan' ? 'border-[#0FA9C6]/70' : 'border-[#E5BD00]/70'
-      }`}
+      className={`shrink-0 border bg-[#191B1F] px-2 py-0.5 font-comic text-sm font-bold tracking-wide text-[#F4F4F0] ${tone === 'cyan' ? 'border-[#0FA9C6]/70' : 'border-[#E5BD00]/70'
+        }`}
     >
       {run.time}
     </span>
@@ -248,9 +249,8 @@ export const WebsiteContactPage: React.FC = () => {
                 button below covers the same action for non-pointer users. */}
             <div
               onClick={handleMapClick}
-              className={`map-frame relative overflow-hidden border-2 border-[#0FA9C6]/30 bg-[#17181C] cursor-pointer ${
-                mapGlow ? 'is-pinged' : ''
-              }`}
+              className={`map-frame relative overflow-hidden border-2 border-[#0FA9C6]/30 bg-[#17181C] cursor-pointer ${mapGlow ? 'is-pinged' : ''
+                }`}
             >
               <iframe
                 title="Department of CSE, Government College of Engineering, Erode"
