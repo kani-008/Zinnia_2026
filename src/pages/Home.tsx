@@ -456,7 +456,7 @@ export const WebsiteHomePage: React.FC = () => {
 
           {/* Menu Card Content Container */}
           <div className="relative z-10 w-full max-w-[310px] xs:max-w-[340px] flex flex-col items-center gap-3.5">
-            
+
             {/* NAVIGATION MENU Sticker (Irregular quadrilateral yellow comic sticker) */}
             <div className="mb-1">
               <div
@@ -476,7 +476,7 @@ export const WebsiteHomePage: React.FC = () => {
 
             {/* 4 Navigation Buttons (Sticker arrangement: HOME, EVENTS, PASSES, CONTACT) */}
             <div className="grid grid-cols-2 gap-3 w-full">
-              
+
               {/* 1. HOME */}
               <div
                 className="relative group cursor-pointer select-none"
@@ -732,7 +732,7 @@ export const WebsiteHomePage: React.FC = () => {
 
             {/* Centered ZINNIA '26 Title Block on Mobile (Equal Top & Bottom Gap) */}
             <div className="relative z-10 flex flex-col items-center justify-center text-center w-full mt-5 xs:mt-6 mb-1 px-1">
-              
+
               {/* LEFT SIDE 1: Mascot Peeking Top-Left (Nudged up for gap) */}
               <div className="absolute -top-9 xs:-top-10 -left-3 xs:-left-2 z-30 pointer-events-none">
                 <img
@@ -1009,7 +1009,7 @@ export const WebsiteHomePage: React.FC = () => {
 
         {/* Countdown Module */}
         <div className="relative z-10 flex flex-col items-center max-w-full px-1">
-          {/* ₹15,000+ PRIZE POOL! Starburst */}
+          {/* ₹20,000+ PRIZE POOL! Starburst */}
           <div
             className="hidden lg:block absolute -left-36 md:-left-56 lg:-left-64 -top-16 md:-top-24 hover:scale-105 transition-transform cursor-pointer z-30 select-none"
             onClick={() => triggerComicFX('PRIZES!')}
@@ -1017,7 +1017,7 @@ export const WebsiteHomePage: React.FC = () => {
             <div className="relative flex items-center justify-center w-44 md:w-52 lg:w-56 h-44 md:h-52 lg:h-56">
               <img src={priceSvg} alt="Prize Pool" className="w-full h-full object-contain select-none pointer-events-none scale-y-[-1]" />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center -rotate-[25deg]">
-                <span className="font-display text-2xl md:text-3xl lg:text-[32px] text-[#EEEEEA] leading-none font-black drop-shadow-[2px_2px_0px_#090A0B]">₹15,000+</span>
+                <span className="font-display text-2xl md:text-3xl lg:text-[32px] text-[#EEEEEA] leading-none font-black drop-shadow-[2px_2px_0px_#090A0B]">₹20,000+</span>
                 <span className="font-comic text-sm md:text-base text-[#E5BD00] font-black leading-tight drop-shadow-[1.5px_1.5px_0px_#090A0B] mt-1 tracking-wide">PRIZE POOL!</span>
               </div>
             </div>
@@ -1040,7 +1040,7 @@ export const WebsiteHomePage: React.FC = () => {
 
           {/* Countdown Comic Number Boxes (Hand-Drawn Double Outline & Offset Layers) */}
           <div className="flex items-center gap-1.5 xs:gap-2.5 sm:gap-3.5">
-            
+
             {/* 1. DAYS BOX (Hand-drawn Comic Panel) */}
             <div
               className="relative group cursor-pointer select-none"
@@ -1661,18 +1661,16 @@ export const WebsiteHomePage: React.FC = () => {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-[92%] sm:w-full max-w-2xl max-h-[88vh] sm:max-h-[90vh] overflow-y-auto bg-[#141417] border-[2.5px] sm:border-[3px] ${
-              selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
-            } shadow-[6px_6px_0px_#000000] sm:shadow-[8px_8px_0px_#000000] p-4 sm:p-7 rounded-2xl space-y-4 sm:space-y-5 select-text mx-auto`}
+            className={`relative w-[92%] sm:w-full max-w-2xl max-h-[88vh] sm:max-h-[90vh] overflow-y-auto bg-[#141417] border-[2.5px] sm:border-[3px] ${selectedEvent.event_type === 'TECH' ? 'border-[#3CE7FF]' : 'border-[#FF3366]'
+              } shadow-[6px_6px_0px_#000000] sm:shadow-[8px_8px_0px_#000000] p-4 sm:p-7 rounded-2xl space-y-4 sm:space-y-5 select-text mx-auto`}
           >
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[#2A2A2E] pb-2.5">
               <div className="space-y-0.5 min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
-                    className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${
-                      selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
-                    }`}
+                    className={`px-2.5 py-0.5 font-mono font-black text-xs rounded uppercase ${selectedEvent.event_type === 'TECH' ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white'
+                      }`}
                   >
                     {selectedEvent.code}
                   </span>
@@ -1684,9 +1682,8 @@ export const WebsiteHomePage: React.FC = () => {
                   {selectedEvent.mission_name}
                 </h3>
                 <p
-                  className={`font-comic text-xs sm:text-sm font-bold ${
-                    selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
-                  }`}
+                  className={`font-comic text-xs sm:text-sm font-bold ${selectedEvent.event_type === 'TECH' ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
+                    }`}
                 >
                   {selectedEvent.tagline || selectedEvent.title}
                 </p>
@@ -1815,11 +1812,10 @@ export const WebsiteHomePage: React.FC = () => {
                   triggerComicFX('DEPLOY!');
                   navigate(`/register?mission=${selectedEvent.id}`);
                 }}
-                className={`w-full py-3.5 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${
-                  selectedEvent.event_type === 'TECH'
-                    ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
-                    : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
-                }`}
+                className={`w-full py-3.5 font-display text-sm sm:text-base tracking-wider uppercase font-bold cursor-pointer transition-all border-[2px] shadow-[4px_4px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center gap-2 rounded-xl ${selectedEvent.event_type === 'TECH'
+                  ? 'bg-[#3CE7FF] hover:bg-[#F5D90A] text-[#0D0D0F] border-[#3CE7FF]'
+                  : 'bg-[#FF3366] hover:bg-[#F5D90A] text-white hover:text-[#0D0D0F] border-[#FF3366]'
+                  }`}
               >
                 <span>REGISTER FOR {selectedEvent.mission_name}</span>
                 <ArrowRight className="w-4 h-4" />
