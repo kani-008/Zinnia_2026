@@ -215,8 +215,8 @@ export const controlClass = (invalid = false) =>
     // Pill/stadium shape. The extra horizontal padding is not cosmetic — at
     // rounded-full the curve eats into the corners, so text needs to start
     // further in than it would in a rectangle.
-    'w-full bg-[#111214] px-5 py-3 rounded-full',
-    'font-mono text-sm text-[#EEEEEA] placeholder-[#71767B]',
+    'w-full bg-[#111214] px-4 sm:px-5 py-2.5 sm:py-3 rounded-full',
+    'font-mono text-xs sm:text-sm text-[#EEEEEA] placeholder-[#71767B]',
     'border outline-none transition-colors duration-150',
     invalid
       ? 'border-[#D51F55] focus:border-[#D51F55]'
@@ -319,7 +319,7 @@ export const ComicChoice: React.FC<ComicChoiceProps> = ({
     onClick={onClick}
     disabled={disabled}
     aria-pressed={selected}
-    className={`flex w-full items-center justify-between gap-3 px-5 py-3 text-left border rounded-full transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${
+    className={`flex w-full items-center justify-between gap-2.5 sm:gap-3 px-3.5 sm:px-5 py-2.5 sm:py-3 text-left border rounded-full transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${
       selected ? SELECTED_FILL[tone] : 'border-[#0FA9C6]/20 bg-[#111214] hover:border-[#0FA9C6]/40'
     } ${className}`}
   >
@@ -374,7 +374,7 @@ export const ComicCTA: React.FC<ComicCTAProps> = ({
   ...props
 }) => (
   <div
-    className={`comic-cta-wrapper group ${fullWidth ? 'w-full block' : 'w-auto'} ${
+    className={`comic-cta-wrapper group pr-2 ${fullWidth ? 'w-full block' : 'w-auto'} ${
       disabled ? 'opacity-50 pointer-events-none' : ''
     }`}
   >
@@ -382,7 +382,7 @@ export const ComicCTA: React.FC<ComicCTAProps> = ({
     <button
       {...props}
       disabled={disabled}
-      className={`comic-cta-front tone-${tone} px-6 py-3.5 flex items-center justify-center gap-3 w-full ${className}`}
+      className={`comic-cta-front tone-${tone} px-5 sm:px-6 py-3.5 flex items-center justify-center gap-2.5 sm:gap-3 w-full ${className}`}
     >
       <span className="font-comic font-black text-base sm:text-lg tracking-wider uppercase italic">
         {children}
@@ -492,12 +492,12 @@ export const ComicPageShell: React.FC<{ className?: string; children: React.Reac
   className = '',
   children,
 }) => (
-  <div className={`min-h-screen bg-[#08090A] relative ${className}`}>
+  <div className={`min-h-screen bg-[#08090A] relative w-full max-w-full overflow-x-hidden ${className}`}>
     {/* halftone dot cluster, same utility the homepage sections use */}
     <div
       className="pointer-events-none absolute inset-x-0 top-0 h-64 opacity-[0.07] bg-halftone-dots-cyan"
       aria-hidden="true"
     />
-    <div className="relative z-10">{children}</div>
+    <div className="relative z-10 w-full max-w-full">{children}</div>
   </div>
 );

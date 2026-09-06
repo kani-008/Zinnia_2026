@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
-import { loadSession } from '../lib/participant/api';
+import { loadSession, clearSession } from '../lib/participant/api';
 import { WebsiteFooter } from '../components/layout/Footer';
+import { WebsiteNavbar } from '../components/layout/Navbar';
 import robotMascot from '../assets/1.svg';
 import megaphoneSvg from '../assets/megaphone.svg';
 import zinniaSvg from '../assets/zinnia.svg';
@@ -177,14 +178,13 @@ const calculateTimeLeft = () => {
 
 export const WebsiteHomePage: React.FC = () => {
   const navigate = useNavigate();
-  const signedIn = Boolean(loadSession());
+  const [signedIn, setSignedIn] = useState(() => Boolean(loadSession()));
   const location = useLocation();
 
   // Real-time ticking countdown to September 24, 2026 (calculated instantly without initial dummy values)
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
 
   const [interactiveSoundText, setInteractiveSoundText] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [secSnap, setSecSnap] = useState(false);
   const isFirstMountRef = React.useRef(true);
 
@@ -304,7 +304,7 @@ export const WebsiteHomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-transparent text-[#EEEEEA] flex flex-col justify-between px-2 sm:px-4 md:px-6 pt-1 pb-4 select-none scroll-smooth">
+    <div className="relative w-full max-w-full min-h-screen bg-transparent text-[#EEEEEA] flex flex-col justify-between pb-4 select-none scroll-smooth overflow-x-hidden">
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
@@ -316,305 +316,22 @@ export const WebsiteHomePage: React.FC = () => {
         </div>
       )}
 
-      {/* =========================================================================
-          1. TOP NAVBAR (100% 2D Illustrated Comic Style with Magnetic Buttons)
-          ========================================================================= */}
-      <header className="relative z-60 max-w-7xl mx-auto w-full flex items-center justify-between gap-2 sm:gap-4 pt-1 px-1 sm:px-3">
-        {/* Left: Illustrated ZINNIA Comic Logo with Magnetic Pull */}
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-          {/* Magnetic Logo Badge (ZINNIA '26 SVG Asset) */}
-          <MagneticElement strength={0.25} onClick={() => triggerComicFX('BOOM!')}>
-            <div className="cursor-pointer group relative -rotate-2 hover:rotate-0 transition-transform active:translate-x-1 active:translate-y-1 flex items-center">
-              <img
-                src={zinniaSvg}
-                alt="ZINNIA '26 Logo"
-                className="h-20 sm:h-16 md:h-18 lg:h-20 w-auto object-contain select-none pointer-events-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]"
-              />
-            </div>
-          </MagneticElement>
-
-
-        </div>
-
-        {/* Mobile Hamburger Menu Button */}
-        <button
-          type="button"
-          className="sm:hidden flex items-center justify-center w-11 h-11 bg-[#111214] border-2 border-[#EEEEEA]/80 shadow-[3px_3px_0px_#090A0B] cursor-pointer active:scale-95 transition-transform"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6 text-[#EEEEEA]" /> : <Menu className="w-6 h-6 text-[#EEEEEA]" />}
-        </button>
-
-        {/* Desktop Comic Navigation Tabs with Magnetic Pull */}
-        <nav className="hidden sm:flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
-          {/* EVENTS TAB */}
-          <MagneticElement strength={0.3} onClick={() => scrollToSection('events', 'EVENTS!')}>
-            <button className="comic-button" type="button">
-              {/* FIXED BOTTOM BOX */}
-              <span className="back-box" />
-              {/* MOVING TOP BOX */}
-              <span className="front-box">
-                <span className="lightning">⚡</span>
-                <span>EVENTS</span>
-              </span>
-            </button>
-          </MagneticElement>
-
-
-          {/* CONTACT US TAB */}
-          <MagneticElement strength={0.3} onClick={() => { triggerComicFX('CONTACT!'); navigate('/contact'); }}>
-            <button className="comic-button" type="button">
-              {/* FIXED BOTTOM BOX */}
-              <span className="back-box" />
-              {/* MOVING TOP BOX */}
-              <span className="front-box">
-                <span>CONTACT</span>
-              </span>
-            </button>
-          </MagneticElement>
-
-          {/* Register / Dashboard Navbar Magnetic Button */}
-          <MagneticElement
-            strength={0.35}
-            onClick={() => navigate(signedIn ? '/participant/dashboard' : '/register')}
-          >
-            <button className="comic-button-cyan" type="button">
-              {/* FIXED BOTTOM BOX */}
-              <span className="back-box-cyan" />
-              {/* MOVING TOP BOX */}
-              <span className="front-box-cyan">
-                <span>{signedIn ? 'DASHBOARD' : 'REGISTER'}</span>
-              </span>
-            </button>
-          </MagneticElement>
-        </nav>
-      </header>
-
-      {/* Mobile Menu Drawer (Authentic Hand-Drawn 2D Comic Panel) */}
-      {mobileMenuOpen && (
-        <div className="sm:hidden fixed inset-0 z-[100] bg-[#08090A] flex flex-col items-center justify-center p-4 select-none overflow-y-auto animate-in fade-in duration-150">
-          {/* 1–2 Sparse Localized Halftone & Ink Doodles (Not covering whole screen) */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
-            {/* Top-left small halftone patch */}
-            <div className="comic-halftone -top-10 -left-10 opacity-25 scale-75" />
-            {/* Bottom-right small halftone patch */}
-            <div className="comic-halftone -bottom-10 -right-10 opacity-25 scale-75" />
-
-            {/* Hand-drawn pink star doodle (top-left) */}
-            <div className="absolute top-16 left-6 rotate-12 opacity-60">
-              <svg viewBox="0 0 50 50" className="w-6 h-6 fill-none">
-                <path d="M 25 4 Q 26 20 44 24 Q 28 26 24 44 Q 22 28 4 25 Q 20 22 25 4 Z" fill="#D51F55" stroke="#D51F55" strokeWidth="1.5" strokeLinejoin="round" />
-              </svg>
-            </div>
-
-            {/* Hand-drawn yellow lightning doodle (bottom-right) */}
-            <div className="absolute bottom-20 right-6 -rotate-12 opacity-70">
-              <svg viewBox="0 0 40 50" className="w-5 h-7 fill-[#E5BD00]">
-                <path d="M 22 2 L 6 26 L 18 24 L 10 48 L 34 18 L 22 20 Z" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Close Button (Hand-Drawn Comic Square) */}
-          <button
-            type="button"
-            className="absolute top-4 right-4 z-20 w-10 h-10 bg-[#111214] border-2 border-[#EEEEEA] text-[#EEEEEA] shadow-[3px_3px_0px_#090A0B] flex items-center justify-center cursor-pointer active:translate-x-0.5 active:translate-y-0.5 -rotate-3 transition-transform"
-            onClick={() => setMobileMenuOpen(false)}
-            aria-label="Close menu"
-          >
-            <X className="w-5 h-5 stroke-[2.5]" />
-          </button>
-
-          {/* Menu Card Content Container */}
-          <div className="relative z-10 w-full max-w-[310px] xs:max-w-[340px] flex flex-col items-center gap-3.5">
-
-            {/* NAVIGATION MENU Sticker (Irregular quadrilateral yellow comic sticker) */}
-            <div className="mb-1">
-              <div
-                className="relative inline-block px-4 py-1.5 bg-[#E5BD00] border-2 border-[#090A0B] shadow-[3px_3px_0px_#090A0B] -rotate-2"
-                style={{
-                  clipPath: 'polygon(2% 8%, 98% 1%, 100% 93%, 1% 98%)',
-                }}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[#090A0B] text-xs font-black">⚡</span>
-                  <span className="font-comic font-black italic text-[#090A0B] text-xs xs:text-sm tracking-wider uppercase">
-                    NAVIGATION MENU
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* 4 Navigation Buttons (Sticker arrangement: HOME, EVENTS, PASSES, CONTACT) */}
-            <div className="grid grid-cols-2 gap-3 w-full">
-
-              {/* 1. HOME */}
-              <div
-                className="relative group cursor-pointer select-none"
-                style={{ transform: 'rotate(-0.8deg)' }}
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  triggerComicFX('HOME!');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              >
-                {/* Slightly offset back border box */}
-                <div
-                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
-                  style={{
-                    transform: 'translate(3px, 3px)',
-                    clipPath: 'polygon(1% 5%, 98% 2%, 99% 95%, 2% 98%)',
-                  }}
-                />
-                {/* Front comic button */}
-                <div
-                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
-                  style={{
-                    clipPath: 'polygon(2% 3%, 99% 1%, 98% 97%, 1% 95%)',
-                  }}
-                >
-                  <svg className="absolute -top-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
-                    <path d="M1 8 L1 1 L8 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  <svg className="absolute -bottom-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
-                    <path d="M9 2 L9 9 L2 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  <div className="absolute top-1 right-2 w-1.5 h-[1.5px] bg-[#0FA9C6] opacity-80" />
-                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
-                    HOME
-                  </span>
-                </div>
-              </div>
-
-              {/* 2. EVENTS */}
-              <div
-                className="relative group cursor-pointer select-none"
-                style={{ transform: 'rotate(1.1deg)' }}
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  scrollToSection('events', 'EVENTS!');
-                }}
-              >
-                {/* Slightly offset back border box */}
-                <div
-                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
-                  style={{
-                    transform: 'translate(3px, 3px)',
-                    clipPath: 'polygon(2% 2%, 99% 4%, 97% 98%, 1% 94%)',
-                  }}
-                />
-                {/* Front comic button */}
-                <div
-                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center gap-1 transition-transform active:translate-x-0.5 active:translate-y-0.5"
-                  style={{
-                    clipPath: 'polygon(1% 1%, 98% 3%, 99% 96%, 2% 98%)',
-                  }}
-                >
-                  <svg className="absolute -top-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
-                    <path d="M9 8 L9 1 L2 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  <svg className="absolute -bottom-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
-                    <path d="M1 2 L1 9 L8 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  <span className="text-[#E5BD00] text-xs font-black">⚡</span>
-                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
-                    EVENTS
-                  </span>
-                </div>
-              </div>
-
-
-              {/* 4. CONTACT */}
-              <div
-                className="relative group cursor-pointer select-none"
-                style={{ transform: 'rotate(-0.9deg)' }}
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  triggerComicFX('CONTACT!');
-                  navigate('/contact');
-                }}
-              >
-                {/* Slightly offset back border box */}
-                <div
-                  className="absolute inset-0 bg-[#090A0B] border-[1.5px] border-[#B8B8B2]"
-                  style={{
-                    transform: 'translate(3px, 3px)',
-                    clipPath: 'polygon(1% 2%, 98% 4%, 99% 97%, 2% 95%)',
-                  }}
-                />
-                {/* Front comic button */}
-                <div
-                  className="relative z-10 bg-[#111214] border-2 border-[#EEEEEA] px-3 py-2.5 flex items-center justify-center transition-transform active:translate-x-0.5 active:translate-y-0.5"
-                  style={{
-                    clipPath: 'polygon(2% 1%, 99% 2%, 98% 98%, 1% 96%)',
-                  }}
-                >
-                  <svg className="absolute -top-1 -right-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
-                    <path d="M9 8 L9 1 L2 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  <svg className="absolute -bottom-1 -left-1 w-2.5 h-2.5 text-[#EEEEEA] pointer-events-none" viewBox="0 0 10 10" fill="none">
-                    <path d="M1 2 L1 9 L8 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
-                  <span className="font-comic font-black text-sm xs:text-base text-[#EEEEEA] uppercase tracking-wider">
-                    CONTACT
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* 5. REGISTER */}
-            <div
-              className="w-full mt-1 cursor-pointer select-none group"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                triggerComicFX(signedIn ? 'DASHBOARD!' : 'REGISTER!');
-                navigate(signedIn ? '/participant/dashboard' : '/register');
-              }}
-            >
-              <div className="relative w-full">
-                {/* Fixed offset back-box underneath */}
-                <div
-                  className="absolute inset-0 bg-[#090A0B] border-2 border-[#B8B8B2]"
-                  style={{
-                    transform: 'translate(4px, 4px)',
-                    clipPath: 'polygon(1.2% 4.5%, 98.5% 1%, 100% 6.5%, 98.5% 95.5%, 96% 99%, 3.5% 98.5%, 0.5% 92.5%)',
-                  }}
-                />
-                {/* Moving top cyan panel */}
-                <div
-                  className="relative z-10 w-full bg-[#0FA9C6] hover:bg-[#E5BD00] border-[2.5px] border-[#090A0B] px-5 py-3 flex items-center justify-center gap-2.5 transition-all active:translate-x-1 active:translate-y-1"
-                  style={{
-                    clipPath: 'polygon(0.8% 3.5%, 99.2% 1.2%, 100% 5.8%, 99% 94.5%, 96.5% 98.5%, 3% 97.2%, 0.8% 92%)',
-                  }}
-                >
-                  <span className="font-comic font-black text-lg xs:text-xl tracking-wider uppercase italic text-[#090A0B]">
-                    REGISTER
-                  </span>
-                  <svg viewBox="0 0 32 20" className="w-6 h-4 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1 transition-transform">
-                    <path d="M 3 10 L 25 10" strokeWidth="3.2" strokeLinecap="round" />
-                    <path d="M 16 3 L 27 10 L 16 17" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
+      {/* Universal Comic Navbar with Top-Down Half Page Mobile Menu */}
+      <WebsiteNavbar />
 
       {/* =========================================================================
           2. HERO SECTION (Matched to Reference Image)
           ========================================================================= */}
-      <section className="relative z-30 max-w-6xl mx-auto w-full pt-1 sm:pt-2 pb-1 sm:pb-2 px-3 sm:px-6 select-none overflow-visible">
+      <section className="relative z-30 max-w-6xl mx-auto w-full pt-1 sm:pt-2 pb-1 sm:pb-2 px-3 sm:px-6 select-none overflow-hidden md:overflow-visible">
 
         {/* Background Comic Halftone Decorative Layer */}
-        <div className="absolute inset-0 pointer-events-none overflow-visible z-0">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
           <div className="comic-halftone -bottom-10 -left-6 opacity-85 scale-110" />
           <div className="comic-halftone -bottom-14 -right-10 opacity-85 scale-110" />
         </div>
 
         {/* Hand-Drawn Rough Comic Ink Scribbles & Doodles Layer */}
-        <div className="absolute inset-0 pointer-events-none overflow-visible z-10 select-none">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-10 select-none">
           {/* Left Mid Pink Comic Star */}
           <div className="absolute top-44 left-3 sm:left-6 rotate-12">
             <svg viewBox="0 0 50 50" className="w-6 sm:w-8 h-6 sm:h-8 fill-none opacity-85">
@@ -675,10 +392,10 @@ export const WebsiteHomePage: React.FC = () => {
           </div>
 
           {/* Mobile: Comic Poster Composition (Centering & Highlighting ZINNIA '26) */}
-          <div className="md:hidden relative w-full pt-1 pb-2 overflow-visible">
+          <div className="md:hidden relative w-full pt-1 pb-2 overflow-hidden">
 
             {/* Background Lightning Accents */}
-            <div className="absolute inset-0 pointer-events-none z-0 overflow-visible">
+            <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
               <div className="absolute top-0 left-1 rotate-[-15deg]">
                 <svg viewBox="0 0 40 50" className="w-5 h-7 fill-[#E5BD00]">
                   <path d="M 22 2 L 6 26 L 18 24 L 10 48 L 34 18 L 22 20 Z" />
@@ -702,103 +419,60 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
 
             {/* Centered ZINNIA '26 Title Block on Mobile (Equal Top & Bottom Gap) */}
-            <div className="relative z-10 flex flex-col items-center justify-center text-center w-full mt-5 xs:mt-6 mb-1 px-1">
+            <div className="relative z-10 flex flex-col items-center justify-center text-center w-full mt-10 mb-16 px-1">
 
-              {/* LEFT SIDE 1: Mascot Peeking Top-Left (Nudged up for gap) */}
-              <div className="absolute -top-9 xs:-top-10 -left-3 xs:-left-2 z-30 pointer-events-none">
-                <img
-                  src={robotMascot}
-                  alt="Zinnia Robot Mascot"
-                  className="w-13 xs:w-16 sm:w-18 h-auto object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.9)]"
-                />
+              {/* CENTER: ZINNIA '26 Title */}
+              <div className="relative inline-flex items-center justify-center py-2 px-1">
+                <h1
+                  className="font-display text-[#FFFFFF] uppercase select-none -rotate-[2deg] text-center whitespace-nowrap relative z-10"
+                  style={{
+                    fontSize: 'clamp(72px, 21.5vw, 125px)',
+                    lineHeight: '0.85',
+                    letterSpacing: '-0.01em',
+                    textShadow: '4px 4px 0px #090A0B, 7px 7px 0px #000, 0 0 25px rgba(60, 231, 255, 0.45)',
+                  }}
+                >
+                  ZINNIA
+                </h1>
+                <span className="font-comic text-3xl sm:text-4xl text-[#0FA9C6] font-black leading-none select-none drop-shadow-[3px_3px_0px_#090A0B] -rotate-3 tracking-wider -translate-y-3 sm:-translate-y-4 ml-0.5 shrink-0 relative z-20">
+                  '26
+                </span>
               </div>
 
-              {/* LEFT SIDE 2: Prize Pool Starburst (Positioned in middle with clear gap above and below) */}
+              {/* RIGHT SIDE: Prize Pool Starburst */}
               <div
-                className="absolute top-[62px] xs:top-[68px] -left-2 xs:left-0 z-40 cursor-pointer active:scale-95 transition-transform"
+                className="absolute top-12 right-0.5 sm:right-2 z-30 cursor-pointer active:scale-95 transition-transform"
                 onClick={() => triggerComicFX('PRIZES!')}
               >
-                <div className="relative flex items-center justify-center w-13 h-13 xs:w-15 xs:h-15">
+                <div className="relative flex items-center justify-center w-[72px] h-[72px] sm:w-[80px] sm:h-[80px]">
                   <img
                     src={priceSvg}
                     alt="Prize Pool"
-                    className="w-full h-full object-contain scale-y-[-1]"
+                    className="w-full h-full object-contain scale-y-[-1] drop-shadow-[0_4px_14px_rgba(0,0,0,0.75)]"
                   />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center -rotate-[22deg]">
-                    <span className="font-display text-[8.5px] xs:text-[9.5px] text-[#EEEEEA] leading-none font-black drop-shadow-[1.5px_1.5px_0px_#090A0B]">
-                      ₹15,000+
+                    <span className="font-display text-[11px] sm:text-[12.5px] text-[#EEEEEA] leading-none font-black drop-shadow-[1.5px_1.5px_0px_#090A0B]">
+                      ₹20,000+
                     </span>
-                    <span className="font-comic text-[5.5px] xs:text-[6.5px] text-[#E5BD00] font-black leading-tight drop-shadow-[1px_1px_0px_#090A0B] mt-0.5 tracking-wide">
+                    <span className="font-comic text-[7px] sm:text-[8px] text-[#E5BD00] font-black leading-tight drop-shadow-[1px_1px_0px_#090A0B] mt-0.5 tracking-wide">
                       PRIZE POOL!
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* CENTER: ZINNIA '26 Title (UNTOUCHED & FIXED) */}
-              <div className="relative inline-flex items-start justify-center py-2 px-6">
-                <h1
-                  className="font-display text-[#FFFFFF] uppercase select-none -rotate-[2deg] text-center whitespace-nowrap tracking-wider relative z-10"
-                  style={{
-                    fontSize: 'clamp(60px, 18vw, 110px)',
-                    lineHeight: '0.85',
-                    letterSpacing: '0.02em',
-                    textShadow: '4px 4px 0px #090A0B, 7px 7px 0px #000, 0 0 25px rgba(60, 231, 255, 0.45)',
-                  }}
-                >
-                  ZINNIA
-                </h1>
-                <span className="font-comic text-2xl xs:text-3xl text-[#0FA9C6] font-black leading-none select-none drop-shadow-[3px_3px_0px_#090A0B] -rotate-3 tracking-wider -translate-y-2 xs:-translate-y-3 ml-1.5 xs:ml-2 shrink-0 relative z-20">
-                  '26
-                </span>
-              </div>
-
-              {/* RIGHT SIDE: Megaphone Horn */}
-              <div
-                className="absolute top-1 -right-3 sm:right-0 z-30 cursor-pointer active:scale-95 transition-transform"
-                onClick={() => triggerComicFX('LOUD!')}
-              >
-                <img
-                  src={megaphoneSvg}
-                  alt="Megaphone"
-                  className="w-18 xs:w-22 h-auto object-contain select-none pointer-events-none drop-shadow-[0_6px_16px_rgba(0,0,0,0.85)] -rotate-12"
-                />
-              </div>
-
-            </div>
-
-            {/* Badges Row below with clear gap from Prize Pool */}
-            <div className="relative z-20 flex items-center justify-center gap-2 xs:gap-3 mt-10 xs:mt-12 mb-4 w-full px-1 flex-wrap xs:flex-nowrap">
-              <div
-                onClick={() => triggerComicFX('NATIONAL LEVEL!')}
-                className="relative group cursor-pointer hover:scale-105 transition-transform duration-150 active:scale-95 flex items-center justify-center flex-1 min-w-0"
-              >
-                <img src={nationalBadge} alt="National Level" className="h-8 xs:h-9 sm:h-10 w-full max-h-[38px] object-contain select-none pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.7)]" />
-              </div>
-              <div
-                onClick={() => triggerComicFX('9 BATTLES!')}
-                className="relative group cursor-pointer hover:scale-105 transition-transform duration-150 active:scale-95 flex items-center justify-center flex-1 min-w-0"
-              >
-                <img src={evenBadge} alt="9 Active Events" className="h-8 xs:h-9 sm:h-10 w-full max-h-[38px] object-contain select-none pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.7)]" />
-              </div>
-              <div
-                onClick={() => triggerComicFX('ANNA UNIV VERIFIED!')}
-                className="relative group cursor-pointer hover:scale-105 transition-transform duration-150 active:scale-95 flex items-center justify-center flex-1 min-w-0"
-              >
-                <img src={annBadge} alt="Anna Univ Verified" className="h-8 xs:h-9 sm:h-10 w-full max-h-[38px] object-contain select-none pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.7)]" />
-              </div>
             </div>
 
             {/* Register CTA (mobile) */}
-            <div className="relative z-20 my-4 w-full flex justify-center px-1">
+            <div className="relative z-20 mt-6 mb-5 w-full flex justify-center px-2">
               <MagneticElement strength={0.3} onClick={() => navigate(signedIn ? '/participant/dashboard' : '/register')} className="w-full">
                 <div className="comic-cta-wrapper w-full group">
                   <span className="comic-cta-back" />
                   <button
                     type="button"
-                    className="comic-cta-front px-5 py-3.5 flex items-center justify-center gap-3 w-full"
+                    className="comic-cta-front px-4 py-3.5 flex items-center justify-center gap-2.5 w-full"
                   >
-                    <span className="font-comic font-black text-sm xs:text-base tracking-wider uppercase italic text-[#090A0B] whitespace-nowrap">
+                    <span className="font-comic font-black text-xs xs:text-base tracking-wider uppercase italic text-[#090A0B] whitespace-nowrap">
                       {signedIn ? 'GO TO YOUR DASHBOARD' : 'REGISTER FOR ZINNIA'}
                     </span>
                     <svg viewBox="0 0 32 20" className="w-5 h-4 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
@@ -811,7 +485,7 @@ export const WebsiteHomePage: React.FC = () => {
             </div>
 
             {/* Fee sticker (mobile) — ₹250 online vs ₹300 on the spot */}
-            <RegistrationFeeCallout className="relative z-20 w-full px-1 -mt-1 mb-2" />
+            <RegistrationFeeCallout className="relative z-20 w-full px-2 -mt-1 mb-2" />
           </div>
 
           {/* Desktop: Title + Badges + Register CTA */}
@@ -914,9 +588,9 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
             3. COUNTDOWN SECTION
             ========================================================================= */}
-      <div className="relative z-30 flex flex-col items-center justify-center mt-3 md:mt-4 pt-2 w-full px-2 max-w-5xl mx-auto">
+      <div className="relative z-30 flex flex-col items-center justify-center mt-3 md:mt-4 pt-2 w-full px-2 max-w-5xl mx-auto overflow-hidden md:overflow-visible">
         {/* Background Layer: Halftones + Scattered Hand-Inked Scribbles */}
-        <div className="absolute inset-0 pointer-events-none overflow-visible z-0 select-none">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 select-none">
           <div className="comic-halftone -top-10 -left-12 opacity-30 scale-75" />
           <div className="comic-halftone -top-10 -right-12 opacity-30 scale-75" />
 
@@ -1245,11 +919,11 @@ export const WebsiteHomePage: React.FC = () => {
           ========================================================================= */}
       <section
         id="events"
-        className="relative z-30 max-w-7xl mx-auto w-full pt-6 sm:pt-10 pb-0 px-2 sm:px-4 mt-2 sm:mt-4 mb-0 overflow-visible"
+        className="relative z-30 max-w-7xl mx-auto w-full pt-6 sm:pt-10 pb-0 px-2 sm:px-4 mt-2 sm:mt-4 mb-0 overflow-hidden md:overflow-visible"
       >
         {/* Section Header */}
-        <div className="flex items-center justify-center gap-3 sm:gap-6 mb-8 sm:mb-12">
-          <div className="flex items-center gap-1.5 text-[#B8B8B2]/50">
+        <div className="flex items-center justify-center gap-2 sm:gap-6 mb-8 sm:mb-12 max-w-full overflow-hidden">
+          <div className="hidden sm:flex items-center gap-1.5 text-[#B8B8B2]/50">
             <span className="h-[1px] w-8 sm:w-28 bg-[#B8B8B2]/50" />
             <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
             <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
@@ -1258,12 +932,12 @@ export const WebsiteHomePage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <span className="text-[#E5BD00] text-2xl sm:text-4xl font-black select-none">⚡</span>
-            <h2 className="font-display italic text-3xl xs:text-4xl sm:text-5xl md:text-6xl text-[#EEEEEA] tracking-widest uppercase select-none">
+            <h2 className="font-display italic text-3xl sm:text-5xl md:text-6xl text-[#EEEEEA] tracking-widest uppercase select-none">
               EVENTS
             </h2>
             <span className="text-[#E5BD00] text-2xl sm:text-4xl font-black select-none">⚡</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[#B8B8B2]/50">
+          <div className="hidden sm:flex items-center gap-1.5 text-[#B8B8B2]/50">
             <span className="h-[1px] w-4 sm:w-16 bg-[#B8B8B2]/50" />
             <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
             <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />

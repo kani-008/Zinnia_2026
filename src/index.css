@@ -27,7 +27,9 @@ html {
   background-color: #08090A;
   color: #EEEEEA;
   width: 100%;
+  max-width: 100vw;
   min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -35,6 +37,7 @@ body {
   padding: 0;
   min-height: 100%;
   width: 100%;
+  max-width: 100vw;
   overflow-x: hidden;
   background-color: #08090A;
   color: #EEEEEA;
@@ -44,8 +47,10 @@ body {
 #root {
   min-height: 100vh;
   width: 100%;
+  max-width: 100vw;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 /* Tech HUD Cyber Background Utilities */
@@ -197,6 +202,39 @@ body {
 
 .comic-button-fluid .lightning {
   font-size: clamp(0.6rem, 2.7vw, 0.8rem);
+}
+
+/* Mobile dropdown menu buttons: punchy, balanced comic proportions */
+.comic-button-mobile {
+  --cb-w: min(230px, 78vw);
+  --cb-h: 46px;
+  --cb-box-w: calc(min(230px, 78vw) - 8px);
+  --cb-box-h: 38px;
+  --cb-font: 14.5px;
+  position: relative;
+  width: var(--cb-w);
+  height: var(--cb-h);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+}
+
+.comic-button-mobile .back-box,
+.comic-button-mobile .back-box-cyan {
+  left: 4px;
+  top: 5px;
+}
+
+.comic-button-mobile .front-box,
+.comic-button-mobile .front-box-cyan {
+  font-size: var(--cb-font);
+  letter-spacing: 0.04em;
+}
+
+.comic-button-mobile .lightning {
+  font-size: 15px;
 }
 
 /* Square icon button wearing the same double-box comic border as the menu items */
@@ -1600,14 +1638,18 @@ body {
    and 32px clears panels up to ~1000px tall (the tallest here is the
    registration form at ~900px). */
 .pad-panel {
-  padding-block: 1.5rem;
-  padding-inline: max(1.25rem, 5.5%);
+  padding-top: 2.25rem;
+  padding-bottom: 2.75rem;
+  padding-left: max(1.5rem, 6%);
+  padding-right: max(1.75rem, 7%);
 }
 
 @media (min-width: 640px) {
   .pad-panel {
-    padding-block: 2rem;
-    padding-inline: max(1.75rem, 5.5%);
+    padding-top: 2.75rem;
+    padding-bottom: 3.25rem;
+    padding-left: max(2rem, 6%);
+    padding-right: max(2.25rem, 7%);
   }
 }
 

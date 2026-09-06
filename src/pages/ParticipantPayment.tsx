@@ -257,7 +257,7 @@ export const ParticipantPaymentPage: React.FC = () => {
     return (
       <ComicPageShell>
         <WebsiteNavbar />
-        <main className="mx-auto max-w-xl px-5 pb-24 pt-28 text-center">
+        <main className="mx-auto max-w-xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 text-center overflow-hidden">
           <div className="mb-5 flex justify-center">
             <ComicChip tone="cyan" rotate={-2}>
               <ComicBolt tone="cyan" className="w-3 h-3" /> Registration confirmed
@@ -325,7 +325,7 @@ export const ParticipantPaymentPage: React.FC = () => {
     return (
       <ComicPageShell>
         <WebsiteNavbar />
-        <main className="mx-auto max-w-xl px-5 pb-24 pt-28 text-center">
+        <main className="mx-auto max-w-xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 text-center overflow-hidden">
           <div className="mb-5 flex justify-center">
             <ComicChip tone="cyan" rotate={-2}>
               <CheckCircle2 size={12} /> Registration complete
@@ -395,7 +395,7 @@ export const ParticipantPaymentPage: React.FC = () => {
     <ComicPageShell>
       <WebsiteNavbar />
 
-      <main className="mx-auto max-w-2xl px-5 pb-24 pt-28">
+      <main className="mx-auto max-w-2xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 overflow-hidden">
         <header className="mb-8">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <ComicChip tone="cyan" rotate={-2}>

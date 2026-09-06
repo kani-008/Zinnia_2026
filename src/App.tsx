@@ -38,7 +38,7 @@ export function App() {
   }, [navigate]);
 
   return (
-    <div className="relative w-full min-h-screen bg-[#0D0D0F]">
+    <div className="relative w-full max-w-full min-h-screen bg-[#0D0D0F] overflow-x-hidden">
       <ScrollToTop />
       {/* Routes */}
       <Routes>

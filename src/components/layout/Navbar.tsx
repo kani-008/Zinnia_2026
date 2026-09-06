@@ -80,9 +80,32 @@ export const WebsiteNavbar: React.FC = () => {
     setTimeout(() => setInteractiveSoundText(null), 800);
   };
 
+  const drawerRef = useRef<HTMLElement | null>(null);
+
+  const closeMobileMenu = () => {
+    if (
+      document.activeElement instanceof HTMLElement &&
+      drawerRef.current?.contains(document.activeElement)
+    ) {
+      document.activeElement.blur();
+    }
+    setMobileMenuOpen(false);
+  };
+
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      if (
+        document.activeElement instanceof HTMLElement &&
+        drawerRef.current?.contains(document.activeElement)
+      ) {
+        document.activeElement.blur();
+      }
+    }
+  }, [mobileMenuOpen]);
+
   const handleNavClick = (target: string, fx: string) => {
     triggerComicFX(fx);
-    setMobileMenuOpen(false);
+    closeMobileMenu();
     if (target === 'home') {
       navigate('/');
     } else if (target === 'events') {
@@ -154,7 +177,13 @@ export const WebsiteNavbar: React.FC = () => {
           <button
             type="button"
             className="comic-icon-button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => {
+              if (mobileMenuOpen) {
+                closeMobileMenu();
+              } else {
+                setMobileMenuOpen(true);
+              }
+            }}
             aria-expanded={mobileMenuOpen}
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           >
@@ -247,101 +276,112 @@ export const WebsiteNavbar: React.FC = () => {
           className={`sm:hidden fixed inset-0 z-[125] bg-[#08090A]/70 transition-opacity duration-200 ${
             mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={closeMobileMenu}
         />
 
-        {/* Mobile Menu Drawer: 40% wide, links stacked one below another */}
+        {/* Mobile Menu Drawer: top-down half page tab */}
         <aside
-          className="sm:hidden fixed top-0 right-0 bottom-0 z-[130] w-[40%] bg-[#08090A] border-l-2 border-[#EEEEEA]/30 shadow-[-6px_0_20px_rgba(0,0,0,0.6)] flex flex-col gap-3 px-3 pt-16 pb-6 overflow-y-auto transition-transform duration-300 ease-out"
-          style={{ transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(100%)' }}
-          aria-hidden={!mobileMenuOpen}
+          ref={drawerRef}
+          className="sm:hidden fixed top-0 left-0 right-0 z-[130] w-full bg-[#08090A] border-b-3 border-[#0FA9C6] shadow-[0_12px_36px_rgba(0,0,0,0.85)] flex flex-col items-center px-4 pt-3 pb-4 transition-transform duration-300 ease-out"
+          style={{
+            transform: mobileMenuOpen ? 'translateY(0)' : 'translateY(-100%)',
+            maxHeight: '52vh',
+            minHeight: '340px',
+          }}
+          inert={!mobileMenuOpen}
         >
-          {/* Close button lives inside the panel, so it slides in with it */}
-          {/* Wrapper does the positioning: .comic-icon-button is position:relative
-              for its own back/front boxes, which would beat an `absolute` class. */}
-          <div className="absolute top-3 right-3 z-10">
-          <button
-            type="button"
-            className="comic-icon-button"
-            onClick={() => setMobileMenuOpen(false)}
-            tabIndex={mobileMenuOpen ? 0 : -1}
-            aria-label="Close navigation menu"
-          >
-            <span className="back-box" />
-            <span className="front-box">
-              <span className="block h-[2px] w-4 bg-[#EEEEEA] rounded-full translate-y-[5px] rotate-45" />
-              <span className="block h-[2px] w-4 bg-[#EEEEEA] rounded-full opacity-0" />
-              <span className="block h-[2px] w-4 bg-[#EEEEEA] rounded-full -translate-y-[5px] -rotate-45" />
-            </span>
-          </button>
+          {/* Header row inside drawer: Logo on left, Close button on right */}
+          <div className="flex items-center justify-between w-full max-w-xs px-1 mb-2 shrink-0">
+            <img
+              src={zinniaSvg}
+              alt="ZINNIA '26 Logo"
+              className="h-8 w-auto object-contain select-none pointer-events-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
+            />
+            <button
+              type="button"
+              className="comic-icon-button"
+              onClick={closeMobileMenu}
+              tabIndex={mobileMenuOpen ? 0 : -1}
+              aria-label="Close navigation menu"
+            >
+              <span className="back-box" />
+              <span className="front-box">
+                <span className="block h-[2px] w-4 bg-[#EEEEEA] rounded-full translate-y-[5px] rotate-45" />
+                <span className="block h-[2px] w-4 bg-[#EEEEEA] rounded-full opacity-0" />
+                <span className="block h-[2px] w-4 bg-[#EEEEEA] rounded-full -translate-y-[5px] -rotate-45" />
+              </span>
+            </button>
           </div>
 
-          <button
-            className="comic-button comic-button-fluid"
-            type="button"
-            tabIndex={mobileMenuOpen ? 0 : -1}
-            onClick={() => handleNavClick('home', 'HOME!')}
-          >
-            <span className="back-box" />
-            <span className="front-box">
-              <span>HOME</span>
-            </span>
-          </button>
+          {/* Centered navigation buttons with comic proportions */}
+          <div className="flex-1 flex flex-col items-center justify-center gap-2 w-full">
+            <button
+              className="comic-button-mobile"
+              type="button"
+              tabIndex={mobileMenuOpen ? 0 : -1}
+              onClick={() => handleNavClick('home', 'HOME!')}
+            >
+              <span className="back-box" />
+              <span className="front-box">
+                <span>HOME</span>
+              </span>
+            </button>
 
-          <button
-            className="comic-button comic-button-fluid"
-            type="button"
-            tabIndex={mobileMenuOpen ? 0 : -1}
-            onClick={() => handleNavClick('events', 'EVENTS!')}
-          >
-            <span className="back-box" />
-            <span className="front-box">
-              <span className="lightning">⚡</span>
-              <span>EVENTS</span>
-            </span>
-          </button>
+            <button
+              className="comic-button-mobile"
+              type="button"
+              tabIndex={mobileMenuOpen ? 0 : -1}
+              onClick={() => handleNavClick('events', 'EVENTS!')}
+            >
+              <span className="back-box" />
+              <span className="front-box">
+                <span className="lightning">⚡</span>
+                <span>EVENTS</span>
+              </span>
+            </button>
 
-          <button
-            className="comic-button comic-button-fluid"
-            type="button"
-            tabIndex={mobileMenuOpen ? 0 : -1}
-            onClick={() => handleNavClick('contact', 'CONTACT!')}
-          >
-            <span className="back-box" />
-            <span className="front-box">
-              <span>CONTACT</span>
-            </span>
-          </button>
+            <button
+              className="comic-button-mobile"
+              type="button"
+              tabIndex={mobileMenuOpen ? 0 : -1}
+              onClick={() => handleNavClick('contact', 'CONTACT!')}
+            >
+              <span className="back-box" />
+              <span className="front-box">
+                <span>CONTACT</span>
+              </span>
+            </button>
 
-          <button
-            className="comic-button comic-button-fluid"
-            type="button"
-            tabIndex={mobileMenuOpen ? 0 : -1}
-            onClick={() =>
-              signedIn ? handleNavClick('logout', 'BYE!') : handleNavClick('login', 'LOGIN!')
-            }
-          >
-            <span className="back-box-cyan" />
-            <span className="front-box outline-cyan">
-              <span>{signedIn ? 'LOG OUT' : 'LOGIN'}</span>
-            </span>
-          </button>
+            <button
+              className="comic-button-mobile"
+              type="button"
+              tabIndex={mobileMenuOpen ? 0 : -1}
+              onClick={() =>
+                signedIn ? handleNavClick('logout', 'BYE!') : handleNavClick('login', 'LOGIN!')
+              }
+            >
+              <span className="back-box-cyan" />
+              <span className="front-box outline-cyan">
+                <span>{signedIn ? 'LOG OUT' : 'LOGIN'}</span>
+              </span>
+            </button>
 
-          <button
-            className="comic-button-cyan comic-button-fluid"
-            type="button"
-            tabIndex={mobileMenuOpen ? 0 : -1}
-            onClick={() =>
-              signedIn
-                ? handleNavClick('dashboard', 'DASHBOARD!')
-                : handleNavClick('register', 'REGISTER!')
-            }
-          >
-            <span className="back-box-cyan" />
-            <span className="front-box-cyan">
-              <span>{signedIn ? 'DASHBOARD' : 'REGISTER'}</span>
-            </span>
-          </button>
+            <button
+              className="comic-button-cyan comic-button-mobile"
+              type="button"
+              tabIndex={mobileMenuOpen ? 0 : -1}
+              onClick={() =>
+                signedIn
+                  ? handleNavClick('dashboard', 'DASHBOARD!')
+                  : handleNavClick('register', 'REGISTER!')
+              }
+            >
+              <span className="back-box-cyan" />
+              <span className="front-box-cyan">
+                <span>{signedIn ? 'DASHBOARD' : 'REGISTER'}</span>
+              </span>
+            </button>
+          </div>
         </aside>
         </>,
         document.body

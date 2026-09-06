@@ -118,7 +118,7 @@ export const ParticipantRegisterPage: React.FC = () => {
     <ComicPageShell>
       <WebsiteNavbar />
 
-      <main className="mx-auto max-w-2xl px-5 pb-24 pt-28">
+      <main className="mx-auto max-w-2xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 overflow-hidden">
         <header className="mb-8">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <ComicChip tone="cyan" rotate={-2}>
@@ -154,7 +154,7 @@ export const ParticipantRegisterPage: React.FC = () => {
                 invalid={fieldError === 'name'}
                 value={form.name}
                 onChange={(e) => set('name', e.target.value)}
-                placeholder="As it should appear on your pass"
+                placeholder="Name on your pass"
                 autoComplete="name"
                 required
               />
@@ -166,7 +166,7 @@ export const ParticipantRegisterPage: React.FC = () => {
                 invalid={fieldError === 'college'}
                 value={form.college}
                 onChange={(e) => set('college', e.target.value)}
-                placeholder="Government College of Engineering, Erode"
+                placeholder="College / Institution name"
                 required
               />
             </ComicField>
@@ -178,7 +178,7 @@ export const ParticipantRegisterPage: React.FC = () => {
                   invalid={fieldError === 'department'}
                   value={form.department}
                   onChange={(e) => set('department', e.target.value)}
-                  placeholder="CSE"
+                  placeholder="e.g. CSE"
                   required
                 />
               </ComicField>
@@ -235,7 +235,7 @@ export const ParticipantRegisterPage: React.FC = () => {
                 <Utensils size={12} /> Food preference
               </legend>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {FOOD_OPTIONS.map((option) => (
                   <ComicChoice
                     key={option.value}
@@ -255,7 +255,7 @@ export const ParticipantRegisterPage: React.FC = () => {
             </fieldset>
           </ComicPanel>
 
-          <div className="mt-7">
+          <div className="mt-7 pr-2">
             <ComicCTA type="submit" tone="cyan" disabled={submitting} arrow={!submitting}>
               {submitting ? (
                 <span className="inline-flex items-center gap-2">
