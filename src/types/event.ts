@@ -42,6 +42,7 @@ export interface EventMission {
     second?: string;
     third?: string;
   };
+  youtube_embed_url?: string;
 }
 
 export type PrizePosition = 1 | 2 | 3 | null;

@@ -214,7 +214,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       second: '₹600'
     },
     status: 'AVAILABLE',
-    icon_name: 'gaming'
+    icon_name: 'gaming',
+    youtube_embed_url: 'https://www.youtube.com/embed/Fl9N733PC44'
   },
   {
     id: 'think-strike-and-win',

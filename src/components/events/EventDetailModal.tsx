@@ -159,6 +159,27 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
           </div>
         </div>
 
+
+        {/* Teaser / Trailer Video (Vertical Portrait for Shorts/Reels) */}
+        {event.youtube_embed_url && (
+          <div className="space-y-2 flex flex-col items-center">
+            <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold self-start">
+              // TEASER / TRAILER
+            </h4>
+            <div className="relative w-full max-w-[260px] sm:max-w-[280px] aspect-[9/16] mx-auto rounded-2xl overflow-hidden border-2 border-[#FF3366]/60 bg-black shadow-[6px_6px_0px_#000000]">
+              <iframe
+                className="w-full h-full"
+                src={event.youtube_embed_url}
+                title={`${event.mission_name} Teaser`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        )}
+
+
+        
         {/* Briefing */}
         <div className="space-y-1.5">
           <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
@@ -168,6 +189,8 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             {event.description}
           </p>
         </div>
+
+        
 
         {/* Rules */}
         {event.rules && event.rules.length > 0 && (
