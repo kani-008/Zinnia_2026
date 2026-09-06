@@ -1,7 +1,7 @@
 import React from 'react';
 import { BadgeIndianRupee, Users, Zap } from 'lucide-react';
 
-import { REGISTRATION_FEE_PER_HEAD } from '../../config/site';
+import { ON_SPOT_REGISTRATION_FEE, REGISTRATION_FEE_PER_HEAD } from '../../config/site';
 import { DEFAULT_CONFIG } from '../../lib/rules/catalog';
 
 /**
@@ -65,7 +65,11 @@ export const RegistrationPassCard: React.FC = () => {
 
       <p className="mt-4 font-mono text-[11px] text-[#A8A8AC] leading-relaxed">
         One pass covers your whole day. Your event slots open in the dashboard once the treasurer
-        confirms your payment.
+        confirms your payment.{' '}
+        <span className="text-[#F5D90A]">
+          On-the-spot registration at the venue is ₹{ON_SPOT_REGISTRATION_FEE} — register online and
+          save ₹{ON_SPOT_REGISTRATION_FEE - REGISTRATION_FEE_PER_HEAD}.
+        </span>
       </p>
     </section>
   );

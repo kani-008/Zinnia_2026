@@ -4,8 +4,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
   // TECHNICAL EVENTS (01 - 05)
   {
     id: 'debugging',
-    code: '01',
-    display_order: 1,
+    code: '02',
+    display_order: 2,
     mission_name: 'DEBUGGING',
     title: 'Debugging',
     tagline: 'Find. Fix. Conquer.',
@@ -38,8 +38,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
   },
   {
     id: 'the-last-signal',
-    code: '02',
-    display_order: 2,
+    code: '03',
+    display_order: 3,
     mission_name: 'THE LAST SIGNAL',
     title: 'The Last Signal',
     tagline: 'Investigate. Defend. Connect. Uncover.',
@@ -74,8 +74,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
   },
   {
     id: 'lost-at-sql',
-    code: '03',
-    display_order: 3,
+    code: '04',
+    display_order: 4,
     mission_name: 'LOST AT SQL',
     title: 'Lost at SQL',
     tagline: 'Get lost in the queries. Find your way out with SQL!',
@@ -108,10 +108,10 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
   },
   {
     id: 'gadget-codes',
-    // Its own MEGA EVENT tier, sitting between the technical row (01-04) and
-    // the non-technical row (06-09), so the numbering runs straight down.
-    code: '05',
-    display_order: 5,
+    // The MEGA EVENT. It opens the section as 01 in its own tier; the other
+    // technical events follow as 02-05, then the non-technical row 06-09.
+    code: '01',
+    display_order: 1,
     is_mega: true,
     mission_name: 'GADGET CODES',
     title: 'Gadget Codes (Single event)',
@@ -148,8 +148,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
   },
   {
     id: 'paper-presentation',
-    code: '04',
-    display_order: 4,
+    code: '05',
+    display_order: 5,
     mission_name: 'PAPER PRESENTATION',
     title: 'Paper Presentation',
     tagline: 'Ideas that speak. Impact that lasts.',

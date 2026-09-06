@@ -42,6 +42,22 @@ const renderPrizeContent = (prizeText?: string, textColor = 'text-white') => {
   return <span className={`font-bold text-xs sm:text-sm leading-tight break-words ${textColor}`}>{prizeText}</span>;
 };
 
+/**
+ * Click blip for the filter tabs.
+ *
+ * These handlers used to call a bare `audioManager`, which is not defined or
+ * imported anywhere in the project — every tab click threw a ReferenceError
+ * after the filter had already been applied. This is the same local helper
+ * EventScheduleView uses, and it swallows autoplay rejections.
+ */
+const triggerAudio = () => {
+  try {
+    const audio = new Audio('/pop.mp3');
+    audio.volume = 0.3;
+    audio.play().catch(() => {});
+  } catch {}
+};
+
 export const WebsiteEventsPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'ALL' | 'TECH' | 'NON_TECH'>('ALL');
@@ -115,7 +131,7 @@ export const WebsiteEventsPage: React.FC = () => {
             <h3 className="font-display text-xl font-bold text-white uppercase tracking-wide leading-snug">
               {e.mission_name}
             </h3>
-            <div className={`font-comic text-xs font-bold uppercase tracking-wider pt-0.5 ${isTech ? 'text-[#3CE7FF]' : 'text-[#FF3366]'}`}>
+            <div className={`font-comic text-xs font-bold uppercase tracking-wider pt-0.5 ${e.is_mega ? 'text-[#C084FC]' : isTech ? 'text-[#3CE7FF]' : 'text-[#FF3366]'}`}>
               {e.tagline || e.title}
             </div>
           </div>
@@ -220,7 +236,7 @@ export const WebsiteEventsPage: React.FC = () => {
             <button
               onClick={() => {
                 setActiveTab('ALL');
-                audioManager.playNodeEngage();
+                triggerAudio();
               }}
               className={`px-4 py-2.5 font-comic text-xs sm:text-sm uppercase tracking-wider font-extrabold transition-all border-[2.5px] rounded-xl cursor-pointer flex items-center gap-2 ${
                 activeTab === 'ALL'
@@ -239,7 +255,7 @@ export const WebsiteEventsPage: React.FC = () => {
             <button
               onClick={() => {
                 setActiveTab('TECH');
-                audioManager.playNodeEngage();
+                triggerAudio();
               }}
               className={`px-4 py-2.5 font-comic text-xs sm:text-sm uppercase tracking-wider font-extrabold transition-all border-[2.5px] rounded-xl cursor-pointer flex items-center gap-2 ${
                 activeTab === 'TECH'
@@ -259,7 +275,7 @@ export const WebsiteEventsPage: React.FC = () => {
             <button
               onClick={() => {
                 setActiveTab('NON_TECH');
-                audioManager.playNodeEngage();
+                triggerAudio();
               }}
               className={`px-4 py-2.5 font-comic text-xs sm:text-sm uppercase tracking-wider font-extrabold transition-all border-[2.5px] rounded-xl cursor-pointer flex items-center gap-2 ${
                 activeTab === 'NON_TECH'
@@ -281,39 +297,12 @@ export const WebsiteEventsPage: React.FC = () => {
         {/* Registration pass — priced from configuration, not typed in here */}
         <RegistrationPassCard />
 
-        {/* SECTION 1: TECHNICAL EVENTS */}
-        {(activeTab === 'ALL' || activeTab === 'TECH') && (
-          <div className="space-y-5">
-            <div className="p-4 bg-gradient-to-r from-cyan-950/80 via-slate-900 to-transparent border-l-4 border-cyan-400 rounded-r-xl flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-cyan-950 border border-cyan-500/40 rounded-lg text-cyan-400">
-                  <Cpu className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-display text-cyan-300 font-bold uppercase tracking-wider flex items-center gap-2">
-                    <span>TECHNICAL BATTLEGROUNDS</span>
-                    <span className="text-xs font-mono font-normal bg-cyan-900/60 text-cyan-200 px-2 py-0.5 rounded border border-cyan-500/30">
-                      {techEvents.length} Missions
-                    </span>
-                  </h2>
-                  <p className="text-xs font-comic text-slate-400">
-                    Debugging, Neural AI, SQL Extraction, UI/UX, and Algorithmic Survival Marathons.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {techEvents.map((e) => renderEventCard(e))}
-            </div>
-          </div>
-        )}
-
-        {/* SECTION 2: MEGA EVENT — its own tier, purple.
+        {/* SECTION 1: MEGA EVENT — the flagship, so it opens the directory.
+            The page reads 01 (mega) -> 02-05 (technical) -> 06-09 (non-tech).
             Shown under the TECHNICAL filter too: it is still a technical event
             by category, and hiding it there would make it unfindable. */}
         {(activeTab === 'ALL' || activeTab === 'TECH') && megaEvents.length > 0 && (
-          <div className="space-y-5 pt-4">
+          <div className="space-y-5">
             <div className="p-4 bg-gradient-to-r from-[#23123B]/80 via-slate-900 to-transparent border-l-4 border-[#9333EA] rounded-r-xl flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-[#23123B] border border-[#9333EA]/40 rounded-lg text-[#C084FC]">
@@ -339,6 +328,34 @@ export const WebsiteEventsPage: React.FC = () => {
               <div className="w-full max-w-2xl">
                 {megaEvents.map((e) => renderEventCard(e))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* SECTION 2: TECHNICAL EVENTS */}
+        {(activeTab === 'ALL' || activeTab === 'TECH') && (
+          <div className="space-y-5 pt-4">
+            <div className="p-4 bg-gradient-to-r from-cyan-950/80 via-slate-900 to-transparent border-l-4 border-cyan-400 rounded-r-xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-cyan-950 border border-cyan-500/40 rounded-lg text-cyan-400">
+                  <Cpu className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-display text-cyan-300 font-bold uppercase tracking-wider flex items-center gap-2">
+                    <span>TECHNICAL BATTLEGROUNDS</span>
+                    <span className="text-xs font-mono font-normal bg-cyan-900/60 text-cyan-200 px-2 py-0.5 rounded border border-cyan-500/30">
+                      {techEvents.length} Missions
+                    </span>
+                  </h2>
+                  <p className="text-xs font-comic text-slate-400">
+                    Debugging, Neural AI, SQL Extraction, UI/UX, and Algorithmic Survival Marathons.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {techEvents.map((e) => renderEventCard(e))}
             </div>
           </div>
         )}

@@ -82,37 +82,9 @@ export const EventScheduleView: React.FC<{
         setSelectedEventModal(matched);
       }
     } else {
-      // Fallback pseudo-mission for Prize Distribution
-      const prizeObj: EventMission = {
-        id: item.id,
-        code: 'FINALE',
-        mission_name: 'PRIZE DISTRIBUTION',
-        title: 'PRIZE DISTRIBUTION',
-        tagline: 'HONOR. VICTORY. CELEBRATION.',
-        event_type: 'NON_TECH',
-        category: 'VALEDICTORY',
-        clearance_level: 'SPECIAL',
-        team_size_min: 0,
-        team_size_max: 0,
-        schedule_time: '03:00 PM – 04:00 PM',
-        duration: '1 hr',
-        venue: 'Main Auditorium',
-        description: 'Celebrate the winners of ZINNIA \'26 with the presentation of trophies, shields, certificates, and cash prizes, marking the grand conclusion of the symposium.',
-        rules: [
-          'All winners must assemble at the Main Auditorium.',
-          'Winners must be present to receive their prizes.',
-          'Prizes will be awarded according to the official results.',
-          'Maintain discipline throughout the ceremony.'
-        ],
-        coordinators: [{ name: 'Symposium Directorate', role: 'Directorate' }],
-        status: 'AVAILABLE',
-        icon_name: 'trophy'
-      };
-      if (onSelectEvent) {
-        onSelectEvent(prizeObj);
-      } else {
-        setSelectedEventModal(prizeObj);
-      }
+      // Timeline items always resolve to a mission; Prize Distribution is a
+      // ceremony and is no longer listed here, so there is nothing to open.
+      return;
     }
   };
 
@@ -120,7 +92,7 @@ export const EventScheduleView: React.FC<{
   const masterTimelineItems: TimelineFlowItem[] = [
     {
       id: 'debugging',
-      code: '01',
+      code: '02',
       mission_name: 'DEBUGGING',
       start_time: '11:00 AM',
       time_display: '11:00 AM – 12:30 PM',
@@ -133,7 +105,7 @@ export const EventScheduleView: React.FC<{
     },
     {
       id: 'the-last-signal',
-      code: '02',
+      code: '03',
       mission_name: 'THE LAST SIGNAL',
       start_time: '11:00 AM',
       time_display: '11:00 AM – 12:30 PM',
@@ -146,7 +118,7 @@ export const EventScheduleView: React.FC<{
     },
     {
       id: 'gadget-codes',
-      code: '04',
+      code: '01',
       mission_name: 'GADGET CODES',
       start_time: '11:00 AM',
       time_display: '11:00 AM – 02:30 PM',
@@ -199,7 +171,7 @@ export const EventScheduleView: React.FC<{
     },
     {
       id: 'lost-at-sql',
-      code: '03',
+      code: '04',
       mission_name: 'LOST AT SQL',
       start_time: '01:30 PM',
       time_display: '01:30 PM – 03:00 PM',
@@ -235,19 +207,6 @@ export const EventScheduleView: React.FC<{
       venue: 'Main Stage',
       tagline: 'Freeze moments. Frame stories.',
       description: 'Create an original short film inspired by time, perspective, and self-doubt. Tell a meaningful story through visuals, characters, and emotions while keeping the narrative clear and engaging.'
-    },
-    {
-      id: 'prize-distribution',
-      code: 'FINALE',
-      mission_name: 'PRIZE DISTRIBUTION',
-      start_time: '03:00 PM',
-      time_display: '03:00 PM – 04:00 PM',
-      duration: '1 hr',
-      category_type: 'SPECIAL',
-      color_theme: 'purple',
-      venue: 'Main Auditorium',
-      tagline: 'HONOR. VICTORY. CELEBRATION.',
-      description: 'Celebrate the winners of ZINNIA \'26 with the presentation of trophies, shields, certificates, and cash prizes, marking the grand conclusion of the symposium.'
     }
   ];
 
