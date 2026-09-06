@@ -1,59 +1,107 @@
-import React, { useState } from 'react';
+// Zinnia 2026 — Contact page.
+//
+// Restyled onto the homepage comic system: sketchy <ComicPanel> ink instead of
+// rounded-xl boxes, Luckiest Guy / Bangers / JetBrains Mono, and the cyan /
+// pink / yellow accents. All original content is preserved — coordinators,
+// campus address, the embedded map, and every bus detail that was already here.
+//
+// The map is an iframe, so a click inside it never reaches this page. A
+// transparent catcher sits on top to run the radar ping and then open Google
+// Maps; that is what trades away in-place pan/zoom.
+
+import React, { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Bus, Clock, Mail, MapPin, Phone } from 'lucide-react';
+
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { WebsiteFooter } from '../components/layout/Footer';
 import { registerNav } from '../services/registerNavigation';
-import { Phone, Mail, MapPin, ArrowRight, Bus } from 'lucide-react';
+import {
+  ComicBolt,
+  ComicCTA,
+  ComicChip,
+  ComicPanel,
+  ComicSectionTitle,
+} from '../components/ui/comic';
 
-// 2D-only Magnetic Interaction Component (Matching Home page)
-const MagneticElement: React.FC<{
-  children: React.ReactNode;
-  strength?: number;
-  className?: string;
-  onClick?: (e: React.MouseEvent) => void;
-}> = ({ children, strength = 0.25, className = '', onClick }) => {
-  const elementRef = React.useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
+/** Campus coordinates from the shared maps link. */
+const CAMPUS_LAT_LNG = '11.415753,77.665973';
+const MAP_EMBED_SRC = `https://maps.google.com/maps?q=${CAMPUS_LAT_LNG}&z=16&output=embed`;
+const MAP_OPEN_URL = `https://www.google.com/maps/search/?api=1&query=${CAMPUS_LAT_LNG}`;
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!elementRef.current) return;
-    const rect = elementRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    setPosition({ x: x * strength, y: y * strength });
-  };
+interface Coordinator {
+  name: string;
+  role: string;
+  phone: string;
+  /** tel: form, digits only */
+  dial: string;
+}
 
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
+const COORDINATORS: Coordinator[] = [
+  { name: 'Vijayanand', role: 'Staff Coordinator', phone: '+91 98765 43287', dial: '+919876543287' },
+  { name: 'Saran S', role: 'Student Coordinator', phone: '+91 96299 93985', dial: '+919629993985' },
+];
 
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setPosition({ x: 0, y: 0 });
-  };
+interface BusRun {
+  time: string;
+  service: string;
+}
 
-  return (
-    <div
-      ref={elementRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onClick={onClick}
-      style={{
-        transform: `translate(${position.x}px, ${position.y}px)`,
-        transition: isHovered ? 'transform 0.08s ease-out' : 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
-      }}
-      className={`inline-block will-change-transform ${className}`}
+/** Cyan group — departures from Erode Bus Stand. */
+const FROM_ERODE: BusRun[] = [
+  { time: '8:00 AM', service: 'Route Bus' },
+  { time: '8:00 AM', service: 'Town Govt Bus' },
+  { time: '8:30 AM', service: 'Town Govt Bus 5B' },
+];
+
+/** Pink group — departures from Chithode. */
+const FROM_CHITHODE: BusRun[] = [
+  { time: '8:15 – 8:20 AM', service: 'Route Bus' },
+  { time: '8:30 – 8:35 AM', service: 'Town Govt Bus' },
+  { time: 'Around 8:50 AM', service: 'Town Govt Bus 5B' },
+];
+
+/**
+ * Details that were already on this page and are not covered by the
+ * origin-grouped timetable above (arrival times, frequencies, and which stop to
+ * get down at). Kept so nothing is lost in the reorganisation.
+ */
+const EXTRA_NOTES: string[] = [
+  'Route buses from Erode Bus Stand and Chithode reach the college by around 8:45 AM.',
+  'Town bus from Lakshmi Nagar / Bhavani Bypass departs about 8:10 AM and reaches the college by 8:30 AM.',
+  'Bus No. 3 and B12 run roughly every 5 minutes from Lakshmi Nagar or Bhavani Bypass — get down at the Government College of Engineering stop, then a short walk to campus.',
+  'Bus No. 3 runs roughly every 10 minutes from Erode Bus Stand — get down at the Government College of Engineering (IRTT) stop, then a short walk to campus.',
+];
+
+interface Ping {
+  id: number;
+  x: number;
+  y: number;
+}
+
+const BusRunRow: React.FC<{ run: BusRun; tone: 'cyan' | 'pink' }> = ({ run, tone }) => (
+  <li className="flex items-center justify-between gap-4 border-b border-[#23262D]">
+    <span className="flex items-center gap-2 font-mono text-xs text-[#EEEEEA]">
+      <Bus size={13} className={tone === 'cyan' ? 'text-[#0FA9C6]' : 'text-[#D51F55]'} />
+      {run.service}
+    </span>
+    <span
+      className={`shrink-0 font-comic text-sm font-bold tracking-wide ${
+        tone === 'cyan' ? 'text-[#0FA9C6]' : 'text-[#D51F55]'
+      }`}
     >
-      {children}
-    </div>
-  );
-};
+      {run.time}
+    </span>
+  </li>
+);
 
 export const WebsiteContactPage: React.FC = () => {
   const navigate = useNavigate();
   const [interactiveSoundText, setInteractiveSoundText] = useState<string | null>(null);
+
+  const [pings, setPings] = useState<Ping[]>([]);
+  const [mapGlow, setMapGlow] = useState(false);
+  const pingId = useRef(0);
 
   const triggerComicFX = (soundText: string) => {
     setInteractiveSoundText(soundText);
@@ -61,6 +109,29 @@ export const WebsiteContactPage: React.FC = () => {
       setInteractiveSoundText(null);
     }, 900);
   };
+
+  /**
+   * Radar ping from the click point, a glow on the frame, then Google Maps in a
+   * new tab. The 340ms delay stays inside the browser's transient user
+   * activation window, so window.open is not treated as an unsolicited popup.
+   */
+  const handleMapClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const id = (pingId.current += 1);
+
+    setPings((prev) => [...prev, { id, x: e.clientX - rect.left, y: e.clientY - rect.top }]);
+    setMapGlow(true);
+    triggerComicFX('PING!');
+
+    window.setTimeout(() => {
+      setPings((prev) => prev.filter((p) => p.id !== id));
+      setMapGlow(false);
+    }, 660);
+
+    window.setTimeout(() => {
+      window.open(MAP_OPEN_URL, '_blank', 'noopener,noreferrer');
+    }, 340);
+  }, []);
 
   return (
     <div className="relative w-full min-h-screen bg-[#08090A] text-[#EEEEEA] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none scroll-smooth">
@@ -78,201 +149,211 @@ export const WebsiteContactPage: React.FC = () => {
       {/* Universal Comic Navbar */}
       <WebsiteNavbar />
 
-      {/* =========================================================================
-          2. MAIN CONTENT AREA
-          ========================================================================= */}
+      {/* halftone wash, same utility the homepage sections use */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-[0.07] bg-halftone-dots-cyan"
+        aria-hidden="true"
+      />
+
       <main className="relative z-20 max-w-6xl mx-auto w-full pt-10 sm:pt-14 pb-16 px-2 sm:px-4 flex-1">
         {/* Page Header */}
         <div className="text-center space-y-3 mb-10 sm:mb-12">
-          <h1 className="font-display text-4xl sm:text-6xl md:text-7xl uppercase tracking-tight text-[#EEEEEA]">
+          <div className="flex justify-center">
+            <ComicChip tone="yellow" rotate={-2}>
+              <ComicBolt tone="yellow" className="w-3 h-3" /> Help desk open
+            </ComicChip>
+          </div>
+
+          <h1 className="font-display text-4xl sm:text-6xl md:text-7xl uppercase tracking-tight text-[#EEEEEA] text-stroke-comic-sm">
             CONTACT <span className="text-[#E5BD00]">US</span>
           </h1>
 
           <p className="font-mono text-xs sm:text-sm text-[#B8B8B2] max-w-xl mx-auto leading-relaxed">
-            Have questions about event guidelines, accommodation, schedule, or registrations? We are here to help.
+            Have questions about event guidelines, accommodation, schedule, or registrations? We are
+            here to help.
           </p>
         </div>
 
-        {/* Contact Information Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-stretch">
-          
-          {/* CARD 1: Official Email & Helplines */}
-          <div className="bg-[#111214] border border-[#B8B8B2]/20 rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#090A0B] flex flex-col justify-between relative">
-            <div>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-lg bg-[#17181C] border border-[#B8B8B2]/30 text-[#E5BD00] flex items-center justify-center shrink-0">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-comic font-black text-lg text-[#EEEEEA] uppercase tracking-wide">
-                    OFFICIAL COORDINATOR
-                  </h3>
-                  <p className="font-mono text-xs text-[#B8B8B2]">Direct inquiries &amp; verification desk</p>
-                </div>
-              </div>
-
-              {/* Helpline Rows */}
-              <div className="space-y-2.5 font-mono text-xs">
-                <div className="p-3.5 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md bg-[#111214] text-[#B8B8B2] flex items-center justify-center shrink-0">
-                      <Phone className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-bold text-zinc-100 font-mono">Vijayanand</p>
-                      <p className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">Staff Coordinator</p>
-                      <p className="text-sm font-bold text-zinc-100 font-mono">+91 98765 43287</p>
-                    </div>
-                  </div>
-                  <a
-                    href="tel:+919876543287"
-                    className="text-xs text-zinc-300 hover:text-white hover:border-zinc-500 font-semibold px-3 py-1.5 bg-[#22222C] border border-[#30303E] rounded transition-colors shrink-0 font-mono"
-                  >
-                    CALL
-                  </a>
-                </div>
-
-                <div className="p-3.5 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md bg-[#111214] text-[#B8B8B2] flex items-center justify-center shrink-0">
-                      <Phone className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-bold text-zinc-100 font-mono">Saran S</p>
-                      <p className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">Student Coordinator</p>
-                      <p className="text-sm font-bold text-zinc-100 font-mono">+91 96299 93985</p>
-                    </div>
-                  </div>
-                  <a
-                    href="tel:+919629993985"
-                    className="text-xs text-zinc-300 hover:text-white hover:border-zinc-500 font-semibold px-3 py-1.5 bg-[#22222C] border border-[#30303E] rounded transition-colors shrink-0 font-mono"
-                  >
-                    CALL
-                  </a>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* CARD 2: Campus Headquarters & Location */}
-          <div className="bg-[#111214] border border-[#B8B8B2]/20 rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#090A0B] flex flex-col justify-between relative">
-            <div>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-lg bg-[#17181C] border border-[#B8B8B2]/30 text-[#E5BD00] flex items-center justify-center shrink-0">
-                  <MapPin className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-comic font-black text-lg text-[#EEEEEA] uppercase tracking-wide">
-                    DEPARTMENT OF CSE
-                  </h3>
-                  <p className="font-mono text-xs text-[#B8B8B2]">Government College of Engineering, Erode</p>
-                </div>
-              </div>
-
-              {/* Location map - 11.415753, 77.665973 (from the shared maps link) */}
-              <div className="rounded-xl overflow-hidden border border-[#B8B8B2]/20 bg-[#17181C] mb-4">
-                <iframe
-                  title="Department of CSE, Government College of Engineering, Erode"
-                  src="https://maps.google.com/maps?q=11.415753,77.665973&z=16&output=embed"
-                  className="w-full h-44 sm:h-52 border-0 block"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  allowFullScreen
-                />
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* CARD 3: Bus Timings to the campus */}
-          <div className="bg-[#111214] border border-[#B8B8B2]/20 rounded-xl p-6 sm:p-7 shadow-[4px_4px_0px_#090A0B] lg:col-span-2">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-lg bg-[#17181C] border border-[#B8B8B2]/30 text-[#E5BD00] flex items-center justify-center shrink-0">
-                <Bus className="w-5 h-5 text-[#0FA9C6]" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-7 items-stretch">
+          {/* ================= CARD 1: Coordinators ================= */}
+          <ComicPanel tone="cyan">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 border-2 border-[#0FA9C6] bg-[#111214] text-[#E5BD00] flex items-center justify-center shrink-0">
+                <Mail className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-comic font-black text-lg text-[#EEEEEA] uppercase tracking-wide">
-                  BUS TIMINGS
-                </h3>
-                <p className="font-mono text-xs text-[#B8B8B2]">Government bus services to the college campus</p>
+                <ComicSectionTitle tone="cyan">OFFICIAL COORDINATOR</ComicSectionTitle>
+                <p className="font-mono text-[11px] text-[#B8B8B2]">
+                  Direct inquiries &amp; verification desk
+                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="stack-box">
+              {COORDINATORS.map((person) => (
+                <div
+                  key={person.dial}
+                  className="flex items-center justify-between gap-3 border border-[#0FA9C6]/20 bg-[#111214] pad-box-sm transition-colors hover:border-[#0FA9C6]/50"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 border border-[#0FA9C6]/30 bg-[#17181C] text-[#0FA9C6] flex items-center justify-center shrink-0">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div className="space-y-0.5 min-w-0">
+                      <p className="font-mono text-sm font-bold text-[#EEEEEA]">{person.name}</p>
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-[#B8B8B2]">
+                        {person.role}
+                      </p>
+                      <p className="font-mono text-sm font-bold text-[#EEEEEA]">{person.phone}</p>
+                    </div>
+                  </div>
 
-              {/* Route buses */}
-              <div className="space-y-2.5">
-                <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#E5BD00]">
-                  Route Bus
+                  <a
+                    href={`tel:${person.dial}`}
+                    className="shrink-0 border-2 border-[#0FA9C6] px-3 py-1.5 font-comic text-xs uppercase tracking-wider text-[#0FA9C6] shadow-[3px_3px_0px_#090A0B] btn-comic transition-colors hover:bg-[#0FA9C6] hover:text-[#090A0B]"
+                  >
+                    Call
+                  </a>
                 </div>
+              ))}
+            </div>
+          </ComicPanel>
 
-                <div className="p-3.5 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg font-mono text-xs">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="font-bold text-[#EEEEEA]">Erode Bus Stand</span>
-                    <span className="text-[#0FA9C6] font-bold shrink-0">8:00 AM</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-[#B8B8B2]">
-                    <ArrowRight className="w-3 h-3 shrink-0 text-[#B8B8B2]/70" />
-                    <span>Reaches college by <strong className="text-[#EEEEEA]">8:45 AM</strong></span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg font-mono text-xs">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="font-bold text-[#EEEEEA]">Chithode Bus Stop</span>
-                    <span className="text-[#0FA9C6] font-bold shrink-0">8:20 AM</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-[#B8B8B2]">
-                    <ArrowRight className="w-3 h-3 shrink-0 text-[#B8B8B2]/70" />
-                    <span>Reaches college by <strong className="text-[#EEEEEA]">8:45 AM</strong></span>
-                  </div>
-                </div>
+          {/* ================= CARD 2: Campus + map ================= */}
+          <ComicPanel tone="cyan">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 border-2 border-[#0FA9C6] bg-[#111214] text-[#E5BD00] flex items-center justify-center shrink-0">
+                <MapPin className="w-5 h-5" />
               </div>
-
-              {/* Town buses */}
-              <div className="space-y-2.5">
-                <div className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#E5BD00]">
-                  Town Bus
-                </div>
-
-                <div className="p-3.5 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg font-mono text-xs">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="font-bold text-[#EEEEEA]">Lakshmi Nagar / Bhavani Bypass</span>
-                    <span className="text-[#0FA9C6] font-bold shrink-0">8:10 AM</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-[#B8B8B2]">
-                    <ArrowRight className="w-3 h-3 shrink-0 text-[#B8B8B2]/70" />
-                    <span>Reaches college by <strong className="text-[#EEEEEA]">8:30 AM</strong></span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg font-mono text-xs space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-[#EEEEEA]">Bus No. 3 &amp; B12</span>
-                    <span className="text-[#0FA9C6] font-bold shrink-0">Every 5 min</span>
-                  </div>
-                  <p className="text-[11px] text-[#B8B8B2] leading-relaxed">
-                    From Lakshmi Nagar or Bhavani Bypass. Get down at the
-                    <strong className="text-[#EEEEEA]"> Government College of Engineering</strong> stop, then a short walk to the campus.
-                  </p>
-                </div>
-
-                <div className="p-3.5 bg-[#17181C] border border-[#B8B8B2]/20 rounded-lg font-mono text-xs space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-[#EEEEEA]">Bus No. 3</span>
-                    <span className="text-[#0FA9C6] font-bold shrink-0">Every 10 min</span>
-                  </div>
-                  <p className="text-[11px] text-[#B8B8B2] leading-relaxed">
-                    From Erode Bus Stand. Get down at the
-                    <strong className="text-[#EEEEEA]"> Government College of Engineering (IRTT)</strong> stop, then a short walk to the campus.
-                  </p>
-                </div>
+              <div>
+                <ComicSectionTitle tone="cyan">DEPARTMENT OF CSE</ComicSectionTitle>
+                <p className="font-mono text-[11px] text-[#B8B8B2]">
+                  Government College of Engineering, Erode
+                </p>
               </div>
             </div>
+
+            {/* Clickable map. The iframe is pointer-events-none so the catcher
+                above it reliably receives the click; a keyboard-reachable
+                button below covers the same action for non-pointer users. */}
+            <div
+              onClick={handleMapClick}
+              className={`map-frame relative overflow-hidden border-2 border-[#0FA9C6]/30 bg-[#17181C] cursor-pointer ${
+                mapGlow ? 'is-pinged' : ''
+              }`}
+            >
+              <iframe
+                title="Department of CSE, Government College of Engineering, Erode"
+                src={MAP_EMBED_SRC}
+                className="w-full h-44 sm:h-52 border-0 block pointer-events-none"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+
+              {pings.map((p) => (
+                <span key={p.id} className="map-ping" style={{ left: p.x, top: p.y }} />
+              ))}
+
+              <span className="pointer-events-none absolute bottom-2 right-2 border border-[#0FA9C6]/40 bg-[#08090A]/85 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-[#0FA9C6]">
+                Tap to open maps
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => window.open(MAP_OPEN_URL, '_blank', 'noopener,noreferrer')}
+              className="mt-4 w-full border-2 border-[#0FA9C6] px-4 py-2 font-comic text-xs uppercase tracking-wider text-[#0FA9C6] shadow-[3px_3px_0px_#090A0B] btn-comic transition-colors hover:bg-[#0FA9C6] hover:text-[#090A0B]"
+            >
+              Open in Google Maps
+            </button>
+          </ComicPanel>
+
+          {/* ================= CARD 3: Getting to IRTT ================= */}
+          <div className="lg:col-span-2">
+            <ComicPanel tone="yellow">
+              <div className="flex flex-wrap items-center gap-3 mb-6">
+                <div className="w-10 h-10 border-2 border-[#E5BD00] bg-[#111214] text-[#0FA9C6] flex items-center justify-center shrink-0">
+                  <Bus className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <ComicSectionTitle tone="yellow">GETTING TO IRTT</ComicSectionTitle>
+                  <p className="font-mono text-[11px] text-[#B8B8B2]">
+                    Government bus services to the college campus
+                  </p>
+                </div>
+                <ComicChip tone="yellow" rotate={2} className="ml-auto">
+                  <Clock size={11} /> Morning departures
+                </ComicChip>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* FROM ERODE BUS STAND — cyan, matching technical events */}
+                <div className="border-2 border-[#0FA9C6]/40 bg-[#111214] pad-box">
+                  <div className="mb-3 flex items-center gap-2 border-b-2 border-[#0FA9C6]/30 pb-2.5">
+                    <Bus size={15} className="text-[#0FA9C6] shrink-0" />
+                    <h4 className="font-comic text-sm uppercase tracking-wider text-[#0FA9C6]">
+                      From Erode Bus Stand
+                    </h4>
+                  </div>
+                  <ul className="row-list">
+                    {FROM_ERODE.map((run) => (
+                      <BusRunRow key={`${run.time}-${run.service}`} run={run} tone="cyan" />
+                    ))}
+                  </ul>
+                </div>
+
+                {/* FROM CHITHODE — pink, matching non-technical events */}
+                <div className="border-2 border-[#D51F55]/40 bg-[#111214] pad-box">
+                  <div className="mb-3 flex items-center gap-2 border-b-2 border-[#D51F55]/30 pb-2.5">
+                    <Bus size={15} className="text-[#D51F55] shrink-0" />
+                    <h4 className="font-comic text-sm uppercase tracking-wider text-[#D51F55]">
+                      From Chithode
+                    </h4>
+                  </div>
+                  <ul className="row-list">
+                    {FROM_CHITHODE.map((run) => (
+                      <BusRunRow key={`${run.time}-${run.service}`} run={run} tone="pink" />
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Retained detail from the previous bus card. */}
+              <div className="mt-8 border-t-2 border-[#23262D] pt-6">
+                <h4 className="mb-3 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#B8B8B2]">
+                  <ComicBolt tone="yellow" className="w-3.5 h-3.5" /> Also good to know
+                </h4>
+                <ul className="space-y-2">
+                  {EXTRA_NOTES.map((note) => (
+                    <li
+                      key={note}
+                      className="flex items-start gap-2 font-mono text-[11px] leading-relaxed text-[#B8B8B2]"
+                    >
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 bg-[#E5BD00]" />
+                      {note}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </ComicPanel>
           </div>
+        </div>
 
+        {/* Register CTA — routes through registerNav so this page follows the
+            same cutover redirect as every other Register entry point. */}
+        <div className="mt-10 flex justify-center">
+          <ComicCTA
+            tone="cyan"
+            fullWidth={false}
+            onClick={() => {
+              triggerComicFX('REGISTER!');
+              registerNav.setNavigator((path) => navigate(path));
+              registerNav.trigger();
+            }}
+          >
+            Register for Zinnia
+          </ComicCTA>
         </div>
       </main>
 

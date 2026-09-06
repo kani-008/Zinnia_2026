@@ -1,8 +1,17 @@
 import React from 'react';
 
+/** 'mega' is the standout purple tier — one event, its own section. */
+type CardVariant = 'tech' | 'non-tech' | 'mega';
+
+const VARIANT_CLASS: Record<CardVariant, string> = {
+  tech: 'tech',
+  'non-tech': 'non-tech',
+  mega: 'mega-tier mega',
+};
+
 interface ComicHandDrawnCardProps {
   code: string;
-  variant: 'tech' | 'non-tech';
+  variant: CardVariant;
   onClick?: () => void;
   children: React.ReactNode;
   className?: string;
@@ -18,7 +27,7 @@ export const ComicHandDrawnCard: React.FC<ComicHandDrawnCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className={`comic-card-wrapper group ${variant === 'tech' ? 'tech' : 'non-tech'} ${className}`}
+      className={`comic-card-wrapper group ${VARIANT_CLASS[variant] ?? 'tech'} ${className}`}
     >
       {/* =====================================================
            HAND-DRAWN CARD BORDER

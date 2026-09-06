@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { RegistrationPassCard } from '../components/events/RegistrationPassCard';
 import { Link, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
@@ -18,6 +19,7 @@ import {
   Cpu, 
   Gamepad2,
   CheckCircle2,
+  Crown,
   Flame,
   X
 } from 'lucide-react';
@@ -54,21 +56,37 @@ export const WebsiteEventsPage: React.FC = () => {
     return () => unsub();
   }, []);
 
-  const techEvents = events.filter((e) => e.event_type === 'TECH' || e.category === 'TECHNICAL');
-  const nonTechEvents = events.filter((e) => e.event_type === 'NON_TECH' || e.category === 'NON_TECHNICAL');
+  const byDisplayOrder = (a: EventMission, b: EventMission) =>
+    (a.display_order ?? 99) - (b.display_order ?? 99);
+  // Carved out first so it cannot render twice: a TECH event by category, but
+  // it gets its own purple tier rather than a slot in the technical grid.
+  const megaEvents = events.filter((e) => e.is_mega).sort(byDisplayOrder);
+  const techEvents = events
+    .filter((e) => (e.event_type === 'TECH' || e.category === 'TECHNICAL') && !e.is_mega)
+    .sort(byDisplayOrder);
+  const nonTechEvents = events
+    .filter((e) => e.event_type === 'NON_TECH' || e.category === 'NON_TECHNICAL')
+    .sort(byDisplayOrder);
 
   const renderEventCard = (e: EventMission) => {
     const isTech = e.event_type === 'TECH' || e.category === 'TECHNICAL';
-    const accentBorder = isTech 
-      ? 'border-[#3CE7FF]/70 hover:border-[#3CE7FF] hover:shadow-[6px_6px_0px_#1E8FA3]' 
+    // Three tiers now. Purple is the prize-distribution palette, reused as-is.
+    const accentBorder = e.is_mega
+      ? 'border-[#9333EA]/70 hover:border-[#C084FC] hover:shadow-[6px_6px_0px_#23123B]'
+      : isTech
+      ? 'border-[#3CE7FF]/70 hover:border-[#3CE7FF] hover:shadow-[6px_6px_0px_#1E8FA3]'
       : 'border-[#FF3366]/70 hover:border-[#FF3366] hover:shadow-[6px_6px_0px_#B01F45]';
-    const badgeBg = isTech ? 'bg-[#3CE7FF] text-[#0D0D0F]' : 'bg-[#FF3366] text-white';
+    const badgeBg = e.is_mega
+      ? 'bg-[#9333EA] text-white'
+      : isTech
+      ? 'bg-[#3CE7FF] text-[#0D0D0F]'
+      : 'bg-[#FF3366] text-white';
 
     return (
       <div
         key={e.id}
         onClick={() => setSelectedEvent(e)}
-        className={`p-6 bg-[#1A1A1D] border-[3px] ${accentBorder} shadow-[4.5px_4.5px_0px_#000000] transition-all duration-200 hover:-translate-y-1.5 flex flex-col justify-between space-y-4 rounded-xl cursor-pointer`}
+        className={`p-6 bg-[#1A1A1D] border-[3px] ${accentBorder} shadow-[4.5px_4.5px_0px_#000000] transition-all duration-200 hover:-translate-y-1.5 flex flex-col justify-between space-y-4 rounded-xl cursor-pointer ${e.is_mega ? 'mega-card' : ''}`}
       >
         <div className="space-y-3">
           <div className="flex justify-between items-center flex-wrap gap-2">
@@ -80,6 +98,9 @@ export const WebsiteEventsPage: React.FC = () => {
                 <span className="px-2 py-0.5 bg-amber-400 text-black text-[10px] font-mono font-bold uppercase rounded border border-black">
                   ★ Single Track
                 </span>
+              )}
+              {e.is_mega && (
+                <Crown className="w-4 h-4 text-[#C084FC]" strokeWidth={2.6} aria-label="Mega event" />
               )}
             </div>
             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#141417] border border-[#3A3A3E] text-[10px] font-mono text-[#A8A8AC] rounded">
@@ -148,7 +169,9 @@ export const WebsiteEventsPage: React.FC = () => {
               navigate(`/register?mission=${e.id}`);
             }}
             className={`w-full py-2.5 px-3 font-display text-xs tracking-wider uppercase font-bold flex items-center justify-center gap-2 border-[2px] transition-all shadow-[3px_3px_0px_#000000] rounded-lg active:translate-x-0.5 active:translate-y-0.5 cursor-pointer ${
-              isTech
+              e.is_mega
+                ? 'bg-[#141417] text-[#C084FC] border-[#9333EA] hover:bg-[#9333EA] hover:text-white'
+                : isTech
                 ? 'bg-[#141417] text-[#3CE7FF] border-[#3CE7FF] hover:bg-[#3CE7FF] hover:text-[#0D0D0F]'
                 : 'bg-[#141417] text-[#FF3366] border-[#FF3366] hover:bg-[#FF3366] hover:text-white'
             }`}
@@ -255,6 +278,9 @@ export const WebsiteEventsPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Registration pass — priced from configuration, not typed in here */}
+        <RegistrationPassCard />
+
         {/* SECTION 1: TECHNICAL EVENTS */}
         {(activeTab === 'ALL' || activeTab === 'TECH') && (
           <div className="space-y-5">
@@ -283,7 +309,41 @@ export const WebsiteEventsPage: React.FC = () => {
           </div>
         )}
 
-        {/* SECTION 2: NON-TECHNICAL EVENTS */}
+        {/* SECTION 2: MEGA EVENT — its own tier, purple.
+            Shown under the TECHNICAL filter too: it is still a technical event
+            by category, and hiding it there would make it unfindable. */}
+        {(activeTab === 'ALL' || activeTab === 'TECH') && megaEvents.length > 0 && (
+          <div className="space-y-5 pt-4">
+            <div className="p-4 bg-gradient-to-r from-[#23123B]/80 via-slate-900 to-transparent border-l-4 border-[#9333EA] rounded-r-xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#23123B] border border-[#9333EA]/40 rounded-lg text-[#C084FC]">
+                  <Crown className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-display text-[#C084FC] font-bold uppercase tracking-wider flex items-center gap-2">
+                    <span>MEGA EVENT</span>
+                    <span className="text-xs font-mono font-normal bg-[#9333EA]/30 text-[#C084FC] px-2 py-0.5 rounded border border-[#9333EA]/40">
+                      {megaEvents.length} Mission
+                    </span>
+                  </h2>
+                  <p className="text-xs font-comic text-slate-400">
+                    The flagship of the symposium. Its own tier, running all day.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* One card, so it is centred and widened rather than stretched
+                across a three-column grid with two empty cells. */}
+            <div className="flex justify-center">
+              <div className="w-full max-w-2xl">
+                {megaEvents.map((e) => renderEventCard(e))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SECTION 3: NON-TECHNICAL EVENTS */}
         {(activeTab === 'ALL' || activeTab === 'NON_TECH') && (
           <div className="space-y-5 pt-4">
             <div className="p-4 bg-gradient-to-r from-rose-950/80 via-slate-900 to-transparent border-l-4 border-rose-500 rounded-r-xl flex items-center justify-between">
@@ -426,19 +486,21 @@ export const WebsiteEventsPage: React.FC = () => {
                 <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
                   <Trophy className="w-3.5 h-3.5 text-[#F5D90A]" /> PRIZE REWARDS
                 </h4>
-                <div className={`grid ${selectedEvent.prizes.third ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 sm:gap-2 text-center text-xs`}>
+                <div className={`grid ${selectedEvent.prizes.third ? 'grid-cols-3' : selectedEvent.prizes.second ? 'grid-cols-2' : 'grid-cols-1'} gap-1.5 sm:gap-2 text-center text-xs`}>
                   <div className="p-2 bg-[#222228] rounded-lg border border-[#3A3A40] flex flex-col justify-center items-center">
                     <div className="text-[10px] text-[#A8A8AC] uppercase font-mono">1ST PRIZE</div>
                     <div className="mt-1 w-full">
                       {renderPrizeContent(selectedEvent.prizes.first, 'text-[#F5D90A]')}
                     </div>
                   </div>
-                  <div className="p-2 bg-[#222228] rounded-lg border border-[#3A3A40] flex flex-col justify-center items-center">
-                    <div className="text-[10px] text-[#A8A8AC] uppercase font-mono">2ND PRIZE</div>
-                    <div className="mt-1 w-full">
-                      {renderPrizeContent(selectedEvent.prizes.second, 'text-white')}
+                  {selectedEvent.prizes.second && (
+                    <div className="p-2 bg-[#222228] rounded-lg border border-[#3A3A40] flex flex-col justify-center items-center">
+                      <div className="text-[10px] text-[#A8A8AC] uppercase font-mono">2ND PRIZE</div>
+                      <div className="mt-1 w-full">
+                        {renderPrizeContent(selectedEvent.prizes.second, 'text-white')}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   {selectedEvent.prizes.third && (
                     <div className="p-2 bg-[#222228] rounded-lg border border-[#3A3A40] flex flex-col justify-center items-center">
                       <div className="text-[10px] text-[#A8A8AC] uppercase font-mono">3RD PRIZE</div>

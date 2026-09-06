@@ -582,3 +582,429 @@ Need assistance? Contact the coordination team at zinnia2026@gcee.ac.in.
         print(f"[SMTP Error] Failed to deliver rejection email to {recipient_email}: {e}")
         return {"success": False, "status": "FAILED", "error": str(e), "recipient": recipient_email}
 
+def _strip_tags(html: str) -> str:
+    """
+    Crude HTML -> text for the plain-text alternative part.
+
+    Deliberately not a parser: these are our own templates, not arbitrary
+    input, and every multipart message needs *some* text/plain part or spam
+    filters mark it down. Block-level tags become newlines so the result reads
+    as lines rather than one run-on paragraph.
+    """
+    import re as _re
+
+    text = _re.sub(r"(?s)<(script|style).*?</\1>", "", html)
+    text = _re.sub(r"(?i)<br\s*/?>", "\n", text)
+    text = _re.sub(r"(?i)</(p|div|tr|li|h[1-6])>", "\n", text)
+    text = _re.sub(r"<[^>]+>", "", text)
+    text = (
+        text.replace("&nbsp;", " ")
+        .replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&bull;", "-")
+        .replace("&rarr;", "->")
+    )
+    text = _re.sub(r"\n{3,}", "\n\n", text)
+    return "\n".join(line.strip() for line in text.split("\n")).strip()
+
+
+def send_simple_email(to: str, subject: str, html: str, text: str = None) -> bool:
+    """
+    One-off transactional mail: no QR, no inline image, no idempotency stamp.
+
+    The passport mailer above is a 600-line template with a CID attachment and
+    a passport_sent_at guard. A login code needs none of that and must not be
+    gated by that guard — a participant logging in for the third time still
+    needs their third code — so short messages go out through here instead.
+
+    Returns True only when SMTP actually accepted the message.
+    """
+    recipient = (to or "").strip()
+    if not recipient:
+        print("[SMTP Error] send_simple_email called with no recipient.")
+        return False
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = SMTP_FROM
+    msg["To"] = recipient
+    msg.attach(MIMEText(text if text is not None else _strip_tags(html), "plain"))
+    msg.attach(MIMEText(html, "html"))
+
+    # Same rule as the passport mailer: missing credentials is a failure, not a
+    # silent success. ALLOW_EMAIL_SIMULATION only changes the log line.
+    if not SMTP_USER or not SMTP_PASS or SMTP_USER.startswith("your_"):
+        if os.getenv("ALLOW_EMAIL_SIMULATION", "false").lower() == "true":
+            print(f"[Email Sim] SMTP not configured - would have sent '{subject}' to {recipient}.")
+        else:
+            print(f"[SMTP Error] SMTP not configured. '{subject}' not sent to {recipient}.")
+        return False
+
+    try:
+        if SMTP_PORT == 465:
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"[SMTP Error] Failed to deliver '{subject}' to {recipient}: {e}")
+        return False
+
+
+# ==============================================================================
+# REGISTRATION EMAIL — UserID + master QR + WhatsApp group (EMAIL #1, §4.1)
+# ==============================================================================
+#
+# Sent the moment the participant proves their email works (the OTP step that
+# now sits between the details form and payment), not at payment time. Two
+# reasons: a wrong address is caught before any money moves, and a participant
+# who forgets to copy their UserID has it in their inbox immediately.
+#
+# THE MASTER QR ENCODES THE USERID AS PLAIN TEXT — nothing else. Any phone
+# camera shows "ZIN26-0142". The coordinator's identification app (a separate
+# system) resolves that ID to the live record: name, food preference, events,
+# team. Because the QR is a pointer and not a snapshot, it never goes stale as
+# the participant registers events or forms teams. The earlier design embedded
+# food + event codes in a signed payload, which went stale on the first change.
+
+PARTICIPANTS_WHATSAPP_GROUP_URL = os.getenv(
+    "WHATSAPP_GROUP_URL",
+    "https://chat.whatsapp.com/DthX9rMcTk9BgLh3gQOHx6?s=sw&p=a&mlu=0&ilr=4",
+).strip()
+
+
+def generate_master_qr_email_html(
+    name: str,
+    user_id: str,
+    login_url: str,
+    whatsapp_url: str,
+    qr_cid: str = "cid:master_qr",
+) -> str:
+    """
+    EMAIL #2 — the confirmation, sent only after the treasurer approves the
+    payment. Comic-styled ID card: big UserID, the master QR, the WhatsApp CTA,
+    the login link. Everything here is released by that approval and by nothing
+    earlier; the participant has already had EMAIL #1 and has been picking
+    events since they submitted their payment reference.
+    """
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Your Zinnia 2026 UserID</title>
+    </head>
+    <body style="margin:0;padding:0;background-color:#08090A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#EEEEEA;">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#08090A;padding:30px 10px;">
+        <tr><td align="center">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:560px;background-color:#111214;border:2px solid #23262D;border-radius:16px;overflow:hidden;">
+
+            <tr>
+              <td style="background:linear-gradient(135deg,#0FA9C6 0%,#1570EF 100%);padding:24px 20px;text-align:center;">
+                <div style="display:inline-block;background-color:#E5BD00;color:#08090A;font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:4px;">
+                  YOU ARE REGISTERED
+                </div>
+                <h1 style="margin:6px 0 0 0;font-size:28px;font-weight:900;color:#FFFFFF;letter-spacing:1px;">ZINNIA 2026</h1>
+                <p style="margin:6px 0 0 0;font-size:13px;color:#EEEEEA;">Government College of Engineering, Erode</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:24px 20px 8px 20px;">
+                <p style="margin:0 0 8px 0;font-size:16px;">Hello <strong style="color:#E5BD00;">{name}</strong>,</p>
+                <p style="margin:0 0 18px 0;font-size:13px;color:#B8B8B2;line-height:1.5;">
+                  Your payment has been verified and your registration is fully confirmed. Keep this
+                  mail — your pass for the day is below.
+                </p>
+
+                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#08090A;border:2px solid #E5BD00;border-radius:12px;text-align:center;">
+                  <tr><td style="padding:18px 16px 6px 16px;">
+                    <div style="font-size:11px;font-family:monospace;color:#B8B8B2;font-weight:700;letter-spacing:2px;text-transform:uppercase;">YOUR USERID</div>
+                    <div style="font-size:34px;font-family:monospace;font-weight:900;color:#E5BD00;letter-spacing:3px;margin-top:6px;">{user_id}</div>
+                    <div style="font-size:11px;color:#B8B8B2;margin-top:6px;">This is how you log in, and how teammates add you to their team.</div>
+                  </td></tr>
+                  <tr><td style="padding:14px 16px 18px 16px;">
+                    <div style="font-size:11px;font-family:monospace;color:#0FA9C6;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;">MASTER QR &bull; YOUR ID CARD</div>
+                    <div style="display:inline-block;background-color:#ffffff;padding:12px;border-radius:12px;">
+                      <img src="{qr_cid}" alt="Master QR — {user_id}" width="200" height="200" style="display:block;width:200px;height:200px;" />
+                    </div>
+                    <div style="font-size:11px;color:#B8B8B2;margin-top:10px;line-height:1.5;">
+                      Show this at the gate, at every event desk and at the food counter.<br/>
+                      Scanning it reveals your UserID; coordinators use it to look up your events and meal.
+                    </div>
+                    <div style="font-size:11px;color:#E5BD00;margin-top:10px;line-height:1.5;font-weight:700;">
+                      This QR is your pass for the whole day. It stays the same as you add events —
+                      you will not be sent a new one. Save the attached PNG to your phone.
+                    </div>
+                    <div style="font-size:11px;color:#0FA9C6;margin-top:6px;line-height:1.5;font-weight:700;">
+                      Your payment is verified, so this pass is active and will open the gate.
+                    </div>
+                  </td></tr>
+                </table>
+
+                <div style="text-align:center;margin:22px 0 10px 0;">
+                  <a href="{whatsapp_url}" style="display:inline-block;background-color:#25D366;color:#08090A;font-weight:800;font-size:13px;text-decoration:none;padding:12px 22px;border-radius:8px;text-transform:uppercase;font-family:monospace;">
+                    JOIN THE PARTICIPANTS WHATSAPP GROUP &rarr;
+                  </a>
+                  <div style="font-size:11px;color:#B8B8B2;margin-top:8px;">All schedule changes and reminders go there first.</div>
+                </div>
+
+                <div style="text-align:center;margin:10px 0 20px 0;">
+                  <a href="{login_url}" style="display:inline-block;background-color:#0FA9C6;color:#08090A;font-weight:800;font-size:13px;text-decoration:none;padding:12px 22px;border-radius:8px;text-transform:uppercase;font-family:monospace;">
+                    LOG IN &amp; PICK YOUR EVENTS &rarr;
+                  </a>
+                </div>
+
+                <div style="background-color:#17181C;border-left:3px solid #0FA9C6;padding:12px 14px;border-radius:4px;">
+                  <div style="font-size:11px;font-weight:700;color:#0FA9C6;text-transform:uppercase;margin-bottom:4px;">NOTHING LEFT TO DO</div>
+                  <div style="font-size:12px;color:#B8B8B2;line-height:1.6;">
+                    Your place is secured. If you have not picked all your events yet you still can —
+                    the catalog stays open on your dashboard until each event closes.
+                  </div>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="background-color:#08090A;padding:16px 20px;text-align:center;border-top:1px solid #23262D;">
+                <p style="margin:0;font-size:10px;color:#71717A;font-family:monospace;">
+                  ZINNIA 2026 &bull; Department of Computer Science and Engineering<br/>
+                  Government College of Engineering, Erode &bull; Support: zinnia2026@gcee.ac.in
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </body>
+    </html>
+    """
+
+
+def send_master_qr_email(participant: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    EMAIL #2 — the confirmation, sent ONLY from treasurer_review_payment() on
+    APPROVE. This is the one and only release point for the registration code,
+    the master QR entry pass and the WhatsApp group link; nothing earlier in
+    the flow emits any of the three.
+
+    Multipart/related so the QR travels as an inline CID image and renders in
+    clients that strip remote images. Idempotency is deliberately NOT enforced
+    here: re-approving is exactly how a participant re-sends themselves the ID
+    they forgot to copy.
+    """
+    recipient = (participant.get("email") or "").strip()
+    user_id = (participant.get("user_id") or "").strip().upper()
+    name = participant.get("name") or "Participant"
+
+    if not recipient or not user_id:
+        return {"success": False, "status": "SKIPPED", "error": "Missing email or UserID."}
+
+    if not SMTP_USER or not SMTP_PASS or SMTP_USER.startswith("your_"):
+        message = f"SMTP is not configured. Master QR email was not sent to {recipient}."
+        simulated = os.getenv("ALLOW_EMAIL_SIMULATION", "false").lower() == "true"
+        print(f"[{'Email Sim' if simulated else 'SMTP Error'}] {message}")
+        return {
+            "success": False,
+            "status": "SIMULATED_NOT_SENT" if simulated else "FAILED",
+            "recipient": recipient,
+            "error": message,
+        }
+
+    login_url = f"{APP_BASE_URL}/participant/login?user_id={user_id}"
+    whatsapp_url = PARTICIPANTS_WHATSAPP_GROUP_URL
+
+    # The QR content is the UserID and only the UserID.
+    png_bytes = generate_qr_png_bytes(user_id)
+
+    msg = MIMEMultipart("related")
+    msg["Subject"] = f"Payment confirmed — your Zinnia 2026 UserID is {user_id}, master QR inside"
+    msg["From"] = SMTP_FROM
+    msg["To"] = recipient
+
+    text_content = f"""
+ZINNIA 2026 - PAYMENT CONFIRMED
+Government College of Engineering, Erode
+
+Hello {name},
+
+Your payment has been verified and your registration is fully confirmed.
+
+YOUR USERID: {user_id}
+(This is how you log in, and how teammates add you to their team.)
+
+Your master QR is attached to this email. Show it at the gate, at every
+event desk and at the food counter. Scanning it reveals your UserID.
+
+This QR is your pass for the whole day. It stays the same as you add
+events - you will not be sent a new one. Save the attached PNG to your
+phone. Your payment is verified, so this pass is active and will open
+the gate.
+
+Join the participants WhatsApp group:
+{whatsapp_url}
+
+Log in to your dashboard:
+{login_url}
+
+Nothing is left to do. If you have not picked all your events yet you
+still can - the catalog stays open on your dashboard until each event
+closes.
+    """
+
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(text_content, "plain", "utf-8"))
+    alt.attach(
+        MIMEText(
+            generate_master_qr_email_html(name, user_id, login_url, whatsapp_url),
+            "html",
+            "utf-8",
+        )
+    )
+    msg.attach(alt)
+
+    qr_image = MIMEImage(png_bytes, "png")
+    qr_image.add_header("Content-ID", "<master_qr>")
+    qr_image.add_header("Content-Disposition", "inline", filename=f"zinnia2026-{user_id}.png")
+    msg.attach(qr_image)
+
+    # Same PNG again as a plain attachment. Inline CID images render in the
+    # body but many clients do not list them for download; the attachment is
+    # the copy that saves to the phone gallery and works at the gate offline.
+    qr_file = MIMEImage(png_bytes, "png")
+    qr_file.add_header(
+        "Content-Disposition", "attachment", filename=f"zinnia2026-master-qr-{user_id}.png"
+    )
+    msg.attach(qr_file)
+
+    try:
+        if SMTP_PORT == 465:
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg)
+        print(f"[Email] Master QR sent to {recipient} for {user_id}")
+        return {"success": True, "status": "SENT", "recipient": recipient}
+    except Exception as e:
+        print(f"[SMTP Error] Master QR email to {recipient} failed: {e}")
+        return {"success": False, "status": "FAILED", "recipient": recipient, "error": str(e)}
+
+
+def send_registration_complete_email(participant: Dict[str, Any]) -> bool:
+    """
+    EMAIL #1 — sent the moment the payment reference and screenshot are
+    submitted. Registration is COMPLETE at that point: the account exists, the
+    dashboard is open and all nine events are selectable straight away.
+
+    Deliberately not a "pending verification, check your status" message. The
+    only things still to come are the master QR and the WhatsApp group link,
+    which the treasurer's approval releases in EMAIL #2
+    (send_master_qr_email). Nothing here blocks the participant.
+
+    This message CARRIES THE USERID, because the UserID is the participant's
+    only login credential — login by email address was removed. Without it in
+    this email they could not get back into the dashboard this email is sending
+    them to. The master QR and the WhatsApp group link are still held back for
+    EMAIL #2.
+    """
+    recipient = (participant.get("email") or "").strip()
+    name = participant.get("name") or "Participant"
+    user_id = (participant.get("user_id") or "").strip().upper()
+    if not recipient:
+        return False
+
+    login_url = f"{APP_BASE_URL}/participant/login?user_id={user_id}"
+    events_url = f"{APP_BASE_URL}/participant/dashboard"
+
+    html = f"""
+    <div style="font-family:Arial,sans-serif;background:#08090A;color:#EEEEEA;padding:24px;">
+      <h2 style="color:#E5BD00;margin:0 0 8px 0;">You&#39;re registered for Zinnia 2026!</h2>
+      <p style="color:#B8B8B2;">Hello {name}, your registration is complete and your payment
+      reference has been recorded. Nothing else is needed from you to secure your place.</p>
+
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background:#08090A;
+      border:2px solid #E5BD00;border-radius:12px;text-align:center;margin:20px 0;">
+        <tr><td style="padding:18px 16px;">
+          <div style="font-size:11px;font-family:monospace;color:#B8B8B2;font-weight:700;
+          letter-spacing:2px;text-transform:uppercase;">YOUR USERID</div>
+          <div style="font-size:32px;font-family:monospace;font-weight:900;color:#E5BD00;
+          letter-spacing:3px;margin-top:6px;">{user_id}</div>
+          <div style="font-size:11px;color:#B8B8B2;margin-top:8px;line-height:1.5;">
+            This is how you log in, and how teammates add you to their team.<br/>
+            Keep this email &mdash; you need this ID to get back in.
+          </div>
+        </td></tr>
+      </table>
+
+      <p style="color:#B8B8B2;"><strong style="color:#EEEEEA;">Pick your events now.</strong>
+      All nine events are open to you immediately &mdash; log in to browse the catalog, create or
+      join teams, and register for the events you want. Popular events fill up, so it is worth
+      doing this early.</p>
+
+      <p style="margin:20px 0;">
+        <a href="{events_url}" style="background:#0FA9C6;color:#08090A;font-weight:bold;
+        text-decoration:none;padding:12px 22px;display:inline-block;">Choose your events</a>
+      </p>
+
+      <p style="color:#B8B8B2;">Log in any time with your UserID at
+      <a href="{login_url}" style="color:#0FA9C6;font-weight:bold;">{APP_BASE_URL}/participant/login</a>.
+      There is no password: we email a 6-digit code to this address to confirm it is you.</p>
+
+      <p style="color:#71767B;font-size:13px;border-top:1px solid #23262D;padding-top:14px;
+      margin-top:22px;">One thing still to come: once the treasurer confirms your payment we will
+      email your master QR entry pass and the participants&#39; WhatsApp group link. Both will also
+      appear on your dashboard. Until then you can carry on registering for events as normal.</p>
+    </div>
+    """
+
+    text_content = f"""
+ZINNIA 2026 - YOU'RE REGISTERED!
+Government College of Engineering, Erode
+
+Hello {name},
+
+Your registration is complete and your payment reference has been recorded.
+Nothing else is needed from you to secure your place.
+
+YOUR USERID: {user_id}
+(This is how you log in, and how teammates add you to their team. Keep this
+email - you need this ID to get back in.)
+
+PICK YOUR EVENTS NOW
+All nine events are open to you immediately. Log in to browse the catalog,
+create or join teams, and register for the events you want. Popular events
+fill up, so it is worth doing this early.
+
+Choose your events: {events_url}
+
+Log in any time with your UserID at {APP_BASE_URL}/participant/login
+There is no password: we email a 6-digit code to this address to confirm it
+is you.
+
+Still to come: once the treasurer confirms your payment we will email your
+master QR entry pass and the participants' WhatsApp group link. Both will also
+appear on your dashboard. Until then you can carry on registering for events
+as normal.
+    """
+
+    return send_simple_email(
+        to=recipient,
+        subject="You're registered for Zinnia 2026 - pick your events now",
+        html=html,
+        text=text_content,
+    )

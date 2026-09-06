@@ -797,6 +797,16 @@ body {
   --pink-inner: #D51F55;
   --pink-dark-ink: #090A0B;
 
+  /* MEGA tier. Both values are lifted straight from the prize-distribution
+     theme in components/ui/EventScheduleView.tsx (border #9333EA, accent
+     #C084FC) — no new shade is introduced. They sit in the same light-main /
+     darker-shadow relationship the cyan and pink tiers already use. */
+  --purple: #C084FC;
+  --purple-dark: #9333EA;
+  --purple-shadow: #9333EA;
+  --purple-inner: #C084FC;
+  --purple-dark-ink: #090A0B;
+
   position: relative;
   width: 100%;
   min-height: 320px;
@@ -820,6 +830,13 @@ body {
   --card-shadow: var(--pink-shadow);
   --card-inner: var(--pink-inner);
   --card-dark: var(--pink-dark-ink);
+}
+
+.comic-card-wrapper.mega-tier {
+  --card-main: var(--purple);
+  --card-shadow: var(--purple-shadow);
+  --card-inner: var(--purple-inner);
+  --card-dark: var(--purple-dark-ink);
 }
 
 .comic-card-wrapper:hover {
@@ -1413,3 +1430,256 @@ body {
   scrollbar-width: none !important;
 }
 
+
+/* =========================================================================
+   COMIC CTA TONE MODIFIERS
+   .comic-cta-front ships cyan-only (hero "REGISTER FOR ZINNIA"). The
+   participant flow needs the same button in the pink and yellow accents for
+   destructive and warning actions, so these add the two missing fills using
+   the existing palette hexes. Hover keeps the established yellow<->cyan swap.
+   ========================================================================= */
+
+.comic-cta-front.tone-pink {
+  background: #D51F55;
+  color: #EEEEEA;
+}
+
+.comic-cta-wrapper:hover .comic-cta-front.tone-pink {
+  background-color: #E5BD00;
+  color: #090A0B;
+}
+
+.comic-cta-front.tone-yellow {
+  background: #E5BD00;
+  color: #090A0B;
+}
+
+.comic-cta-wrapper:hover .comic-cta-front.tone-yellow {
+  background-color: #0FA9C6;
+  color: #090A0B;
+}
+
+/* Disabled CTAs must not appear to lift on hover. */
+.comic-cta-front:disabled {
+  cursor: not-allowed;
+}
+
+.comic-cta-wrapper:hover .comic-cta-front:disabled {
+  transform: none;
+}
+
+/* =========================================================================
+   FLUID COMIC FRAME
+   The event cards are roughly the shape of the frame's viewBox, so stretching
+   the ink with preserveAspectRatio="none" is imperceptible there. A tall form
+   panel is not — the non-uniform scale would render the top and bottom lines
+   noticeably thicker than the sides. Pinning the stroke width keeps the ink
+   even at any panel height. Scoped to .comic-frame-fluid so the existing event
+   cards and schedule view are untouched.
+   ========================================================================= */
+
+.comic-frame-fluid > .card-svg-frame path {
+  vector-effect: non-scaling-stroke;
+}
+
+/* =========================================================================
+   OUTLINED CYAN NAV BUTTON (secondary CTA)
+   .comic-button is white-outlined (nav links) and .comic-button-cyan is solid
+   cyan (the primary REGISTER). LOGIN needs to sit between the two: outlined so
+   REGISTER stays dominant, but cyan so it still reads as an action rather than
+   another nav link. Geometry is inherited from .front-box untouched.
+   ========================================================================= */
+
+.front-box.outline-cyan {
+  border-color: #0FA9C6;
+  color: #0FA9C6;
+}
+
+.comic-button:hover .front-box.outline-cyan {
+  background: #0FA9C6;
+  color: #090A0B;
+}
+
+/* =========================================================================
+   MAP RADAR PING
+   Click effect for the location map: a cyan ring radiates from the click
+   point while the frame glows, then the location opens in Google Maps.
+   Pure CSS animation, no library.
+   ========================================================================= */
+
+.map-frame {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.map-frame.is-pinged {
+  border-color: #0FA9C6;
+  box-shadow: 0 0 0 2px #0FA9C6, 0 0 28px rgba(15, 169, 198, 0.5);
+}
+
+.map-ping {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border: 2px solid #0FA9C6;
+  border-radius: 9999px;
+  pointer-events: none;
+  animation: map-ping-out 640ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+@keyframes map-ping-out {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.9;
+  }
+  70% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(14);
+    opacity: 0;
+  }
+}
+
+/* Same feedback without the motion for anyone who asked for less of it. */
+@media (prefers-reduced-motion: reduce) {
+  .map-ping {
+    animation: map-ping-fade 400ms ease-out forwards;
+  }
+
+  @keyframes map-ping-fade {
+    0% {
+      transform: scale(6);
+      opacity: 0.6;
+    }
+    100% {
+      transform: scale(6);
+      opacity: 0;
+    }
+  }
+}
+
+/* =========================================================================
+   INTERNAL PADDING SCALE FOR BORDERED CONTAINERS
+   One scale, two tiers. The tiers exist because the two border types have
+   different geometry, not as a style preference:
+   ========================================================================= */
+
+/* TIER A — straight-border boxes (1-2px solid borders).
+   The border sits exactly on the edge, so a flat inset works: 16px mobile,
+   24px desktop. This is the default for any bordered box. */
+.pad-box {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .pad-box {
+    padding: 1.5rem;
+  }
+}
+
+/* Nested sub-boxes inside a .pad-box, one step down so the nesting reads. */
+.pad-box-sm {
+  padding: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .pad-box-sm {
+    padding: 1.25rem;
+  }
+}
+
+/* TIER B — sketchy <ComicFrame/> panels.
+   The frame is an SVG stretched with preserveAspectRatio="none", so its inner
+   print line lands at ~4.55% of the panel's WIDTH rather than a fixed pixel
+   inset: ~16px on a 350px card but ~50px on a full-width one. A flat padding
+   therefore cannot clear the ink at every size, which is what made some cards
+   look cramped and others roomy. max() tracks the ink: the rem floor covers
+   narrow panels, the percentage takes over as the panel widens.
+   Vertical is a fixed 24/32px — the ink's vertical inset is ~3.2% of height,
+   and 32px clears panels up to ~1000px tall (the tallest here is the
+   registration form at ~900px). */
+.pad-panel {
+  padding-block: 1.5rem;
+  padding-inline: max(1.25rem, 5.5%);
+}
+
+@media (min-width: 640px) {
+  .pad-panel {
+    padding-block: 2rem;
+    padding-inline: max(1.75rem, 5.5%);
+  }
+}
+
+/* Event-card content: same inline rule as .pad-panel, but the top inset has to
+   clear the rotated sticky-note number tag (47px tall) that overlaps the
+   card's top-left corner. */
+.pad-card-face {
+  padding-block: 3rem 1.75rem;
+  padding-inline: max(1.25rem, 5.5%);
+}
+
+@media (min-width: 640px) {
+  .pad-card-face {
+    padding-block: 3.5rem 2rem;
+  }
+}
+
+/* Even vertical rhythm between blocks inside a container. Used instead of
+   ad-hoc space-y-* so every card breathes the same way. */
+.stack-box > * + * {
+  margin-top: 1rem;
+}
+
+.stack-box-lg > * + * {
+  margin-top: 1.5rem;
+}
+
+/* List rows inside an already-padded container: the container owns the inline
+   inset, the row owns a consistent vertical one. First/last rows lose the
+   border so they never look cramped against the container edge. */
+.row-list > * {
+  padding-block: 0.75rem;
+}
+
+.row-list > *:first-child {
+  padding-top: 0;
+}
+
+.row-list > *:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+
+/* =========================================================================
+   MEGA EVENT — the flagship card (Gadget Codes)
+   Same cyan ink as every technical card; what changes is a yellow glow on the
+   frame, a slightly stronger lift, and the crown sticker in the top-right.
+   No new palette, no new layout.
+   ========================================================================= */
+
+/* The glow was yellow when MEGA EVENT was a sticker on a cyan card. The tier
+   is purple now, and the glow follows the prize-distribution theme's own
+   rgba(147, 51, 234, ...) / rgba(192, 132, 252, ...) pair. */
+.comic-card-wrapper.mega .card-svg-frame .card-main {
+  filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.55));
+}
+
+.comic-card-wrapper.mega:hover {
+  transform: translateY(-7px) scale(1.035) rotate(0deg);
+}
+
+.comic-card-wrapper.mega:hover .card-svg-frame .card-main {
+  filter: drop-shadow(0 0 14px rgba(192, 132, 252, 0.75));
+}
+
+/* Events page (rectangular cards) */
+.mega-card {
+  border-color: #9333ea !important;
+  box-shadow: 4.5px 4.5px 0 #000, 0 0 22px rgba(147, 51, 234, 0.28);
+}
+
+.mega-card:hover {
+  box-shadow: 6px 6px 0 #23123b, 0 0 30px rgba(192, 132, 252, 0.45) !important;
+}

@@ -104,7 +104,6 @@ export const EventScheduleView: React.FC<{
           'Prizes will be awarded according to the official results.',
           'Maintain discipline throughout the ceremony.'
         ],
-        prizes: { first: '₹30,000+ Cash Prize', second: 'Merit Shield', third: 'Trophy' },
         coordinators: [{ name: 'Symposium Directorate', role: 'Directorate' }],
         status: 'AVAILABLE',
         icon_name: 'trophy'
@@ -579,7 +578,7 @@ export const EventScheduleView: React.FC<{
                     <Users className="w-3 h-3 text-[#F5D90A] shrink-0" /> TEAM SIZE
                   </div>
                   <div className="text-white font-bold mt-0.5 text-[11px] sm:text-xs leading-snug break-words">
-                    {selectedEventModal.team_size_min}{selectedEventModal.team_size_min !== selectedEventModal.team_size_max ? ` - ${selectedEventModal.team_size_max}` : ''} Members
+                    {selectedEventModal.team_size_max > 0 ? `${selectedEventModal.team_size_min}${selectedEventModal.team_size_min !== selectedEventModal.team_size_max ? ` - ${selectedEventModal.team_size_max}` : ''} Members` : 'Open to all registered participants'}
                   </div>
                 </div>
                 <div className="p-2 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
@@ -634,19 +633,21 @@ export const EventScheduleView: React.FC<{
                 <h4 className="font-mono text-[11px] text-[#F5D90A] uppercase tracking-wider font-bold flex items-center gap-1.5">
                   <Trophy className="w-3 h-3 text-[#F5D90A]" /> PRIZE REWARDS
                 </h4>
-                <div className={`grid ${selectedEventModal.prizes.third ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5 sm:gap-2 text-center text-xs`}>
+                <div className={`grid ${selectedEventModal.prizes.third ? 'grid-cols-3' : selectedEventModal.prizes.second ? 'grid-cols-2' : 'grid-cols-1'} gap-1.5 sm:gap-2 text-center text-xs`}>
                   <div className="p-1.5 sm:p-2 bg-[#222228] rounded-lg border border-[#3A3A40] flex flex-col justify-center items-center">
                     <div className="text-[9px] text-[#A8A8AC] uppercase font-mono">1ST PRIZE</div>
                     <div className="mt-0.5 w-full">
                       {renderPrizeContent(selectedEventModal.prizes.first, 'text-[#F5D90A]')}
                     </div>
                   </div>
-                  <div className="p-1.5 sm:p-2 bg-[#222228] rounded-lg border border-[#3A3A40] flex flex-col justify-center items-center">
-                    <div className="text-[9px] text-[#A8A8AC] uppercase font-mono">2ND PRIZE</div>
-                    <div className="mt-0.5 w-full">
-                      {renderPrizeContent(selectedEventModal.prizes.second, 'text-white')}
+                  {selectedEventModal.prizes.second && (
+                    <div className="p-1.5 sm:p-2 bg-[#222228] rounded-lg border border-[#3A3A40] flex flex-col justify-center items-center">
+                      <div className="text-[9px] text-[#A8A8AC] uppercase font-mono">2ND PRIZE</div>
+                      <div className="mt-0.5 w-full">
+                        {renderPrizeContent(selectedEventModal.prizes.second, 'text-white')}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   {selectedEventModal.prizes.third && (
                     <div className="p-1.5 sm:p-2 bg-[#222228] rounded-lg border border-[#3A3A40] flex flex-col justify-center items-center">
                       <div className="text-[9px] text-[#A8A8AC] uppercase font-mono">3RD PRIZE</div>

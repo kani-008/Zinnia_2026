@@ -22,7 +22,7 @@ const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) || '').re
 const STORAGE_KEYS = {
   TEAMS: 'zin26_live_teams_v2',
   MEMBERS: 'zin26_live_members_v2',
-  EVENTS: 'zin26_live_events_v9',
+  EVENTS: 'zin26_live_events_v10',
   REGISTRATIONS: 'zin26_live_registrations_v2',
   ATTENDANCE: 'zin26_live_attendance_v2',
   CURRENT_TEAM: 'zin26_current_team_v2'
@@ -41,7 +41,7 @@ class ZinniaStore {
 
   private cleanLegacyStorage() {
     try {
-      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1', 'zin26_live_events_v2', 'zin26_live_events_v3', 'zin26_live_events_v4', 'zin26_live_events_v5', 'zin26_live_events_v6', 'zin26_live_events_v7', 'zin26_live_events_v8'].forEach(k => {
+      ['zin26_participants_v3', 'zin26_attendance_v3', 'zin26_registrations_v3', 'zin26_live_participants_v1', 'zin26_live_events_v2', 'zin26_live_events_v3', 'zin26_live_events_v4', 'zin26_live_events_v5', 'zin26_live_events_v6', 'zin26_live_events_v7', 'zin26_live_events_v8', 'zin26_live_events_v9'].forEach(k => {
         localStorage.removeItem(k);
       });
       Object.keys(localStorage).forEach(k => {
@@ -195,8 +195,10 @@ class ZinniaStore {
         .order('code', { ascending: true });
 
       if (!eErr && dbEvents && dbEvents.length > 0) {
-        const currentEvents = this.getStorage<EventMission[]>(STORAGE_KEYS.EVENTS, OFFICIAL_MISSIONS);
-        const mergedEvents = currentEvents.map(base => {
+        // OFFICIAL_MISSIONS is the catalog of record; the DB only overlays live
+        // fields (status, venue, timings). Starting from the cache instead would
+        // pin whatever an older build had stored.
+        const mergedEvents = OFFICIAL_MISSIONS.map(base => {
           const matched = dbEvents.find(db => 
             (db.code && db.code.toString().padStart(2, '0') === base.code) ||
             (db.id && db.id.toLowerCase() === base.id.toLowerCase()) ||

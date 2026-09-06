@@ -5,3 +5,5 @@ export * from './Badge';
 export * from './MissionCard';
 export * from './PageHeader';
 export * from './EmptyState';
+export * from './ComicFrame';
+export * from './comic';

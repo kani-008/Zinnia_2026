@@ -62,6 +62,29 @@ class AdminController:
     @staticmethod
     def get_payments():
         status_filter = request.args.get("status", "").upper()
+
+        # Participant model (zin26). ?model=participant&status=PENDING|APPROVED|REJECTED
+        if request.args.get("model", "").lower() == "participant":
+            from services import zin26_db as zdb
+            q = "select=id,user_id,amount,txn_ref,status,reject_reason,screenshot_url,approved_at,approved_by,created_at&order=created_at.desc"
+            if status_filter in ("PENDING", "APPROVED", "REJECTED"):
+                q += f"&status=eq.{status_filter}"
+            rows = [r for r in zdb.select("payments", q) if r.get("txn_ref")]
+            ids = list({r["user_id"] for r in rows})
+            people = {}
+            if ids:
+                people = {p["user_id"]: p for p in zdb.select(
+                    "participants", f"select=user_id,name,email,phone,college,master_qr_token,payment_status&user_id=in.({','.join(ids)})")}
+            out = []
+            for r in rows:
+                p = people.get(r["user_id"], {})
+                out.append({
+                    **r,
+                    "name": p.get("name"), "email": p.get("email"), "phone": p.get("phone"),
+                    "college": p.get("college"), "registration_id": p.get("master_qr_token"),
+                    "screenshot_signed_url": zdb.sign_file_url(r.get("screenshot_url") or "", 3600),
+                })
+            return jsonify({"success": True, "model": "participant", "payments": out}), 200
         from services.payment_service import get_pending_payments_service
         pending_data = get_pending_payments_service()
         pending_list = pending_data.get("payments", [])
@@ -93,6 +116,19 @@ class AdminController:
         admin_user = getattr(g, "admin", None)
         admin_name = admin_user.get("name") if admin_user else (data.get("admin_name") or "Treasurer")
 
+        # Participant model (zin26): keyed by user_id / registration_id / payment_id.
+        if data.get("user_id") or data.get("registration_id") or data.get("payment_id"):
+            from services.participant_service import treasurer_review_payment
+            res = treasurer_review_payment(
+                user_id=str(data.get("user_id", "")),
+                registration_id=str(data.get("registration_id", "")),
+                payment_id=str(data.get("payment_id", "")),
+                action="APPROVE",
+                admin_name=admin_name,
+                admin_id=str((admin_user or {}).get("id") or (admin_user or {}).get("admin_id") or (admin_user or {}).get("sub") or ""),
+            )
+            return jsonify(res), (200 if res.get("success") else 400)
+
         if not team_id:
             return jsonify({"success": False, "error": "Missing team_id parameter."}), 400
 
@@ -108,6 +144,18 @@ class AdminController:
         reason = data.get("reason") or data.get("rejection_reason") or "Payment verification rejected by treasurer."
         admin_user = getattr(g, "admin", None)
         admin_name = admin_user.get("name") if admin_user else (data.get("admin_name") or "Treasurer")
+
+        if data.get("user_id") or data.get("registration_id") or data.get("payment_id"):
+            from services.participant_service import treasurer_review_payment
+            res = treasurer_review_payment(
+                user_id=str(data.get("user_id", "")),
+                registration_id=str(data.get("registration_id", "")),
+                payment_id=str(data.get("payment_id", "")),
+                action="REJECT",
+                reason=reason,
+                admin_name=admin_name,
+            )
+            return jsonify(res), (200 if res.get("success") else 400)
 
         if not team_id:
             return jsonify({"success": False, "error": "Missing team_id parameter."}), 400

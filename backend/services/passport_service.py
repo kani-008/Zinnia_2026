@@ -20,8 +20,8 @@ from dotenv import load_dotenv
 load_dotenv()
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://aiefrwricgwchvapinlc.supabase.co").rstrip("/")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY", "sb_publishable_jP4KLIgOGvI-QIWVEBzznA_5b_FJvOL")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY", "")
 QR_SIGNING_SECRET = os.getenv("QR_SIGNING_SECRET")
 if not QR_SIGNING_SECRET:
     raise RuntimeError("CRITICAL SECURITY ERROR: QR_SIGNING_SECRET environment variable is missing!")

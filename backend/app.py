@@ -19,6 +19,7 @@ from flask_cors import CORS
 
 from routes.passport_routes import passport_bp
 from routes.registration_routes import registration_bp
+from routes.participant_routes import participant_bp
 from routes.payment_routes import payment_bp
 from routes.admin_routes import admin_bp
 from middleware.error_handler import register_error_handlers
@@ -53,6 +54,27 @@ def check_db_connection():
     except Exception as e:
         print(f"[DB Error] Database connection failed: {type(e).__name__} - {str(e)}")
 
+def check_zin26_schema():
+    """
+    Report whether the new-model schema is reachable.
+
+    The likeliest failure in Phases 3-6 is not a code bug but an unapplied
+    migration or a schema missing from Supabase's exposed list, which otherwise
+    only shows up as an opaque 500 on the first registration.
+    """
+    try:
+        from services.zin26_db import zin26_available
+        ok, detail = zin26_available()
+    except Exception as e:
+        print(f"[zin26] Schema check skipped: {type(e).__name__} - {e}")
+        return
+    if ok:
+        print("[zin26] New-model schema reachable.")
+        return
+    print(f"[zin26 Error] New-model schema NOT reachable: {detail}")
+    print("[zin26 Error] Participant routes (/api/participant/*) will fail until this is fixed.")
+
+
 def create_app() -> Flask:
     """Application Factory creating and configuring the Flask app instance."""
     app = Flask(__name__)
@@ -72,11 +94,13 @@ def create_app() -> Flask:
     # 3. Register Modular Route Blueprints
     app.register_blueprint(passport_bp)
     app.register_blueprint(registration_bp)
+    app.register_blueprint(participant_bp)
     app.register_blueprint(payment_bp)
     app.register_blueprint(admin_bp)
 
     # 4. Check DB Connection
     check_db_connection()
+    check_zin26_schema()
 
     return app
 

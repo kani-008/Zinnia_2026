@@ -76,6 +76,10 @@ export const WebsiteNavbar: React.FC = () => {
       navigate('/passport');
     } else if (target === 'contact') {
       navigate('/contact');
+    } else if (target === 'login') {
+      // Participant auth is UserID + emailed OTP; /login is aliased to this
+      // in App.tsx for anyone who types it directly.
+      navigate('/participant/login');
     } else if (target === 'register') {
       navigate('/register');
     }
@@ -171,6 +175,17 @@ export const WebsiteNavbar: React.FC = () => {
               </button>
             </MagneticElement>
 
+            {/* LOGIN TAB — secondary action: cyan OUTLINE, dark fill, so the
+                solid REGISTER beside it stays the dominant CTA. */}
+            <MagneticElement strength={0.3} onClick={() => handleNavClick('login', 'LOGIN!')}>
+              <button className="comic-button" type="button">
+                <span className="back-box-cyan" />
+                <span className="front-box outline-cyan">
+                  <span>LOGIN</span>
+                </span>
+              </button>
+            </MagneticElement>
+
             {/* REGISTER TAB */}
             <MagneticElement strength={0.35} onClick={() => handleNavClick('register', 'REGISTER!')}>
               <button className="comic-button-cyan" type="button">
@@ -256,6 +271,18 @@ export const WebsiteNavbar: React.FC = () => {
             <span className="back-box" />
             <span className="front-box">
               <span>CONTACT</span>
+            </span>
+          </button>
+
+          <button
+            className="comic-button comic-button-fluid"
+            type="button"
+            tabIndex={mobileMenuOpen ? 0 : -1}
+            onClick={() => handleNavClick('login', 'LOGIN!')}
+          >
+            <span className="back-box-cyan" />
+            <span className="front-box outline-cyan">
+              <span>LOGIN</span>
             </span>
           </button>
 

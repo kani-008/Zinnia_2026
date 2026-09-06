@@ -8,6 +8,13 @@ import { WebsiteEventsPage } from './pages/Events';
 import { WebsiteConfirmationPage } from './pages/Confirmation';
 import { WebsiteContactPage } from './pages/Contact';
 import { WebsiteSchedulePage } from './pages/Schedule';
+import { ParticipantRegisterPage } from './pages/ParticipantRegister';
+import { ParticipantVerifyEmailPage } from './pages/ParticipantVerifyEmail';
+import { ParticipantPaymentPage } from './pages/ParticipantPayment';
+import { ParticipantLoginPage } from './pages/ParticipantLogin';
+import { ParticipantDashboardPage } from './pages/ParticipantDashboard';
+import { ParticipantTeamsPage } from './pages/ParticipantTeams';
+import { ParticipantTeamCreatePage } from './pages/ParticipantTeamCreate';
 import { registerNav } from './services/registerNavigation';
 
 // Automatically scroll to the top section of the page on route change
@@ -35,12 +42,31 @@ export function App() {
       <Routes>
         <Route path="/" element={<WebsiteHomePage />} />
         <Route path="/events" element={<WebsiteEventsPage />} />
-        <Route path="/register" element={<WebsiteRegisterPage />} />
+        {/* Every "Register" CTA lands in the participant flow. The old
+            one-shot form is kept reachable at /register-legacy rather than
+            deleted, so nothing is lost before the Phase 6 cutover. */}
+        <Route path="/register" element={<Navigate to="/participant/register" replace />} />
+        <Route path="/register-legacy" element={<WebsiteRegisterPage />} />
         <Route path="/payment" element={<WebsitePaymentPage />} />
         <Route path="/confirmation" element={<WebsiteConfirmationPage />} />
         <Route path="/payment-success" element={<Navigate to="/confirmation" replace />} />
         <Route path="/passport" element={<WebsitePassportPage />} />
+        <Route path="/schedule" element={<WebsiteSchedulePage />} />
         <Route path="/contact" element={<WebsiteContactPage />} />
+
+        {/* Participant flow — registration, payment, login, dashboard, teams */}
+        <Route path="/participant/register" element={<ParticipantRegisterPage />} />
+        {/* Email check sits between details and payment so a wrong address is
+            caught before any money is attached to it. */}
+        <Route path="/participant/verify" element={<ParticipantVerifyEmailPage />} />
+        <Route path="/participant/payment" element={<ParticipantPaymentPage />} />
+        <Route path="/participant/login" element={<ParticipantLoginPage />} />
+        <Route path="/participant/dashboard" element={<ParticipantDashboardPage />} />
+        <Route path="/participant/teams" element={<ParticipantTeamsPage />} />
+        <Route path="/participant/teams/new" element={<ParticipantTeamCreatePage />} />
+        {/* Short alias for the nav LOGIN button and anyone typing /login. */}
+        <Route path="/login" element={<Navigate to="/participant/login" replace />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

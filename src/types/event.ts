@@ -1,12 +1,16 @@
 import { ClearanceLevel } from './participant';
 
 export type EventType = 'TECH' | 'NON_TECH';
-export type EventCategory = 'TECHNICAL' | 'NON_TECHNICAL';
+export type EventCategory = 'TECHNICAL' | 'NON_TECHNICAL' | 'VALEDICTORY';
 export type EventStatus = 'AVAILABLE' | 'REGISTRATION_CLOSED' | 'LIVE' | 'CONCLUDED' | 'IN_PROGRESS' | 'COMPLETED' | 'LOCKED';
 
 export interface EventMission {
   id: string;
   code: string;
+  /** explicit render position; grids sort by this, never by code or DB order */
+  display_order?: number;
+  /** the flagship event — gets the crown treatment */
+  is_mega?: boolean;
   mission_name: string;
   title: string;
   event_type: EventType; // Required TECH or NON_TECH
