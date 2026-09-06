@@ -28,7 +28,45 @@ BACKEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
 
-from app import app  # noqa: E402  (path setup must run first)
+def _diagnostic_app(detail: str):
+    """
+    Stand-in WSGI app used when the real one cannot be imported.
+
+    Several modules raise at import when a required variable is missing —
+    auth_middleware on AUTH_SECRET_KEY, passport_service on QR_SIGNING_SECRET.
+    On Vercel that kills the whole function, and every route, including ones
+    that do not exist, answers FUNCTION_INVOCATION_FAILED with no clue why.
+    Returning the reason turns a half-hour of guesswork into one line.
+    """
+    import json
+
+    def _app(environ, start_response):
+        body = json.dumps({
+            "success": False,
+            "error_code": "STARTUP_FAILED",
+            "message": (
+                "The API could not start. This is almost always a missing "
+                "environment variable in the deployment: AUTH_SECRET_KEY, "
+                "QR_SIGNING_SECRET, SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY "
+                "are all required, and the project must be redeployed after "
+                "adding them."
+            ),
+            "detail": detail,
+        }).encode()
+        start_response("503 Service Unavailable", [
+            ("Content-Type", "application/json"),
+            ("Content-Length", str(len(body))),
+        ])
+        return [body]
+
+    return _app
+
+
+try:
+    from app import app  # noqa: E402  (path setup must run first)
+except Exception as exc:  # noqa: BLE001 — the reason is the whole point
+    print(f"[api/index] startup failed: {type(exc).__name__}: {exc}")
+    app = _diagnostic_app(f"{type(exc).__name__}: {exc}")
 
 # Vercel invokes this name.
 application = app

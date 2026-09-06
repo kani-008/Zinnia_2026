@@ -188,11 +188,18 @@ class ZinniaStore {
       this.setStorage(STORAGE_KEYS.TEAMS, mergedTeams);
       this.setStorage(STORAGE_KEYS.MEMBERS, mergedMembers);
 
-      // 3. Fetch live events
-      const { data: dbEvents, error: eErr } = await supabase
-        .from('events')
-        .select('*')
-        .order('code', { ascending: true });
+      // 3. Events
+      //
+      // This read `public.events`, which the current Supabase project does not
+      // have — the catalog lives in zin26 now, and the supabase-js client here
+      // is pinned to the public schema. The request 404'd on every page load.
+      //
+      // Nothing is lost by skipping it: OFFICIAL_MISSIONS in src/config/events.ts
+      // is the catalog of record and the block below only ever overlaid live
+      // fields onto it. The participant flow reads its catalog from
+      // src/lib/rules/catalog.ts and the dashboard API, not from here.
+      const dbEvents: any[] | null = null;
+      const eErr = null;
 
       if (!eErr && dbEvents && dbEvents.length > 0) {
         // OFFICIAL_MISSIONS is the catalog of record; the DB only overlays live
