@@ -11,9 +11,16 @@ build/
 
 # Environment Variables & Secrets
 .env
-.env.local
-.env.*.local
+.env.*
+.env*.local
+*.env
+**/.env
+**/.env.*
 backend/.env
+
+# Allow environment example/template files
+!.env.example
+!**/.env.example
 
 # Python & Backend
 __pycache__/
@@ -50,8 +57,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
-.env
-.env.*
 
-# The template is meant to be committed; the real files above are not.
-!.env.example
+# AI Assistant & Agent Configurations
+.claude/
+.agents/
