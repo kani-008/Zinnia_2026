@@ -534,7 +534,7 @@ def _rpc_confirm_team(team_id: str) -> int:
     if "ZIN26_TEAM_UNKNOWN" in body:
         raise Zin26Error("Team not found.", status=404, code="NOT_FOUND")
     raise Zin26Error(
-        f"could not confirm team - is migration 008 applied? HTTP {r.status_code} {body[:200]}"
+        f"could not confirm team - is migration 012 applied? HTTP {r.status_code} {body[:200]}"
     )
 
 

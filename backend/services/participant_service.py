@@ -93,7 +93,7 @@ def _next_user_id() -> str:
     )
     if r.status_code not in (200, 201):
         raise Zin26Error(
-            f"could not allocate a UserID - is migration 008 applied? HTTP "
+            f"could not allocate a UserID - is migration 011 applied? HTTP "
             f"{r.status_code} {r.text[:200]}"
         )
     serial = r.json()
