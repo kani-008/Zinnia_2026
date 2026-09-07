@@ -7,7 +7,7 @@ passing the server-side check first.
 
 Capacity (R12) is NOT enforced by the pre-check alone — two concurrent requests
 can both read "1 seat left". The final insert goes through the
-zin26.register_participant_event() RPC from migration 008, which locks the
+zin26.register_participant_event() RPC from migration 012, which locks the
 event row and re-counts inside the transaction.
 """
 
@@ -275,40 +275,139 @@ def cancel_registration(user_id: str, event_code: str) -> Dict[str, Any]:
                 "error_code": "NOT_CAPTAIN",
                 "message": "Only the team captain can cancel this registration.",
             }
-        return _cancel_team(reg["team_id"], event)
 
-    db.update(
-        "registrations",
-        f"reg_id=eq.{reg['reg_id']}",
-        {"status": "CANCELLED", "cancelled_at": dt.datetime.now(dt.timezone.utc).isoformat()},
-    )
+    # `moved` is how many rows actually reached CANCELLED. Reporting success on
+    # a write that touched nothing is what made a cancellation look as though it
+    # had only happened in the browser: the card vanished on reload while the
+    # row stayed live in the database.
+    moved = rpc_cancel(user_id, event_code, event.name)
+
     return {
         "success": True,
         "event_code": event_code,
-        "message": f"{event.name} cancelled. The seat has been returned.",
+        "cancelled": moved,
+        "message": (
+            f"{event.name} team cancelled for every member."
+            if reg.get("team_id")
+            else f"{event.name} cancelled. The seat has been returned."
+        ),
     }
 
 
-# One captain's cancel unwinds the whole team, not just their own row.
-def _cancel_team(team_id: str, event) -> Dict[str, Any]:
-    """Cancelling a team releases every member's seat and event count (R14/D7)."""
-    now = dt.datetime.now(dt.timezone.utc).isoformat()
-    db.update(
-        "registrations",
-        f"team_id=eq.{team_id}&status=neq.CANCELLED",
-        {"status": "CANCELLED", "cancelled_at": now},
+def rpc_cancel(user_id: str, event_code: str, event_name: str) -> int:
+    """
+    Transactional cancel via migration 013. Returns the number of registration
+    rows that moved to CANCELLED.
+
+    Deliberately not db.update(): the previous pair of PATCHes discarded their
+    own responses, so a filter that matched nothing was indistinguishable from
+    a successful cancel. A captain's cancel was worse — registrations and the
+    teams row were two separate requests, so a failure between them left every
+    member CANCELLED under a team still marked CONFIRMED. One function call is
+    one transaction and reports what it did.
+    """
+    r = requests.post(
+        f"{db.SUPABASE_URL}/rest/v1/rpc/cancel_participant_event",
+        headers=db.write_headers(),
+        json={"p_user_id": user_id, "p_event_code": event_code},
+        timeout=db.TIMEOUT,
     )
-    db.update("teams", f"team_id=eq.{team_id}", {"status": "CANCELLED", "updated_at": now})
-    return {
-        "success": True,
-        "event_code": event.code,
-        "message": f"{event.name} team cancelled for every member.",
-    }
+
+    if r.status_code in (200, 201):
+        value = r.json()
+        if isinstance(value, list):
+            value = value[0] if value else 0
+        moved = int(value or 0)
+        if moved == 0:
+            raise Zin26Error(
+                f"{event_name} was not cancelled — nothing changed in the database. "
+                "Reload the page and try again.",
+                status=409,
+                code="CANCEL_FAILED",
+            )
+        return moved
+
+    body = r.text or ""
+
+    # PGRST202 is "no such function". Cancelling predates 013, so fall back
+    # rather than withdraw the feature from a deployment that has the new code
+    # but has not run the migration yet. What 013 really fixes is the index
+    # that blocks re-registration; this path keeps working in the meantime.
+    if "PGRST202" in body or r.status_code == 404:
+        print(
+            "[event_registration] zin26.cancel_participant_event is missing - "
+            "apply supabase/migrations/013; falling back to PATCH"
+        )
+        return _cancel_by_patch(user_id, event_code, event_name)
+
+    if "ZIN26_NOT_REGISTERED" in body:
+        raise Zin26Error(
+            f"You are not registered for {event_name}.", status=404, code="NOT_REGISTERED"
+        )
+    if "ZIN26_NOT_CAPTAIN" in body:
+        raise Zin26Error(
+            "Only the team captain can cancel this registration.",
+            status=403,
+            code="NOT_CAPTAIN",
+        )
+    raise Zin26Error(
+        f"could not cancel - is migration 013 applied? HTTP {r.status_code} {body[:200]}"
+    )
+
+
+def _cancel_by_patch(user_id: str, event_code: str, event_name: str) -> int:
+    """
+    Pre-013 cancellation: read the live row, then PATCH it. Two round trips, so
+    it is not atomic — the fallback, never the first choice.
+
+    One captain's cancel unwinds the whole team, not just their own row: a team
+    cancellation releases every member's seat and event count (R14/D7).
+    """
+    reg = db.select_one(
+        "registrations",
+        f"select=reg_id,team_id&user_id=eq.{user_id}"
+        f"&event_code=eq.{event_code}&status=neq.CANCELLED",
+    )
+    if not reg:
+        raise Zin26Error(
+            f"You are not registered for {event_name}.", status=404, code="NOT_REGISTERED"
+        )
+
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+
+    # status=neq.CANCELLED makes the PATCH a compare-and-set, so a second tap
+    # updates nothing instead of overwriting cancelled_at with a later time.
+    if reg.get("team_id"):
+        rows = db.update(
+            "registrations",
+            f"team_id=eq.{reg['team_id']}&status=neq.CANCELLED",
+            {"status": "CANCELLED", "cancelled_at": now},
+        )
+        db.update(
+            "teams", f"team_id=eq.{reg['team_id']}", {"status": "CANCELLED", "updated_at": now}
+        )
+    else:
+        rows = db.update(
+            "registrations",
+            f"reg_id=eq.{reg['reg_id']}&status=neq.CANCELLED",
+            {"status": "CANCELLED", "cancelled_at": now},
+        )
+
+    if not rows:
+        # The row was live a moment ago and is not now: another request got
+        # there first. The seat is released either way, but say so rather than
+        # claim this call did it.
+        raise Zin26Error(
+            f"{event_name} was already cancelled. Reload the page.",
+            status=409,
+            code="NOT_REGISTERED",
+        )
+    return len(rows)
 
 
 def rpc_register(user_id: str, event_code: str, team_id: Optional[str] = None, status: str = "CONFIRMED") -> str:
     """
-    Race-safe insert via migration 008. Translates the function's sentinel
+    Race-safe insert via migration 012/013. Translates the function's sentinel
     exceptions back into domain errors.
     """
     # Deliberately not db.insert(): the capacity check and the insert have to
@@ -341,8 +440,19 @@ def rpc_register(user_id: str, event_code: str, team_id: Optional[str] = None, s
         raise Zin26Error("Already registered", status=409, code="ALREADY_REGISTERED")
     if "ZIN26_EVENT_UNKNOWN" in body:
         raise Zin26Error("Unknown event", status=404, code="UNKNOWN_EVENT")
+
+    # 23505 is the unique index behind the function's own ALREADY_REGISTERED
+    # check, reached when two requests race past the EXISTS. It used to fall
+    # through to the message below, which showed the participant a raw Postgres
+    # constraint violation and blamed a migration that was applied — the
+    # symptom that hid the real defect (a CANCELLED row still held
+    # (user_id, event_code), so no cancelled event could ever be re-entered).
+    # 013 makes that index live-only; a 23505 now means a genuine duplicate.
+    if "23505" in body:
+        raise Zin26Error("Already registered", status=409, code="ALREADY_REGISTERED")
+
     raise Zin26Error(
-        f"could not register - is migration 008 applied? HTTP {r.status_code} {body[:200]}"
+        f"could not register - is migration 012 applied? HTTP {r.status_code} {body[:200]}"
     )
 
 
