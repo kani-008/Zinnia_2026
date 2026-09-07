@@ -106,12 +106,12 @@ export const WebsiteEventsPage: React.FC = () => {
             <h3 className="font-display text-xl font-bold text-white uppercase tracking-wide leading-snug">
               {e.mission_name}
             </h3>
-            <div className={`font-comic text-xs font-bold uppercase tracking-wider pt-0.5 ${e.is_mega ? 'text-[#C084FC]' : isTech ? 'text-[#3CE7FF]' : 'text-[#FF3366]'}`}>
+            <div className={`font-mono text-xs font-semibold tracking-wide pt-0.5 ${e.is_mega ? 'text-[#C084FC]' : isTech ? 'text-[#3CE7FF]' : 'text-[#FF3366]'}`}>
               {e.tagline || e.title}
             </div>
           </div>
 
-          <p className="font-comic text-xs text-[#A8A8AC] leading-relaxed line-clamp-3">
+          <p className="font-mono text-xs text-[#A8A8AC] leading-relaxed line-clamp-3 font-normal">
             {e.description}
           </p>
 
@@ -133,7 +133,7 @@ export const WebsiteEventsPage: React.FC = () => {
               </div>
               <div className="space-y-1">
                 {e.rules.slice(0, 2).map((rule, rIdx) => (
-                  <div key={rIdx} className="text-[10px] font-comic text-[#D0D0D4] leading-tight flex items-start gap-1.5">
+                  <div key={rIdx} className="text-[10px] font-mono text-[#D0D0D4] leading-tight flex items-start gap-1.5 font-normal">
                     <span className="text-[#F5D90A]">•</span>
                     <span>{rule}</span>
                   </div>
@@ -199,7 +199,7 @@ export const WebsiteEventsPage: React.FC = () => {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-display text-white tracking-tight uppercase">
               WARZONE DIRECTORY
             </h1>
-            <p className="text-xs sm:text-sm font-comic text-[#A8A8AC] font-medium">
+            <p className="text-xs sm:text-sm font-mono text-[#A8A8AC]">
               9 National-Level Competitions across Technical Breakthroughs & Tactical Non-Tech Mastery
             </p>
           </div>
@@ -288,7 +288,7 @@ export const WebsiteEventsPage: React.FC = () => {
                       {megaEvents.length} Mission
                     </span>
                   </h2>
-                  <p className="text-xs font-comic text-slate-400">
+                  <p className="text-xs font-mono text-slate-400">
                     The flagship of the symposium. Its own tier, running all day.
                   </p>
                 </div>
@@ -320,7 +320,7 @@ export const WebsiteEventsPage: React.FC = () => {
                       {techEvents.length} Missions
                     </span>
                   </h2>
-                  <p className="text-xs font-comic text-slate-400">
+                  <p className="text-xs font-mono text-slate-400">
                     Debugging, Neural AI, SQL Extraction, UI/UX, and Algorithmic Survival Marathons.
                   </p>
                 </div>
@@ -348,7 +348,7 @@ export const WebsiteEventsPage: React.FC = () => {
                       {nonTechEvents.length} Missions
                     </span>
                   </h2>
-                  <p className="text-xs font-comic text-slate-400">
+                  <p className="text-xs font-mono text-slate-400">
                     Campus Borderland Mystery, Buzzer Quizzes, Narrative Twists, and Cinematic Screenings.
                   </p>
                 </div>

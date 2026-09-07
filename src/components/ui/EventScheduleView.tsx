@@ -372,12 +372,12 @@ export const EventScheduleView: React.FC<{
                     </h3>
 
                     {/* Tagline */}
-                    <p className={`font-comic text-xs font-bold mt-0.5 ${styles.text}`}>
+                    <p className={`font-mono text-xs font-semibold tracking-wide mt-0.5 ${styles.text}`}>
                       {item.tagline}
                     </p>
 
                     {/* Brief Description */}
-                    <p className="font-comic text-xs text-[#C0C0C5] mt-2 line-clamp-2 leading-relaxed">
+                    <p className="font-mono text-xs text-[#C0C0C5] mt-2 line-clamp-2 leading-relaxed font-normal">
                       {item.description}
                     </p>
 

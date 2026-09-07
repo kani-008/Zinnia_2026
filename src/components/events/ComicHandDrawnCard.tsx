@@ -15,6 +15,7 @@ interface ComicHandDrawnCardProps {
   onClick?: () => void;
   children: React.ReactNode;
   className?: string;
+  innerClassName?: string;
 }
 
 export const ComicHandDrawnCard: React.FC<ComicHandDrawnCardProps> = ({
@@ -23,6 +24,7 @@ export const ComicHandDrawnCard: React.FC<ComicHandDrawnCardProps> = ({
   onClick,
   children,
   className = '',
+  innerClassName,
 }) => {
   return (
     <div
@@ -41,6 +43,7 @@ export const ComicHandDrawnCard: React.FC<ComicHandDrawnCardProps> = ({
         {/* dark offset registration */}
         <path
           className="card-shadow"
+          vectorEffect="non-scaling-stroke"
           d="
             M 18 12
             C 52 10, 86 12, 121 10
@@ -62,6 +65,7 @@ export const ComicHandDrawnCard: React.FC<ComicHandDrawnCardProps> = ({
         {/* MAIN INK */}
         <path
           className="card-main"
+          vectorEffect="non-scaling-stroke"
           d="
             M 16 10
             C 49 8, 88 11, 124 9
@@ -83,6 +87,7 @@ export const ComicHandDrawnCard: React.FC<ComicHandDrawnCardProps> = ({
         {/* IMPERFECT INNER PRINT LINE */}
         <path
           className="card-inner"
+          vectorEffect="non-scaling-stroke"
           d="
             M 21 15
             C 56 13, 93 16, 129 14
@@ -107,24 +112,28 @@ export const ComicHandDrawnCard: React.FC<ComicHandDrawnCardProps> = ({
           stroke="var(--card-main)"
           strokeWidth="1.5"
           strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
         />
         <path
           d="M 8 90 L 13 87"
           stroke="var(--card-main)"
           strokeWidth="1.2"
           strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
         />
         <path
           d="M 248 139 L 255 135"
           stroke="var(--card-main)"
           strokeWidth="1.4"
           strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
         />
         <path
           d="M 248 147 L 254 145"
           stroke="var(--card-main)"
           strokeWidth="1.1"
           strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
         />
 
         {/* ROUGH BOTTOM PRINT STREAKS */}
@@ -133,12 +142,14 @@ export const ComicHandDrawnCard: React.FC<ComicHandDrawnCardProps> = ({
           stroke="var(--card-main)"
           strokeWidth="1.3"
           strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
         />
         <path
           d="M 197 311 C 208 309, 219 312, 231 310"
           stroke="var(--card-main)"
           strokeWidth="1.1"
           strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
         />
       </svg>
 
@@ -159,7 +170,11 @@ export const ComicHandDrawnCard: React.FC<ComicHandDrawnCardProps> = ({
       {/* =====================================================
            CARD CONTENT
       ====================================================== */}
-      <div className="relative z-10 w-full h-full flex-1 flex flex-col items-center justify-between px-4 sm:px-5 pt-12 sm:pt-14 pb-7 sm:pb-8 text-center select-none">
+      <div
+        className={`relative z-10 w-full flex-1 flex flex-col items-center justify-between ${
+          innerClassName ?? 'h-full px-4 sm:px-5 pt-12 sm:pt-14 pb-7 sm:pb-8 text-center select-none'
+        }`}
+      >
         {children}
       </div>
     </div>
