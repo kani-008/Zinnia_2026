@@ -6,8 +6,8 @@
 // campus address, the embedded map, and every bus detail that was already here.
 //
 // The map is an iframe, so a click inside it never reaches this page. A
-// transparent catcher sits on top to run the radar ping and then open Google
-// Maps; that is what trades away in-place pan/zoom.
+// transparent catcher sits on top to run the radar ping and then hand the pin
+// to the device's map app; that is what trades away in-place pan/zoom.
 
 import React, { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -26,8 +26,63 @@ import {
 
 /** Campus coordinates from the shared maps link. */
 const CAMPUS_LAT_LNG = '11.415753,77.665973';
+const CAMPUS_LABEL = 'Government College of Engineering, Erode';
 const MAP_EMBED_SRC = `https://maps.google.com/maps?q=${CAMPUS_LAT_LNG}&z=16&output=embed`;
-const MAP_OPEN_URL = `https://www.google.com/maps/search/?api=1&query=${CAMPUS_LAT_LNG}`;
+
+/**
+ * Where a tap on the map goes, per platform.
+ *
+ * `geo:` is Android's own handoff — the OS opens Google Maps (or the app
+ * chooser) with no browser tab in between, which is the only way to land in
+ * the app rather than on a mobile web page.
+ *
+ * iOS has no `geo:` handler, but the https link is a Google Maps universal
+ * link: the OS gives it to the installed app and falls back to the web page
+ * when the app is absent. That fallback comes for free, so iOS needs no scheme
+ * of its own — and `comgooglemaps://` would dead-end on a blank page for
+ * anyone without the app. Desktop gets the same https link in a new tab.
+ */
+const MAP_GEO_URL = `geo:${CAMPUS_LAT_LNG}?q=${CAMPUS_LAT_LNG}(${encodeURIComponent(CAMPUS_LABEL)})`;
+const MAP_WEB_URL = `https://www.google.com/maps/search/?api=1&query=${CAMPUS_LAT_LNG}`;
+
+/**
+ * Send the campus pin to the device's map app.
+ *
+ * The browser cannot render a `geo:` URL, so on an Android device with no map
+ * app installed the tap would dead-end. The visibility check covers that: an
+ * app that really opened backgrounds this document within a beat, and if
+ * nothing has by the deadline we fall through to the web map rather than
+ * leaving the user on a blank screen.
+ */
+function openCampusMap(): void {
+  const ua = navigator.userAgent;
+  const isAndroid = /android/i.test(ua);
+  const isIOS =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  if (isAndroid) {
+    const fallback = window.setTimeout(() => {
+      if (document.visibilityState === 'visible') {
+        window.location.href = MAP_WEB_URL;
+      }
+    }, 1200);
+    document.addEventListener('visibilitychange', () => window.clearTimeout(fallback), {
+      once: true,
+    });
+    window.location.href = MAP_GEO_URL;
+    return;
+  }
+
+  // Same-tab navigation is what lets iOS intercept the universal link;
+  // window.open('_blank') strands it in a new Safari tab instead.
+  if (isIOS) {
+    window.location.href = MAP_WEB_URL;
+    return;
+  }
+
+  window.open(MAP_WEB_URL, '_blank', 'noopener,noreferrer');
+}
 
 interface Coordinator {
   name: string;
@@ -122,9 +177,9 @@ export const WebsiteContactPage: React.FC = () => {
   };
 
   /**
-   * Radar ping from the click point, a glow on the frame, then Google Maps in a
-   * new tab. The 340ms delay stays inside the browser's transient user
-   * activation window, so window.open is not treated as an unsolicited popup.
+   * Radar ping from the click point, a glow on the frame, then the map app.
+   * The 340ms delay stays inside the browser's transient user activation
+   * window, so the handoff is not treated as an unsolicited popup.
    */
   const handleMapClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -139,9 +194,23 @@ export const WebsiteContactPage: React.FC = () => {
       setMapGlow(false);
     }, 660);
 
-    window.setTimeout(() => {
-      window.open(MAP_OPEN_URL, '_blank', 'noopener,noreferrer');
-    }, 340);
+    window.setTimeout(openCampusMap, 340);
+  }, []);
+
+  /**
+   * The map frame is now the only route to the map app, so it has to answer the
+   * keyboard as well — the button that used to cover that case is gone. There
+   * is no click point to ping from here, so this glows the frame instead.
+   */
+  const handleMapKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+
+    setMapGlow(true);
+    triggerComicFX('PING!');
+
+    window.setTimeout(() => setMapGlow(false), 660);
+    window.setTimeout(openCampusMap, 340);
   }, []);
 
   return (
@@ -244,12 +313,17 @@ export const WebsiteContactPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Clickable map. The iframe is pointer-events-none so the catcher
-                above it reliably receives the click; a keyboard-reachable
-                button below covers the same action for non-pointer users. */}
+            {/* Clickable map. The iframe is pointer-events-none so this div
+                reliably receives the tap; role/tabIndex/onKeyDown keep the same
+                action reachable for non-pointer users, which is what the
+                separate button underneath used to be here for. */}
             <div
+              role="button"
+              tabIndex={0}
+              aria-label={`Open ${CAMPUS_LABEL} in the Google Maps app`}
               onClick={handleMapClick}
-              className={`map-frame relative overflow-hidden border-2 border-[#0FA9C6]/30 bg-[#17181C] cursor-pointer ${mapGlow ? 'is-pinged' : ''
+              onKeyDown={handleMapKeyDown}
+              className={`map-frame relative overflow-hidden border-2 border-[#0FA9C6]/30 bg-[#17181C] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0FA9C6] ${mapGlow ? 'is-pinged' : ''
                 }`}
             >
               <iframe
@@ -270,13 +344,6 @@ export const WebsiteContactPage: React.FC = () => {
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={() => window.open(MAP_OPEN_URL, '_blank', 'noopener,noreferrer')}
-              className="mt-4 w-full border-2 border-[#0FA9C6] px-4 py-2 font-comic text-xs uppercase tracking-wider text-[#0FA9C6] shadow-[3px_3px_0px_#090A0B] btn-comic transition-colors hover:bg-[#0FA9C6] hover:text-[#090A0B]"
-            >
-              Open in Google Maps
-            </button>
           </ComicPanel>
 
           {/* ================= CARD 3: Getting to IRTT ================= */}

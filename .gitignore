@@ -18,10 +18,6 @@ build/
 **/.env.*
 backend/.env
 
-# Allow environment example/template files
-!.env.example
-!**/.env.example
-
 # Python & Backend
 __pycache__/
 *.py[cod]
