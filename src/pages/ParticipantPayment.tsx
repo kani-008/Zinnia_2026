@@ -12,9 +12,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  BookOpen,
   Check,
   CheckCircle2,
   Copy,
+  ExternalLink,
   Hourglass,
   ImagePlus,
   Loader2,
@@ -29,6 +31,7 @@ import { WebsiteNavbar } from '../components/layout/Navbar';
 import {
   REGISTRATION_FEE_PER_HEAD,
   REGISTRATION_STEPS,
+  REGISTRATION_USER_MANUAL_URL,
   TREASURER_PAYMENT_CONFIG,
 } from '../config/site';
 import {
@@ -534,8 +537,20 @@ export const ParticipantPaymentPage: React.FC = () => {
       <WebsiteNavbar />
 
       <main className="mx-auto max-w-2xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 overflow-hidden">
-        <header className="mb-8">
-          <ComicHeading fluid>Pay the registration fee</ComicHeading>
+        <header className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <ComicHeading fluid>Pay the registration fee</ComicHeading>
+            <a
+              href={REGISTRATION_USER_MANUAL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-lg border border-[#E5BD00]/50 bg-[#E5BD00]/10 hover:bg-[#E5BD00]/20 text-[#E5BD00] font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 hover:scale-[1.02] shadow-[2px_2px_0px_#090A0B]"
+            >
+              <BookOpen size={14} className="shrink-0" />
+              <span>User Manual</span>
+              <ExternalLink size={12} className="shrink-0 opacity-80" />
+            </a>
+          </div>
 
           <ComicStepper steps={REGISTRATION_STEPS} current={3} className="mt-6" />
         </header>
@@ -611,15 +626,27 @@ export const ParticipantPaymentPage: React.FC = () => {
                 <p className="mt-1 pl-2 font-mono text-sm text-[#EEEEEA]">{TREASURER_PAYMENT_CONFIG.payeeName || '—'}</p>
               </div>
 
-              <div className="pt-2 border-t border-[#B8B8B2]/15">
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">Payment Support</p>
-                <p className="mt-0.5 pl-2 font-mono text-[11px] text-[#B8B8B2]">Contact if any issues arise:</p>
+              <div className="pt-2 border-t border-[#B8B8B2]/15 space-y-2">
+                <div>
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">Payment Support</p>
+                  <p className="mt-0.5 pl-2 font-mono text-[11px] text-[#B8B8B2]">Contact if any issues arise:</p>
+                  <a
+                    href="tel:8903664244"
+                    className="mt-1 flex items-center gap-1.5 pl-2 font-mono text-sm font-bold text-[#E5BD00] hover:text-[#0FA9C6] transition-colors"
+                  >
+                    <Phone size={14} className="shrink-0" />
+                    <span>Kishore : 8903664244</span>
+                  </a>
+                </div>
                 <a
-                  href="tel:8903664244"
-                  className="mt-1 flex items-center gap-1.5 pl-2 font-mono text-sm font-bold text-[#E5BD00] hover:text-[#0FA9C6] transition-colors"
+                  href={REGISTRATION_USER_MANUAL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 pl-2 font-mono text-xs font-bold text-[#0FA9C6] hover:text-[#EEEEEA] transition-colors"
                 >
-                  <Phone size={14} className="shrink-0" />
-                  <span>Kishore : 8903664244</span>
+                  <BookOpen size={13} className="shrink-0" />
+                  <span>View Step-by-Step Manual</span>
+                  <ExternalLink size={11} className="shrink-0" />
                 </a>
               </div>
             </div>

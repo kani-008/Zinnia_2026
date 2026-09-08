@@ -10,9 +10,10 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Check, Loader2, UserPlus, Users, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, Check, ExternalLink, Loader2, UserPlus, Users, X } from 'lucide-react';
 
 import { WebsiteNavbar } from '../components/layout/Navbar';
+import { REGISTRATION_USER_MANUAL_URL } from '../config/site';
 import { createTeam, loadSession, lookupTeammate } from '../lib/participant/api';
 import { EVENTS } from '../lib/rules/catalog';
 import type { EventCode, TeammateLookup } from '../lib/participant/types';
@@ -220,10 +221,20 @@ export const ParticipantTeamCreatePage: React.FC = () => {
         </button>
 
         <header className="mb-8">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <ComicChip tone="cyan" rotate={-2}>
               <Users size={12} /> You are the team leader
             </ComicChip>
+            <a
+              href={REGISTRATION_USER_MANUAL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border border-[#E5BD00]/50 bg-[#E5BD00]/10 hover:bg-[#E5BD00]/20 text-[#E5BD00] font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 hover:scale-[1.02] shadow-[2px_2px_0px_#090A0B]"
+            >
+              <BookOpen size={13} className="shrink-0" />
+              <span>User Manual</span>
+              <ExternalLink size={11} className="shrink-0 opacity-80" />
+            </a>
           </div>
 
           <ComicHeading>{spec.name}</ComicHeading>
