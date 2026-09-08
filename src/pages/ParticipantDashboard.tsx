@@ -293,7 +293,9 @@ export const ParticipantDashboardPage: React.FC = () => {
   const promptedRef = useRef(false);
   useEffect(() => {
     const uid = flagKey();
-    if (!uid || promptedRef.current || hasReadRules(uid)) return;
+    // Nothing to prompt once the picking is over: the notice says "before you
+    // pick", and the description it points at is no longer on the dashboard.
+    if (!uid || promptedRef.current || hasReadRules(uid) || hasConfirmedLineup(uid)) return;
     promptedRef.current = true;
 
     // Only the first mount in a document can be the reload itself; a later one
@@ -444,7 +446,7 @@ export const ParticipantDashboardPage: React.FC = () => {
    * the description is still reachable.
    */
   const atEventLimit = counted_used >= counted_max;
-  const catalogClosed = atEventLimit || lineupConfirmed;
+  const catalogClosed = atEventLimit;
 
   /**
    * The registration description: one page, every rule that decides what can
@@ -1229,6 +1231,10 @@ export const ParticipantDashboardPage: React.FC = () => {
           </section>
         )}
 
+        {/* Once the line-up is confirmed the whole catalog goes — heading,
+            rules button and all. The dashboard ends at "My events", because
+            there is nothing left to do here. */}
+        {!lineupConfirmed && (
         <section>
           <div className="mb-5 flex items-center justify-between gap-2 sm:gap-4">
             <ComicSectionTitle tone="cyan" className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-xl shrink-0">
@@ -1259,9 +1265,7 @@ export const ParticipantDashboardPage: React.FC = () => {
           */}
           {catalogClosed ? (
             <p className="border-2 border-[#23262D] bg-[#111214] pad-box-sm font-mono text-[11px] leading-relaxed text-[#8E939D]">
-              {lineupConfirmed
-                ? 'Your events are confirmed. The list has been emailed to you.'
-                : `That is all ${counted_max} of your events. Cancel one above if you want to swap it for something else.`}
+              {`That is all ${counted_max} of your events. Cancel one above if you want to swap it for something else.`}
             </p>
           ) : (
           GROUPS.map((group) => {
@@ -1317,18 +1321,23 @@ export const ParticipantDashboardPage: React.FC = () => {
             </div>
           )}
 
-          {actionNeeded && (
-            <div className="mt-8 flex justify-center">
-              <ComicCTA
-                tone="cyan"
-                fullWidth={false}
-                onClick={() => navigate(status === 'DETAILS_SUBMITTED' ? verifyUrl : paymentUrl)}
-              >
-                {status === 'DETAILS_SUBMITTED' ? 'Verify your email' : status === 'PAYMENT_FAILED' ? 'Resubmit payment' : 'Complete payment'}
-              </ComicCTA>
-            </div>
-          )}
         </section>
+        )}
+
+        {/* Outside the catalog on purpose: an unpaid or unverified
+            registration still needs its way forward even once the events are
+            confirmed. */}
+        {actionNeeded && (
+          <div className="mt-8 flex justify-center">
+            <ComicCTA
+              tone="cyan"
+              fullWidth={false}
+              onClick={() => navigate(status === 'DETAILS_SUBMITTED' ? verifyUrl : paymentUrl)}
+            >
+              {status === 'DETAILS_SUBMITTED' ? 'Verify your email' : status === 'PAYMENT_FAILED' ? 'Resubmit payment' : 'Complete payment'}
+            </ComicCTA>
+          </div>
+        )}
       </main>
     </ComicPageShell>
   );
