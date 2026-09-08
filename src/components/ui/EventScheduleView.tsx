@@ -62,7 +62,7 @@ export const EventScheduleView: React.FC<{
     {
       id: 'debugging',
       code: '02',
-      mission_name: 'DEBUGGING',
+      mission_name: 'DEBUGGING PROTOCOL',
       start_time: '11:00 AM',
       time_display: '11:00 AM – 01:00 PM',
       duration: '2 hrs',

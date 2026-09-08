@@ -169,20 +169,39 @@ class AdminPanelController:
 
         file_id = drive.open_proxy_token((flask_request.args.get("t") or "").strip())
         if not file_id:
-            return jsonify({"success": False, "message": "That image link expired."}), 403
+            # Plain text, not JSON: this response lands in an <img>, and a JSON
+            # body there is invisible. The header is what a diagnostic fetch or
+            # the panel's own retry reads.
+            return Response("proof link expired", status=403, mimetype="text/plain",
+                            headers={"X-Proof-Error": "TOKEN_EXPIRED"})
+
+        # A Drive file id is immutable in this app - replacing a screenshot
+        # uploads a new file and stores a new id - so the id IS the version.
+        # That makes revalidation free: a returning treasurer gets a ~40-byte
+        # 304 and the browser paints from cache, with no call to Google at all.
+        etag = f'"{file_id}"'
+        if flask_request.headers.get("If-None-Match") == etag:
+            return Response(status=304, headers={
+                "ETag": etag,
+                "Cache-Control": "private, max-age=240",
+            })
 
         try:
             data, mime = drive.fetch(file_id)
         except Exception as e:
-            return _fail(e)
+            print(f"[proof] Drive fetch failed for {file_id}: {type(e).__name__}: {e}")
+            return Response("proof unavailable", status=502, mimetype="text/plain",
+                            headers={"X-Proof-Error": "UPSTREAM_UNAVAILABLE"})
 
         return Response(
             data,
             mimetype=mime,
             headers={
-                # private: the token is per-viewer and short-lived, so a shared
-                # cache must not keep a copy.
-                "Cache-Control": "private, max-age=300",
+                # private: the token names one file for one viewer, so a shared
+                # cache must not keep a copy. max-age stays under the token TTL
+                # so the cached copy always dies before the URL that fetched it.
+                "Cache-Control": "private, max-age=240",
+                "ETag": etag,
                 "Content-Length": str(len(data)),
             },
         )

@@ -75,14 +75,19 @@ class AdminController:
             if ids:
                 people = {p["user_id"]: p for p in zdb.select(
                     "participants", f"select=user_id,name,email,phone,college,master_qr_token,payment_status&user_id=in.({','.join(ids)})")}
+            from services import proof_reference
+
             out = []
             for r in rows:
                 p = people.get(r["user_id"], {})
+                # sign_file_url alone returned None for every Drive-stored
+                # proof, which read as "no proof" rather than "wrong resolver".
+                proof = proof_reference.resolve(r.get("screenshot_url") or "")
                 out.append({
                     **r,
                     "name": p.get("name"), "email": p.get("email"), "phone": p.get("phone"),
                     "college": p.get("college"), "registration_id": p.get("master_qr_token"),
-                    "screenshot_signed_url": zdb.sign_file_url(r.get("screenshot_url") or "", 3600),
+                    "screenshot_signed_url": proof.get("url") if proof.get("success") else None,
                 })
             return jsonify({"success": True, "model": "participant", "payments": out}), 200
         from services.payment_service import get_pending_payments_service

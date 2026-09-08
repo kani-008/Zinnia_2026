@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import datetime as dt
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
 from flask import g
@@ -487,62 +488,130 @@ def payments_queue(status: str = "PENDING", q: str = "", flag: str = "", page: i
     }
 
 
+def _shares_txn_ref(uid: str, txn_ref: str) -> bool:
+    """
+    Does another participant's latest attempt carry this same reference?
+
+    The queue derives DUPLICATE_REF by counting every latest attempt at once.
+    One record cannot afford that, so this asks the same question the narrow
+    way: who else has ever used this reference, and is it still their current
+    one. Usually zero rows come back and the second query never runs.
+    """
+    others = {
+        r["user_id"]
+        for r in db.select("payments", f"select=user_id&txn_ref=eq.{db.enc(txn_ref)}")
+        if r["user_id"] != uid
+    }
+    if not others:
+        return False
+
+    rows = db.select(
+        "payments",
+        f"select=user_id,txn_ref&user_id=in.({','.join(sorted(others))})&order=created_at.asc",
+    )
+    latest = {r["user_id"]: r.get("txn_ref") for r in rows}  # ascending, last write wins
+    return any(ref == txn_ref for ref in latest.values())
+
+
 def payment_detail(user_id: str) -> Dict[str, Any]:
+    """
+    One participant's payment record.
+
+    Built from targeted reads rather than from _queue_rows(): rebuilding the
+    whole queue - every participant, every payment, every registration - to
+    find a single row took ~3.5s, and the drawer renders nothing at all until
+    it lands, so that was 3.5s of blank panel before the proof image was even
+    requested.
+    """
     uid = user_id.strip().upper()
-    row = next((r for r in _queue_rows() if r["user_id"] == uid), None)
-    if not row:
+    enc_uid = db.enc(uid)
+
+    # Every PostgREST call costs about half a second of round trip whatever it
+    # returns, so what makes the drawer slow is the NUMBER of reads, not their
+    # size. These five do not depend on each other, so they go at once.
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        f_participant = pool.submit(
+            db.select_one, "participants",
+            "select=user_id,name,email,phone,college,department,year,food_preference,"
+            f"payment_status,master_qr_token,created_at&user_id=eq.{enc_uid}",
+        )
+        f_attempts = pool.submit(
+            db.select, "payments",
+            f"select=id,amount,txn_ref,status,reject_reason,screenshot_url,created_at,approved_at"
+            f"&user_id=eq.{enc_uid}&order=created_at.desc",
+        )
+        f_regs = pool.submit(
+            db.select, "registrations",
+            f"select=reg_id,event_code,status,team_id,created_at&user_id=eq.{enc_uid}",
+        )
+        f_otp = pool.submit(
+            db.select_one, "login_otps",
+            f"select=user_id&user_id=eq.{enc_uid}&consumed_at=not.is.null",
+        )
+        f_events = pool.submit(_events)
+
+        participant = f_participant.result()
+        attempts = f_attempts.result()
+        registrations = f_regs.result()
+        verified = bool(f_otp.result())
+        event_rows = f_events.result()
+
+    if not participant:
         return {"success": False, "error_code": "NOT_FOUND", "message": "Registration not found."}
 
-    attempts = db.select(
-        "payments",
-        f"select=id,amount,txn_ref,status,reject_reason,screenshot_url,created_at,approved_at"
-        f"&user_id=eq.{uid}&order=created_at.desc",
-    )
-    registrations = db.select(
-        "registrations",
-        f"select=reg_id,event_code,status,team_id,created_at&user_id=eq.{uid}",
-    )
+    pay = dict(attempts[0]) if attempts else {}
+    pay["attempt_no"] = sum(1 for a in attempts if a.get("txn_ref"))
+
+    dup_refs = set()
+    if pay.get("txn_ref") and _shares_txn_ref(uid, pay["txn_ref"]):
+        dup_refs.add(pay["txn_ref"])
+
+    events = {e["code"]: e["name"] for e in event_rows}
+    ev = sorted(events.get(r["event_code"], r["event_code"]) for r in registrations)
+
+    row = {
+        **participant,
+        "registration_id": participant.get("master_qr_token"),
+        "registered_at": participant.get("created_at"),
+        "payment_id": pay.get("id"),
+        "amount": pay.get("amount"),
+        "txn_ref": pay.get("txn_ref"),
+        "payment_attempt_status": pay.get("status"),
+        "reject_reason": pay.get("reject_reason"),
+        "screenshot_url": pay.get("screenshot_url"),
+        "submitted_at": pay.get("created_at") if pay.get("txn_ref") else None,
+        "approved_at": pay.get("approved_at"),
+        "attempt_no": pay["attempt_no"],
+        "email_verified": verified,
+        "events_count": len(ev),
+        "event_list": ", ".join(ev) or None,
+        "flags": _flags(participant, pay, verified, dup_refs),
+    }
     return {"success": True, "payment": row, "attempts": attempts, "registrations": registrations}
 
 
 def screenshot_url(user_id: str) -> Dict[str, Any]:
     """
-    Short-lived signed URL for the proof image. The column stores an object
-    path in a private bucket — a stored signed URL would expire and a stored
-    public one would leak.
+    Short-lived viewable URL for the proof image. The column stores a
+    reference, never a URL — a stored signed URL would expire and a stored
+    public one would leak the proof to anybody who finds the row.
+
+    Every form the column can hold is handled in services/proof_reference, so
+    the treasurer's panel, the participant's own page and the legacy endpoint
+    cannot disagree about what a reference means.
     """
     row = db.select_one(
         "payments",
-        f"select=screenshot_url&user_id=eq.{user_id.strip().upper()}"
+        f"select=screenshot_url&user_id=eq.{db.enc(user_id.strip().upper())}"
         f"&screenshot_url=not.is.null&order=created_at.desc",
     )
     if not row or not row.get("screenshot_url"):
         return {"success": False, "error_code": "NO_SCREENSHOT",
                 "message": "No payment screenshot was submitted."}
 
-    stored = row["screenshot_url"]
+    from services import proof_reference
 
-    # Drive proofs are streamed back through this server rather than linked to
-    # Google directly — a drive.google.com view link is rate-limited and often
-    # answers with an interstitial instead of the image, which would stall the
-    # panel. The token authorises this one file for five minutes.
-    from services import drive_storage as drive
-
-    if drive.is_drive_ref(stored):
-        token = drive.proxy_token(drive.file_id_of(stored), ttl=300)
-        return {
-            "success": True,
-            # Relative on purpose: the panel is same-origin, so this works in
-            # local dev and on Vercel without knowing the public host.
-            "url": f"/api/admin/payment-proof?t={token}",
-            "expires_in": 300,
-        }
-
-    signed = db.sign_file_url(stored, expires_in=300)
-    if not signed:
-        return {"success": False, "error_code": "SIGN_FAILED",
-                "message": "The screenshot could not be opened. It may have been removed."}
-    return {"success": True, "url": signed, "expires_in": 300}
+    return proof_reference.resolve(row["screenshot_url"])
 
 
 def review_payment(user_id: str, approve: bool, reason: str = "") -> Dict[str, Any]:

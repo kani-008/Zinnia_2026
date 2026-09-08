@@ -272,7 +272,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     venue: 'CSE Dept',
     description: "Read an incomplete, original story and figure out its real (hidden) climax — you're not writing an ending, you're solving one. Uncover clues, adapt to sudden narrative twists across 2 intense deduction rounds, and prove your team's investigative accuracy and speed.",
     rules: [
-      'Team Size: 2 members per team.',
+      'Team Size: 3 members per team.',
       'Goal: Read an incomplete, original story and solve its real hidden climax.',
       'Format: 2 rounds, 30 minutes each.',
       'Round 1: Pick 2 clues from the options and solve the story as quickly as possible (No elimination).',

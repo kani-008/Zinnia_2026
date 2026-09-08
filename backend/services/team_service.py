@@ -551,7 +551,6 @@ TEAM_ID_PREFIX = {
     "BORDERLAND": "BL",
     "THINK_STRIKE_WIN": "TS",
     "PLOT_TWIST": "PT",
-    "SHORT_FILM": "SF",
 }
 
 # Attempts before giving up. With ~30 teams against 9999 numbers a first-pick

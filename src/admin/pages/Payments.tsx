@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Check, ImageOff, Search, Send, X } from 'lucide-react';
+import { Check, ExternalLink, ImageOff, Loader2, Search, Send, X } from 'lucide-react';
 import { useAdminQuery } from '../hooks/useAdminQuery';
 import { adminFetch } from '../auth/adminFetch';
 import {
@@ -61,7 +61,13 @@ function Drawer({
   }>(`/api/admin/payments/${userId}`, 0);
 
   const [shot, setShot] = useState<string | null>(null);
+  const [shotDrive, setShotDrive] = useState<string | null>(null);
   const [shotError, setShotError] = useState<string | null>(null);
+  // Three-state, not two: "still loading" is not "nothing was uploaded". While
+  // the proof was in flight the box fell through to the empty placeholder and
+  // told the treasurer no screenshot had been submitted — for a file that was
+  // about to appear.
+  const [shotLoading, setShotLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -69,18 +75,83 @@ function Drawer({
 
   const p = data?.payment;
 
-  // Signed URL, minted per view and short-lived. The column stores an object
-  // path, never a URL — see the screenshot contract in the build book.
+  const shotMinted = useRef({ at: 0, ttl: 0 });
+  const shotRetried = useRef(false);
+
+  /**
+   * Exchange the stored reference for something an <img> can load.
+   *
+   * Keyed on userId alone rather than on the loaded record: the endpoint
+   * answers NO_SCREENSHOT perfectly well on its own, and waiting for the
+   * detail query first put a multi-second serial delay in front of an image
+   * that already takes a Drive round trip to arrive.
+   */
+  const loadShot = useCallback(
+    async (opts?: { quiet?: boolean }) => {
+      if (!opts?.quiet) setShotLoading(true);
+      setShotError(null);
+      try {
+        const d = await adminFetch<{ url: string; expires_in?: number; external_url?: string }>(
+          `/api/admin/payments/${userId}/screenshot`,
+        );
+        shotMinted.current = { at: Date.now(), ttl: d.expires_in || 0 };
+        setShot(d.url);
+        setShotDrive(d.external_url || null);
+        return d.url;
+      } catch (e: any) {
+        setShot(null);
+        setShotDrive(null);
+        // NO_SCREENSHOT is not a failure — it is the empty state, and showing
+        // it as an error would put a "Try again" button on a record where
+        // nothing was ever uploaded.
+        setShotError(
+          e?.code === 'NO_SCREENSHOT' ? null : e?.message || 'Could not open the screenshot.',
+        );
+        return null;
+      } finally {
+        if (!opts?.quiet) setShotLoading(false);
+      }
+    },
+    [userId],
+  );
+
   useEffect(() => {
-    if (!p?.screenshot_url) return;
-    let cancelled = false;
-    adminFetch<{ url: string }>(`/api/admin/payments/${userId}/screenshot`)
-      .then((d) => !cancelled && setShot(d.url))
-      .catch((e) => !cancelled && setShotError(e?.message || 'Could not open the screenshot.'));
-    return () => {
-      cancelled = true;
-    };
-  }, [p?.screenshot_url, userId]);
+    // Reset first: without this a failure on one record stayed on screen over
+    // the next one, which reads as that participant's proof being broken too.
+    setShot(null);
+    setShotDrive(null);
+    setShotError(null);
+    shotRetried.current = false;
+    void loadShot();
+  }, [loadShot]);
+
+  /** The <img> itself failed — usually a token that expired while the drawer sat open. */
+  const onShotError = useCallback(() => {
+    if (shotRetried.current) {
+      setShot(null);
+      setShotError('The screenshot could not be loaded from the proof store.');
+      return;
+    }
+    shotRetried.current = true;
+    void loadShot({ quiet: true });
+  }, [loadShot]);
+
+  /**
+   * Open full size. The token is good for ten minutes; a treasurer comparing a
+   * reference against a bank statement can easily outlast that, and a stale
+   * link opens a new tab on an error page instead of the proof. Re-mint only
+   * when it is actually near expiry, so the ordinary click stays instant.
+   */
+  const openFullSize = useCallback(
+    async (e: React.MouseEvent<HTMLAnchorElement>) => {
+      const { at, ttl } = shotMinted.current;
+      if (!ttl || Date.now() - at < (ttl - 30) * 1000) return;
+      e.preventDefault();
+      const url = await loadShot({ quiet: true });
+      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    },
+    [loadShot],
+  );
 
   const act = async (approve: boolean, reason?: string) => {
     setBusy(true);
@@ -163,15 +234,57 @@ function Drawer({
                   Payment proof
                 </div>
                 {shot ? (
-                  <a href={shot} target="_blank" rel="noreferrer">
-                    <img
-                      src={shot}
-                      alt="Payment screenshot"
-                      className="max-h-[420px] w-full rounded object-contain bg-black/40"
-                    />
-                  </a>
+                  <>
+                    <a href={shot} target="_blank" rel="noreferrer" onClick={openFullSize}>
+                      <img
+                        src={shot}
+                        alt="Payment screenshot"
+                        className="max-h-[420px] w-full rounded object-contain bg-black/40"
+                        // The image is fetched from Drive through the proxy, so
+                        // it can fail on its own long after the URL was minted
+                        // — an expired token, a Drive hiccup. Without this the
+                        // box just goes blank and nothing says why.
+                        onError={onShotError}
+                      />
+                    </a>
+                    {shotDrive && (
+                      <a
+                        href={shotDrive}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex items-center gap-1.5 font-mono text-[11px] text-white/40 hover:text-white/70"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Open in Drive
+                      </a>
+                    )}
+                  </>
+                ) : shotLoading ? (
+                  <div className="flex flex-col items-center gap-2 py-10 text-white/25">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <p className="text-[12px]">Loading the screenshot…</p>
+                  </div>
                 ) : shotError ? (
-                  <p className="py-6 text-center text-[13px] text-white/40">{shotError}</p>
+                  <div className="flex flex-col items-center gap-2.5 py-8">
+                    <p className="max-w-[40ch] text-center text-[13px] text-white/45">{shotError}</p>
+                    <button
+                      onClick={() => void loadShot()}
+                      className="rounded border border-white/15 px-2.5 py-1 font-mono text-[11px] text-white/60 hover:border-white/30 hover:text-white"
+                    >
+                      Try again
+                    </button>
+                    {shotDrive && (
+                      <a
+                        href={shotDrive}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 font-mono text-[11px] text-white/40 hover:text-white/70"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Open in Drive
+                      </a>
+                    )}
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2 py-10 text-white/25">
                     <ImageOff className="w-6 h-6" />

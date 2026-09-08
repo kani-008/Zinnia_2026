@@ -312,6 +312,13 @@ export const ParticipantDashboardPage: React.FC = () => {
     const TONE_ICON = { warn: AlertTriangle, info: Info, good: CheckCircle2 } as const;
     const TONE_COLOR = { warn: '#E5BD00', info: '#8E939D', good: '#1DB954' } as const;
 
+    // Mega event first, the way the catalog above groups it — its note is the
+    // one that changes what you can pick, so it should not be read fourth.
+    // sort() is stable, so everything else keeps its catalog order.
+    const ordered = [...catalog].sort(
+      (a, b) => Number(groupOf(a) !== 'MEGA') - Number(groupOf(b) !== 'MEGA'),
+    );
+
     return (
       <ComicPageShell>
         <WebsiteNavbar />
@@ -342,7 +349,7 @@ export const ParticipantDashboardPage: React.FC = () => {
             })}
           </ul>
 
-          {catalog.map((card) => {
+          {ordered.map((card) => {
             const info = notesFor(card.event_code);
             if (!info) return null;
             const variant = cardVariant(card.event_code);
@@ -424,13 +431,25 @@ export const ParticipantDashboardPage: React.FC = () => {
                   className={`min-h-[350px] sm:min-h-[360px] transition-all duration-200 ${
                     locked ? 'opacity-70 hover:opacity-85 !cursor-default' : '!cursor-default'
                   }`}
-                  innerClassName="w-full flex-1 flex flex-col justify-between px-6 sm:px-7 pt-12 sm:pt-14 pb-8 sm:pb-9 text-center select-text"
+                  innerClassName={`w-full flex-1 flex flex-col justify-between px-6 sm:px-7 ${
+                    open ? 'pt-7 sm:pt-8 pb-14 sm:pb-16' : 'pt-11 sm:pt-12 pb-8 sm:pb-9'
+                  } text-center select-text`}
                 >
                   <div className="flex w-full flex-1 flex-col justify-between">
                     {/* TOP SECTION: META & TITLE & DETAILS */}
                     <div className="w-full flex flex-col items-center">
                       {/* Top Bar: Spacing clearance from the top-left number tag + category & lock badge */}
-                      <div className="w-full flex items-center justify-end gap-1.5 min-h-[22px] mb-1.5">
+                      <div
+                        className={`w-full flex items-center justify-end gap-1.5 ${
+                          open
+                            ? locked
+                              ? 'min-h-[16px] mb-1'
+                              : 'h-0 mb-0'
+                            : locked
+                              ? 'min-h-[22px] mb-1.5'
+                              : 'min-h-[16px] mb-1'
+                        }`}
+                      >
                         {locked && (
                           <span title="Unavailable" className="p-0.5 text-[#71767B]">
                             <Lock size={12} />
@@ -438,8 +457,12 @@ export const ParticipantDashboardPage: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Event Title: Consistent min-height so all cards align across rows */}
-                      <div className="min-h-[50px] sm:min-h-[54px] w-full flex items-center justify-center px-1">
+                      {/* Event Title: Consistent min-height when closed, compact when expanded */}
+                      <div
+                        className={`w-full flex items-center justify-center px-1 ${
+                          open ? 'min-h-0 py-1' : 'min-h-[50px] sm:min-h-[54px]'
+                        }`}
+                      >
                         <h3 className="font-sans font-black text-base xs:text-lg sm:text-xl uppercase tracking-wider leading-tight text-[#EEEEEA] text-center">
                           {card.name}
                         </h3>
@@ -519,7 +542,11 @@ export const ParticipantDashboardPage: React.FC = () => {
                     </div>
 
                     {/* BOTTOM ACTION SECTION */}
-                    <div className="w-full mt-auto pt-4 pb-0.5 border-t border-[#1C1F24] flex justify-center">
+                    <div
+                      className={`w-full mt-auto ${
+                        open ? 'pt-3 pb-3 sm:pb-4' : 'pt-4 pb-0.5'
+                      } border-t border-[#1C1F24] flex justify-center`}
+                    >
                       {registered ? (
                         <div
                           className="w-auto inline-flex py-2 px-5 border-2 items-center justify-center gap-2"
@@ -652,7 +679,7 @@ export const ParticipantDashboardPage: React.FC = () => {
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
           {/* Only the identity clears the number tag; the action below spans
               the card, so it sits centred instead of shunted right. */}
-          <div className="min-w-0 flex-1 pl-5">
+          <div className={`min-w-0 flex-1 ${open ? 'pl-6 sm:pl-5' : 'pl-12 sm:pl-5'}`}>
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-sans font-black text-base sm:text-lg uppercase tracking-wider leading-tight text-[#EEEEEA]">
                 {card.name}

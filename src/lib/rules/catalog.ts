@@ -7,7 +7,7 @@
 // TEAM SIZES (spec rule, matches the seed exactly):
 //   TECH team events are 2 students - except Paper Verse, which is 2-3.
 //   NON_TECH team events are 3 students, maximum 3.
-//   Short Film is online and stays 1-3 (solo or team, §4.8).
+//   Short Film is online and is exactly 1 (ruling of 4 September 2026).
 
 import type {
   BlockCode,
@@ -93,7 +93,7 @@ export const EVENTS: Record<EventCode, EventDef> = {
 
   DEBUGGING: {
     code: 'DEBUGGING',
-    name: 'Debugging',
+    name: 'Debugging Protocol',
     category: 'TECH',
     type: 'RUNNING',
     minTeam: 1,
@@ -183,11 +183,10 @@ export const EVENTS: Record<EventCode, EventDef> = {
     name: 'Short Film',
     category: 'NON_TECH',
     type: 'ONLINE',
-    // Team of 3, superseding the 4 September 2026 ruling of exactly 1. Online,
-    // no block, no count - but every member still needs an on-campus event of
-    // their own (R7 via R8). Mirrors rules_engine.EVENTS["SHORT_FILM"].
-    minTeam: 3,
-    maxTeam: 3,
+    // Exactly 1 (ruling of 4 September 2026): online, no block, no count, so
+    // team size affects no rule. Mirrors rules_engine.EVENTS["SHORT_FILM"].
+    minTeam: 1,
+    maxTeam: 1,
     capacity: null,
     durationMin: 0,
     window: null,

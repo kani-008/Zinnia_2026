@@ -321,7 +321,7 @@ export const WebsiteEventsPage: React.FC = () => {
                     </span>
                   </h2>
                   <p className="text-xs font-mono text-slate-400">
-                    Debugging, Neural AI, SQL Extraction, UI/UX, and Algorithmic Survival Marathons.
+                    Debugging Protocol, Neural AI, SQL Extraction, UI/UX, and Algorithmic Survival Marathons.
                   </p>
                 </div>
               </div>

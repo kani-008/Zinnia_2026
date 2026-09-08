@@ -1125,6 +1125,12 @@ export const WebsiteHomePage: React.FC = () => {
                         <br />
                         <span>VERSE</span>
                       </>
+                    ) : e.mission_name.toLowerCase().includes('debug') ? (
+                      <>
+                        <span>DEBUGGING</span>
+                        <br />
+                        <span>PROTOCOL</span>
+                      </>
                     ) : (
                       <span>{e.mission_name}</span>
                     )}

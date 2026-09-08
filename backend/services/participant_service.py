@@ -591,23 +591,13 @@ def payment_proof_url(user_id: str = "", registration_id: str = "") -> Dict[str,
     if not stored:
         return {"success": False, "error_code": "NO_SCREENSHOT", "message": "No screenshot on file."}
 
-    from services import drive_storage as drive
+    # Resolved by services/proof_reference, the same way the treasurer's panel
+    # resolves it. A Drive reference becomes the token-gated proxy URL: the
+    # token IS the authorisation - it names one file and expires - so this is
+    # not a role check being skipped.
+    from services import proof_reference
 
-    if drive.is_drive_ref(stored):
-        # The same token-gated proxy the treasurer's panel uses. The token IS
-        # the authorisation - it names one file for five minutes - so this is
-        # not a role check being skipped.
-        token = drive.proxy_token(drive.file_id_of(stored), ttl=300)
-        return {"success": True, "url": f"/api/admin/payment-proof?t={token}", "expires_in": 300}
-
-    signed = db.sign_file_url(stored, expires_in=300)
-    if not signed:
-        return {
-            "success": False,
-            "error_code": "SIGN_FAILED",
-            "message": "That screenshot could not be opened. Upload it again.",
-        }
-    return {"success": True, "url": signed, "expires_in": 300}
+    return proof_reference.resolve(stored)
 
 
 def remove_payment_proof(user_id: str = "", registration_id: str = "") -> Dict[str, Any]:

@@ -46,13 +46,10 @@ export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {
 
   PAPER_PRESENTATION: {
     summary: 'Shortlisted by topic before the day, then a 15-minute slot.',
-    when: 'A 15-minute slot, assigned to you after shortlisting',
+    when: 'A 15-minute slot, assigned to you',
     team: 'Team of 2-3',
     notes: [
-      { tone: 'good', text: 'This does NOT use up one of your 3 events - you can hold three other events as well.' },
-      { tone: 'info', text: 'Submit your title, track and abstract when you register. Shortlisting happens before the day and is announced in the participants group.' },
-      { tone: 'info', text: 'Your slot time is assigned once you are shortlisted, and is chosen to avoid your other events.' },
-      { tone: 'warn', text: 'It still takes a time slot, so it cannot be combined with Gadget Codes.' },
+      { tone: 'warn', text: 'It cannot be combined with Gadget Codes.' },
     ],
   },
 
@@ -62,7 +59,7 @@ export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {
     team: 'Individual',
     notes: [
       { tone: 'good', text: 'Flexible timing - you take your 30 minutes whenever you are free in the morning window.' },
-      { tone: 'good', text: 'Combines comfortably with Debugging and a morning paper slot.' },
+      { tone: 'good', text: 'Combines comfortably with Debugging Protocol and a morning paper slot.' },
     ],
   },
 
@@ -102,7 +99,7 @@ export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {
     team: 'Team of 3',
     notes: [
       { tone: 'warn', text: 'Takes the whole afternoon hour. You can hold only ONE afternoon event, and it rules out Lost in SQL.' },
-      { tone: 'good', text: 'Your mornings stay free for Debugging, The Last Signal and a morning paper slot.' },
+      { tone: 'good', text: 'Your mornings stay free for Debugging Protocol, The Last Signal and a morning paper slot.' },
     ],
   },
 
@@ -112,19 +109,19 @@ export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {
     team: 'Team of 3',
     notes: [
       { tone: 'warn', text: 'Takes the whole afternoon hour. You can hold only ONE afternoon event, and it rules out Lost in SQL.' },
-      { tone: 'good', text: 'Your mornings stay free for Debugging, The Last Signal and a morning paper slot.' },
+      { tone: 'good', text: 'Your mornings stay free for Debugging Protocol, The Last Signal and a morning paper slot.' },
     ],
   },
 
   SHORT_FILM: {
     summary: 'Online. Nothing to attend on the day.',
     when: 'No time slot - submit your video online',
-    team: 'Team of 1-3',
+    team: 'Individual',
     notes: [
       { tone: 'good', text: 'Does NOT use up one of your 3 events, and clashes with nothing.' },
       { tone: 'warn', text: 'You must already be registered for at least one on-campus event before you can enter this.' },
       { tone: 'warn', text: 'Registration AND submission both close on 20 September - two days earlier than every other event.' },
-      { tone: 'info', text: 'Video is 8 minutes maximum. You submit a link, not a file.' },
+      { tone: 'info', text: 'Video is 8 minutes maximum. You submit a link in the WhatsApp group, not a file.' },
     ],
   },
 };

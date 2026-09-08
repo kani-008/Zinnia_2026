@@ -122,7 +122,7 @@ EVENTS: Dict[str, EventDef] = {
         1, 1, None, 30, MORNING, (), True, _CLOSES_DEFAULT,
     ),
     "DEBUGGING": EventDef(
-        "DEBUGGING", "Debugging", "TECH", "RUNNING",
+        "DEBUGGING", "Debugging Protocol", "TECH", "RUNNING",
         1, 1, None, 30, MORNING, (), True, _CLOSES_DEFAULT,
     ),
     "LOST_IN_SQL": EventDef(
@@ -147,17 +147,12 @@ EVENTS: Dict[str, EventDef] = {
         3, 3, None, 60, None, ("B3", "B4"), True, _CLOSES_DEFAULT,
     ),
     "SHORT_FILM": EventDef(
-        # Team of 3, like the other non-tech events. This SUPERSEDES the
-        # 4 September 2026 ruling that made it exactly 1.
-        #
-        # Being a team event now has two consequences worth knowing: it is
-        # registered through create_team rather than individually, and R8 runs
-        # R1-R7 for EVERY member - so all three need an on-campus event of
-        # their own before the team can be created (R7), not just the captain.
-        #
-        # Keep in step with src/lib/rules/catalog.ts and zin26.events.
+        # Team of exactly 1 (ruling of 4 September 2026). It is online, occupies
+        # no block and counts toward no limit, so team composition affects no
+        # rule - which is why it is registered individually rather than as a
+        # team. Keep in step with src/lib/rules/catalog.ts and zin26.events.
         "SHORT_FILM", "Short Film", "NON_TECH", "ONLINE",
-        3, 3, None, 0, None, (), False, _CLOSES_SHORT_FILM,
+        1, 1, None, 0, None, (), False, _CLOSES_SHORT_FILM,
     ),
 }
 

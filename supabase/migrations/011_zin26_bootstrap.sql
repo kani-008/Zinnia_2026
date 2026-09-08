@@ -200,7 +200,7 @@ INSERT INTO zin26.events
      counts_toward_limit, duration_min, window_code, has_rounds, is_active,
      reg_closes_at, sort_order)
 VALUES
-    ('DEBUGGING',          'Debugging',          'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'MORNING',   false, true, '2026-09-22T23:59:59+05:30', 1),
+    ('DEBUGGING',          'Debugging Protocol', 'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'MORNING',   false, true, '2026-09-22T23:59:59+05:30', 1),
     ('LAST_SIGNAL',        'The Last Signal',    'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'MORNING',   false, true, '2026-09-22T23:59:59+05:30', 2),
     ('LOST_IN_SQL',        'Lost in SQL',        'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'AFTERNOON', false, true, '2026-09-22T23:59:59+05:30', 3),
     ('GADGET_CODES',       'Gadget Codes',       'TECH',     'FIXED',   2, 2, NULL, false, true,  180, NULL,        true,  true, '2026-09-22T23:59:59+05:30', 4),
@@ -217,8 +217,8 @@ VALUES
     ('THINK_STRIKE_WIN',   'Think, Strike, Win', 'NON_TECH', 'FIXED',   3, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-22T23:59:59+05:30', 7),
     ('PLOT_TWIST',         'Plot Twist',         'NON_TECH', 'FIXED',   3, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-22T23:59:59+05:30', 8),
     -- Online, no block, no count. Closes two days before everything else.
-    -- Team of 3, superseding the 4 September ruling of exactly 1.
-    ('SHORT_FILM',         'Short Film',         'NON_TECH', 'ONLINE',  3, 3, NULL, false, false,   0, NULL,        false, true, '2026-09-20T23:59:59+05:30', 9)
+    -- Exactly 1 per the 4 September ruling.
+    ('SHORT_FILM',         'Short Film',         'NON_TECH', 'ONLINE',  1, 1, NULL, false, false,   0, NULL,        false, true, '2026-09-20T23:59:59+05:30', 9)
 ON CONFLICT (code) DO UPDATE SET
     name = EXCLUDED.name, category = EXCLUDED.category, type = EXCLUDED.type,
     min_team = EXCLUDED.min_team, max_team = EXCLUDED.max_team,
