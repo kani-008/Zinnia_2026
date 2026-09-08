@@ -68,9 +68,16 @@ function removeTrigger() {
 function syncNow() {
   var props = PropertiesService.getScriptProperties();
   var url = props.getProperty('SYNC_URL');
-  var key = props.getProperty('SYNC_KEY');
+  // SHEET_SYNC_KEY is what the variable is called in Vercel, so that is the
+  // name people naturally copy across. Accept either rather than failing with
+  // a message that does not mention the name they actually used.
+  var key = props.getProperty('SYNC_KEY') || props.getProperty('SHEET_SYNC_KEY');
   if (!url || !key) {
-    throw new Error('Set SYNC_URL and SYNC_KEY in Project Settings -> Script Properties.');
+    throw new Error(
+      'Set SYNC_URL and SYNC_KEY (or SHEET_SYNC_KEY) in Project Settings -> ' +
+      'Script Properties. Found: ' +
+      (url ? 'SYNC_URL ok' : 'SYNC_URL MISSING') + ', ' +
+      (key ? 'key ok' : 'key MISSING') + '.');
   }
 
   var res = UrlFetchApp.fetch(url, {
