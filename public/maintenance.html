@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Under Maintenance — ZINNIA 2026</title>
+  <meta name="description" content="Zinnia 2026 is currently undergoing scheduled system maintenance and upgrades.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #08090A;
+      color: #EEEEEA;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-x: hidden;
+      position: relative;
+    }
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.18;
+      background-image: radial-gradient(circle at 1px 1px, rgba(15, 169, 198, 0.3) 1px, transparent 0);
+      background-size: 28px 28px;
+    }
+    .glow-cyan {
+      position: fixed;
+      top: -100px;
+      left: -100px;
+      width: 400px;
+      height: 400px;
+      background: rgba(15, 169, 198, 0.12);
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+    }
+    .glow-yellow {
+      position: fixed;
+      bottom: -100px;
+      right: -100px;
+      width: 400px;
+      height: 400px;
+      background: rgba(229, 189, 0, 0.12);
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+    }
+    header {
+      position: relative;
+      z-index: 10;
+      border-bottom: 2px solid #181A1D;
+      background: rgba(9, 10, 11, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-title {
+      font-family: 'Bangers', cursive;
+      font-size: 1.5rem;
+      letter-spacing: 0.08em;
+      color: #E5BD00;
+    }
+    .brand-sub {
+      font-size: 10px;
+      color: #71767B;
+      letter-spacing: 0.12em;
+    }
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #111214;
+      border: 1px solid rgba(15, 169, 198, 0.3);
+      font-size: 11px;
+      font-weight: 700;
+      color: #0FA9C6;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: #0FA9C6;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #0FA9C6;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    main {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+    .comic-card {
+      max-width: 640px;
+      width: 100%;
+      background: #111214;
+      border: 3px solid #0FA9C6;
+      box-shadow: 6px 6px 0px #090A0B;
+      padding: 32px 28px;
+      position: relative;
+    }
+    .chip {
+      display: inline-block;
+      background: #090A0B;
+      border: 2px solid #E5BD00;
+      color: #E5BD00;
+      font-family: 'Bangers', cursive;
+      font-size: 12px;
+      padding: 4px 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transform: rotate(-1.5deg);
+      box-shadow: 2px 2px 0px #090A0B;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-family: 'Luckiest Guy', cursive;
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      color: #EEEEEA;
+      line-height: 1.05;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      letter-spacing: 0.03em;
+    }
+    p.desc {
+      font-size: 13px;
+      color: #B8B8B2;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .terminal-box {
+      background: #090A0B;
+      border: 2px solid #181A1D;
+      padding: 16px;
+      margin-bottom: 24px;
+      font-size: 12px;
+    }
+    .terminal-header {
+      display: flex;
+      justify-content: space-between;
+      color: #71767B;
+      font-size: 10px;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #181A1D;
+      text-transform: uppercase;
+    }
+    .terminal-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      color: #9A9FA5;
+    }
+    .btn-action {
+      width: 100%;
+      background: #0FA9C6;
+      color: #08090A;
+      border: none;
+      font-family: 'Bangers', cursive;
+      font-size: 18px;
+      padding: 14px 20px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      box-shadow: 4px 4px 0px #090A0B;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-action:hover {
+      background: #23b7d3;
+      transform: translate(-1px, -1px);
+      box-shadow: 5px 5px 0px #090A0B;
+    }
+    .btn-action:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #090A0B;
+    }
+    footer {
+      position: relative;
+      z-index: 10;
+      border-top: 1px solid #181A1D;
+      padding: 14px;
+      text-align: center;
+      font-size: 11px;
+      color: #71767B;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="glow-cyan"></div>
+  <div class="glow-yellow"></div>
+
+  <header>
+    <div>
+      <div class="brand-title">ZINNIA 2026</div>
+      <div class="brand-sub">PROTOCOL // 503-MAINTENANCE</div>
+    </div>
+    <div class="status-pill">
+      <div class="pulse-dot"></div>
+      <span>Systems Updating</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="comic-card">
+      <div class="chip">TEMPORAL RECALIBRATION IN PROGRESS</div>
+      <h1>System Under Maintenance</h1>
+      <p class="desc">
+        We are currently calibrating the quantum cores and upgrading database servers for <strong>ZINNIA 2026</strong>. Hang tight, we'll be back live shortly!
+      </p>
+
+      <div class="terminal-box">
+        <div class="terminal-header">
+          <span>// TELEMETRY STATUS</span>
+          <span id="auto-refresh-timer">Auto-check in: 30s</span>
+        </div>
+        <div class="terminal-row">
+          <span>Core Database Engine</span>
+          <span style="color: #0FA9C6; font-weight: bold;">[ONLINE]</span>
+        </div>
+        <div class="terminal-row">
+          <span>Registration Portals</span>
+          <span style="color: #E5BD00; font-weight: bold;">[UPDATING 94%]</span>
+        </div>
+        <div class="terminal-row">
+          <span>Digital Passport Gateway</span>
+          <span style="color: #9A9FA5;">[STANDBY]</span>
+        </div>
+      </div>
+
+      <button class="btn-action" onclick="window.location.reload();">
+        ↻ Check If We're Back Online
+      </button>
+
+      <div style="margin-top: 18px; text-align: center; font-size: 11px; color: #71767B;">
+        <span>Emergency queries: zinnia2026@gcee.ac.in</span>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    ZINNIA 2026 • GOVERNMENT COLLEGE OF ENGINEERING, ERODE • ALL RIGHTS RESERVED
+  </footer>
+
+  <script>
+    var countdown = 30;
+    var timerEl = document.getElementById('auto-refresh-timer');
+    setInterval(function() {
+      countdown--;
+      if (countdown <= 0) {
+        window.location.reload();
+      } else {
+        timerEl.textContent = 'Auto-check in: ' + countdown + 's';
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

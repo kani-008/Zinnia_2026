@@ -241,22 +241,15 @@ export const WebsiteContactPage: React.FC = () => {
         aria-hidden="true"
       />
 
-      <main className="relative z-20 max-w-6xl mx-auto w-full pt-10 sm:pt-14 pb-16 px-2 sm:px-4 flex-1">
+      <main className="relative z-20 max-w-6xl mx-auto w-full pt-4 sm:pt-7 pb-16 px-2 sm:px-4 flex-1">
         {/* Page Header */}
         <div className="text-center space-y-3 mb-10 sm:mb-12">
-          <div className="flex justify-center">
-            <ComicChip tone="yellow" rotate={-2}>
-              <ComicBolt tone="yellow" className="w-3 h-3" /> Help desk open
-            </ComicChip>
-          </div>
-
           <h1 className="font-display text-4xl sm:text-6xl md:text-7xl uppercase tracking-tight text-[#EEEEEA] text-stroke-comic-sm">
             CONTACT <span className="text-[#E5BD00]">US</span>
           </h1>
 
           <p className="font-mono text-xs sm:text-sm text-[#B8B8B2] max-w-xl mx-auto leading-relaxed">
-            Have questions about event guidelines, accommodation, schedule, or registrations? We are
-            here to help.
+            Have questions about event guidelines, schedule, or registrations? We are here to help.
           </p>
         </div>
 
@@ -305,8 +298,11 @@ export const WebsiteContactPage: React.FC = () => {
             </div>
           </ComicPanel>
 
-          {/* ================= CARD 2: Campus + map ================= */}
-          <ComicPanel tone="cyan">
+          {/* ================= CARD 2: Campus + map =================
+              h-full + a flex column so the map grows into whatever height the
+              coordinator card sets beside it. It used to be a fixed 208px in a
+              panel twice that tall, leaving a dead black slab under it. */}
+          <ComicPanel tone="cyan" className="h-full" bodyClassName="h-full flex flex-col">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 border-2 border-[#0FA9C6] bg-[#111214] text-[#E5BD00] flex items-center justify-center shrink-0">
                 <MapPin className="w-5 h-5" />
@@ -329,13 +325,13 @@ export const WebsiteContactPage: React.FC = () => {
               aria-label={`Open ${CAMPUS_LABEL} in the Google Maps app`}
               onClick={handleMapClick}
               onKeyDown={handleMapKeyDown}
-              className={`map-frame relative overflow-hidden border-2 border-[#0FA9C6]/30 bg-[#17181C] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0FA9C6] ${mapGlow ? 'is-pinged' : ''
+              className={`map-frame relative flex-1 min-h-[clamp(11rem,26vw,26rem)] overflow-hidden border-2 border-[#0FA9C6]/30 bg-[#17181C] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0FA9C6] ${mapGlow ? 'is-pinged' : ''
                 }`}
             >
               <iframe
                 title="Department of CSE, Government College of Engineering, Erode"
                 src={MAP_EMBED_SRC}
-                className="w-full h-44 sm:h-52 border-0 block pointer-events-none"
+                className="absolute inset-0 h-full w-full border-0 block pointer-events-none"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 allowFullScreen

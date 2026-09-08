@@ -364,7 +364,9 @@ export const WebsiteHomePage: React.FC = () => {
           <h3
             className="text-[#E5BD00] uppercase text-xs xs:text-sm sm:text-2xl md:text-3xl tracking-widest leading-tight drop-shadow-[2px_2px_0px_#090A0B] font-mono font-bold"
           >
-            GOVERNMENT COLLEGE OF ENGINEERING, ERODE
+            GOVERNMENT COLLEGE OF ENGINEERING
+            <br />
+            ERODE - 638 316
           </h3>
           <p
             className="text-[#3CE7FF] uppercase text-[11px] xs:text-xs sm:text-xl md:text-2xl tracking-widest leading-tight drop-shadow-[1.5px_1.5px_0px_#090A0B] mt-0.5 font-mono font-bold"
@@ -922,27 +924,56 @@ export const WebsiteHomePage: React.FC = () => {
         className="relative z-30 max-w-7xl mx-auto w-full pt-6 sm:pt-10 pb-0 px-2 sm:px-4 mt-2 sm:mt-4 mb-0 overflow-hidden md:overflow-visible"
       >
         {/* Section Header */}
-        <div className="flex items-center justify-center gap-2 sm:gap-6 mb-8 sm:mb-12 max-w-full overflow-hidden">
-          <div className="hidden sm:flex items-center gap-1.5 text-[#B8B8B2]/50">
-            <span className="h-[1px] w-8 sm:w-28 bg-[#B8B8B2]/50" />
-            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
-            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
-            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
-            <span className="h-[1px] w-4 sm:w-16 bg-[#B8B8B2]/50" />
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8 sm:mb-12 w-full max-w-6xl mx-auto px-2 select-none">
+          {/* Left Side: Bold Fluid Gradient Line + 3 Theme Color Dots */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 flex-1 justify-end min-w-0">
+            <span
+              className="h-[3.5px] sm:h-[5px] w-full max-w-[70px] xs:max-w-[120px] sm:max-w-[240px] md:max-w-[340px] lg:max-w-[440px] rounded-full bg-gradient-to-r from-transparent via-[#C084FC] via-[#0FA9C6] to-[#D51F55] shadow-[0_0_12px_rgba(15,169,198,0.6)] shrink"
+              aria-hidden="true"
+            />
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              <span
+                className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3.5 sm:h-3.5 rounded-full bg-[#C084FC] shadow-[0_0_8px_#C084FC] transition-transform hover:scale-125"
+                title="Mega Event"
+              />
+              <span
+                className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3.5 sm:h-3.5 rounded-full bg-[#0FA9C6] shadow-[0_0_8px_#0FA9C6] transition-transform hover:scale-125"
+                title="Technical Events"
+              />
+              <span
+                className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3.5 sm:h-3.5 rounded-full bg-[#D51F55] shadow-[0_0_8px_#D51F55] transition-transform hover:scale-125"
+                title="Non-Technical Events"
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span className="text-[#E5BD00] text-2xl sm:text-4xl font-black select-none">⚡</span>
-            <h2 className="font-display italic text-3xl sm:text-5xl md:text-6xl text-[#EEEEEA] tracking-widest uppercase select-none">
+
+          {/* Title */}
+          <div className="px-1 sm:px-3 shrink-0">
+            <h2 className="font-display italic text-2xl xs:text-3xl sm:text-5xl md:text-6xl text-[#EEEEEA] tracking-wider sm:tracking-widest uppercase select-none drop-shadow-[2px_2px_0px_#090A0B] text-center whitespace-nowrap">
               EVENTS
             </h2>
-            <span className="text-[#E5BD00] text-2xl sm:text-4xl font-black select-none">⚡</span>
           </div>
-          <div className="hidden sm:flex items-center gap-1.5 text-[#B8B8B2]/50">
-            <span className="h-[1px] w-4 sm:w-16 bg-[#B8B8B2]/50" />
-            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
-            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
-            <span className="w-1 h-1 rounded-full bg-[#B8B8B2]/60" />
-            <span className="h-[1px] w-8 sm:w-28 bg-[#B8B8B2]/50" />
+
+          {/* Right Side: 3 Theme Color Dots + Bold Fluid Gradient Line */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 flex-1 justify-start min-w-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              <span
+                className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3.5 sm:h-3.5 rounded-full bg-[#D51F55] shadow-[0_0_8px_#D51F55] transition-transform hover:scale-125"
+                title="Non-Technical Events"
+              />
+              <span
+                className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3.5 sm:h-3.5 rounded-full bg-[#0FA9C6] shadow-[0_0_8px_#0FA9C6] transition-transform hover:scale-125"
+                title="Technical Events"
+              />
+              <span
+                className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3.5 sm:h-3.5 rounded-full bg-[#C084FC] shadow-[0_0_8px_#C084FC] transition-transform hover:scale-125"
+                title="Mega Event"
+              />
+            </div>
+            <span
+              className="h-[3.5px] sm:h-[5px] w-full max-w-[70px] xs:max-w-[120px] sm:max-w-[240px] md:max-w-[340px] lg:max-w-[440px] rounded-full bg-gradient-to-l from-transparent via-[#C084FC] via-[#0FA9C6] to-[#D51F55] shadow-[0_0_12px_rgba(15,169,198,0.6)] shrink"
+              aria-hidden="true"
+            />
           </div>
         </div>
 
@@ -969,7 +1000,20 @@ export const WebsiteHomePage: React.FC = () => {
               </span>
             </div>
 
-            <div className="flex justify-center">
+            <div className="flex items-center justify-center gap-5 lg:gap-10 sm:-translate-x-[110px] lg:-translate-x-[120px]">
+              {/* The comic cloud, moved up from the non-technical row so it
+                  opens the section beside the flagship card. Desktop only —
+                  on a phone it is a full extra screen of decoration above the
+                  one card people came to tap. */}
+              <div className="hidden sm:flex w-full max-w-[200px] shrink-0 items-center justify-center select-none pointer-events-none">
+                <img
+                  src={cloudSvg}
+                  alt=""
+                  aria-hidden="true"
+                  className="w-full h-auto object-contain select-none pointer-events-none mix-blend-screen drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)]"
+                />
+              </div>
+
               {megaEvents.map((e) => (
                 <div key={e.id} className="w-full max-w-[300px] sm:max-w-[340px] lg:max-w-[380px]">
                   <ComicHandDrawnCard
@@ -1143,16 +1187,6 @@ export const WebsiteHomePage: React.FC = () => {
             ))}
           </div>
 
-          {/* Comic Cloud & Star Doodle Graphic */}
-          <div className="flex sm:hidden justify-center items-center my-6 relative select-none pointer-events-none">
-            <div className="relative w-full max-w-[210px] flex items-center justify-center">
-              <img
-                src={cloudSvg}
-                alt="Comic Cloud"
-                className="w-full h-auto object-contain select-none pointer-events-none mix-blend-screen drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)]"
-              />
-            </div>
-          </div>
         </div>
 
         {/* -------------------------------------------------------------
@@ -1169,21 +1203,11 @@ export const WebsiteHomePage: React.FC = () => {
             </span>
           </div>
 
-          {/* 6 Columns Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5 lg:gap-6 items-center">
+          {/* 5 Columns Grid — the cloud that used to open this row now sits
+              beside Gadget Codes in the mega tier above. */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 lg:gap-6 items-center">
 
-            {/* Column 1 on Desktop: Official Comic Cloud Asset */}
-            <div className="hidden sm:flex col-span-1 lg:col-span-1 flex-col items-center justify-center relative select-none pointer-events-none min-h-[220px] sm:min-h-[295px] pr-2">
-              <div className="relative w-full max-w-[210px] flex items-center justify-center">
-                <img
-                  src={cloudSvg}
-                  alt="Comic Cloud"
-                  className="w-full h-auto object-contain select-none pointer-events-none mix-blend-screen drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)]"
-                />
-              </div>
-            </div>
-
-            {/* Columns 2 to 5: The 4 Non-Technical Cards (06, 07, 08, 09) */}
+            {/* Columns 1 to 4: The 4 Non-Technical Cards (06, 07, 08, 09) */}
             {nonTechEvents.map((e) => (
               <ComicHandDrawnCard
                 key={e.id}
@@ -1270,8 +1294,10 @@ export const WebsiteHomePage: React.FC = () => {
               </ComicHandDrawnCard>
             ))}
 
-            {/* Column 6 on Desktop: Flying Paper Airplane Doodle with Looped Trail */}
-            <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex items-center justify-center relative pointer-events-none select-none min-h-[220px] sm:min-h-[295px]">
+            {/* Column 5 on Desktop: Flying Paper Airplane Doodle with Looped
+                Trail. Desktop only — on a phone it spanned both columns and
+                cost a full screen of scrolling to say nothing. */}
+            <div className="hidden sm:flex sm:col-span-1 lg:col-span-1 items-center justify-center relative pointer-events-none select-none min-h-[220px] sm:min-h-[295px]">
               <svg className="w-full h-full max-w-[200px] max-h-[190px]" viewBox="0 0 200 190" fill="none">
                 {/* Dashed flight loop */}
                 <path

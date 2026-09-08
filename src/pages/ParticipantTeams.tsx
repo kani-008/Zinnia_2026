@@ -51,9 +51,9 @@ export const ParticipantTeamsPage: React.FC = () => {
 
   // Failures surface as a slide-in toast rather than a box above the form,
   // which on a phone appeared off-screen above the button just pressed.
+  const [notice, setNotice] = useState<string | null>(null);
   useToastOn(error);
   useToastOn(notice, 'info');
-  const [notice, setNotice] = useState<string | null>(null);
 
   const me = loadSession()?.user.user_id ?? '';
 
