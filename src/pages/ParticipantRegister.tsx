@@ -28,38 +28,9 @@ import {
 } from '../components/ui/comic';
 import { useToastOn } from '../components/ui/toast';
 
+import { VegNonVegToggle } from '../components/ui/VegNonVegToggle';
+
 const YEARS = ['I', 'II', 'III', 'IV'] as const;
-
-/** Food toggle: 7.5rem track − 4px borders − 0.25rem gap each end − 1.75rem knob. */
-const KNOB_TRAVEL = '5rem';
-
-/**
- * The Indian packaged-food veg / non-veg mark: a filled dot or triangle inside
- * a square outline.
- *
- * Drawn inline rather than taken from lucide, which does not carry it — and it
- * is worth carrying, because it is the one food symbol every participant can
- * read without the word next to it. This is also why the toggle uses the
- * mark's own green and red instead of the site's cyan/pink accents.
- */
-const FoodMark: React.FC<{ veg: boolean; className?: string }> = ({ veg, className = '' }) => (
-  <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
-    <rect
-      x="1.5"
-      y="1.5"
-      width="17"
-      height="17"
-      fill="none"
-      strokeWidth="2"
-      stroke={veg ? '#1DB954' : '#D51F55'}
-    />
-    {veg ? (
-      <circle cx="10" cy="10" r="4.5" fill="#1DB954" />
-    ) : (
-      <path d="M10 5 L15 14.5 H5 Z" fill="#D51F55" />
-    )}
-  </svg>
-);
 
 const EMPTY: ParticipantDetails = {
   name: '',
@@ -251,46 +222,14 @@ export const ParticipantRegisterPage: React.FC = () => {
               />
             </ComicField>
 
-            <div className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-[#B8B8B2]">
-                <Utensils size={12} /> Food preference
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+              <span className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#B8B8B2]">
+                <Utensils size={14} className="text-[#0FA9C6]" /> Food preference
               </span>
-
-              <button
-                type="button"
-                onClick={() => set('food_preference', isVeg ? 'NON_VEG' : 'VEG')}
-                aria-label={`Food preference: ${
-                  isVeg ? 'vegetarian' : 'non-vegetarian'
-                }. Activate to switch to ${isVeg ? 'non-vegetarian' : 'vegetarian'}.`}
-                className={`relative h-9 w-[7rem] shrink-0 border-2 border-[#090A0B] shadow-[3px_3px_0px_#090A0B] transition-colors duration-200 ${
-                  isVeg ? 'bg-[#1DB954]/15' : 'bg-[#D51F55]/15'
-                }`}
-              >
-                {/* The label sits opposite the knob, so the control reads as a
-                    track with the mark travelling along it. */}
-                <span
-                  className={`pointer-events-none absolute top-1/2 -translate-y-1/2 font-mono text-[11px] font-bold uppercase tracking-wider ${
-                    isVeg ? 'right-2.5 text-[#1DB954]' : 'left-2.5 text-[#D51F55]'
-                  }`}
-                >
-                  {isVeg ? 'Veg' : 'Non-Veg'}
-                </span>
-
-                {/* Both axes are set in one inline `translate`. Tailwind's
-                    translate-x-* utility and the -50% that centres the knob
-                    vertically write the same property, so as classes they
-                    cancel rather than compose — the knob stayed put on the
-                    left. KNOB_TRAVEL is the track minus its borders, the gap
-                    at each end, and the knob itself. */}
-                <span
-                  style={{ translate: isVeg ? '0 -50%' : `${KNOB_TRAVEL} -50%` }}
-                  className={`absolute left-1 top-1/2 grid h-7 w-7 place-items-center border-2 bg-[#111214] transition-[translate,border-color] duration-200 ${
-                    isVeg ? 'border-[#1DB954]' : 'border-[#D51F55]'
-                  }`}
-                >
-                  <FoodMark veg={isVeg} className="h-4 w-4" />
-                </span>
-              </button>
+              <VegNonVegToggle
+                value={form.food_preference}
+                onChange={(val) => set('food_preference', val)}
+              />
             </div>
           </ComicPanel>
 

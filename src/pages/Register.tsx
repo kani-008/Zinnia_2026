@@ -21,6 +21,7 @@ import {
   Loader2 
 } from 'lucide-react';
 import { FoodMark } from '../components/ui/FoodMark';
+import { VegNonVegToggle } from '../components/ui/VegNonVegToggle';
 import { SelectField } from '../components/ui/SelectField';
 
 const ACADEMIC_YEAR_OPTIONS = [
@@ -706,36 +707,15 @@ export const WebsiteRegisterPage: React.FC = () => {
               </div>
 
               {/* Food Preference Selection */}
-              <div className="space-y-1.5 pt-1">
-                <label className="block text-xs text-[#B8B8B2] font-semibold font-mono">
-                  Lunch Preference (Leader) <span className="text-[#D51F55]">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setLeader({ ...leader, food_preference: 'VEG' })}
-                    className={`min-h-[44px] py-2.5 px-4 rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer select-none ${
-                      (leader.food_preference || 'VEG') === 'VEG'
-                        ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981] shadow-[2px_2px_0px_#10B981]'
-                        : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30 hover:border-[#B8B8B2]/60'
-                    }`}
-                  >
-                    <FoodMark type="VEG" />
-                    <span>VEG</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setLeader({ ...leader, food_preference: 'NON_VEG' })}
-                    className={`min-h-[44px] py-2.5 px-4 rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer select-none ${
-                      leader.food_preference === 'NON_VEG'
-                        ? 'bg-[#D51F55]/20 text-[#D51F55] border-[#D51F55] shadow-[2px_2px_0px_#D51F55]'
-                        : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30 hover:border-[#B8B8B2]/60'
-                    }`}
-                  >
-                    <FoodMark type="NON_VEG" />
-                    <span>NON-VEG</span>
-                  </button>
+              <div className="pt-1">
+                <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3">
+                  <label className="block text-xs text-[#B8B8B2] font-semibold font-mono">
+                    Lunch Preference (Leader) <span className="text-[#D51F55]">*</span>
+                  </label>
+                  <VegNonVegToggle
+                    value={leader.food_preference || 'VEG'}
+                    onChange={(val) => setLeader({ ...leader, food_preference: val })}
+                  />
                 </div>
               </div>
 
@@ -883,35 +863,16 @@ export const WebsiteRegisterPage: React.FC = () => {
                   </div>
 
                   {/* Member Food Preference */}
-                  <div className="pt-1 space-y-1">
-                    <label className="block text-xs sm:text-sm text-[#B8B8B2] font-semibold font-mono">
-                      Lunch Preference (Member {idx + 2}) <span className="text-[#D51F55]">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => handleMemberChange(idx, 'food_preference', 'VEG')}
-                        className={`min-h-[44px] py-2 px-3 rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer select-none ${
-                          (member.food_preference || 'VEG') === 'VEG'
-                            ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981] shadow-[2px_2px_0px_#10B981]'
-                            : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30'
-                        }`}
-                      >
-                        <FoodMark type="VEG" />
-                        <span>VEG</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleMemberChange(idx, 'food_preference', 'NON_VEG')}
-                        className={`min-h-[44px] py-2 px-3 rounded-xl font-mono text-xs font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer select-none ${
-                          member.food_preference === 'NON_VEG'
-                            ? 'bg-[#D51F55]/20 text-[#D51F55] border-[#D51F55] shadow-[2px_2px_0px_#D51F55]'
-                            : 'bg-[#08090A] text-[#B8B8B2] border-[#B8B8B2]/30'
-                        }`}
-                      >
-                        <FoodMark type="NON_VEG" />
-                        <span>NON-VEG</span>
-                      </button>
+                  <div className="pt-1">
+                    <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2.5">
+                      <label className="block text-xs sm:text-sm text-[#B8B8B2] font-semibold font-mono">
+                        Lunch Preference (Member {idx + 2}) <span className="text-[#D51F55]">*</span>
+                      </label>
+                      <VegNonVegToggle
+                        size="sm"
+                        value={member.food_preference || 'VEG'}
+                        onChange={(val) => handleMemberChange(idx, 'food_preference', val)}
+                      />
                     </div>
                   </div>
                 </div>
