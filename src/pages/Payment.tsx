@@ -16,7 +16,8 @@ import {
   Loader2,
   RefreshCw,
   Receipt,
-  ChevronUp
+  ChevronUp,
+  Phone
 } from 'lucide-react';
 
 const UTR_REGEX = /^[A-Z0-9]{10,30}$/;
@@ -33,6 +34,7 @@ export const WebsitePaymentPage: React.FC = () => {
   const [utrNumber, setUtrNumber] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [copiedUpi, setCopiedUpi] = useState(false);
+  const [copiedNumber, setCopiedNumber] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -353,6 +355,37 @@ export const WebsitePaymentPage: React.FC = () => {
                   {copiedUpi ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : <Copy className="w-3.5 h-3.5 stroke-[2.5]" />}
                   <span>{copiedUpi ? 'COPIED' : 'COPY'}</span>
                 </button>
+              </div>
+
+              {/* Pay via Mobile Number (GPay / PhonePe / Paytm) */}
+              <div className="w-full p-3 bg-[#08090A] border border-[#EEEEEA]/30 shadow-[3px_3px_0px_#090A0B] rounded-xl flex items-center justify-between gap-2">
+                <div className="text-left font-mono truncate">
+                  <div className="text-[10px] text-[#E5BD00] font-bold uppercase">PAY VIA NUMBER (GPAY / PHONEPE / PAYTM)</div>
+                  <div className="text-sm text-[#EEEEEA] font-bold tracking-wider">8778784819</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText('8778784819');
+                    setCopiedNumber(true);
+                    setTimeout(() => setCopiedNumber(false), 2000);
+                  }}
+                  className="min-h-[36px] px-3 py-1.5 bg-[#0FA9C6] hover:bg-[#EEEEEA] text-[#090A0B] font-mono font-bold rounded-lg text-xs uppercase border border-[#090A0B] shadow-[2px_2px_0px_#090A0B] flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                >
+                  {copiedNumber ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : <Copy className="w-3.5 h-3.5 stroke-[2.5]" />}
+                  <span>{copiedNumber ? 'COPIED' : 'COPY'}</span>
+                </button>
+              </div>
+
+              {/* Payment Support Notice */}
+              <div className="w-full p-3 bg-[#111214] border border-[#E5BD00]/30 shadow-[3px_3px_0px_#090A0B] rounded-xl text-left font-mono text-xs text-[#B8B8B2] flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-[#E5BD00] shrink-0" />
+                <div>
+                  <span className="text-[11px] text-[#B8B8B2] block">Contact if any issues arise:</span>
+                  <a href="tel:8903664244" className="font-bold text-[#E5BD00] hover:text-[#0FA9C6] transition-colors">
+                    Kishore : 8903664244
+                  </a>
+                </div>
               </div>
 
             </div>

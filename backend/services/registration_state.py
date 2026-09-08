@@ -63,6 +63,11 @@ def resolve_participant(
     email = (email or "").strip().lower()
 
     if registration_id:
+        try:
+            import uuid
+            uuid.UUID(str(registration_id))
+        except (ValueError, AttributeError):
+            return None
         return db.select_one("participants", f"select={PARTICIPANT_FIELDS}&master_qr_token=eq.{registration_id}")
     if user_id:
         return db.select_one("participants", f"select={PARTICIPANT_FIELDS}&user_id=eq.{user_id}")

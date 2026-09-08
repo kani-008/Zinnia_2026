@@ -19,6 +19,7 @@ import {
   ImagePlus,
   Loader2,
   MessageCircle,
+  Phone,
   RefreshCw,
   X,
 } from 'lucide-react';
@@ -105,6 +106,7 @@ export const ParticipantPaymentPage: React.FC = () => {
   const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedNumber, setCopiedNumber] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Failures surface as a slide-in toast rather than a box above the form,
@@ -219,6 +221,16 @@ export const ParticipantPaymentPage: React.FC = () => {
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
       // Clipboard is blocked in some mobile browsers; the ID is on screen anyway.
+    }
+  };
+
+  const copyNumber = async () => {
+    try {
+      await navigator.clipboard.writeText('8778784819');
+      setCopiedNumber(true);
+      window.setTimeout(() => setCopiedNumber(false), 1800);
+    } catch {
+      // Clipboard is blocked in some mobile browsers; the number is on screen anyway.
     }
   };
 
@@ -579,11 +591,37 @@ export const ParticipantPaymentPage: React.FC = () => {
                   {copied ? <Check size={14} className="text-[#0FA9C6]" /> : <Copy size={14} className="text-[#71767B]" />}
                 </button>
               </div>
+
+              <div>
+                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">
+                  Pay via Number
+                </p>
+                <button
+                  onClick={copyNumber}
+                  type="button"
+                  className="mt-1 flex items-center gap-2 pl-2 font-mono text-sm font-bold text-[#EEEEEA] transition-colors hover:text-[#E5BD00]"
+                >
+                  8778784819
+                  {copiedNumber ? <Check size={14} className="text-[#0FA9C6]" /> : <Copy size={14} className="text-[#71767B]" />}
+                </button>
+              </div>
+
               <div>
                 <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">Payee</p>
                 <p className="mt-1 pl-2 font-mono text-sm text-[#EEEEEA]">{TREASURER_PAYMENT_CONFIG.payeeName || '—'}</p>
               </div>
-              
+
+              <div className="pt-2 border-t border-[#B8B8B2]/15">
+                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">Payment Support</p>
+                <p className="mt-0.5 pl-2 font-mono text-[11px] text-[#B8B8B2]">Contact if any issues arise:</p>
+                <a
+                  href="tel:8903664244"
+                  className="mt-1 flex items-center gap-1.5 pl-2 font-mono text-sm font-bold text-[#E5BD00] hover:text-[#0FA9C6] transition-colors"
+                >
+                  <Phone size={14} className="shrink-0" />
+                  <span>Kishore : 8903664244</span>
+                </a>
+              </div>
             </div>
           </div>
         </ComicPanel>

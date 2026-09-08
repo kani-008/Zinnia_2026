@@ -262,8 +262,18 @@ def promote_pending(details: Dict[str, Any]) -> Dict[str, Any]:
 
     # Re-checked here, not just at register time: two tabs can both pass the
     # earlier check and arrive with valid codes for the same address.
-    existing = db.select_one("participants", f"select=user_id&email=eq.{db.enc(email)}")
+    existing = db.select_one("participants", f"select=user_id,email&email=eq.{db.enc(email)}")
     if existing:
+        # If this participant was created during an earlier submission attempt that
+        # failed before the payment reference was saved, allow them to finish
+        # payment rather than locking them out with DUPLICATE_EMAIL.
+        payment = db.select_one(
+            "payments",
+            f"select=id,txn_ref,status&user_id=eq.{existing['user_id']}&order=created_at.desc",
+        )
+        if not payment or not payment.get("txn_ref"):
+            return {"success": True, "participant": existing}
+
         return {
             "success": False,
             "error_code": "DUPLICATE_EMAIL",
@@ -414,6 +424,16 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
             "message": "The transaction number is 12 digits, numbers only.",
         }
 
+    # Ensure this transaction reference (UTR) is unique across payments before any writes occur
+    dup_payment = db.select_one("payments", f"select=id,user_id,txn_ref&txn_ref=eq.{db.enc(utr)}")
+    if dup_payment and (not user_id or dup_payment.get("user_id") != user_id):
+        return {
+            "success": False,
+            "error_code": "DUPLICATE_UTR",
+            "field": "utr_number",
+            "message": "This transaction reference / UTR has already been submitted. Each payment proof must be unique.",
+        }
+
     # Proof screenshot (§4.1 "participant uploads screenshot + enters transaction
     # reference"). Required on a first submission; on a resubmission the earlier
     # proof stands unless a new one is sent. Validated before any DB read.
@@ -450,17 +470,19 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
 
         # The address was proven by the emailed code, which never reached the
         # table because no row existed to hang it on. A consumed OTP row is how
-        # the rest of the system reads "verified", so it is written now.
+        # the rest of the system reads "verified", so it is written now if not already recorded.
         now = dt.datetime.now(dt.timezone.utc)
-        db.insert(
-            "login_otps",
-            {
-                "user_id": user_id,
-                "otp_hash": "promoted-at-payment",
-                "expires_at": now.isoformat(),
-                "consumed_at": now.isoformat(),
-            },
-        )
+        consumed = db.select_one("login_otps", f"select=id&user_id=eq.{user_id}&consumed_at=not.is.null")
+        if not consumed:
+            db.insert(
+                "login_otps",
+                {
+                    "user_id": user_id,
+                    "otp_hash": "promoted-at-payment",
+                    "expires_at": now.isoformat(),
+                    "consumed_at": now.isoformat(),
+                },
+            )
 
     participant = db.select_one("participants", f"select=*&user_id=eq.{user_id}")
     if not participant:
@@ -521,7 +543,17 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
             f"{user_id}/{stamp}.{ext}", proof_bytes, proof_mime
         )
 
-    db.update("payments", f"id=eq.{payment['id']}", update)
+    try:
+        db.update("payments", f"id=eq.{payment['id']}", update)
+    except Zin26Error as e:
+        if "uq_payments_txn_ref" in str(e.message):
+            return {
+                "success": False,
+                "error_code": "DUPLICATE_UTR",
+                "field": "utr_number",
+                "message": "This transaction reference / UTR has already been submitted. Each payment proof must be unique.",
+            }
+        raise
 
     # Mirrored onto the participant row so the gate scan and every teammate
     # lookup can read payment state without a second query.

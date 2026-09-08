@@ -115,9 +115,10 @@ export const ParticipantTeamCreatePage: React.FC = () => {
   );
 
   const setCode = (index: number, value: string) => {
-    const next = value.toUpperCase();
-    setCodes((prev) => prev.map((c, i) => (i === index ? next : c)));
-    check(index, next);
+    // Strip accidental ZIN26- prefix if pasted or typed by user so only the rest is stored
+    const cleanSuffix = value.toUpperCase().replace(/^ZIN26-?/i, '').trim();
+    setCodes((prev) => prev.map((c, i) => (i === index ? cleanSuffix : c)));
+    check(index, cleanSuffix ? `ZIN26-${cleanSuffix}` : '');
   };
 
   const addSlot = () => {
@@ -139,7 +140,10 @@ export const ParticipantTeamCreatePage: React.FC = () => {
     setSubmitting(true);
     setError(null);
 
-    const memberIds = codes.map((c) => c.trim().toUpperCase()).filter(Boolean);
+    const memberIds = codes
+      .map((c) => c.trim().toUpperCase())
+      .filter(Boolean)
+      .map((c) => (c.startsWith('ZIN26-') ? c : `ZIN26-${c}`));
 
     let result = await createTeam({
       event_code: eventCode,
@@ -262,10 +266,11 @@ export const ParticipantTeamCreatePage: React.FC = () => {
                       <div className="flex gap-2">
                         <ComicInput
                           className="flex-1"
+                          prefix="ZIN26-"
                           invalid={slot.status === 'blocked' || slot.status === 'error'}
                           value={code}
                           onChange={(e) => setCode(index, e.target.value)}
-                          placeholder="ZIN26-0142"
+                          placeholder="0142"
                         />
                         {codes.length > Math.max(spec.min - 1, 0) && (
                           <button

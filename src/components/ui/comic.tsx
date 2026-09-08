@@ -238,12 +238,37 @@ export const controlClass = (invalid = false) =>
 // on the login screen focuses itself).
 export type ComicInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   invalid?: boolean;
+  prefix?: React.ReactNode;
   ref?: React.Ref<HTMLInputElement>;
 };
 
-export const ComicInput: React.FC<ComicInputProps> = ({ invalid, className = '', ...props }) => (
-  <input {...props} className={`${controlClass(invalid)} ${className}`} />
-);
+export const ComicInput: React.FC<ComicInputProps> = ({ invalid, prefix, className = '', ...props }) => {
+  const innerRef = React.useRef<HTMLInputElement>(null);
+
+  if (prefix) {
+    return (
+      <div
+        onClick={() => innerRef.current?.focus()}
+        className={`w-full bg-[#111214] rounded-sm border transition-colors duration-150 flex items-center cursor-text overflow-hidden ${
+          invalid
+            ? 'border-[#D51F55] focus-within:border-[#D51F55]'
+            : 'border-[#0FA9C6]/20 hover:border-[#0FA9C6]/40 focus-within:border-[#0FA9C6]'
+        } ${className}`}
+      >
+        <span className="pl-3 sm:pl-4 pr-0.5 font-mono text-xs sm:text-sm font-bold text-[#EEEEEA] select-none pointer-events-none shrink-0 tracking-wider">
+          {prefix}
+        </span>
+        <input
+          {...props}
+          ref={innerRef}
+          className="flex-1 min-w-0 bg-transparent px-1.5 sm:px-2 py-2.5 sm:py-3 font-mono text-xs sm:text-sm text-[#EEEEEA] placeholder-[#71767B] outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+        />
+      </div>
+    );
+  }
+
+  return <input {...props} className={`${controlClass(invalid)} ${className}`} />;
+};
 
 export type ComicSelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean };
 

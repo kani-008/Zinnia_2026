@@ -133,10 +133,14 @@ export const ParticipantLoginPage: React.FC = () => {
               <ComicField label="Your UserID" htmlFor="user_id">
                 <ComicInput
                   id="user_id"
-                  className="text-center text-xl tracking-[0.2em]"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value.toUpperCase())}
-                  placeholder="ZIN26-0142"
+                  prefix="ZIN26-"
+                  className="text-lg tracking-[0.1em]"
+                  value={userId.replace(/^ZIN26-?/i, '')}
+                  onChange={(e) => {
+                    const clean = e.target.value.toUpperCase().replace(/^ZIN26-?/i, '').trim();
+                    setUserId(clean ? `ZIN26-${clean}` : '');
+                  }}
+                  placeholder="0142"
                   autoComplete="username"
                   required
                 />
