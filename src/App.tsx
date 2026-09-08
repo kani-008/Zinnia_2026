@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 
 import { ComicToaster } from './components/ui/toast';
+import { MaintenancePage } from './pages/MaintenancePage';
 import { WebsiteHomePage } from './pages/Home';
 import { WebsiteRegisterPage } from './pages/Register';
 import { WebsitePaymentPage } from './pages/Payment';
@@ -33,12 +34,20 @@ function ScrollToTop() {
   return null;
 }
 
+const isMaintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true';
+
 export function App() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     registerNav.setNavigator(navigate);
   }, [navigate]);
+
+  // When maintenance is active, all public routes show MaintenancePage (except /admin)
+  if (isMaintenanceMode && !location.pathname.startsWith('/admin')) {
+    return <MaintenancePage />;
+  }
 
   return (
     <div className="relative w-full max-w-full min-h-screen bg-[#0D0D0F] overflow-x-hidden">
@@ -47,6 +56,7 @@ export function App() {
       <ComicToaster />
       {/* Routes */}
       <Routes>
+        <Route path="/maintenance" element={<MaintenancePage />} />
         <Route path="/" element={<WebsiteHomePage />} />
         <Route path="/events" element={<WebsiteEventsPage />} />
         {/* Every "Register" CTA lands in the participant flow. The old
