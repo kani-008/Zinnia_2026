@@ -19,12 +19,15 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import {
+  AlertTriangle,
+  ArrowLeft,
   CalendarClock,
   Check,
   CheckCircle2,
   Clock,
   Copy,
   Hourglass,
+  Info,
   KeyRound,
   Loader2,
   LogOut,
@@ -42,6 +45,7 @@ import { OFFICIAL_MISSIONS } from '../config/events';
 import {
   cancelRegistration,
   clearSession,
+  confirmLineup,
   getDashboard,
   loadSession,
   registerForEvent,
@@ -64,7 +68,8 @@ import {
   ComicPanel,
   ComicSectionTitle,
 } from '../components/ui/comic';
-import { useToastOn } from '../components/ui/toast';
+import { toast, useToastOn } from '../components/ui/toast';
+import { GENERAL_NOTES, notesFor } from '../config/eventRegistrationNotes';
 
 interface DashboardData {
   participant: RegistrationView;
@@ -76,8 +81,13 @@ interface DashboardData {
 }
 
 /** Same technical/non-technical split the homepage event cards colour by. */
-const cardVariant = (code: EventCode): 'tech' | 'non-tech' =>
-  EVENTS[code]?.category === 'NON_TECH' ? 'non-tech' : 'tech';
+const cardVariant = (code: EventCode): 'tech' | 'non-tech' | 'mega' => {
+  // is_mega lives in the marketing catalog, not the rule engine - the Events
+  // page already draws Gadget Codes as the mega tier, and reading the same flag
+  // here is what keeps the two pages from disagreeing about it.
+  if (missionFor(code)?.is_mega) return 'mega';
+  return EVENTS[code]?.category === 'NON_TECH' ? 'non-tech' : 'tech';
+};
 
 /**
  * zin26 event code -> the id used by OFFICIAL_MISSIONS in src/config/events.ts.
@@ -99,9 +109,25 @@ const MISSION_ID: Record<string, string> = {
 const missionFor = (code: string) =>
   OFFICIAL_MISSIONS.find((m) => m.id === MISSION_ID[code]);
 
+/** Mega first: it is the headline event, and burying it mid-list undersells it. */
+const GROUPS = [
+  { key: 'MEGA', title: 'Mega event', tone: 'yellow' as const },
+  { key: 'TECH', title: 'Technical events', tone: 'cyan' as const },
+  { key: 'NON_TECH', title: 'Non-technical events', tone: 'pink' as const },
+];
+
+const groupOf = (card: DashboardCatalogCard): string => {
+  if (missionFor(card.event_code)?.is_mega) return 'MEGA';
+  return card.category === 'TECH' ? 'TECH' : 'NON_TECH';
+};
+
 export const ParticipantDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [openCard, setOpenCard] = useState<string | null>(null);
+  // Whether the registration description is open. While it is, the dashboard
+  // is replaced by it so it reads as its own page with a way back.
+  const [showRules, setShowRules] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -127,6 +153,18 @@ export const ParticipantDashboardPage: React.FC = () => {
         navigate('/participant/login', { replace: true });
         return;
       }
+
+      // The session names a participant the server cannot find — the row was
+      // removed, or this session predates a reset. Retrying cannot fix that,
+      // so the stale session is dropped and they go to the home page rather
+      // than being stranded on a dashboard error with nothing but "Try again".
+      if (result.error_code === 'NOT_FOUND') {
+        clearSession();
+        toast.error('That registration no longer exists. Please register again.');
+        navigate('/', { replace: true });
+        return;
+      }
+
       setError(result.message);
       return;
     }
@@ -136,6 +174,26 @@ export const ParticipantDashboardPage: React.FC = () => {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /**
+   * Emails the participant their event list.
+   *
+   * Registering an event no longer mails anything on its own - picking is
+   * iterative, and a mail per tap described a selection that was still moving.
+   * This is the participant saying they are done, so the list they receive is
+   * one they actually finished making.
+   */
+  const onConfirmLineup = async () => {
+    setConfirming(true);
+    const result = await confirmLineup();
+    setConfirming(false);
+
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
+    toast.success(result.message ?? 'Your events are confirmed - check your email.');
+  };
 
   const onRegister = async (card: DashboardCatalogCard) => {
     setBusyEvent(card.event_code);
@@ -154,13 +212,22 @@ export const ParticipantDashboardPage: React.FC = () => {
       result = await registerForEvent(card.event_code, true);
     }
 
-    setBusyEvent(null);
-
     if (!result.success) {
+      setBusyEvent(null);
       setError(result.message);
       return;
     }
+
+    // Held until the refetch finishes, so the only thing that looks busy is the
+    // button that was pressed. Clearing it first left the rest of the dashboard
+    // silently swapping itself out for a second with nothing to explain why.
+    //
+    // The refetch is not optional: registering one event changes what is
+    // available on OTHER cards - an afternoon event closes Lost in SQL - so the
+    // catalog has to be re-read. `data` is never cleared while that runs, so
+    // the page updates in place instead of falling back to a loading screen.
     await load();
+    setBusyEvent(null);
   };
 
   const onCancel = async (eventCode: EventCode, eventName: string) => {
@@ -217,9 +284,12 @@ export const ParticipantDashboardPage: React.FC = () => {
           <ComicAlert tone="pink" className="text-left">
             {error ?? 'Could not load your dashboard.'}
           </ComicAlert>
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
             <ComicGhostButton tone="cyan" onClick={() => void load()}>
               Try again
+            </ComicGhostButton>
+            <ComicGhostButton tone="pink" onClick={() => navigate('/participant/register')}>
+              Register
             </ComicGhostButton>
           </div>
         </main>
@@ -228,6 +298,471 @@ export const ParticipantDashboardPage: React.FC = () => {
   }
 
   const { participant, registrations, counted_used, counted_max, catalog, pending_invites } = data;
+
+  /**
+   * The registration description: one page, every rule that decides what can
+   * be held alongside what.
+   *
+   * The engine refuses an illegal combination server-side, but a rejection
+   * after the fact is a poor way to learn that Gadget Codes costs you every
+   * other event. This says so first. Nothing here is enforced - rules_engine.py
+   * remains the authority - so the copy lives in config, not in logic.
+   */
+  const renderRules = () => {
+    const TONE_ICON = { warn: AlertTriangle, info: Info, good: CheckCircle2 } as const;
+    const TONE_COLOR = { warn: '#E5BD00', info: '#8E939D', good: '#1DB954' } as const;
+
+    return (
+      <ComicPageShell>
+        <WebsiteNavbar />
+
+        <main className="mx-auto max-w-2xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowRules(false)}
+            className="mb-6 inline-flex items-center gap-2 font-sans text-xs font-bold uppercase tracking-wider text-[#8E939D] transition-colors hover:text-[#EEEEEA]"
+          >
+            <ArrowLeft size={14} />
+            Event registration description
+          </button>
+
+          <h1 className="font-sans font-black uppercase leading-tight tracking-wider text-[clamp(1.4rem,5.5vw,2.25rem)] text-[#EEEEEA]">
+            Before you pick
+          </h1>
+
+          <ul className="mt-5 space-y-3 border-2 border-[#23262D] bg-[#111214] px-4 py-4">
+            {GENERAL_NOTES.map((n, idx) => {
+              const Icon = TONE_ICON[n.tone];
+              return (
+                <li key={idx} className="flex items-start gap-2.5">
+                  <Icon size={15} className="mt-0.5 shrink-0" style={{ color: TONE_COLOR[n.tone] }} />
+                  <span className="font-mono text-xs leading-relaxed text-[#C2C6CE]">{n.text}</span>
+                </li>
+              );
+            })}
+          </ul>
+
+          {catalog.map((card) => {
+            const info = notesFor(card.event_code);
+            if (!info) return null;
+            const variant = cardVariant(card.event_code);
+            const accent =
+              variant === 'mega' ? '#C084FC' : variant === 'tech' ? '#0FA9C6' : '#D51F55';
+
+            return (
+              <section key={card.event_code} className="mt-7">
+                <h2
+                  className="font-sans font-black uppercase tracking-wider text-base sm:text-lg"
+                  style={{ color: accent }}
+                >
+                  {card.name}
+                </h2>
+
+                <p className="mt-1 font-mono text-[11px] text-[#8E939D]">
+                  {info.when} &middot; {info.team}
+                </p>
+
+                <ul className="mt-2.5 space-y-2">
+                  {info.notes.map((n, idx) => {
+                    const Icon = TONE_ICON[n.tone];
+                    return (
+                      <li key={idx} className="flex items-start gap-2.5">
+                        <Icon size={14} className="mt-0.5 shrink-0" style={{ color: TONE_COLOR[n.tone] }} />
+                        <span className="font-mono text-xs leading-relaxed text-[#C2C6CE]">{n.text}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
+
+          <div className="mt-9">
+            <button
+              type="button"
+              onClick={() => setShowRules(false)}
+              className="w-full sm:w-auto px-6 py-3 font-sans font-bold text-xs uppercase tracking-wider text-[#090A0B] bg-[#0FA9C6] border-2 border-[#090A0B] shadow-[3px_3px_0px_#090A0B] transition-transform hover:-translate-y-0.5"
+            >
+              Back to events
+            </button>
+          </div>
+        </main>
+      </ComicPageShell>
+    );
+  };
+
+  if (showRules) return renderRules();
+
+
+  /**
+   * The original card, unchanged in shape - desktop keeps the grid it had.
+   * Only the redundant TECH/NON-TECH badge is gone (the list is grouped by it
+   * now) and the type is the Events page's, a weight lighter than before.
+   */
+  const renderEventCard = (card: DashboardCatalogCard, i: number) => {
+              const registered = card.state === 'REGISTERED';
+              const blocked = card.state === 'BLOCKED';
+              const full = card.state === 'FULL';
+              const locked = blocked || full;
+              const number = String(card.display_order ?? i + 1).padStart(2, '0');
+              const variant = cardVariant(card.event_code);
+              const tier =
+                variant === 'mega'
+                            ? { main: '#C084FC', shadow: '#9333EA' }
+                            : variant === 'tech'
+                              ? { main: '#0FA9C6', shadow: '#08758A' }
+                              : { main: '#D51F55', shadow: '#A81443' };
+
+              const mission = missionFor(card.event_code);
+              const open = openCard === card.event_code;
+
+              return (
+                <ComicHandDrawnCard
+                  key={card.event_code}
+                  code={number}
+                  variant={variant}
+                  className={`min-h-[350px] sm:min-h-[360px] transition-all duration-200 ${
+                    locked ? 'opacity-70 hover:opacity-85 !cursor-default' : '!cursor-default'
+                  }`}
+                  innerClassName="w-full flex-1 flex flex-col justify-between px-6 sm:px-7 pt-12 sm:pt-14 pb-8 sm:pb-9 text-center select-text"
+                >
+                  <div className="flex w-full flex-1 flex-col justify-between">
+                    {/* TOP SECTION: META & TITLE & DETAILS */}
+                    <div className="w-full flex flex-col items-center">
+                      {/* Top Bar: Spacing clearance from the top-left number tag + category & lock badge */}
+                      <div className="w-full flex items-center justify-end gap-1.5 min-h-[22px] mb-1.5">
+                        {locked && (
+                          <span title="Unavailable" className="p-0.5 text-[#71767B]">
+                            <Lock size={12} />
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Event Title: Consistent min-height so all cards align across rows */}
+                      <div className="min-h-[50px] sm:min-h-[54px] w-full flex items-center justify-center px-1">
+                        <h3 className="font-sans font-black text-base xs:text-lg sm:text-xl uppercase tracking-wider leading-tight text-[#EEEEEA] text-center">
+                          {card.name}
+                        </h3>
+                      </div>
+
+                      {/* Expandable "WHAT IS THIS?" UI Control */}
+                      {mission && (
+                        <div className="mt-1.5 w-full flex flex-col items-center">
+                          <button
+                            type="button"
+                            onClick={() => setOpenCard(open ? null : card.event_code)}
+                            aria-expanded={open}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-sm border font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] transition-all cursor-pointer ${
+                              open
+                                ? 'border-[#E5BD00] bg-[#E5BD00]/15 text-[#E5BD00]'
+                                : variant === 'tech'
+                                  ? 'border-[#0FA9C6]/40 bg-[#0FA9C6]/10 text-[#0FA9C6] hover:bg-[#0FA9C6]/20 hover:border-[#0FA9C6]'
+                                  : 'border-[#D51F55]/40 bg-[#D51F55]/10 text-[#D51F55] hover:bg-[#D51F55]/20 hover:border-[#D51F55]'
+                            }`}
+                          >
+                            <span>{open ? 'HIDE DETAILS ↑' : 'WHAT IS THIS? ↓'}</span>
+                          </button>
+
+                          {/* Expanded Content Panel */}
+                          {open && (
+                            <div className="mt-3 w-full bg-[#0B0D10]/95 border-2 border-dashed border-[#23262D] p-3 text-left space-y-2.5">
+                              <p className="font-mono text-xs leading-relaxed text-[#C2C6CE]">
+                                {mission.description}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] text-[#8E939D] border-t border-[#1C1E23] pt-2">
+                                <span className="flex items-center gap-1">
+                                  <Clock size={11} className="text-[#E5BD00]" />
+                                  {mission.schedule_time}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <MapPin size={11} className="text-[#0FA9C6]" />
+                                  {mission.venue}
+                                </span>
+                              </div>
+                              {mission.rules?.length > 0 && (
+                                <div className="border-t border-[#1C1E23] pt-2">
+                                  <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#71767B] mb-1">
+                                    Rules:
+                                  </p>
+                                  <ul className="space-y-1 font-mono text-[10.5px] leading-relaxed text-[#9DA2AC]">
+                                    {mission.rules.slice(0, 4).map((r) => (
+                                      <li key={r} className="flex items-start gap-1.5">
+                                        <span className="text-[#E5BD00] font-bold select-none">•</span>
+                                        <span>{r}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Team requirement indicator */}
+                      {card.is_team_event && (
+                        <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#141619] border border-[#23262D] font-mono text-[11px] text-[#8E939D]">
+                          <Users size={12} className={variant === 'mega' ? 'text-[#C084FC]' : variant === 'tech' ? 'text-[#0FA9C6]' : 'text-[#D51F55]'} />
+                          <span>
+                            Team of {card.min_team === card.max_team ? card.min_team : `${card.min_team}-${card.max_team}`}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Locked reason notice */}
+                      {locked && card.reason && (
+                        <div className="mt-2.5 w-full px-2.5 py-1.5 bg-[#171415] border border-[#3E232A] flex items-start justify-center gap-1.5 font-mono text-[11px] leading-relaxed text-[#E08A9D]">
+                          <CalendarClock size={12} className="mt-0.5 shrink-0 text-[#D51F55]" />
+                          <span className="text-center">{card.reason}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* BOTTOM ACTION SECTION */}
+                    <div className="w-full mt-auto pt-4 pb-0.5 border-t border-[#1C1F24] flex justify-center">
+                      {registered ? (
+                        <div
+                          className="w-auto inline-flex py-2 px-5 border-2 items-center justify-center gap-2"
+                          style={{ backgroundColor: `${tier.main}26`, borderColor: tier.main, boxShadow: `2px 2px 0px ${tier.shadow}` }}
+                        >
+                          <Check size={16} className="stroke-[3.5] shrink-0" style={{ color: tier.main }} />
+                          <span className="font-sans font-bold text-xs sm:text-sm tracking-wider uppercase" style={{ color: tier.main }}>
+                            YOU&apos;RE REGISTERED
+                          </span>
+                        </div>
+                      ) : locked ? (
+                        <div className="w-auto inline-flex py-2 px-5 bg-[#131518] border-2 border-[#23262D] items-center justify-center gap-2 text-[#71767B]">
+                          <Lock size={13} className="shrink-0 text-[#71767B]" />
+                          <span className="font-sans font-bold text-xs sm:text-sm tracking-wider uppercase text-[#71767B]">
+                            {full ? 'REGISTRATIONS CLOSED' : 'UNAVAILABLE'}
+                          </span>
+                        </div>
+                      ) : card.is_team_event ? (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/participant/teams/new?event=${card.event_code}`)}
+                          disabled={busyEvent === card.event_code}
+                          className={`w-auto inline-flex py-2.5 px-6 sm:px-7 font-sans font-bold text-xs sm:text-sm uppercase tracking-wider items-center justify-center gap-2 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                            variant === 'mega'
+                              ? 'bg-[#C084FC] text-[#090A0B] border-2 border-[#C084FC] shadow-[3px_3px_0px_#9333EA] hover:bg-[#D2A6FF] hover:shadow-[4px_4px_0px_#9333EA] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#9333EA]'
+                              : variant === 'tech'
+                              ? 'bg-[#0FA9C6] text-[#090A0B] border-2 border-[#0FA9C6] shadow-[3px_3px_0px_#08758A] hover:bg-[#15C3E5] hover:shadow-[4px_4px_0px_#08758A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#08758A]'
+                              : 'bg-[#D51F55] text-white border-2 border-[#D51F55] shadow-[3px_3px_0px_#A81443] hover:bg-[#E82C64] hover:shadow-[4px_4px_0px_#A81443] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#A81443]'
+                          }`}
+                        >
+                          {busyEvent === card.event_code ? (
+                            <>
+                              <Loader2 size={15} className="animate-spin" />
+                              <span>WORKING…</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>CREATE TEAM</span>
+                              <span className="text-base leading-none">→</span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void onRegister(card)}
+                          disabled={busyEvent === card.event_code}
+                          className={`w-auto inline-flex py-2.5 px-6 sm:px-7 font-sans font-bold text-xs sm:text-sm uppercase tracking-wider items-center justify-center gap-2 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                            variant === 'mega'
+                              ? 'bg-[#C084FC] text-[#090A0B] border-2 border-[#C084FC] shadow-[3px_3px_0px_#9333EA] hover:bg-[#D2A6FF] hover:shadow-[4px_4px_0px_#9333EA] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#9333EA]'
+                              : variant === 'tech'
+                              ? 'bg-[#0FA9C6] text-[#090A0B] border-2 border-[#0FA9C6] shadow-[3px_3px_0px_#08758A] hover:bg-[#15C3E5] hover:shadow-[4px_4px_0px_#08758A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#08758A]'
+                              : 'bg-[#D51F55] text-white border-2 border-[#D51F55] shadow-[3px_3px_0px_#A81443] hover:bg-[#E82C64] hover:shadow-[4px_4px_0px_#A81443] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#A81443]'
+                          }`}
+                        >
+                          {busyEvent === card.event_code ? (
+                            <>
+                              <Loader2 size={15} className="animate-spin" />
+                              <span>WORKING…</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>REGISTER NOW</span>
+                              <span className="text-base leading-none">→</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </ComicHandDrawnCard>
+              );
+  };
+
+
+  /**
+   * One catalog row: identity on the left, the single action on the right.
+   *
+   * Replaces the tall card that stood in a 2-3 column grid. The action button
+   * is the only thing on this screen a participant actually presses, and in the
+   * grid it sat at the bottom of a 350px card - so on a phone the button for
+   * the event being read was usually off the bottom of the viewport.
+   */
+  const renderEventRow = (card: DashboardCatalogCard, i: number) => {
+    const registered = card.state === 'REGISTERED';
+    const blocked = card.state === 'BLOCKED';
+    const full = card.state === 'FULL';
+    const locked = blocked || full;
+    const number = String(card.display_order ?? i + 1).padStart(2, '0');
+    const variant = cardVariant(card.event_code);
+    const mission = missionFor(card.event_code);
+    const open = openCard === card.event_code;
+    const busy = busyEvent === card.event_code;
+
+    const tier =
+      variant === 'mega'
+        ? { main: '#C084FC', shadow: '#9333EA' }
+        : variant === 'tech'
+          ? { main: '#0FA9C6', shadow: '#08758A' }
+          : { main: '#D51F55', shadow: '#A81443' };
+
+    const actionClass =
+      variant === 'mega'
+        ? 'bg-[#C084FC] text-[#090A0B] border-2 border-[#C084FC] shadow-[3px_3px_0px_#9333EA] hover:bg-[#D2A6FF] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#9333EA]'
+        : variant === 'tech'
+          ? 'bg-[#0FA9C6] text-[#090A0B] border-2 border-[#0FA9C6] shadow-[3px_3px_0px_#08758A] hover:bg-[#15C3E5] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#08758A]'
+          : 'bg-[#D51F55] text-white border-2 border-[#D51F55] shadow-[3px_3px_0px_#A81443] hover:bg-[#E82C64] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#A81443]';
+
+    return (
+      <ComicHandDrawnCard
+        key={card.event_code}
+        code={number}
+        variant={variant}
+        className={`row-card transition-all duration-200 ${locked ? 'opacity-70 hover:opacity-85 !cursor-default' : '!cursor-default'}`}
+        innerClassName="w-full px-5 sm:px-6 pt-4 pb-5 text-left select-text"
+      >
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+          {/* Only the identity clears the number tag; the action below spans
+              the card, so it sits centred instead of shunted right. */}
+          <div className="min-w-0 flex-1 pl-9 sm:pl-10">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-sans font-black text-base sm:text-lg uppercase tracking-wider leading-tight text-[#EEEEEA]">
+                {card.name}
+              </h3>
+              {locked && (
+                <span title="Unavailable" className="text-[#71767B]">
+                  <Lock size={12} />
+                </span>
+              )}
+            </div>
+
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-[11px] text-[#8E939D]">
+              {card.is_team_event && (
+                <span className="inline-flex items-center gap-1">
+                  <Users size={12} className={variant === 'mega' ? 'text-[#C084FC]' : variant === 'tech' ? 'text-[#0FA9C6]' : 'text-[#D51F55]'} />
+                  Team of{' '}
+                  {card.min_team === card.max_team ? card.min_team : `${card.min_team}-${card.max_team}`}
+                </span>
+              )}
+              {mission && (
+                <button
+                  type="button"
+                  onClick={() => setOpenCard(open ? null : card.event_code)}
+                  aria-expanded={open}
+                  className={`font-bold uppercase tracking-[0.12em] underline underline-offset-2 transition-colors cursor-pointer hover:text-[#E5BD00] ${
+                    open
+                      ? 'text-[#E5BD00]'
+                      : variant === 'mega'
+                        ? 'text-[#C084FC]'
+                        : variant === 'tech'
+                          ? 'text-[#0FA9C6]'
+                          : 'text-[#D51F55]'
+                  }`}
+                >
+                  {open ? 'Hide details' : 'What is this?'}
+                </button>
+              )}
+            </div>
+
+            {locked && card.reason && (
+              <p className="mt-2 flex items-start gap-1.5 font-mono text-[11px] leading-relaxed text-[#E08A9D]">
+                <CalendarClock size={12} className="mt-0.5 shrink-0 text-[#D51F55]" />
+                <span>{card.reason}</span>
+              </p>
+            )}
+          </div>
+
+          <div className="w-full sm:w-[184px] sm:shrink-0 flex justify-center sm:justify-end">
+            {registered ? (
+              <div
+                className="w-auto inline-flex py-2 px-5 border-2 items-center justify-center gap-2"
+                style={{ backgroundColor: `${tier.main}26`, borderColor: tier.main, boxShadow: `2px 2px 0px ${tier.shadow}` }}
+              >
+                <Check size={15} className="stroke-[3.5] shrink-0" style={{ color: tier.main }} />
+                <span className="font-sans font-bold text-xs tracking-wider uppercase" style={{ color: tier.main }}>
+                  REGISTERED
+                </span>
+              </div>
+            ) : locked ? (
+              <div className="w-auto inline-flex py-2 px-5 bg-[#131518] border-2 border-[#23262D] items-center justify-center gap-2 text-[#71767B]">
+                <Lock size={13} className="shrink-0" />
+                <span className="font-sans font-bold text-xs tracking-wider uppercase">
+                  {full ? 'FULL' : 'UNAVAILABLE'}
+                </span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  if (card.is_team_event) {
+                    navigate(`/participant/teams/new?event=${card.event_code}`);
+                  } else {
+                    void onRegister(card);
+                  }
+                }}
+                disabled={busy}
+                className={`w-auto inline-flex py-2 px-6 font-sans font-bold text-xs uppercase tracking-wider items-center justify-center gap-2 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${actionClass}`}
+              >
+                {busy ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    <span>WORKING...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{card.is_team_event ? 'CREATE TEAM' : 'REGISTER'}</span>
+                    <span className="text-base leading-none">-&gt;</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {open && mission && (
+          <div className="mt-4 w-full border-t-2 border-dashed border-[#23262D] pt-3 space-y-2.5">
+            <p className="font-mono text-xs leading-relaxed text-[#C2C6CE]">{mission.description}</p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] text-[#8E939D]">
+              <span className="flex items-center gap-1">
+                <Clock size={11} className="text-[#E5BD00]" />
+                {mission.schedule_time}
+              </span>
+              <span className="flex items-center gap-1">
+                <MapPin size={11} className="text-[#0FA9C6]" />
+                {mission.venue}
+              </span>
+            </div>
+            {mission.rules?.length > 0 && (
+              <ul className="space-y-1 font-mono text-[10.5px] leading-relaxed text-[#9DA2AC]">
+                {mission.rules.slice(0, 4).map((r) => (
+                  <li key={r} className="flex items-start gap-1.5">
+                    <span className="text-[#E5BD00] font-bold select-none">*</span>
+                    <span>{r}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </ComicHandDrawnCard>
+    );
+  };
+
   const status = participant.registration_status;
   const confirmed = status === 'REGISTRATION_CONFIRMED';
   // Registration is COMPLETE the moment the payment reference is submitted.
@@ -498,198 +1033,81 @@ export const ParticipantDashboardPage: React.FC = () => {
             <ComicChip tone="yellow" rotate={1.5}>
               {catalog.length} active events
             </ComicChip>
-            {registrationComplete && (
-              <ComicChip tone="cyan" rotate={-1}>
-                <CheckCircle2 size={11} /> All events open to you
-              </ComicChip>
-            )}
+
+            {/* The rules that decide what combines with what. Reading them
+                before picking beats finding out from a rejection. */}
+            <button
+              type="button"
+              onClick={() => setShowRules(true)}
+              className="inline-flex items-center gap-1.5 border-2 border-[#0FA9C6] bg-[#111214] px-3 py-1.5 font-sans text-[11px] font-bold uppercase tracking-wider text-[#0FA9C6] shadow-[2px_2px_0px_#090A0B] transition-colors hover:bg-[#0FA9C6] hover:text-[#090A0B]"
+            >
+              <Info size={13} /> Registration description
+            </button>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 items-start">
-            {catalog.map((card, i) => {
-              const registered = card.state === 'REGISTERED';
-              const blocked = card.state === 'BLOCKED';
-              const full = card.state === 'FULL';
-              const locked = blocked || full;
-              const number = String(card.display_order ?? i + 1).padStart(2, '0');
-              const variant = cardVariant(card.event_code);
-              const mission = missionFor(card.event_code);
-              const open = openCard === card.event_code;
+          {/*
+              Two layouts, one list. Mobile gets a full-width row per event:
+              nine tall cards two or three abreast meant scrolling past most of
+              them to reach the one being looked for, and the action button sat
+              below the fold. Desktop keeps the grid, where that was never a
+              problem and the cards have room to breathe.
 
-              return (
-                <ComicHandDrawnCard
-                  key={card.event_code}
-                  code={number}
-                  variant={variant}
-                  className={`min-h-[350px] sm:min-h-[360px] transition-all duration-200 ${
-                    locked ? 'opacity-70 hover:opacity-85 !cursor-default' : '!cursor-default'
-                  }`}
-                  innerClassName="w-full flex-1 flex flex-col justify-between px-6 sm:px-7 pt-12 sm:pt-14 pb-8 sm:pb-9 text-center select-text"
-                >
-                  <div className="flex w-full flex-1 flex-col justify-between">
-                    {/* TOP SECTION: META & TITLE & DETAILS */}
-                    <div className="w-full flex flex-col items-center">
-                      {/* Top Bar: Spacing clearance from the top-left number tag + category & lock badge */}
-                      <div className="w-full flex items-center justify-end gap-1.5 min-h-[22px] mb-1.5">
-                        <span className="font-mono text-[9px] font-bold tracking-widest px-2 py-0.5 uppercase border border-[#23262D] bg-[#0E1012] text-[#8E939D]">
-                          {variant === 'tech' ? 'TECH' : 'NON-TECH'}
-                        </span>
-                        {locked && (
-                          <span title="Unavailable" className="p-0.5 text-[#71767B]">
-                            <Lock size={12} />
-                          </span>
-                        )}
-                      </div>
+              Grouped mega -> technical -> non-technical. The per-card
+              TECH/NON-TECH badge is gone with the grouping: the heading above
+              the list already says it.
+          */}
+          {GROUPS.map((group) => {
+            const cards = catalog.filter((c) => groupOf(c) === group.key);
+            if (!cards.length) return null;
 
-                      {/* Event Title: Consistent min-height so all cards align across rows */}
-                      <div className="min-h-[50px] sm:min-h-[54px] w-full flex items-center justify-center px-1">
-                        <h3 className="font-display text-lg sm:text-xl font-black uppercase leading-tight tracking-wide text-[#EEEEEA] text-center">
-                          {card.name}
-                        </h3>
-                      </div>
+            return (
+              <div key={group.key} className="mb-9 last:mb-0">
+                <div className="mb-4 flex items-center gap-3">
+                  <ComicSectionTitle tone={group.tone}>{group.title}</ComicSectionTitle>
+                  <span className="font-mono text-[11px] text-[#71767B]">{cards.length}</span>
+                  <span className="h-px flex-1 bg-[#23262D]" />
+                </div>
 
-                      {/* Expandable "WHAT IS THIS?" UI Control */}
-                      {mission && (
-                        <div className="mt-1.5 w-full flex flex-col items-center">
-                          <button
-                            type="button"
-                            onClick={() => setOpenCard(open ? null : card.event_code)}
-                            aria-expanded={open}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-sm border font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] transition-all cursor-pointer ${
-                              open
-                                ? 'border-[#E5BD00] bg-[#E5BD00]/15 text-[#E5BD00]'
-                                : variant === 'tech'
-                                  ? 'border-[#0FA9C6]/40 bg-[#0FA9C6]/10 text-[#0FA9C6] hover:bg-[#0FA9C6]/20 hover:border-[#0FA9C6]'
-                                  : 'border-[#D51F55]/40 bg-[#D51F55]/10 text-[#D51F55] hover:bg-[#D51F55]/20 hover:border-[#D51F55]'
-                            }`}
-                          >
-                            <span>{open ? 'HIDE DETAILS ↑' : 'WHAT IS THIS? ↓'}</span>
-                          </button>
+                {/* mobile: one long row each */}
+                <div className="grid grid-cols-1 gap-4 items-start sm:hidden">
+                  {cards.map((card, i) => renderEventRow(card, i))}
+                </div>
 
-                          {/* Expanded Content Panel */}
-                          {open && (
-                            <div className="mt-3 w-full bg-[#0B0D10]/95 border-2 border-dashed border-[#23262D] p-3 text-left space-y-2.5">
-                              <p className="font-mono text-xs leading-relaxed text-[#C2C6CE]">
-                                {mission.description}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] text-[#8E939D] border-t border-[#1C1E23] pt-2">
-                                <span className="flex items-center gap-1">
-                                  <Clock size={11} className="text-[#E5BD00]" />
-                                  {mission.schedule_time}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <MapPin size={11} className="text-[#0FA9C6]" />
-                                  {mission.venue}
-                                </span>
-                              </div>
-                              {mission.rules?.length > 0 && (
-                                <div className="border-t border-[#1C1E23] pt-2">
-                                  <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#71767B] mb-1">
-                                    Rules:
-                                  </p>
-                                  <ul className="space-y-1 font-mono text-[10.5px] leading-relaxed text-[#9DA2AC]">
-                                    {mission.rules.slice(0, 4).map((r) => (
-                                      <li key={r} className="flex items-start gap-1.5">
-                                        <span className="text-[#E5BD00] font-bold select-none">•</span>
-                                        <span>{r}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                {/* desktop and up: the original card grid */}
+                <div className="hidden gap-6 items-start sm:grid sm:grid-cols-2 lg:grid-cols-3">
+                  {cards.map((card, i) => renderEventCard(card, i))}
+                </div>
+              </div>
+            );
+          })}
 
-                      {/* Team requirement indicator */}
-                      {card.is_team_event && (
-                        <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#141619] border border-[#23262D] font-mono text-[11px] text-[#8E939D]">
-                          <Users size={12} className={variant === 'tech' ? 'text-[#0FA9C6]' : 'text-[#D51F55]'} />
-                          <span>
-                            Team of {card.min_team === card.max_team ? card.min_team : `${card.min_team}-${card.max_team}`}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Locked reason notice */}
-                      {locked && card.reason && (
-                        <div className="mt-2.5 w-full px-2.5 py-1.5 bg-[#171415] border border-[#3E232A] flex items-start justify-center gap-1.5 font-mono text-[11px] leading-relaxed text-[#E08A9D]">
-                          <CalendarClock size={12} className="mt-0.5 shrink-0 text-[#D51F55]" />
-                          <span className="text-center">{card.reason}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* BOTTOM ACTION SECTION */}
-                    <div className="w-full mt-auto pt-4 pb-0.5 border-t border-[#1C1F24]">
-                      {registered ? (
-                        <div className="w-full py-2.5 px-3 bg-[#0FA9C6]/15 border-2 border-[#0FA9C6] flex items-center justify-center gap-2 shadow-[2px_2px_0px_#08758A]">
-                          <Check size={16} className="text-[#0FA9C6] stroke-[3.5] shrink-0" />
-                          <span className="font-comic font-black text-xs sm:text-sm tracking-wider uppercase italic text-[#0FA9C6]">
-                            YOU&apos;RE REGISTERED
-                          </span>
-                        </div>
-                      ) : locked ? (
-                        <div className="w-full py-2.5 px-3 bg-[#131518] border-2 border-[#23262D] flex items-center justify-center gap-2 text-[#71767B]">
-                          <Lock size={13} className="shrink-0 text-[#71767B]" />
-                          <span className="font-comic font-bold text-xs sm:text-sm tracking-wider uppercase text-[#71767B]">
-                            {full ? 'REGISTRATIONS CLOSED' : 'UNAVAILABLE'}
-                          </span>
-                        </div>
-                      ) : card.is_team_event ? (
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/participant/teams/new?event=${card.event_code}`)}
-                          disabled={busyEvent === card.event_code}
-                          className={`w-full py-2.5 px-4 font-comic font-black text-xs sm:text-sm uppercase italic tracking-wider flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                            variant === 'tech'
-                              ? 'bg-[#0FA9C6] text-[#090A0B] border-2 border-[#0FA9C6] shadow-[3px_3px_0px_#08758A] hover:bg-[#15C3E5] hover:shadow-[4px_4px_0px_#08758A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#08758A]'
-                              : 'bg-[#D51F55] text-white border-2 border-[#D51F55] shadow-[3px_3px_0px_#A81443] hover:bg-[#E82C64] hover:shadow-[4px_4px_0px_#A81443] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#A81443]'
-                          }`}
-                        >
-                          {busyEvent === card.event_code ? (
-                            <>
-                              <Loader2 size={15} className="animate-spin" />
-                              <span>WORKING…</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>CREATE TEAM</span>
-                              <span className="text-base leading-none">→</span>
-                            </>
-                          )}
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => void onRegister(card)}
-                          disabled={busyEvent === card.event_code}
-                          className={`w-full py-2.5 px-4 font-comic font-black text-xs sm:text-sm uppercase italic tracking-wider flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                            variant === 'tech'
-                              ? 'bg-[#0FA9C6] text-[#090A0B] border-2 border-[#0FA9C6] shadow-[3px_3px_0px_#08758A] hover:bg-[#15C3E5] hover:shadow-[4px_4px_0px_#08758A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#08758A]'
-                              : 'bg-[#D51F55] text-white border-2 border-[#D51F55] shadow-[3px_3px_0px_#A81443] hover:bg-[#E82C64] hover:shadow-[4px_4px_0px_#A81443] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#A81443]'
-                          }`}
-                        >
-                          {busyEvent === card.event_code ? (
-                            <>
-                              <Loader2 size={15} className="animate-spin" />
-                              <span>WORKING…</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>REGISTER NOW</span>
-                              <span className="text-base leading-none">→</span>
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </ComicHandDrawnCard>
-              );
-            })}
-          </div>
+          {/* Nothing above this sends mail. The participant presses this when the
+              line-up is the one they want, and only then does it go out. */}
+          {registrationComplete && registrations.length > 0 && (
+            <div className="mt-10 border-t-2 border-[#23262D] pt-7 text-center">
+              <p className="mb-4 font-mono text-xs leading-relaxed text-[#B8B8B2]">
+                Happy with your {registrations.length} event
+                {registrations.length === 1 ? '' : 's'}? Confirm to get the list emailed to you.
+                You can still change them until registrations close.
+              </p>
+              <button
+                type="button"
+                onClick={() => void onConfirmLineup()}
+                disabled={confirming}
+                className="inline-flex items-center justify-center gap-2 border-2 border-[#090A0B] bg-[#1DB954] px-7 py-3 font-sans text-xs font-bold uppercase tracking-wider text-[#090A0B] shadow-[3px_3px_0px_#090A0B] transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {confirming ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" /> Sending...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={15} /> Confirm my events
+                  </>
+                )}
+              </button>
+            </div>
+          )}
 
           {actionNeeded && (
             <div className="mt-8 flex justify-center">

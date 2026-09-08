@@ -67,6 +67,12 @@ participant_bp.route("/api/participant/events/register", methods=["POST"])(
     require_participant(rate_limit(20)(ParticipantDashboardController.register_event))
 )
 
+# The participant saying "I am done picking". The only thing that emails the
+# event list, so it carries a tight limit - each press sends real mail.
+participant_bp.route("/api/participant/events/confirm", methods=["POST"])(
+    require_participant(rate_limit(5)(ParticipantDashboardController.confirm_lineup))
+)
+
 participant_bp.route("/api/participant/events/cancel", methods=["POST"])(
     require_participant(rate_limit(20)(ParticipantDashboardController.cancel_event))
 )

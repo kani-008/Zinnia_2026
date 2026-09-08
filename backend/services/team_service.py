@@ -275,7 +275,14 @@ def respond_to_invite(user_id: str, team_id: str, accept: bool) -> Dict[str, Any
     )
     if outstanding == 0:
         confirmed = _rpc_confirm_team(team_id)
-        _notify_confirmed(team_id)
+        # No mail here. A team confirming is a registration completing, and
+        # registrations no longer email on their own - the participant presses
+        # Confirm on the dashboard when their line-up is final, and that one
+        # press sends the list. Mailing here as well would put an event-by-event
+        # confirmation back into the flow through the side door.
+        #
+        # The INVITE mail in _send_invite stays: without it a teammate is never
+        # told there is something to accept, and the team can never complete.
         return {
             "success": True,
             "team_id": team_id,
@@ -559,7 +566,13 @@ def _send_invite(member: Dict[str, Any], captain: Dict[str, Any], team_name: str
 
 
 def _notify_confirmed(team_id: str) -> None:
-    """§4.5 — every member gets the confirmation once the team is complete."""
+    """
+    Every member gets the roster once the team is complete.
+
+    NOT CALLED. Kept because it is the natural place to mail a team roster if
+    that is ever wanted again; today the only registration mail is the one the
+    participant asks for with Confirm on the dashboard.
+    """
     try:
         from services.email_service import send_simple_email
 

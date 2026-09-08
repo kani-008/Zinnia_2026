@@ -10,7 +10,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Check, Loader2, UserPlus, Users, X } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, UserPlus, Users, X } from 'lucide-react';
 
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { createTeam, loadSession, lookupTeammate } from '../lib/participant/api';
@@ -174,7 +174,7 @@ export const ParticipantTeamCreatePage: React.FC = () => {
     return (
       <ComicPageShell>
         <WebsiteNavbar />
-        <main className="mx-auto max-w-xl px-5 pt-32 text-center">
+        <main className="mx-auto max-w-xl px-5 pt-10 text-center">
           <ComicAlert tone="pink" className="text-left">
             That is not a team event.
           </ComicAlert>
@@ -204,7 +204,17 @@ export const ParticipantTeamCreatePage: React.FC = () => {
     <ComicPageShell>
       <WebsiteNavbar />
 
-      <main className="mx-auto max-w-2xl px-5 pb-24 pt-28">
+      <main className="mx-auto max-w-2xl px-5 sm:px-8 pb-24 pt-6 sm:pt-10">
+        {/* This page is reached from one place and has one way out. */}
+        <button
+          type="button"
+          onClick={() => navigate('/participant/dashboard')}
+          className="mb-6 inline-flex items-center gap-2 font-sans text-xs font-bold uppercase tracking-wider text-[#8E939D] transition-colors hover:text-[#EEEEEA]"
+        >
+          <ArrowLeft size={14} />
+          Back to events
+        </button>
+
         <header className="mb-8">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <ComicChip tone="cyan" rotate={-2}>

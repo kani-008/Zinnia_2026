@@ -123,6 +123,14 @@ class ParticipantDashboardController:
         )
 
     @staticmethod
+    def confirm_lineup():
+        endpoint = "POST /api/participant/events/confirm"
+        return _guard(
+            endpoint,
+            lambda: _respond(events.confirm_lineup(g.participant_user_id), endpoint),
+        )
+
+    @staticmethod
     def cancel_event():
         endpoint = "POST /api/participant/events/cancel"
         data = _body()

@@ -225,7 +225,10 @@ def register_individual(user_id: str, event_code: str, confirm_warnings: bool = 
 
     reg_id = rpc_register(user_id, event_code)
 
-    _send_confirmation(participant, event)
+    # No email here. Picking events is iterative - add one, change your mind,
+    # swap another - and mailing on every tap sent messages describing a
+    # selection that was still moving. The participant says when they are done
+    # by pressing Confirm, which is confirm_lineup() below.
 
     return {
         "success": True,
@@ -456,23 +459,75 @@ def rpc_register(user_id: str, event_code: str, team_id: Optional[str] = None, s
     )
 
 
-def _send_confirmation(participant: Dict[str, Any], event) -> None:
-    """§4.5 confirmation email. Best-effort; a failure never loses the seat."""
+def confirm_lineup(user_id: str) -> Dict[str, Any]:
+    """
+    POST /api/participant/events/confirm
+
+    Emails the participant their event list. This is the ONLY thing that sends
+    that mail - it is triggered by the participant pressing Confirm, not by
+    reaching some count, so what they receive is a selection they have actually
+    finished making.
+
+    Registrations are already live; this changes nothing about them. Pressing it
+    twice just sends the list again, which is harmless and occasionally what
+    someone wants.
+    """
+    participant = db.select_one(
+        "participants",
+        f"select=user_id,name,email,payment_status,master_qr_token&user_id=eq.{user_id}",
+    )
+    if not participant:
+        return {"success": False, "error_code": "NOT_FOUND", "message": "Participant not found."}
+
+    held = held_event_codes(user_id)
+    if not held:
+        return {
+            "success": False,
+            "error_code": "NO_EVENTS",
+            "message": "Pick at least one event before confirming.",
+        }
+
+    sent = _send_lineup_confirmation(participant, held)
+    return {
+        "success": True,
+        "event_count": len(held),
+        "email_sent": sent,
+        "message": (
+            "Your events are confirmed - we have emailed the list to you."
+            if sent
+            else "Your events are confirmed. The email could not be sent just now."
+        ),
+    }
+
+
+def _send_lineup_confirmation(participant: Dict[str, Any], event_codes: List[str]) -> bool:
+    """
+    §4.5 confirmation, sent once the participant's counted line-up is complete.
+
+    Best-effort: a failure never loses a seat, and never blocks the response —
+    the registration is already committed by the time this runs.
+    """
     try:
         from services.email_service import send_simple_email
 
-        send_simple_email(
+        names = [rules.EVENTS[c].name for c in event_codes if c in rules.EVENTS]
+        items = "".join(f"<li>{n}</li>" for n in names)
+
+        return send_simple_email(
             to=participant["email"],
-            subject=f"Zinnia 2026 — you're registered for {event.name}",
+            subject="Zinnia 2026 - your events are confirmed",
             html=(
-                f"<p>Hi {participant.get('name', '')},</p><p>You're confirmed for <strong>"
-                f"{event.name}</strong>.</p><p>Your UserID is <strong>"
-                f"{participant['user_id']}</strong>. Bring the master QR from your registration email — the same pass works at the gate, at every event desk and at the food counter.</p>"
+                f"<p>Hi {participant.get('name', '')},</p>"
+                f"<p>Your events are confirmed:</p><ul>{items}</ul>"
+                f"<p>Your UserID is <strong>{participant['user_id']}</strong>. Bring the master QR "
+                f"from your registration email - the same pass works at the gate, at every event "
+                f"desk and at the food counter.</p>"
             ),
         )
 
     except Exception as e:
         print(
-            f"[event_registration] confirmation email failed for "
-            f"{participant.get('user_id')} / {event.code}: {type(e).__name__}: {e}"
+            f"[event_registration] line-up email failed for "
+            f"{participant.get('user_id')}: {type(e).__name__}: {e}"
         )
+        return False

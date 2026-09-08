@@ -554,6 +554,10 @@ def evaluate_catalog(
             "event_code": event.code,
             "display_order": display_index(event.code) + 1,
             "name": event.name,
+            # TECH / NON_TECH. The dashboard groups the list by it — nine cards
+            # in one undifferentiated run gave no hint that they are two kinds
+            # of thing with different rules.
+            "category": event.category,
             "min_team": event.min_team,
             "max_team": event.max_team,
             # Two different questions the dashboard asks. `is_team_event` means a

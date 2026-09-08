@@ -10,6 +10,7 @@ import { WebsiteEventsPage } from './pages/Events';
 import { WebsiteConfirmationPage } from './pages/Confirmation';
 import { WebsiteContactPage } from './pages/Contact';
 import { WebsiteSchedulePage } from './pages/Schedule';
+import { WebsitePrivacyPage } from './pages/Privacy';
 import { ParticipantRegisterPage } from './pages/ParticipantRegister';
 import { ParticipantVerifyEmailPage } from './pages/ParticipantVerifyEmail';
 import { ParticipantPaymentPage } from './pages/ParticipantPayment';
@@ -59,6 +60,7 @@ export function App() {
         <Route path="/passport" element={<WebsitePassportPage />} />
         <Route path="/schedule" element={<WebsiteSchedulePage />} />
         <Route path="/contact" element={<WebsiteContactPage />} />
+        <Route path="/privacy" element={<WebsitePrivacyPage />} />
 
         {/* Participant flow — registration, payment, login, dashboard, teams */}
         <Route path="/participant/register" element={<ParticipantRegisterPage />} />

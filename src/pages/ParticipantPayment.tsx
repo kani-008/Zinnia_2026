@@ -31,6 +31,7 @@ import {
   TREASURER_PAYMENT_CONFIG,
 } from '../config/site';
 import { getPaymentStatus, saveSession, submitPayment } from '../lib/participant/api';
+import { clearRegistrationDraft } from '../lib/participant/draft';
 import type { PaymentStatusData } from '../lib/participant/types';
 import {
   ComicAlert,
@@ -45,7 +46,7 @@ import {
   ComicPanel,
   ComicStepper,
 } from '../components/ui/comic';
-import { useToastOn } from '../components/ui/toast';
+import { toast, useToastOn } from '../components/ui/toast';
 
 /** Both fields are hard requirements server-side, so both are marked. */
 const RequiredMark: React.FC = () => (
@@ -256,18 +257,35 @@ export const ParticipantPaymentPage: React.FC = () => {
       });
     }
 
-    // Do not assume success. Re-read the server's view of the registration; it
-    // will say PAYMENT_RECEIVED until the treasurer has actually verified it.
     setShowForm(false);
     pickProof(null);
 
-    // The pending token is spent; from here the registration has a real id.
-    if (result.registration_id) {
+    // Registration is finished, so the parked details are done with. Left
+    // behind, the next person to register on a shared laptop would open the
+    // form already filled with this one's name and email.
+    clearRegistrationDraft();
+
+    // The response IS the server's view of the registration, so it is used
+    // directly. Re-reading here would have refetched with the spent pending
+    // token, which still answers from the token itself — OTP_VERIFIED with no
+    // payment — and bounced the participant straight back to the form they had
+    // just completed.
+    setStatus(result as unknown as PaymentStatusData);
+
+    // Green, and it leaves on its own. A standing badge on this screen said
+    // "complete" every time the page was opened, long after the moment it was
+    // reporting; this fires once, when it actually happens.
+    toast.success('Registration complete — all events are open.');
+
+    // From here the registration has a real id; the URL change lets the normal
+    // load path take over on any later refresh.
+    if (result.registration_id && result.registration_id !== rid) {
       navigate(`/participant/payment?rid=${encodeURIComponent(result.registration_id)}`, {
         replace: true,
       });
+    } else {
+      await load();
     }
-    await load();
   };
 
   /* ---------------------------------------------------------------- states */
@@ -385,19 +403,7 @@ export const ParticipantPaymentPage: React.FC = () => {
       <ComicPageShell>
         <WebsiteNavbar />
         <main className="mx-auto max-w-xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 text-center overflow-hidden">
-          <div className="mb-5 flex justify-center">
-            <ComicChip tone="cyan" rotate={-2}>
-              <CheckCircle2 size={12} /> Registration complete
-            </ComicChip>
-          </div>
-
           <ComicHeading>You&apos;re registered</ComicHeading>
-
-          <p className="mt-4 font-mono text-xs leading-relaxed text-[#B8B8B2] sm:text-sm">
-            That is everything we need from you. All nine events are open — head to your dashboard
-            and pick yours now. Your master QR and the WhatsApp group link arrive once the treasurer
-            confirms the payment; nothing is waiting on that in the meantime.
-          </p>
 
           <ComicStepper steps={REGISTRATION_STEPS} current={4} className="mt-6 justify-center" />
 
@@ -428,6 +434,19 @@ export const ParticipantPaymentPage: React.FC = () => {
               Reference <span className="font-bold text-[#EEEEEA]">{status.payment?.txn_ref}</span>
               {status.payment?.screenshot_url ? ' · proof uploaded' : ''}
             </div>
+
+            {/* Sits under the reference it corrects rather than in the button
+                row below, where it read as a peer of "Pick your events" — the
+                same shape as the change-email link on the code screen. */}
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                className="font-mono text-[11px] font-bold uppercase tracking-wide text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
+              >
+                Change reference or screenshot
+              </button>
+            </div>
           </ComicPanel>
 
           <div className="flex justify-center">
@@ -439,9 +458,6 @@ export const ParticipantPaymentPage: React.FC = () => {
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <ComicGhostButton tone="cyan" onClick={() => void load()} className="inline-flex items-center gap-1.5">
               <RefreshCw size={14} /> Check status
-            </ComicGhostButton>
-            <ComicGhostButton tone="yellow" onClick={() => setShowForm(true)}>
-              Submit a different reference
             </ComicGhostButton>
           </div>
         </main>
@@ -557,7 +573,7 @@ export const ParticipantPaymentPage: React.FC = () => {
                   <img src={proofPreview} alt="Payment screenshot preview" className="h-20 w-20 shrink-0 rounded-xl border border-[#23262D] object-cover" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-mono text-xs font-bold text-[#EEEEEA]">{proof.name}</p>
-                    <p className="mt-0.5 font-mono text-[11px] text-[#71767B]">{(proof.size / 1024).toFixed(0)} KB · ready to upload</p>
+                    <p className="mt-0.5 font-mono text-[11px] text-[#71767B]">{(proof.size / 1024).toFixed(0)} KB</p>
                   </div>
                   <button
                     type="button"

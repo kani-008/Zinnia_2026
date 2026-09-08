@@ -13,7 +13,6 @@ import { Loader2 } from 'lucide-react';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { REGISTRATION_STEPS } from '../config/site';
 import { requestOtp, verifyRegistrationEmail } from '../lib/participant/api';
-import { clearRegistrationDraft } from '../lib/participant/draft';
 import {
   ComicAlert,
   ComicCTA,
@@ -123,10 +122,9 @@ export const ParticipantVerifyEmailPage: React.FC = () => {
     // No session yet: the registration does not exist until the payment is
     // submitted, so there is no UserID to bind one to. Payment issues it.
 
-    // The address is confirmed, so there is nothing left to go back and fix.
-    // Dropping the draft here stops the next registration on a shared laptop
-    // from opening with this person's details already in the form.
-    clearRegistrationDraft();
+    // The draft is deliberately NOT dropped here. Verifying the address no
+    // longer finishes the registration — payment does — so the details still
+    // have to survive a trip back to the form until then. Payment clears it.
 
     // Straight to payment. The "Address confirmed" screen that used to sit here
     // only restated what the participant had just done and asked them to press
@@ -218,7 +216,7 @@ export const ParticipantVerifyEmailPage: React.FC = () => {
                 onClick={() => navigate('/participant/register')}
                 className="font-mono text-[11px] font-bold uppercase tracking-wide text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
               >
-                Change email address
+                Change email?
               </button>
             </div>
           </ComicPanel>

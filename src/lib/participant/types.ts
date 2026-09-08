@@ -170,6 +170,8 @@ export interface DashboardCatalogCard {
   event_code: EventCode;
   display_order?: number;
   name: string;
+  /** TECH | NON_TECH — the dashboard groups the catalog by it */
+  category?: string;
   state: 'AVAILABLE' | 'BLOCKED' | 'FULL' | 'REGISTERED';
   /** the specific reason — never collapsed to "unavailable" */
   reason?: string;

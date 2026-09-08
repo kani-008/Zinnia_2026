@@ -856,6 +856,18 @@ body {
   flex-direction: column;
 }
 
+/* The dashboard catalog uses the same hand-drawn frame laid out as a full-width
+   row, so it is sized by its content rather than by the 320px card shape the
+   Events grid is built around. Scoped to a modifier: flattening the base rule
+   would flatten those cards too. */
+.comic-card-wrapper.row-card {
+  min-height: 0;
+}
+
+.comic-card-wrapper.row-card:hover {
+  transform: none;
+}
+
 .comic-card-wrapper.tech {
   --card-main: var(--cyan);
   --card-shadow: var(--cyan-shadow);
