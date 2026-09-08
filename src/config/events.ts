@@ -195,11 +195,9 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     schedule_time: '12:00 PM - 03:00 PM',
     duration: '3 hrs',
     venue: 'CSE dept',
-    description: 'Round 1 - Welcome to Borderland @ GCEE: your visa is issued for Round 1. To extend it and advance, your team must survive three games - one tests your memory, one your instinct against the crowd, one your nerve against doubt itself. Round 2 - Borderland Hunt @ GCEE: enter unknown territory where every step could lead to victory or send you the wrong way. Think fast, trust your teammates, decide under pressure - and remember, you are not the only ones hunting.',
+    description: 'Round 1 - Welcome to Borderland @ GCEE: your visa is issued for Round 1. To extend it and advance, your team must survive three games - one tests your memory, one your instinct against the crowd, one your nerve against doubt itself. \n\nRound 2 - Borderland Hunt @ GCEE: enter unknown territory where every step could lead to victory or send you the wrong way. Think fast, trust your teammates, decide under pressure - and remember, you are not the only ones hunting.',
     rules: [
-      'Team size: 3 participants per team.',
-      'Round 1 - Welcome to Borderland @ GCEE: survive three games to extend your visa to Round 2.',
-      'Round 2 - Borderland Hunt @ GCEE: navigate unknown territory; the Borderland may offer chances to turn the game against your rivals.',
+
       'Teams must not assist other teams or disclose game-related information.',
       'Any misbehavior, cheating, or violation of event rules may result in immediate disqualification.',
       'Participants must follow the rules and instructions for each game to continue in the event.',
@@ -207,7 +205,11 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     ],
     coordinators: [
       { name: 'Praveenraja', role: 'STUDENT COORDINATOR', phone: '+91 63822 79383' },
-      { name: 'Kaviyasri', role: 'STUDENT COORDINATOR', phone: '+91 76393 67928' }
+      { name: 'Kaviyasri', role: 'STUDENT COORDINATOR', phone: '+91 76393 67928' },
+      { name: 'Sri Dharanivel ', role: 'STUDENT COORDINATOR', phone: '+91 9791479366' },
+      { name: 'Vijayadharshini ', role: 'STUDENT COORDINATOR', phone: '+91 76959 54664' }
+
+
     ],
     prizes: {
       first: '₹1,000',

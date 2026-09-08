@@ -895,7 +895,7 @@ export const WebsiteHomePage: React.FC = () => {
             onClick={() => triggerComicFX('TIMELINE!')}
             className="mt-3.5 sm:mt-4 px-3 xs:px-4 py-1 bg-[#111214] border-[1.5px] sm:border-[2px] border-[#E5BD00] shadow-[2px_2px_0px_#090A0B] sm:shadow-[2.5px_2.5px_0px_#090A0B] rotate-1 sticker-pop cursor-pointer max-w-full text-center"
           >
-            <span className="font-comic text-[10px] xs:text-xs uppercase text-[#E5BD00] font-bold tracking-wider">
+            <span className="font-mono text-[10px] xs:text-xs uppercase text-[#E5BD00] font-bold tracking-wider">
               ⏰ TIMELINE MONITORED &bull; 24 SEPTEMBER 2026 &bull; GCE ERODE CSE
             </span>
           </div>

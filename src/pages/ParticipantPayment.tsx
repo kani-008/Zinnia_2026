@@ -285,7 +285,7 @@ export const ParticipantPaymentPage: React.FC = () => {
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">
               Your registration code
             </p>
-            <p className="mt-2 select-all font-comic text-3xl font-black tracking-wider text-[#E5BD00] sm:text-4xl">
+            <p className="mt-2 select-all font-mono text-2xl sm:text-3xl font-bold tracking-wider text-[#E5BD00]">
               {status.user_id}
             </p>
             <p className="mt-3 font-mono text-[11px] leading-relaxed text-[#71767B]">
@@ -354,7 +354,7 @@ export const ParticipantPaymentPage: React.FC = () => {
               <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">
                 Your UserID
               </p>
-              <p className="mt-2 select-all font-comic text-3xl font-black tracking-wider text-[#0FA9C6] sm:text-4xl">
+              <p className="mt-2 select-all font-mono text-2xl sm:text-3xl font-bold tracking-wider text-[#0FA9C6]">
                 {status.user_id}
               </p>
               <p className="mt-3 font-mono text-[11px] leading-relaxed text-[#71767B]">

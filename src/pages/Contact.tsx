@@ -158,8 +158,9 @@ const BusRunRow: React.FC<{ run: BusRun; tone: 'cyan' | 'yellow' }> = ({ run, to
       {run.service}
     </span>
     <span
-      className={`shrink-0 border bg-[#191B1F] px-2 py-0.5 font-mono text-sm font-bold text-[#F4F4F0] ${tone === 'cyan' ? 'border-[#0FA9C6]/70' : 'border-[#E5BD00]/70'
-        }`}
+      className={`shrink-0 border bg-[#191B1F] px-2 py-0.5 font-mono text-sm font-bold text-[#F4F4F0] ${
+        tone === 'cyan' ? 'border-[#0FA9C6]/70' : 'border-[#E5BD00]/70'
+      }`}
     >
       {run.time}
     </span>
@@ -374,7 +375,7 @@ export const WebsiteContactPage: React.FC = () => {
                 <div className="border-2 border-[#0FA9C6]/40 bg-[#111214] pad-box">
                   <div className="mb-3 flex items-center gap-2 border-b-2 border-[#0FA9C6]/30 pb-2.5">
                     <Bus size={15} className="text-[#0FA9C6] shrink-0" />
-                    <h4 className="font-comic text-sm uppercase tracking-wider text-[#0FA9C6]">
+                    <h4 className="font-mono text-xs sm:text-sm uppercase tracking-wider font-bold text-[#0FA9C6]">
                       From Erode Bus Stand
                     </h4>
                   </div>
@@ -390,7 +391,7 @@ export const WebsiteContactPage: React.FC = () => {
                 <div className="border-2 border-[#E5BD00]/50 bg-[#111214] pad-box">
                   <div className="mb-3 flex items-center gap-2 border-b-2 border-[#E5BD00]/40 pb-2.5">
                     <Bus size={15} className="text-[#E5BD00] shrink-0" />
-                    <h4 className="font-comic text-sm uppercase tracking-wider text-[#E5BD00]">
+                    <h4 className="font-mono text-xs sm:text-sm uppercase tracking-wider font-bold text-[#E5BD00]">
                       From Chithode
                     </h4>
                   </div>

@@ -22,12 +22,14 @@ import {
   CalendarClock,
   Check,
   CheckCircle2,
+  Clock,
   Copy,
   Hourglass,
   KeyRound,
   Loader2,
   LogOut,
   Lock,
+  MapPin,
   MessageCircle,
   Users,
   X,
@@ -277,7 +279,7 @@ export const ParticipantDashboardPage: React.FC = () => {
                       <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">
                         Your login ID
                       </p>
-                      <p className="select-all font-comic text-xl font-black tracking-wider text-[#0FA9C6] sm:text-2xl">
+                      <p className="select-all font-mono text-xl font-bold tracking-wider text-[#0FA9C6] sm:text-2xl">
                         {participant.user_id}
                       </p>
                     </div>
@@ -503,111 +505,184 @@ export const ParticipantDashboardPage: React.FC = () => {
             )}
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 items-start">
             {catalog.map((card, i) => {
               const registered = card.state === 'REGISTERED';
               const blocked = card.state === 'BLOCKED';
               const full = card.state === 'FULL';
               const locked = blocked || full;
               const number = String(card.display_order ?? i + 1).padStart(2, '0');
+              const variant = cardVariant(card.event_code);
+              const mission = missionFor(card.event_code);
+              const open = openCard === card.event_code;
 
               return (
                 <ComicHandDrawnCard
                   key={card.event_code}
                   code={number}
-                  variant={cardVariant(card.event_code)}
-                  className={locked ? 'opacity-55 !cursor-default' : '!cursor-default'}
+                  variant={variant}
+                  className={`min-h-[350px] sm:min-h-[360px] transition-all duration-200 ${
+                    locked ? 'opacity-70 hover:opacity-85 !cursor-default' : '!cursor-default'
+                  }`}
+                  innerClassName="w-full flex-1 flex flex-col justify-between px-6 sm:px-7 pt-12 sm:pt-14 pb-8 sm:pb-9 text-center select-text"
                 >
-                  <div className="flex w-full flex-1 flex-col items-center justify-between gap-4">
-                    <div className="w-full">
-                      <div className="mb-2 flex items-center justify-center gap-2">
-                        {registered && (
-                          <ComicChip tone="cyan" rotate={-3}>
-                            Registered
-                          </ComicChip>
+                  <div className="flex w-full flex-1 flex-col justify-between">
+                    {/* TOP SECTION: META & TITLE & DETAILS */}
+                    <div className="w-full flex flex-col items-center">
+                      {/* Top Bar: Spacing clearance from the top-left number tag + category & lock badge */}
+                      <div className="w-full flex items-center justify-end gap-1.5 min-h-[22px] mb-1.5">
+                        <span className="font-mono text-[9px] font-bold tracking-widest px-2 py-0.5 uppercase border border-[#23262D] bg-[#0E1012] text-[#8E939D]">
+                          {variant === 'tech' ? 'TECH' : 'NON-TECH'}
+                        </span>
+                        {locked && (
+                          <span title="Unavailable" className="p-0.5 text-[#71767B]">
+                            <Lock size={12} />
+                          </span>
                         )}
-                        {locked && <Lock size={14} className="shrink-0 text-[#71767B]" />}
                       </div>
 
-                      <h3 className="font-display text-lg uppercase leading-tight text-[#EEEEEA] sm:text-xl">
-                        {card.name}
-                      </h3>
+                      {/* Event Title: Consistent min-height so all cards align across rows */}
+                      <div className="min-h-[50px] sm:min-h-[54px] w-full flex items-center justify-center px-1">
+                        <h3 className="font-display text-lg sm:text-xl font-black uppercase leading-tight tracking-wide text-[#EEEEEA] text-center">
+                          {card.name}
+                        </h3>
+                      </div>
 
-                      {/* What the event actually is. Participants were having to
-                          leave the dashboard for the marketing page to find out. */}
-                      {(() => {
-                        const mission = missionFor(card.event_code);
-                        if (!mission) return null;
-                        const open = openCard === card.event_code;
-                        return (
-                          <div className="mt-2">
-                            <button
-                              type="button"
-                              onClick={() => setOpenCard(open ? null : card.event_code)}
-                              aria-expanded={open}
-                              className="font-mono text-[10.5px] font-bold uppercase tracking-[0.15em] text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
-                            >
-                              {open ? 'Hide details' : 'What is this?'}
-                            </button>
-                            {open && (
-                              <div className="mt-2 space-y-2 text-left">
-                                <p className="font-mono text-[11px] leading-relaxed text-[#B8B8B2]">
-                                  {mission.description}
-                                </p>
-                                <p className="font-mono text-[10.5px] text-[#71767B]">
-                                  {mission.schedule_time} · {mission.venue}
-                                </p>
-                                {mission.rules?.length > 0 && (
-                                  <ul className="list-disc space-y-1 pl-4 font-mono text-[10.5px] leading-relaxed text-[#71767B]">
+                      {/* Expandable "WHAT IS THIS?" UI Control */}
+                      {mission && (
+                        <div className="mt-1.5 w-full flex flex-col items-center">
+                          <button
+                            type="button"
+                            onClick={() => setOpenCard(open ? null : card.event_code)}
+                            aria-expanded={open}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-sm border font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] transition-all cursor-pointer ${
+                              open
+                                ? 'border-[#E5BD00] bg-[#E5BD00]/15 text-[#E5BD00]'
+                                : variant === 'tech'
+                                  ? 'border-[#0FA9C6]/40 bg-[#0FA9C6]/10 text-[#0FA9C6] hover:bg-[#0FA9C6]/20 hover:border-[#0FA9C6]'
+                                  : 'border-[#D51F55]/40 bg-[#D51F55]/10 text-[#D51F55] hover:bg-[#D51F55]/20 hover:border-[#D51F55]'
+                            }`}
+                          >
+                            <span>{open ? 'HIDE DETAILS ↑' : 'WHAT IS THIS? ↓'}</span>
+                          </button>
+
+                          {/* Expanded Content Panel */}
+                          {open && (
+                            <div className="mt-3 w-full bg-[#0B0D10]/95 border-2 border-dashed border-[#23262D] p-3 text-left space-y-2.5">
+                              <p className="font-mono text-xs leading-relaxed text-[#C2C6CE]">
+                                {mission.description}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] text-[#8E939D] border-t border-[#1C1E23] pt-2">
+                                <span className="flex items-center gap-1">
+                                  <Clock size={11} className="text-[#E5BD00]" />
+                                  {mission.schedule_time}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <MapPin size={11} className="text-[#0FA9C6]" />
+                                  {mission.venue}
+                                </span>
+                              </div>
+                              {mission.rules?.length > 0 && (
+                                <div className="border-t border-[#1C1E23] pt-2">
+                                  <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#71767B] mb-1">
+                                    Rules:
+                                  </p>
+                                  <ul className="space-y-1 font-mono text-[10.5px] leading-relaxed text-[#9DA2AC]">
                                     {mission.rules.slice(0, 4).map((r) => (
-                                      <li key={r}>{r}</li>
+                                      <li key={r} className="flex items-start gap-1.5">
+                                        <span className="text-[#E5BD00] font-bold select-none">•</span>
+                                        <span>{r}</span>
+                                      </li>
                                     ))}
                                   </ul>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* The reason is the feature. Never collapse this to "unavailable". */}
-                      {locked && card.reason && (
-                        <p className="mt-2 flex items-start justify-center gap-1.5 font-mono text-[11px] leading-relaxed text-[#B8B8B2]">
-                          <CalendarClock size={12} className="mt-0.5 shrink-0" />
-                          {card.reason}
-                        </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       )}
 
-                      {!locked && !registered && card.is_team_event && (
-                        <p className="mt-2 flex items-center justify-center gap-1.5 font-mono text-[11px] text-[#71767B]">
-                          <Users size={12} />
-                          Team of {card.min_team === card.max_team ? card.min_team : `${card.min_team}-${card.max_team}`}
-                        </p>
+                      {/* Team requirement indicator */}
+                      {card.is_team_event && (
+                        <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#141619] border border-[#23262D] font-mono text-[11px] text-[#8E939D]">
+                          <Users size={12} className={variant === 'tech' ? 'text-[#0FA9C6]' : 'text-[#D51F55]'} />
+                          <span>
+                            Team of {card.min_team === card.max_team ? card.min_team : `${card.min_team}-${card.max_team}`}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Locked reason notice */}
+                      {locked && card.reason && (
+                        <div className="mt-2.5 w-full px-2.5 py-1.5 bg-[#171415] border border-[#3E232A] flex items-start justify-center gap-1.5 font-mono text-[11px] leading-relaxed text-[#E08A9D]">
+                          <CalendarClock size={12} className="mt-0.5 shrink-0 text-[#D51F55]" />
+                          <span className="text-center">{card.reason}</span>
+                        </div>
                       )}
                     </div>
 
-                    <div className="w-full">
+                    {/* BOTTOM ACTION SECTION */}
+                    <div className="w-full mt-auto pt-4 pb-0.5 border-t border-[#1C1F24]">
                       {registered ? (
-                        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-[#0FA9C6]">
-                          You&apos;re registered
-                        </p>
+                        <div className="w-full py-2.5 px-3 bg-[#0FA9C6]/15 border-2 border-[#0FA9C6] flex items-center justify-center gap-2 shadow-[2px_2px_0px_#08758A]">
+                          <Check size={16} className="text-[#0FA9C6] stroke-[3.5] shrink-0" />
+                          <span className="font-comic font-black text-xs sm:text-sm tracking-wider uppercase italic text-[#0FA9C6]">
+                            YOU&apos;RE REGISTERED
+                          </span>
+                        </div>
                       ) : locked ? (
-                        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.15em] text-[#71767B]">
-                          {full ? 'Registrations closed' : 'Unavailable'}
-                        </p>
-                      ) : (
-                        <ComicGhostButton
-                          tone={cardVariant(card.event_code) === 'tech' ? 'cyan' : 'pink'}
-                          className="w-full"
-                          onClick={() =>
-                            card.is_team_event
-                              ? navigate(`/participant/teams/new?event=${card.event_code}`)
-                              : void onRegister(card)
-                          }
+                        <div className="w-full py-2.5 px-3 bg-[#131518] border-2 border-[#23262D] flex items-center justify-center gap-2 text-[#71767B]">
+                          <Lock size={13} className="shrink-0 text-[#71767B]" />
+                          <span className="font-comic font-bold text-xs sm:text-sm tracking-wider uppercase text-[#71767B]">
+                            {full ? 'REGISTRATIONS CLOSED' : 'UNAVAILABLE'}
+                          </span>
+                        </div>
+                      ) : card.is_team_event ? (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/participant/teams/new?event=${card.event_code}`)}
                           disabled={busyEvent === card.event_code}
+                          className={`w-full py-2.5 px-4 font-comic font-black text-xs sm:text-sm uppercase italic tracking-wider flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                            variant === 'tech'
+                              ? 'bg-[#0FA9C6] text-[#090A0B] border-2 border-[#0FA9C6] shadow-[3px_3px_0px_#08758A] hover:bg-[#15C3E5] hover:shadow-[4px_4px_0px_#08758A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#08758A]'
+                              : 'bg-[#D51F55] text-white border-2 border-[#D51F55] shadow-[3px_3px_0px_#A81443] hover:bg-[#E82C64] hover:shadow-[4px_4px_0px_#A81443] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#A81443]'
+                          }`}
                         >
-                          {busyEvent === card.event_code ? 'Working…' : card.is_team_event ? 'Create team' : 'Register'}
-                        </ComicGhostButton>
+                          {busyEvent === card.event_code ? (
+                            <>
+                              <Loader2 size={15} className="animate-spin" />
+                              <span>WORKING…</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>CREATE TEAM</span>
+                              <span className="text-base leading-none">→</span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void onRegister(card)}
+                          disabled={busyEvent === card.event_code}
+                          className={`w-full py-2.5 px-4 font-comic font-black text-xs sm:text-sm uppercase italic tracking-wider flex items-center justify-center gap-2 transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                            variant === 'tech'
+                              ? 'bg-[#0FA9C6] text-[#090A0B] border-2 border-[#0FA9C6] shadow-[3px_3px_0px_#08758A] hover:bg-[#15C3E5] hover:shadow-[4px_4px_0px_#08758A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#08758A]'
+                              : 'bg-[#D51F55] text-white border-2 border-[#D51F55] shadow-[3px_3px_0px_#A81443] hover:bg-[#E82C64] hover:shadow-[4px_4px_0px_#A81443] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#A81443]'
+                          }`}
+                        >
+                          {busyEvent === card.event_code ? (
+                            <>
+                              <Loader2 size={15} className="animate-spin" />
+                              <span>WORKING…</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>REGISTER NOW</span>
+                              <span className="text-base leading-none">→</span>
+                            </>
+                          )}
+                        </button>
                       )}
                     </div>
                   </div>

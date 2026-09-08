@@ -17,7 +17,7 @@ export const RegistrationFeeCallout: React.FC<{ className?: string }> = ({ class
   return (
     <div className={`flex justify-center ${className}`}>
       <div className="inline-flex flex-col items-center gap-1 px-4 py-2 bg-[#111214] border-[2px] border-[#E5BD00] shadow-[3px_3px_0px_#090A0B] -rotate-1 sticker-pop text-center max-w-full">
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-comic text-xs sm:text-sm uppercase tracking-wider font-bold">
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-mono text-xs sm:text-sm uppercase tracking-wider font-bold">
           <span className="inline-flex items-center gap-1.5 text-[#0FA9C6]">
             <Ticket size={13} /> Online ₹{REGISTRATION_FEE_PER_HEAD}
           </span>

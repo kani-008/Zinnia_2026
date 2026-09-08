@@ -114,7 +114,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
               {event.mission_name}
             </h3>
             <p
-              className={`font-comic text-xs sm:text-sm font-bold ${
+              className={`font-mono text-xs sm:text-sm font-semibold tracking-wide ${
                 isTech ? 'text-[#3CE7FF]' : 'text-[#FF3366]'
               }`}
             >
@@ -185,7 +185,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
           <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
             // BRIEFING
           </h4>
-          <p className="font-comic text-xs sm:text-sm text-[#D0D0D4] leading-relaxed whitespace-pre-line">
+          <p className="font-mono text-xs sm:text-sm text-[#E4E4E7] leading-relaxed whitespace-pre-line font-normal">
             {event.description}
           </p>
         </div>
@@ -198,9 +198,9 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
               // RULES &amp; GUIDELINES
             </h4>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1.5">
               {event.rules.map((rule, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs font-comic text-[#C0C0C5]">
+                <li key={i} className="flex items-start gap-2 text-xs font-mono text-[#D4D4D8] font-normal leading-snug">
                   <span className="text-[#3CE7FF] shrink-0 font-bold">•</span>
                   <span>{rule}</span>
                 </li>
