@@ -114,31 +114,23 @@ export const ParticipantLoginPage: React.FC = () => {
 
           <ComicHeading>{step === 'identify' ? 'Log in' : 'Enter your code'}</ComicHeading>
 
-          <p className="mt-4 font-mono text-xs leading-relaxed text-[#B8B8B2] sm:text-sm">
-            {step === 'identify' ? (
-              <>
-                Log in with the UserID from your registration email. There is no password — we
-                email a 6-digit code to the address you registered with to confirm it is you.
-              </>
-            ) : (
-              <>
-                We sent a 6-digit code to{' '}
-                <span className="font-bold text-[#0FA9C6]">{emailHint}</span>. It expires in 10
-                minutes.
-              </>
-            )}
-          </p>
+          {/* The identify step explains itself: one field, labelled, and a
+              button that says what it sends. Only the code step needs a line,
+              because the address it went to is not otherwise on screen. */}
+          {step !== 'identify' && (
+            <p className="mt-4 font-mono text-xs leading-relaxed text-[#B8B8B2] sm:text-sm">
+              We sent a 6-digit code to{' '}
+              <span className="font-bold text-[#0FA9C6]">{emailHint}</span>. It expires in 10
+              minutes.
+            </p>
+          )}
         </header>
 
 
         {step === 'identify' ? (
           <form onSubmit={sendCode}>
             <ComicPanel tone="cyan">
-              <ComicField
-                label="Your UserID"
-                htmlFor="user_id"
-                hint="It looks like ZIN26-0142. We emailed it to you when your registration completed."
-              >
+              <ComicField label="Your UserID" htmlFor="user_id">
                 <ComicInput
                   id="user_id"
                   className="text-center text-xl tracking-[0.2em]"
@@ -165,12 +157,7 @@ export const ParticipantLoginPage: React.FC = () => {
               </ComicCTA>
             </div>
 
-            <p className="mt-5 text-center font-mono text-[11px] leading-relaxed text-[#71767B]">
-              Lost your UserID? It is in the &ldquo;You&apos;re registered&rdquo; email we sent when
-              you submitted your payment. Check your spam folder, or contact the coordinators.
-            </p>
-
-            <p className="mt-3 text-center font-mono text-[11px] text-[#71767B]">
+            <p className="mt-5 text-center font-mono text-[11px] text-[#71767B]">
               Not registered yet?{' '}
               <button
                 type="button"

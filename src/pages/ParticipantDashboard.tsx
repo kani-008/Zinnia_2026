@@ -15,7 +15,7 @@
 // released together when the server says REGISTRATION_CONFIRMED. That panel is
 // informational and never blocks anything.
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -121,6 +121,56 @@ const groupOf = (card: DashboardCatalogCard): string => {
   return card.category === 'TECH' ? 'TECH' : 'NON_TECH';
 };
 
+/**
+ * Has this participant opened the registration description yet?
+ *
+ * Per participant, not per browser: a shared machine in the lab would
+ * otherwise silence the prompt for whoever logs in next, and they are exactly
+ * the person who has not read it.
+ */
+const RULES_READ_KEY = (userId: string) => `zin26_rules_read_${userId}`;
+
+const hasReadRules = (userId: string): boolean => {
+  try {
+    return window.localStorage.getItem(RULES_READ_KEY(userId)) === '1';
+  } catch {
+    // Storage blocked — better to prompt again than to assume it was read.
+    return false;
+  }
+};
+
+const markRulesRead = (userId: string): void => {
+  try {
+    window.localStorage.setItem(RULES_READ_KEY(userId), '1');
+  } catch {
+    /* the prompt simply returns next visit */
+  }
+};
+
+/**
+ * Was this document reached by reloading it, rather than by arriving at it?
+ *
+ * Pressing F5 is not the participant coming to the dashboard again - they were
+ * already on it - so re-raising the prompt there reads as nagging. Coming back
+ * from another page is a real arrival and does raise it.
+ */
+const isPageReload = (): boolean => {
+  try {
+    const [nav] = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    return nav?.type === 'reload';
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Module scope, so a full page load resets it and an in-app navigation does
+ * not. That is what separates "refreshed the dashboard" - suppressed - from
+ * "went to Events and came back" - shown - after a refresh has happened: only
+ * the first mount of a document can be the reload itself.
+ */
+let reloadMountConsumed = false;
+
 export const ParticipantDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [openCard, setOpenCard] = useState<string | null>(null);
@@ -174,6 +224,44 @@ export const ParticipantDashboardPage: React.FC = () => {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /** Open the description, and remember that it has now been read. */
+  const openRules = useCallback(() => {
+    const uid = data?.participant?.user_id;
+    if (uid) markRulesRead(uid);
+    setShowRules(true);
+  }, [data]);
+
+  /**
+   * Arriving at the dashboard: point them at the registration description.
+   *
+   * The rules decide what combines with what, and the expensive mistake -
+   * taking Gadget Codes and losing every other on-campus event - is made
+   * before any of them is reachable through a rejection message. So the prompt
+   * is raised until the description has actually been opened rather than once
+   * and gone: a notification that slid past unread has not done its job.
+   *
+   * A refresh is not an arrival, though. Reloading the page they are already
+   * on gets nothing, so the prompt cannot turn into something that fires every
+   * time they press F5.
+   */
+  const promptedRef = useRef(false);
+  useEffect(() => {
+    const uid = data?.participant?.user_id;
+    if (!uid || promptedRef.current || hasReadRules(uid)) return;
+    promptedRef.current = true;
+
+    // Only the first mount in a document can be the reload itself; a later one
+    // is an in-app navigation back to the dashboard, which does count.
+    const wasReload = !reloadMountConsumed && isPageReload();
+    reloadMountConsumed = true;
+    if (wasReload) return;
+
+    toast.info(
+      'Read the registration description before you pick events..!',
+      { label: 'Read it now', onClick: () => openRules() },
+    );
+  }, [data, openRules]);
 
   /**
    * Emails the participant their event list.
@@ -1075,7 +1163,7 @@ export const ParticipantDashboardPage: React.FC = () => {
                 before picking beats finding out from a rejection. */}
             <button
               type="button"
-              onClick={() => setShowRules(true)}
+              onClick={openRules}
               className="shrink-0 inline-flex items-center justify-center border-2 border-[#090A0B] bg-[#0FA9C6] px-2.5 py-1 sm:px-3.5 sm:py-1.5 font-sans text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#090A0B] shadow-[2.5px_2.5px_0px_#090A0B] -rotate-1 transition-all hover:rotate-0 hover:bg-[#15C3E5] hover:-translate-y-0.5 hover:shadow-[3.5px_3.5px_0px_#090A0B] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#090A0B] cursor-pointer"
             >
               Registration description
