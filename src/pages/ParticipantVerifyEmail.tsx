@@ -210,16 +210,17 @@ export const ParticipantVerifyEmailPage: React.FC = () => {
               required
             />
 
-            <p className="mt-3 font-mono text-[11px] leading-relaxed text-[#71767B]">
-              Wrong address?{' '}
+            {/* Right-aligned on its own row: the link is an escape hatch, not
+                part of the instruction above the field. */}
+            <div className="mt-3 flex justify-end">
               <button
                 type="button"
                 onClick={() => navigate('/participant/register')}
-                className="font-bold uppercase tracking-wide text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
+                className="font-mono text-[11px] font-bold uppercase tracking-wide text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
               >
                 Change email address
               </button>
-            </p>
+            </div>
           </ComicPanel>
 
           <div className="mt-7">

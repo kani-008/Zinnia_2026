@@ -20,7 +20,6 @@ import {
   Loader2,
   MessageCircle,
   RefreshCw,
-  ShieldCheck,
   X,
 } from 'lucide-react';
 
@@ -47,6 +46,13 @@ import {
   ComicStepper,
 } from '../components/ui/comic';
 import { useToastOn } from '../components/ui/toast';
+
+/** Both fields are hard requirements server-side, so both are marked. */
+const RequiredMark: React.FC = () => (
+  <span className="text-[#D51F55]" aria-hidden="true">
+    *
+  </span>
+);
 
 // A UPI UTR is exactly 12 digits — no letters, no spaces.
 const UTR_REGEX = /^\d{12}$/;
@@ -450,18 +456,7 @@ export const ParticipantPaymentPage: React.FC = () => {
 
       <main className="mx-auto max-w-2xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 overflow-hidden">
         <header className="mb-8">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <ComicChip tone="cyan" rotate={1.5}>
-              <CheckCircle2 size={12} /> Email verified
-            </ComicChip>
-          </div>
-
-          <ComicHeading>Pay the registration fee</ComicHeading>
-
-          <p className="mt-4 font-mono text-xs text-[#B8B8B2] sm:text-sm">
-            {status.name} · submitting the reference below completes your registration and opens
-            event selection straight away.
-          </p>
+          <ComicHeading fluid>Pay the registration fee</ComicHeading>
 
           <ComicStepper steps={REGISTRATION_STEPS} current={3} className="mt-6" />
         </header>
@@ -488,10 +483,6 @@ export const ParticipantPaymentPage: React.FC = () => {
               ₹{status.expected_amount || REGISTRATION_FEE_PER_HEAD}
             </span>
           </div>
-          <p className="mt-1 font-mono text-[11px] text-[#71767B]">
-            Flat fee per participant — it does not change with how many events you enter.
-          </p>
-
           <div className="mt-6 flex flex-col items-center gap-5 sm:flex-row sm:items-start">
             <div className="w-full max-w-[280px] shrink-0 bg-white p-3 border-[3px] border-[#090A0B] shadow-[5px_5px_0px_#090A0B] -rotate-1 sticker-pop sm:w-[240px]">
               {/* Built from TREASURER_PAYMENT_CONFIG, the same source as the UPI
@@ -520,10 +511,7 @@ export const ParticipantPaymentPage: React.FC = () => {
                 <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">Payee</p>
                 <p className="mt-1 font-mono text-sm text-[#EEEEEA]">{TREASURER_PAYMENT_CONFIG.payeeName || '—'}</p>
               </div>
-              <p className="font-mono text-[11px] leading-relaxed text-[#71767B]">
-                Scan with any UPI app, or pay to the ID above. Then enter the transaction reference
-                and attach the success screenshot below.
-              </p>
+              
             </div>
           </div>
         </ComicPanel>
@@ -532,9 +520,8 @@ export const ParticipantPaymentPage: React.FC = () => {
           <ComicPanel tone="cyan" bodyClassName="space-y-6">
             <ComicField
               error={fieldError === 'utr' ? error : null}
-              label="UTR / transaction reference"
+              label={<>UTR / transaction reference <RequiredMark /></>}
               htmlFor="utr"
-              hint="12 digits. Your payment app calls this the UTR, RRN, or transaction ID."
             >
               <ComicInput
                 id="utr"
@@ -548,13 +535,13 @@ export const ParticipantPaymentPage: React.FC = () => {
             </ComicField>
 
             <ComicField
-              label="Payment screenshot"
+              label={<>Payment screenshot <RequiredMark /></>}
               htmlFor="screenshot"
               error={fieldError === 'screenshot' ? error : null}
               hint={
                 status.payment?.screenshot_url && !proof
                   ? 'A screenshot is already on file. Choose a new one only if you want to replace it.'
-                  : 'The success screen from your UPI app showing the amount and reference. JPG, PNG or WEBP, up to 5 MB.'
+                  : 'Max 5 MB.'
               }
             >
               <input
@@ -615,12 +602,6 @@ export const ParticipantPaymentPage: React.FC = () => {
             </div>
           )}
 
-          <p className="mt-5 flex items-start gap-2 font-mono text-[11px] leading-relaxed text-[#71767B]">
-            <ShieldCheck size={14} className="mt-0.5 shrink-0 text-[#0FA9C6]" />
-            Submitting completes your registration — event selection opens immediately. The
-            treasurer then verifies the payment against the screenshot, which is what releases
-            your registration code, master QR and the WhatsApp group link.
-          </p>
         </form>
       </main>
     </ComicPageShell>
