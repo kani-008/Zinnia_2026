@@ -1228,6 +1228,34 @@ export const ParticipantDashboardPage: React.FC = () => {
                 </li>
               ))}
             </ul>
+
+            {/* The only Confirm on the page, and the only thing that sends
+                mail: it sits with the list it confirms rather than at the foot
+                of the catalog. */}
+            {registrationComplete && !lineupConfirmed && (
+              <div className="mt-4 flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void onConfirmLineup()}
+                  disabled={confirming}
+                  className="inline-flex items-center justify-center gap-2 border-2 border-[#1DB954] bg-transparent px-5 py-2 font-sans text-[11px] font-bold uppercase tracking-wider text-[#1DB954] shadow-[3px_3px_0px_#0E7A38] -rotate-1 transition-all hover:rotate-0 hover:-translate-y-0.5 hover:bg-[#1DB954] hover:text-[#090A0B] hover:shadow-[4px_4px_0px_#0E7A38] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#0E7A38] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {confirming ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" /> Sending...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={13} /> Confirm my events
+                    </>
+                  )}
+                </button>
+                <p className="text-center font-mono text-[11px] leading-relaxed text-[#71767B]">
+                  Confirm to get the list emailed to you. You can still change
+                  them until registrations close.
+                </p>
+              </div>
+            )}
           </section>
         )}
 
@@ -1246,7 +1274,7 @@ export const ParticipantDashboardPage: React.FC = () => {
             <button
               type="button"
               onClick={openRules}
-              className="shrink-0 inline-flex items-center justify-center border-2 border-[#090A0B] bg-[#0FA9C6] px-2.5 py-1 sm:px-3.5 sm:py-1.5 font-sans text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#090A0B] shadow-[2.5px_2.5px_0px_#090A0B] -rotate-1 transition-all hover:rotate-0 hover:bg-[#15C3E5] hover:-translate-y-0.5 hover:shadow-[3.5px_3.5px_0px_#090A0B] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#090A0B] cursor-pointer"
+              className="shrink-0 inline-flex items-center justify-center border-2 border-[#0FA9C6] bg-transparent px-2.5 py-1 sm:px-3.5 sm:py-1.5 font-sans text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#0FA9C6] shadow-[2.5px_2.5px_0px_#08758A] -rotate-1 transition-all hover:rotate-0 hover:bg-[#0FA9C6] hover:text-[#090A0B] hover:-translate-y-0.5 hover:shadow-[3.5px_3.5px_0px_#08758A] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#08758A] cursor-pointer"
             >
               Registration description
             </button>
@@ -1292,34 +1320,6 @@ export const ParticipantDashboardPage: React.FC = () => {
               </div>
             );
           }))}
-
-          {/* Nothing above this sends mail. The participant presses this when the
-              line-up is the one they want, and only then does it go out. */}
-          {registrationComplete && registrations.length > 0 && !lineupConfirmed && (
-            <div className="mt-10 border-t-2 border-[#23262D] pt-7 text-center">
-              <p className="mb-4 font-mono text-xs leading-relaxed text-[#B8B8B2]">
-                Happy with your {registrations.length} event
-                {registrations.length === 1 ? '' : 's'}? Confirm to get the list emailed to you.
-                You can still change them until registrations close.
-              </p>
-              <button
-                type="button"
-                onClick={() => void onConfirmLineup()}
-                disabled={confirming}
-                className="inline-flex items-center justify-center gap-2 border-2 border-[#090A0B] bg-[#1DB954] px-7 py-3 font-sans text-xs font-bold uppercase tracking-wider text-[#090A0B] shadow-[3px_3px_0px_#090A0B] transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {confirming ? (
-                  <>
-                    <Loader2 size={15} className="animate-spin" /> Sending...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 size={15} /> Confirm my events
-                  </>
-                )}
-              </button>
-            </div>
-          )}
 
         </section>
         )}
