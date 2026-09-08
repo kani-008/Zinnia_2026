@@ -308,23 +308,78 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
     utr = str(data.get("utr_number", "")).strip()
     submitted_amount = data.get("submitted_amount", REGISTRATION_FEE)
 
-    # Pre-confirmation clients only hold the internal registration_id.
-    if registration_id and not user_id:
-        from services.registration_state import resolve_participant
+    # The pending path: no row exists yet, and this call is what creates it.
+    # Validation runs BEFORE anything is written, so a rejected submission
+    # leaves the database exactly as it found it.
+    from services import pending_registration as pending
 
-        resolved = resolve_participant(registration_id=registration_id)
-        if not resolved:
-            return {"success": False, "error_code": "NOT_FOUND", "message": "Registration not found."}
-        user_id = resolved["user_id"]
+    pending_details = None
+    if pending.is_pending_token(registration_id):
+        payload, reason = pending.open_token(registration_id)
+        if not payload or not pending.is_verified_payload(payload):
+            return {
+                "success": False,
+                "error_code": "PENDING_EXPIRED" if reason == "EXPIRED" else "NOT_FOUND",
+                "message": (
+                    "This registration attempt expired before payment was submitted. "
+                    "Fill the form again."
+                    if reason == "EXPIRED"
+                    else "Registration not found."
+                ),
+            }
 
-    if not user_id:
-        return {"success": False, "error_code": "VALIDATION_ERROR", "message": "Registration reference is required."}
-    if not is_valid_user_id(user_id):
-        return {
-            "success": False,
-            "error_code": "INVALID_USER_ID",
-            "message": "That UserID does not look right - check it against your registration email.",
-        }
+        if not re.fullmatch(r"\d{12}", utr or ""):
+            return {
+                "success": False,
+                "error_code": "VALIDATION_ERROR",
+                "field": "utr_number",
+                "message": "The transaction number is 12 digits, numbers only.",
+            }
+
+        # Mandatory, with no "already on file" escape: there is no earlier
+        # submission to fall back on, and the treasurer verifies against the
+        # image. Checked here so nothing is created for a submission that
+        # cannot be verified.
+        if screenshot is None or not getattr(screenshot, "filename", ""):
+            return {
+                "success": False,
+                "error_code": "VALIDATION_ERROR",
+                "field": "screenshot",
+                "message": "Attach the payment screenshot - the treasurer verifies against it.",
+            }
+
+        # Details only. The row is created further down, AFTER the screenshot
+        # has been read and validated — creating it here would leave an orphan
+        # participant behind whenever the image turned out to be the wrong type
+        # or too large.
+        pending_details = pending.details_of(payload)
+
+    # Everything in this block is about finding an EXISTING registration. On the
+    # pending path there deliberately is not one yet — user_id is assigned by
+    # the promotion further down — so none of it applies. Running it anyway is
+    # what sent a "pend1..." token into a uuid column.
+    if pending_details is None:
+        # Pre-confirmation clients only hold the internal registration_id.
+        if registration_id and not user_id:
+            from services.registration_state import resolve_participant
+
+            resolved = resolve_participant(registration_id=registration_id)
+            if not resolved:
+                return {"success": False, "error_code": "NOT_FOUND", "message": "Registration not found."}
+            user_id = resolved["user_id"]
+
+        if not user_id:
+            return {
+                "success": False,
+                "error_code": "VALIDATION_ERROR",
+                "message": "Registration reference is required.",
+            }
+        if not is_valid_user_id(user_id):
+            return {
+                "success": False,
+                "error_code": "INVALID_USER_ID",
+                "message": "That UserID does not look right - check it against your registration email.",
+            }
     # A UPI UTR is exactly 12 digits. Enforced server-side as well as in the
     # form, because the browser is not the guard here: a bad reference means
     # the treasurer cannot find the payment in the bank statement at all.
@@ -360,6 +415,29 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
             }
         if not proof_bytes:
             proof_bytes = None
+
+    # Everything about this submission is now known to be good, so the
+    # registration can be created. This is the first and only write for a
+    # participant who reached here through the pending flow.
+    if pending_details is not None:
+        created = promote_pending(pending_details)
+        if not created.get("success"):
+            return created
+        user_id = created["participant"]["user_id"]
+
+        # The address was proven by the emailed code, which never reached the
+        # table because no row existed to hang it on. A consumed OTP row is how
+        # the rest of the system reads "verified", so it is written now.
+        now = dt.datetime.now(dt.timezone.utc)
+        db.insert(
+            "login_otps",
+            {
+                "user_id": user_id,
+                "otp_hash": "promoted-at-payment",
+                "expires_at": now.isoformat(),
+                "consumed_at": now.isoformat(),
+            },
+        )
 
     participant = db.select_one("participants", f"select=*&user_id=eq.{user_id}")
     if not participant:
@@ -433,9 +511,21 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
     # Re-read: the in-memory `participant` predates the writes above.
     fresh = latest_payment(user_id)
     participant = resolve_participant(user_id=user_id) or participant
+
+    # The session used to be issued when the code was verified. Nothing existed
+    # to bind a session to at that point any more, so it is issued here — this
+    # is the first moment the participant has a UserID.
+    session: Dict[str, Any] = {}
+    if pending_details is not None:
+        from services.participant_auth_service import generate_participant_token
+
+        token, expires_at_ms = generate_participant_token(user_id)
+        session = {"token": token, "expires_at": expires_at_ms}
+
     return {
         "success": True,
         **public_view(participant, payment=fresh, verified=True),
+        **session,
         "payment": payment_view(fresh),
         "email_sent": email_sent,
         "message": (
@@ -464,6 +554,40 @@ def payment_status(user_id: str = "", registration_id: str = "") -> Dict[str, An
 
     if not (user_id or registration_id):
         return {"success": False, "error_code": "VALIDATION_ERROR", "message": "Registration reference is required."}
+
+    # A verified-but-unpaid participant has no row to look up: the registration
+    # is created at payment submission. Everything this screen needs is in the
+    # token, so it is answered without touching the database at all — which is
+    # also why the payment screen no longer sits on a loading state.
+    from services import pending_registration as pending
+
+    if pending.is_pending_token(registration_id):
+        payload, reason = pending.open_token(registration_id)
+        if not payload or not pending.is_verified_payload(payload):
+            return {
+                "success": False,
+                "error_code": "PENDING_EXPIRED" if reason == "EXPIRED" else "NOT_FOUND",
+                "message": (
+                    "This registration attempt expired before payment. Fill the form again."
+                    if reason == "EXPIRED"
+                    else "Registration not found."
+                ),
+            }
+
+        d = pending.details_of(payload)
+        return {
+            "success": True,
+            "registration_id": registration_id,
+            "name": d.get("name", ""),
+            "email": d.get("email", ""),
+            "email_verified": True,
+            "payment_submitted": False,
+            "payment_verified": False,
+            "registration_status": "OTP_VERIFIED",
+            "user_id": None,
+            "payment": None,
+            "expected_amount": REGISTRATION_FEE,
+        }
 
     participant = resolve_participant(registration_id=registration_id, user_id=user_id)
     if not participant:

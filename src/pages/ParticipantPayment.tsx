@@ -10,7 +10,7 @@
 // the one payment row.
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Check,
   CheckCircle2,
@@ -31,7 +31,7 @@ import {
   REGISTRATION_STEPS,
   TREASURER_PAYMENT_CONFIG,
 } from '../config/site';
-import { getPaymentStatus, submitPayment } from '../lib/participant/api';
+import { getPaymentStatus, saveSession, submitPayment } from '../lib/participant/api';
 import type { PaymentStatusData } from '../lib/participant/types';
 import {
   ComicAlert,
@@ -61,8 +61,32 @@ export const ParticipantPaymentPage: React.FC = () => {
   // Legacy links carried ?user_id=; the status endpoint still accepts it.
   const legacyUserId = (searchParams.get('user_id') ?? '').trim().toUpperCase();
 
-  const [status, setStatus] = useState<PaymentStatusData | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Handed over by the verify screen. A verified-but-unpaid participant has no
+  // row yet, so there is genuinely nothing to fetch — rendering from this is
+  // not an optimisation, it is the only source of truth until payment is
+  // submitted. It also means no "Loading registration status" screen between
+  // the code and the payment form.
+  const handoff = useLocation().state as
+    | { details?: { name: string; email: string; college: string } }
+    | null;
+
+  const [status, setStatus] = useState<PaymentStatusData | null>(() =>
+    handoff?.details
+      ? ({
+          registration_id: (searchParams.get('rid') ?? '').trim(),
+          name: handoff.details.name,
+          email: handoff.details.email,
+          email_verified: true,
+          payment_submitted: false,
+          payment_verified: false,
+          registration_status: 'OTP_VERIFIED',
+          user_id: null,
+          payment: null,
+          expected_amount: REGISTRATION_FEE_PER_HEAD,
+        } as PaymentStatusData)
+      : null,
+  );
+  const [loading, setLoading] = useState(!handoff?.details);
   const [utr, setUtr] = useState('');
   const [proof, setProof] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
@@ -124,8 +148,11 @@ export const ParticipantPaymentPage: React.FC = () => {
   }, [registrationId, legacyUserId, navigate]);
 
   useEffect(() => {
+    // Already painted from the handoff; a fetch would only re-derive what we
+    // were just given, and would put a loading state in front of the form.
+    if (handoff?.details) return;
     void load();
-  }, [load]);
+  }, [load, handoff]);
 
   const copyUpi = async () => {
     try {
@@ -186,9 +213,12 @@ export const ParticipantPaymentPage: React.FC = () => {
       return;
     }
 
+    // "Already on file" only exists for a resubmission. Before the first
+    // submission there is no registration at all, so the screenshot is
+    // unconditionally required — the server enforces the same rule.
     const proofOnFile = Boolean(status?.payment?.screenshot_url);
     if (!proof && !proofOnFile) {
-      failField('screenshot', 'Attach a screenshot of the payment — the treasurer verifies against it.');
+      failField('screenshot', 'Attach the payment screenshot — the treasurer verifies against it.');
       return;
     }
 
@@ -209,10 +239,28 @@ export const ParticipantPaymentPage: React.FC = () => {
       return;
     }
 
+    // The registration was created by that call, so this is the first moment a
+    // session can exist. Without it the dashboard would bounce them to login
+    // immediately after paying.
+    if (result.token) {
+      saveSession({
+        token: result.token,
+        user: result as unknown as PaymentStatusData,
+        expires_at: result.expires_at as unknown as string,
+      });
+    }
+
     // Do not assume success. Re-read the server's view of the registration; it
     // will say PAYMENT_RECEIVED until the treasurer has actually verified it.
     setShowForm(false);
     pickProof(null);
+
+    // The pending token is spent; from here the registration has a real id.
+    if (result.registration_id) {
+      navigate(`/participant/payment?rid=${encodeURIComponent(result.registration_id)}`, {
+        replace: true,
+      });
+    }
     await load();
   };
 

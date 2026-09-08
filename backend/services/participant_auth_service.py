@@ -335,6 +335,17 @@ def verify_registration_email(
                 ),
             }
 
+        if pending.is_verified_payload(payload):
+            # Already verified; re-submitting the same token is a refresh, not a
+            # second registration. Hand the same token back rather than erroring.
+            details = pending.details_of(payload)
+            return {
+                "success": True,
+                "registration_id": registration_id,
+                "details": _display_details(details),
+                "message": "Email already verified. Continue to payment.",
+            }
+
         if not pending.check_otp(payload, otp):
             # No attempt counter to bump: the token is stateless. The offline
             # guessing this would otherwise invite is what the PBKDF2 cost in
@@ -345,46 +356,32 @@ def verify_registration_email(
                 "message": "Incorrect code. Check the email again, or resend the code.",
             }
 
-        from services.participant_service import promote_pending
-
-        created = promote_pending(pending.details_of(payload))
-        if not created.get("success"):
-            return created
-
-        participant = created["participant"]
-        user_id = participant["user_id"]
-
-        # A consumed OTP row is this project's proof that an address was
-        # verified (see the note above email_is_verified). The pending code was
-        # never in the table, so one is written and consumed here to leave that
-        # proof behind — otherwise payment would refuse an address we just
-        # proved.
-        now = dt.datetime.now(dt.timezone.utc)
-        db.insert(
-            "login_otps",
-            {
-                "user_id": user_id,
-                "otp_hash": _hash_otp(user_id, secrets.token_hex(8)),
-                "expires_at": now.isoformat(),
-                "consumed_at": now.isoformat(),
-            },
-        )
-
-        from services.registration_state import public_view
-
-        token, expires_at_ms = generate_participant_token(user_id)
+        # No row is created here. The address is proven, but the registration
+        # itself is not written until the payment is submitted — so someone who
+        # verifies and then walks away leaves nothing behind, the same as
+        # someone who abandoned the details form.
+        details = pending.details_of(payload)
         return {
             "success": True,
-            "token": token,
-            "expires_at": expires_at_ms,
-            "user": public_view(participant, payment=None, verified=True),
-            "message": "Email verified. You can proceed to payment.",
+            "registration_id": pending.mint_verified(details),
+            "details": _display_details(details),
+            "expires_in": pending.VERIFIED_TTL_SECONDS,
+            "message": "Email verified. Complete the payment to finish registering.",
         }
 
     result = verify_otp(user_id, otp, registration_id=registration_id)
     if result.get("success"):
         result["message"] = "Email verified. You can proceed to payment."
     return result
+
+
+def _display_details(details: Dict[str, Any]) -> Dict[str, Any]:
+    """Only what the payment screen shows. No row exists to derive it from."""
+    return {
+        "name": details.get("name", ""),
+        "email": details.get("email", ""),
+        "college": details.get("college", ""),
+    }
 
 
 def send_pending_otp_email(details: Dict[str, Any], otp: str) -> bool:

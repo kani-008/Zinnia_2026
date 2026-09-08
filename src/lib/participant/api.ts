@@ -21,6 +21,7 @@ import type {
   SubmitPaymentResponse,
   TeammateLookup,
   VerifyOtpResponse,
+  VerifyRegistrationResponse,
 } from './types';
 
 // Origin of the Flask backend. Leave VITE_API_URL unset for local dev so the
@@ -166,8 +167,8 @@ export const verifyOtp = (who: OtpIdentifier, otp: string): Promise<VerifyOtpRes
 export const verifyRegistrationEmail = (
   registrationId: string,
   otp: string,
-): Promise<VerifyOtpResponse> =>
-  request<VerifyOtpResponse>('/api/participant/register/verify-email', {
+): Promise<VerifyRegistrationResponse> =>
+  request<VerifyRegistrationResponse>('/api/participant/register/verify-email', {
     method: 'POST',
     body: { registration_id: registrationId, otp },
   });

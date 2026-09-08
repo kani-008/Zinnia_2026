@@ -12,7 +12,7 @@ import { Loader2 } from 'lucide-react';
 
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { REGISTRATION_STEPS } from '../config/site';
-import { requestOtp, saveSession, verifyRegistrationEmail } from '../lib/participant/api';
+import { requestOtp, verifyRegistrationEmail } from '../lib/participant/api';
 import { clearRegistrationDraft } from '../lib/participant/draft';
 import {
   ComicAlert,
@@ -120,7 +120,8 @@ export const ParticipantVerifyEmailPage: React.FC = () => {
       return;
     }
 
-    saveSession({ token: result.token, user: result.user, expires_at: result.expires_at });
+    // No session yet: the registration does not exist until the payment is
+    // submitted, so there is no UserID to bind one to. Payment issues it.
 
     // The address is confirmed, so there is nothing left to go back and fix.
     // Dropping the draft here stops the next registration on a shared laptop
@@ -130,10 +131,16 @@ export const ParticipantVerifyEmailPage: React.FC = () => {
     // Straight to payment. The "Address confirmed" screen that used to sit here
     // only restated what the participant had just done and asked them to press
     // one more button to continue — a step that could be skipped, so it is.
-    // replace: true so Back does not return to a code screen whose token has
-    // already been spent.
-    const paidRid = result.user?.registration_id ?? registrationId;
-    navigate(`/participant/payment?rid=${encodeURIComponent(paidRid)}`, { replace: true });
+    //
+    // The details ride along in navigation state so the payment screen can
+    // paint immediately: with no row in the database there is nothing for it to
+    // fetch, and it should not sit on a loading state waiting to find that out.
+    // replace: true so Back does not return to a spent code screen.
+    const paidRid = result.registration_id ?? registrationId;
+    navigate(`/participant/payment?rid=${encodeURIComponent(paidRid)}`, {
+      replace: true,
+      state: { details: result.details },
+    });
   };
 
   if (!registrationId) {

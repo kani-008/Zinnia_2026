@@ -49,6 +49,12 @@ if not AUTH_SECRET_KEY:
 # resurrected days later. Matches the copy on the verify screen.
 PENDING_TTL_SECONDS = 10 * 60
 
+# Once the code is proven the token has to survive the whole payment: opening a
+# UPI app, paying, screenshotting, coming back. Ten minutes is nowhere near
+# enough for that, and a token that lapses mid-payment strands someone who has
+# already sent money.
+VERIFIED_TTL_SECONDS = 6 * 60 * 60
+
 # How long past expiry a token may still be used to RESEND a code. A lapsed
 # code should cost the participant one tap, not the whole form again. Capped so
 # a token found in an old tab days later cannot still trigger mail.
@@ -140,6 +146,27 @@ def open_token(token: str, *, grace: int = 0) -> Tuple[Optional[Dict[str, Any]],
         return None, "EXPIRED"
 
     return payload, ""
+
+
+def mint_verified(details: Dict[str, Any]) -> str:
+    """
+    A token for someone whose address is proven but who has no row yet.
+
+    Carries no OTP hash — the code has already done its job — and is marked so
+    the payment endpoints can tell it apart from one still awaiting a code. The
+    participant row is created from this at payment submission.
+    """
+    payload = {
+        "d": {k: details.get(k) for k in _FIELDS},
+        "v": 1,
+        "x": int(time.time()) + VERIFIED_TTL_SECONDS,
+    }
+    body = _b64e(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode())
+    return f"{_PREFIX}.{body}.{_sign(body)}"
+
+
+def is_verified_payload(payload: Dict[str, Any]) -> bool:
+    return bool(payload) and int(payload.get("v", 0)) == 1
 
 
 def details_of(payload: Dict[str, Any]) -> Dict[str, Any]:

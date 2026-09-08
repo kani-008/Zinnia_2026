@@ -108,7 +108,13 @@ export type PaymentStatusData = RegistrationView & {
 export type PaymentStatusResponse = ApiResult<PaymentStatusData>;
 
 export type SubmitPaymentResponse = ApiResult<
-  RegistrationView & { payment: PaymentRecord | null; message?: string }
+  RegistrationView & {
+    payment: PaymentRecord | null;
+    message?: string;
+    /** present only when this call created the registration */
+    token?: string;
+    expires_at?: number;
+  }
 >;
 
 /* ==========================================================================
@@ -134,6 +140,19 @@ export type VerifyOtpResponse = ApiResult<{
   token: string;
   user: SessionUser;
   expires_at: string;
+  message?: string;
+}>;
+
+/**
+ * Registration-time verification returns no session and no RegistrationView:
+ * proving the address no longer creates a row, so there is nothing to describe
+ * and no UserID to bind a session to. It hands back a longer-lived token and
+ * just enough to render the payment screen; the row is created on payment.
+ */
+export type VerifyRegistrationResponse = ApiResult<{
+  registration_id: string;
+  details: { name: string; email: string; college: string };
+  expires_in?: number;
   message?: string;
 }>;
 
