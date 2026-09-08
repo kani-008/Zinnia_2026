@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import datetime as dt
 from collections import defaultdict
+from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
@@ -80,29 +81,71 @@ def _hours_since(value: Optional[str]) -> float:
 # ==============================================================================
 # SHARED READS — one fetch each, reused across screens
 # ==============================================================================
+#
+# "One fetch each" held per SCREEN but not per EXPORT. A workbook builds nine
+# event rosters, and _event_roster_rows() re-read registrations, participants,
+# teams and team_members for every one of them — 21 sequential PostgREST round
+# trips with the tables empty, and about 45 once they are not. Measured at 75
+# seconds against a live project, versus a 10-second Vercel function ceiling on
+# Hobby and 60 on Pro. The Google Sheets sync runs unattended every few minutes,
+# so it cannot be the thing that discovers this.
+#
+# cached_reads() memoises the shared tables for the duration of one build. It is
+# OFF unless a caller opens the block, so every other screen keeps reading live
+# and nothing outside the export path changes behaviour.
+_snapshot: Optional[Dict[str, Any]] = None
+
+
+@contextmanager
+def cached_reads():
+    """Fetch each shared table at most once for the duration of the block."""
+    global _snapshot
+    outer = _snapshot          # nesting is harmless: the inner block reuses
+    _snapshot = {} if outer is None else outer
+    try:
+        yield
+    finally:
+        _snapshot = outer
+
+
+def _cached(key: str, fetch):
+    if _snapshot is None:
+        return fetch()
+    if key not in _snapshot:
+        _snapshot[key] = fetch()
+    return _snapshot[key]
+
+
 def _events() -> List[Dict[str, Any]]:
-    return db.select(
+    return _cached("events", lambda: db.select(
         "events",
         "select=code,name,capacity,capacity_is_locked,is_active,reg_closes_at,"
         "min_team,max_team,sort_order,category,type&order=sort_order",
-    )
+    ))
 
 
 def _registrations() -> List[Dict[str, Any]]:
-    return db.select("registrations", f"select=reg_id,user_id,event_code,team_id,status&{LIVE_REG}")
+    return _cached("registrations", lambda: db.select(
+        "registrations", f"select=reg_id,user_id,event_code,team_id,status&{LIVE_REG}"))
 
 
 def _teams() -> List[Dict[str, Any]]:
-    return db.select(
-        "teams", "select=team_id,event_code,team_name,captain_user_id,status,created_at")
+    return _cached("teams", lambda: db.select(
+        "teams", "select=team_id,event_code,team_name,captain_user_id,status,created_at"))
+
+
+def _team_members() -> List[Dict[str, Any]]:
+    """Shared by the event rosters and the Teams sheet, which both re-read it."""
+    return _cached("team_members", lambda: db.select(
+        "team_members", "select=team_id,user_id,role,accept_status"))
 
 
 def _participants() -> List[Dict[str, Any]]:
-    return db.select(
+    return _cached("participants", lambda: db.select(
         "participants",
         "select=user_id,name,email,phone,college,department,year,food_preference,"
         "payment_status,master_qr_token,created_at",
-    )
+    ))
 
 
 def _latest_payments() -> Dict[str, Dict[str, Any]]:
@@ -113,11 +156,11 @@ def _latest_payments() -> Dict[str, Dict[str, Any]]:
     the treasurer needs the history — so without collapsing to the latest, a
     participant who paid twice would appear twice in the queue.
     """
-    rows = db.select(
+    rows = _cached("payments", lambda: db.select(
         "payments",
         "select=id,user_id,amount,txn_ref,status,reject_reason,screenshot_url,"
         "created_at,approved_at&order=created_at.asc",
-    )
+    ))
     latest: Dict[str, Dict[str, Any]] = {}
     attempts: Dict[str, int] = defaultdict(int)
     for r in rows:
@@ -132,7 +175,8 @@ def _latest_payments() -> Dict[str, Dict[str, Any]]:
 
 def _verified_emails() -> set:
     """A consumed OTP is proof the address works."""
-    rows = db.select("login_otps", "select=user_id&consumed_at=not.is.null")
+    rows = _cached("verified_emails", lambda: db.select(
+        "login_otps", "select=user_id&consumed_at=not.is.null"))
     return {r["user_id"] for r in rows}
 
 
@@ -362,8 +406,7 @@ def _event_roster_rows(event_code: str) -> List[Dict[str, Any]]:
         return []
     people = {p["user_id"]: p for p in _participants()}
     teams = {t["team_id"]: t for t in _teams()}
-    members = {(m["team_id"], m["user_id"]): m
-               for m in db.select("team_members", "select=team_id,user_id,role,accept_status")}
+    members = {(m["team_id"], m["user_id"]): m for m in _team_members()}
 
     out = []
     for r in regs:

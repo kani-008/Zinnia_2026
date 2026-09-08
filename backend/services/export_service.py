@@ -231,7 +231,7 @@ def _team_rows() -> List[Dict[str, Any]]:
     events = {e["code"]: e["name"] for e in panel._events()}
     people = {p["user_id"]: p for p in panel._participants()}
     members: Dict[str, List[Dict[str, Any]]] = {}
-    for m in db.select("team_members", "select=team_id,user_id,role,accept_status"):
+    for m in panel._team_members():
         members.setdefault(m["team_id"], []).append(m)
 
     out = []
@@ -269,14 +269,25 @@ def _match(row: Dict[str, Any], filters: Dict[str, Any]) -> bool:
     return True
 
 
-def build_workbook(
+# Every tab group the export knows how to build, in workbook order.
+ALL_SHEETS = ["participants", "teams", "events", "food", "payments"]
+
+
+def _collect_sheets(
     sheets: List[str],
     filters: Optional[Dict[str, Any]] = None,
     admin: Optional[Dict[str, Any]] = None,
     only_event: str = "",
-) -> Tuple[BytesIO, str, Dict[str, int]]:
+) -> List[Tuple[str, Sequence[Tuple[str, str]], List[Dict[str, Any]]]]:
     """
-    Returns (buffer, filename, per-sheet row counts).
+    The single definition of which tabs exist, in what order, with which columns
+    and which rows.
+
+    Three things render this list: the .xlsx download, the row-count preview and
+    the Google Sheets sync. The first two used to decide it separately, which is
+    how preview came to count event rosters WITHOUT applying the filters the
+    workbook applies — it promised rows the file did not contain. Adding a tab
+    here now adds it to all three.
 
     A coordinator only ever gets their own events, enforced here rather than by
     hiding a checkbox in the browser.
@@ -286,53 +297,73 @@ def build_workbook(
     role = (admin.get("role") or "").upper()
     sheets = sheets or ["participants"]
 
+    out: List[Tuple[str, Sequence[Tuple[str, str]], List[Dict[str, Any]]]] = []
+
+    # One snapshot for the whole list. Without it every event roster re-reads
+    # registrations, participants, teams and team_members from scratch.
+    with panel.cached_reads():
+        participants: List[Dict[str, Any]] = []
+        if {"participants", "food", "payments"} & set(sheets):
+            participants = [r for r in _participant_rows() if _match(r, filters)]
+
+        if "participants" in sheets:
+            out.append(("All Participants", PARTICIPANT_COLUMNS, participants))
+
+        if "teams" in sheets:
+            out.append(("Teams", TEAM_COLUMNS, _team_rows()))
+
+        if "events" in sheets:
+            allowed = set(admin.get("allowed_events") or [])
+            catalog = db.select("events", "select=code,name&order=sort_order")
+            if only_event:
+                catalog = [e for e in catalog if e["code"] == only_event]
+            if role == "EVENT_COORDINATOR":
+                catalog = [e for e in catalog if e["code"] in allowed]
+            for ev in catalog:
+                rows = [r for r in panel._event_roster_rows(ev["code"]) if _match(r, filters)]
+                out.append((ev["name"], EVENT_COLUMNS, rows))
+
+        if "food" in sheets:
+            # Two tabs, not one with a column: the counts go to two different
+            # counters on the day.
+            out.append(("Food - Veg", FOOD_COLUMNS,
+                        [r for r in participants if str(r.get("food", "")).upper() == "VEG"]))
+            out.append(("Food - Non-Veg", FOOD_COLUMNS,
+                        [r for r in participants if str(r.get("food", "")).upper() == "NON_VEG"]))
+
+        if "payments" in sheets:
+            verified = [r for r in participants
+                        if str(r.get("payment_status", "")).upper() == "APPROVED"]
+            # Pending and rejected together: this is the chase list, and whoever
+            # works it does not care which of the two a row is.
+            unverified = [r for r in participants
+                          if str(r.get("payment_status", "")).upper() != "APPROVED"]
+            out.append(("Payment - Verified", PAYMENT_COLUMNS, verified))
+            out.append(("Payment - Not Verified", PAYMENT_COLUMNS, unverified))
+
+    return out
+
+
+def build_workbook(
+    sheets: List[str],
+    filters: Optional[Dict[str, Any]] = None,
+    admin: Optional[Dict[str, Any]] = None,
+    only_event: str = "",
+) -> Tuple[BytesIO, str, Dict[str, int]]:
+    """
+    Returns (buffer, filename, per-sheet row counts).
+    """
+    filters = filters or {}
+    admin = admin or {}
+    sheets = sheets or ["participants"]
+
     wb = Workbook()
     wb.remove(wb.active)
     used_names: set = set()
     counts: Dict[str, int] = {}
 
-    participants: List[Dict[str, Any]] = []
-    if {"participants", "food", "payments"} & set(sheets):
-        participants = [r for r in _participant_rows() if _match(r, filters)]
-
-    if "participants" in sheets:
-        counts["All Participants"] = _add_sheet(
-            wb, "All Participants", PARTICIPANT_COLUMNS, participants, used_names
-        )
-
-    if "teams" in sheets:
-        counts["Teams"] = _add_sheet(wb, "Teams", TEAM_COLUMNS, _team_rows(), used_names)
-
-    if "events" in sheets:
-        allowed = set(admin.get("allowed_events") or [])
-        catalog = db.select("events", "select=code,name&order=sort_order")
-        if only_event:
-            catalog = [e for e in catalog if e["code"] == only_event]
-        if role == "EVENT_COORDINATOR":
-            catalog = [e for e in catalog if e["code"] in allowed]
-        for ev in catalog:
-            rows = [r for r in panel._event_roster_rows(ev["code"]) if _match(r, filters)]
-            counts[ev["name"]] = _add_sheet(wb, ev["name"], EVENT_COLUMNS, rows, used_names)
-
-    if "food" in sheets:
-        # Two sheets, not one with a column: the counts go to two different
-        # counters on the day.
-        veg = [r for r in participants if str(r.get("food", "")).upper() == "VEG"]
-        non = [r for r in participants if str(r.get("food", "")).upper() == "NON_VEG"]
-        counts["Food - Veg"] = _add_sheet(wb, "Food - Veg", FOOD_COLUMNS, veg, used_names)
-        counts["Food - Non-Veg"] = _add_sheet(wb, "Food - Non-Veg", FOOD_COLUMNS, non, used_names)
-
-    if "payments" in sheets:
-        verified = [r for r in participants if str(r.get("payment_status", "")).upper() == "APPROVED"]
-        # Pending and rejected together: this is the chase list, and whoever
-        # works it does not care which of the two a row is.
-        unverified = [r for r in participants if str(r.get("payment_status", "")).upper() != "APPROVED"]
-        counts["Payment - Verified"] = _add_sheet(
-            wb, "Payment - Verified", PAYMENT_COLUMNS, verified, used_names
-        )
-        counts["Payment - Not Verified"] = _add_sheet(
-            wb, "Payment - Not Verified", PAYMENT_COLUMNS, unverified, used_names
-        )
+    for title, columns, rows in _collect_sheets(sheets, filters, admin, only_event):
+        counts[title] = _add_sheet(wb, title, columns, rows, used_names)
 
     # Built last, inserted first.
     _summary_sheet(wb, admin, sheets, counts)
@@ -358,31 +389,63 @@ def preview(sheets: List[str], filters: Optional[Dict[str, Any]] = None,
     """
     Row counts before the download, so nobody generates an empty workbook and
     concludes the system is broken.
+
+    Counted off the same tab list build_workbook renders, so the preview cannot
+    promise rows the file will not contain.
     """
-    filters = filters or {}
-    admin = admin or {}
-    out: Dict[str, int] = {}
+    return {title: len(rows)
+            for title, _, rows in _collect_sheets(sheets, filters, admin)}
 
-    if {"participants", "food", "payments"} & set(sheets or []):
-        rows = [r for r in _participant_rows() if _match(r, filters)]
-        if "participants" in sheets:
-            out["All Participants"] = len(rows)
-        if "food" in sheets:
-            out["Food - Veg"] = sum(1 for r in rows if str(r.get("food", "")).upper() == "VEG")
-            out["Food - Non-Veg"] = sum(1 for r in rows if str(r.get("food", "")).upper() == "NON_VEG")
-        if "payments" in sheets:
-            ok = sum(1 for r in rows if str(r.get("payment_status", "")).upper() == "APPROVED")
-            out["Payment - Verified"] = ok
-            out["Payment - Not Verified"] = len(rows) - ok
 
-    if "teams" in sheets:
-        out["Teams"] = len(_team_rows())
+# ==============================================================================
+# GOOGLE SHEETS SYNC
+# ==============================================================================
 
-    if "events" in sheets:
-        # Count roster rows, not `used`: a per-event sheet lists one row per
-        # PERSON, while `used` counts teams for a team event. Predicting the
-        # wrong number is worse than not predicting one.
-        for e in panel._build_event_rows(admin):
-            out[e["name"]] = len(panel._event_roster_rows(e["event_code"]))
+def _cell(value: Any) -> Any:
+    """
+    One cell, shaped the way _add_sheet shapes it, so a tab in the Google Sheet
+    reads identically to the same tab in the downloaded workbook.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "Yes" if value else "No"
+    if isinstance(value, list):
+        return ", ".join(str(x) for x in value)
+    if isinstance(value, (dt.datetime, dt.date)):
+        return value.isoformat()
+    return value
 
-    return {"success": True, "counts": out, "total": sum(out.values())}
+
+def sync_payload(sheets: Optional[List[str]] = None,
+                 admin: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Every tab of the export as JSON, for the Google Sheets sync.
+
+    Rows are ARRAYS, not objects. Apps Script's setValues() wants a 2D array,
+    and repeating sixteen key names on every row roughly doubles a payload that
+    has to fit inside Vercel's 4.5 MB response ceiling. `sheets` narrows the
+    groups fetched, so a roster that outgrows one response can be pulled in two.
+
+    text_columns carries the indices Sheets must be told to hold as text. Without
+    it a phone number beginning "+91" is parsed as a FORMULA and the cell renders
+    #ERROR!, and a txn_ref with a leading zero quietly loses it.
+
+    Deliberately does NOT write an audit row. This runs every few minutes; at one
+    row per call it would bury the human actions the log exists to record.
+    """
+    tabs = []
+    for title, columns, rows in _collect_sheets(sheets or ALL_SHEETS, {}, admin or {}):
+        keys = [k for k, _ in columns]
+        tabs.append({
+            "name": title,
+            "headers": [label for _, label in columns],
+            "text_columns": [i for i, k in enumerate(keys) if k in TEXT_COLUMNS],
+            "rows": [[_cell(r.get(k)) for k in keys] for r in rows],
+        })
+
+    return {
+        "success": True,
+        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+        "tabs": tabs,
+    }

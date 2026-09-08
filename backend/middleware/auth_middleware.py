@@ -80,6 +80,53 @@ def get_current_admin():
     valid, user, _ = decode_admin_token(token)
     return user if valid else None
 
+# Standalone key for the Google Sheets sync. Deliberately NOT an admin token:
+# an admin token is revoked only by rotating AUTH_SECRET_KEY, which signs out all
+# 24 accounts mid-event, and any valid admin token opens every require_auth route.
+# This one is revoked by editing a single environment variable and opens exactly
+# one endpoint. Unset means the sync is off, which is the right default.
+SHEET_SYNC_KEY = os.getenv("SHEET_SYNC_KEY", "")
+
+
+def require_sync_key(f):
+    """Guard for the read-only Google Sheets export endpoint."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not SHEET_SYNC_KEY:
+            return jsonify({
+                "success": False,
+                "error_code": "SYNC_DISABLED",
+                "message": "Sheet sync is not configured on this deployment.",
+            }), 503
+
+        supplied = request.headers.get("Authorization", "")
+        if supplied[:7].lower() == "bearer ":
+            supplied = supplied[7:]
+        supplied = supplied.strip()
+
+        # compare_digest, not ==: a plain string comparison returns on the first
+        # wrong byte, which leaks the key one character at a time to anyone
+        # willing to time the responses.
+        if not supplied or not hmac.compare_digest(supplied, SHEET_SYNC_KEY):
+            return jsonify({
+                "success": False,
+                "error_code": "UNAUTHORIZED",
+                "message": "Invalid sync key.",
+            }), 401
+
+        # Full scope on purpose: the sheet mirrors the whole export. Role checks
+        # in _collect_sheets narrow EVENT_COORDINATOR, and this is not one.
+        g.admin = {
+            "id": "sheet-sync",
+            "username": "sheet-sync",
+            "name": "Google Sheets sync",
+            "role": "SHEET_SYNC",
+            "allowed_events": [],
+        }
+        return f(*args, **kwargs)
+    return wrapper
+
+
 def require_auth(f):
     """Middleware enforcing valid admin session."""
     @wraps(f)

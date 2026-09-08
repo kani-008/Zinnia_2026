@@ -18,7 +18,7 @@ from flask import Blueprint
 
 from controllers.admin_controller import AdminController
 from controllers.admin_panel_controller import AdminPanelController
-from middleware.auth_middleware import require_auth, require_role
+from middleware.auth_middleware import require_auth, require_role, require_sync_key
 from middleware.rate_limiter import rate_limit
 
 admin_bp = Blueprint("admin_bp", __name__)
@@ -89,6 +89,12 @@ _add("/api/admin/payments/<user_id>/resend-pass", "admin_payment_resend",
 # ==============================================================================
 # ADMIN PANEL — Excel export (F3)
 # ==============================================================================
+# Google Sheets sync. Its own key rather than an admin token, and read-only —
+# the one endpoint an unattended script is allowed to reach. GET, because Apps
+# Script time triggers just fetch a URL.
+_add("/api/admin/export/sync", "admin_export_sync",
+     require_sync_key(AdminPanelController.sync_rows))
+
 _add("/api/admin/export/preview", "admin_export_preview",
      require_auth(AdminPanelController.export_preview), ["POST"])
 _add("/api/admin/export/workbook", "admin_export_workbook",

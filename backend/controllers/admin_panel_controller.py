@@ -259,6 +259,21 @@ class AdminPanelController:
             return _fail(e)
 
     @staticmethod
+    def sync_rows():
+        """
+        Read-only JSON mirror of the workbook, for the Google Sheets sync.
+
+        Guarded by require_sync_key, not require_auth — see the note there.
+        `?sheets=participants,teams` narrows the groups; omitted means all.
+        """
+        try:
+            raw = (request.args.get("sheets") or "").strip()
+            sheets = [s.strip() for s in raw.split(",") if s.strip()] or None
+            return jsonify(export_service.sync_payload(sheets=sheets, admin=g.admin)), 200
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
     def export_workbook():
         try:
             body = request.get_json(silent=True) or {}
