@@ -100,7 +100,7 @@ def create_app() -> Flask:
     
     # 1. Enable CORS for frontend communication.
     # Set CORS_ORIGINS to a comma-separated allowlist in production, e.g.
-    #   CORS_ORIGINS=https://zinnia2026.example,https://admin.zinnia2026.example
+    #   CORS_ORIGINS=https://zinnia-2026.tech,https://www.zinnia-2026.tech
     # "*" is only the fallback for local development.
     cors_origins = [
         o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()

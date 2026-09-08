@@ -15,7 +15,7 @@
  * 1. Extensions -> Apps Script, paste this file, Save.
  * 2. Project Settings -> Script Properties, add two properties:
  *
- *      SYNC_URL   https://zinnia-gcee.vercel.app/api/admin/export/sync
+ *      SYNC_URL   https://zinnia-2026.tech/api/admin/export/sync
  *      SYNC_KEY   <the SHEET_SYNC_KEY value set in Vercel>
  *
  *    Put them HERE, never in a cell — anyone with view access reads cells.

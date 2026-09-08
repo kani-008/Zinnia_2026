@@ -15,7 +15,7 @@ import { REGISTRATION_FEE_PER_HEAD } from '../config/site';
 
 // Origin of the Flask backend. Leave VITE_API_URL unset for local dev so the
 // requests stay relative and Vite's /api proxy forwards them. Set it to the
-// backend origin (e.g. https://api.zinnia2026.example) when the frontend and
+// backend origin (e.g. https://api.zinnia-2026.tech) when the frontend and
 // backend are deployed separately.
 const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) || '').replace(/\/+$/, '');
 
