@@ -20,12 +20,19 @@ import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
 
 export type ToastKind = 'error' | 'success' | 'info';
 
+/** A single button inside the toast — for a notification that asks for something. */
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface Toast {
   id: number;
   kind: ToastKind;
   message: string;
   /** ms this one stays up, derived from its own length */
   duration: number;
+  action?: ToastAction;
 }
 
 type Listener = (toasts: Toast[]) => void;
@@ -54,7 +61,14 @@ export const dismissToast = (id: number): void => {
   emit();
 };
 
-const push = (kind: ToastKind, message: string): number => {
+/**
+ * A toast carrying a button has to outlast reading it — the participant still
+ * has to decide and then reach for it — so it gets a longer floor than a
+ * message that only has to be read.
+ */
+const ACTION_MIN_DURATION = 9000;
+
+const push = (kind: ToastKind, message: string, action?: ToastAction): number => {
   const text = (message || '').trim();
   if (!text) return 0;
 
@@ -63,22 +77,25 @@ const push = (kind: ToastKind, message: string): number => {
   const existing = queue.find((t) => t.message === text && t.kind === kind);
   if (existing) {
     queue = queue.filter((t) => t.id !== existing.id);
-    const revived = { ...existing, id: nextId++ };
+    const revived = { ...existing, id: nextId++, action };
     queue = [...queue, revived].slice(-MAX_VISIBLE);
     emit();
     return revived.id;
   }
 
-  const toast: Toast = { id: nextId++, kind, message: text, duration: readingTime(text) };
+  const duration = action
+    ? Math.max(ACTION_MIN_DURATION, readingTime(text))
+    : readingTime(text);
+  const toast: Toast = { id: nextId++, kind, message: text, duration, action };
   queue = [...queue, toast].slice(-MAX_VISIBLE);
   emit();
   return toast.id;
 };
 
 export const toast = {
-  error: (message: string) => push('error', message),
-  success: (message: string) => push('success', message),
-  info: (message: string) => push('info', message),
+  error: (message: string, action?: ToastAction) => push('error', message, action),
+  success: (message: string, action?: ToastAction) => push('success', message, action),
+  info: (message: string, action?: ToastAction) => push('info', message, action),
 };
 
 /**
@@ -153,9 +170,24 @@ const ToastCard: React.FC<{ toast: Toast }> = ({ toast: t }) => {
         <Icon size={16} />
       </span>
 
-      <p className="flex-1 py-3 font-mono text-[11px] leading-relaxed text-[#EEEEEA] sm:text-xs">
-        {t.message}
-      </p>
+      <div className="flex-1 py-3">
+        <p className="font-mono text-[11px] leading-relaxed text-[#EEEEEA] sm:text-xs">
+          {t.message}
+        </p>
+
+        {t.action && (
+          <button
+            type="button"
+            onClick={() => {
+              t.action?.onClick();
+              close();
+            }}
+            className={`mt-2 font-sans text-[11px] font-bold uppercase tracking-wider underline underline-offset-2 ${text} hover:text-[#EEEEEA]`}
+          >
+            {t.action.label}
+          </button>
+        )}
+      </div>
 
       <button
         type="button"
