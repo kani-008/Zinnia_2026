@@ -950,6 +950,19 @@ body {
   --card-inner: #F5D90A;
 }
 
+/* The mega tier's purple, reusing the same custom properties the mega event
+   card already inks itself with — so the two never drift apart. Declared after
+   the three tone variants above so it wins at equal specificity when a panel
+   carries both (e.g. `tech mega-tier` for Gadget Codes). */
+.comic-frame-box.mega-tier {
+  /* Literal, not var(--purple): those custom properties are declared on
+     .comic-card-wrapper, so inside a .comic-frame-box they resolve to nothing
+     and the frame loses its ink entirely. Same two values the mega card uses. */
+  --card-main: #C084FC;
+  --card-shadow: #9333EA;
+  --card-inner: #C084FC;
+}
+
 /* NUMBER HOLDER TAG */
 .comic-number-holder {
   position: absolute;
@@ -1763,3 +1776,26 @@ body {
 .mega-card:hover {
   box-shadow: 6px 6px 0 #23123b, 0 0 30px rgba(192, 132, 252, 0.45) !important;
 }
+
+/* =========================================================================
+   ANIMATED SCROLL TIMELINE SPINE
+   ========================================================================= */
+@keyframes timelineStream {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-timeline-stream {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    transparent 100%
+  );
+  animation: timelineStream 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
