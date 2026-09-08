@@ -188,6 +188,7 @@ export interface DashboardRegistration {
   event_code: EventCode;
   event_name: string;
   status: string;
+  team_id: string | null;
   team_name: string | null;
 }
 

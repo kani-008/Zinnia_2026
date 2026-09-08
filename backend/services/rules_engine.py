@@ -111,7 +111,7 @@ EVENTS: Dict[str, EventDef] = {
         # zin26.register_participant_event both count distinct teams for an
         # event with max_team > 1, so a team of 2 and a team of 3 each take one.
         "PAPER_PRESENTATION", "Paper Verse", "TECH", "SLOT",
-        2, 3, 30, 15, None, (), False, _CLOSES_DEFAULT,
+        2, 3, 30, 15, None, (), True, _CLOSES_DEFAULT,
     ),
     "GADGET_CODES": EventDef(
         "GADGET_CODES", "Gadget Codes", "TECH", "FIXED",
@@ -152,7 +152,7 @@ EVENTS: Dict[str, EventDef] = {
         # rule - which is why it is registered individually rather than as a
         # team. Keep in step with src/lib/rules/catalog.ts and zin26.events.
         "SHORT_FILM", "Short Film", "NON_TECH", "ONLINE",
-        1, 1, None, 0, None, (), False, _CLOSES_SHORT_FILM,
+        1, 1, None, 0, None, (), True, _CLOSES_SHORT_FILM,
     ),
 }
 
@@ -366,7 +366,7 @@ def can_register(
             return _no("R7", "NEEDS_ON_CAMPUS_EVENT", "Register for at least one other event first")
         return _ok()
 
-    # R1 — Paper Verse and Short Film are exempt from the count, never
+    # R1 — every event counts toward the ceiling; nothing is exempt.
     # from the clash rules below.
     if target.counts_toward_limit:
         counted = sum(1 for c in held if _ev(c).counts_toward_limit)

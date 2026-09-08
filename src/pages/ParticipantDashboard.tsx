@@ -139,6 +139,31 @@ const hasReadRules = (userId: string): boolean => {
   }
 };
 
+/**
+ * Has this participant pressed "Confirm my events"?
+ *
+ * Per participant, like the rules flag. Note this is a UI state only: the
+ * server still accepts a cancellation, because confirming emails the list
+ * rather than locking it. Hiding the buttons is what "done" means here.
+ */
+const LINEUP_KEY = (userId: string) => `zin26_lineup_confirmed_${userId}`;
+
+const hasConfirmedLineup = (userId: string): boolean => {
+  try {
+    return window.localStorage.getItem(LINEUP_KEY(userId)) === '1';
+  } catch {
+    return false;
+  }
+};
+
+const markLineupConfirmed = (userId: string): void => {
+  try {
+    window.localStorage.setItem(LINEUP_KEY(userId), '1');
+  } catch {
+    /* the confirm button simply stays visible */
+  }
+};
+
 const markRulesRead = (userId: string): void => {
   try {
     window.localStorage.setItem(RULES_READ_KEY(userId), '1');
@@ -178,6 +203,7 @@ export const ParticipantDashboardPage: React.FC = () => {
   // is replaced by it so it reads as its own page with a way back.
   const [showRules, setShowRules] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [lineupConfirmed, setLineupConfirmed] = useState(false);
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -188,6 +214,19 @@ export const ParticipantDashboardPage: React.FC = () => {
   useToastOn(error);
   const [busyEvent, setBusyEvent] = useState<EventCode | null>(null);
   const [copiedId, setCopiedId] = useState(false);
+
+  /**
+   * Who these per-participant flags belong to.
+   *
+   * NOT data.participant.user_id: the dashboard masks that until the pass is
+   * released, so for anyone still awaiting verification it is null and every
+   * flag keyed on it silently wrote nothing. The session always carries an
+   * identity, which is the whole point of being logged in.
+   */
+  const flagKey = (): string => {
+    const session = loadSession();
+    return session?.user.user_id || session?.user.registration_id || '';
+  };
 
   const load = useCallback(async () => {
     if (!loadSession()) {
@@ -225,9 +264,15 @@ export const ParticipantDashboardPage: React.FC = () => {
     void load();
   }, [load]);
 
+  // Restore the confirmed state for whoever is logged in.
+  useEffect(() => {
+    const uid = flagKey();
+    if (uid) setLineupConfirmed(hasConfirmedLineup(uid));
+  }, [data]);
+
   /** Open the description, and remember that it has now been read. */
   const openRules = useCallback(() => {
-    const uid = data?.participant?.user_id;
+    const uid = flagKey();
     if (uid) markRulesRead(uid);
     setShowRules(true);
   }, [data]);
@@ -247,7 +292,7 @@ export const ParticipantDashboardPage: React.FC = () => {
    */
   const promptedRef = useRef(false);
   useEffect(() => {
-    const uid = data?.participant?.user_id;
+    const uid = flagKey();
     if (!uid || promptedRef.current || hasReadRules(uid)) return;
     promptedRef.current = true;
 
@@ -280,6 +325,9 @@ export const ParticipantDashboardPage: React.FC = () => {
       setError(result.message);
       return;
     }
+    const uid = flagKey();
+    if (uid) markLineupConfirmed(uid);
+    setLineupConfirmed(true);
     toast.success(result.message ?? 'Your events are confirmed - check your email.');
   };
 
@@ -386,6 +434,17 @@ export const ParticipantDashboardPage: React.FC = () => {
   }
 
   const { participant, registrations, counted_used, counted_max, catalog, pending_invites } = data;
+
+  /**
+   * When to stop offering events.
+   *
+   * At the ceiling there is nothing left to pick, and once the line-up is
+   * confirmed the picking is over — in both cases a wall of cards that can
+   * only refuse is noise. The section header and the rules button stay, so
+   * the description is still reachable.
+   */
+  const atEventLimit = counted_used >= counted_max;
+  const catalogClosed = atEventLimit || lineupConfirmed;
 
   /**
    * The registration description: one page, every rule that decides what can
@@ -1133,20 +1192,37 @@ export const ParticipantDashboardPage: React.FC = () => {
                   className="flex items-center justify-between gap-4 border-2 border-[#23262D] bg-[#111214] pad-box-sm shadow-[4px_4px_0px_#090A0B] transition-colors hover:border-[#0FA9C6]"
                 >
                   <div>
-                    <p className="font-comic text-base uppercase tracking-wide text-[#EEEEEA]">{reg.event_name}</p>
+                    {/* Event name and team ID on ONE row: the ID is what a
+                        coordinator asks for at the desk, so it belongs beside
+                        the event it identifies rather than on a line below. */}
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <p className="font-comic text-base uppercase tracking-wide text-[#EEEEEA]">
+                        {reg.event_name}
+                      </p>
+                      {reg.team_id && (
+                        <p className="font-mono text-[11px] tracking-wide text-[#0FA9C6]">
+                          Team ID : {reg.team_id}
+                        </p>
+                      )}
+                    </div>
                     <p className="mt-0.5 font-mono text-[11px] text-[#71767B]">
                       {reg.team_name ? `Team ${reg.team_name} · ` : ''}
                       {reg.status === 'PENDING_ACCEPTANCE' ? 'Waiting on teammates' : 'Confirmed'}
                     </p>
                   </div>
-                  <button
-                    onClick={() => void onCancel(reg.event_code, reg.event_name)}
-                    disabled={busyEvent === reg.event_code}
-                    title="Cancel"
-                    className="border-2 border-[#23262D] p-2 text-[#71767B] transition-colors hover:border-[#D51F55] hover:text-[#D51F55] disabled:opacity-40"
-                  >
-                    {busyEvent === reg.event_code ? <Loader2 size={15} className="animate-spin" /> : <X size={15} />}
-                  </button>
+
+                  {/* Cancel disappears once they have confirmed the line-up:
+                      the point of confirming is that the picking is over. */}
+                  {!lineupConfirmed && (
+                    <button
+                      onClick={() => void onCancel(reg.event_code, reg.event_name)}
+                      disabled={busyEvent === reg.event_code}
+                      title="Cancel"
+                      className="border-2 border-[#23262D] p-2 text-[#71767B] transition-colors hover:border-[#D51F55] hover:text-[#D51F55] disabled:opacity-40"
+                    >
+                      {busyEvent === reg.event_code ? <Loader2 size={15} className="animate-spin" /> : <X size={15} />}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -1181,7 +1257,14 @@ export const ParticipantDashboardPage: React.FC = () => {
               TECH/NON-TECH badge is gone with the grouping: the heading above
               the list already says it.
           */}
-          {GROUPS.map((group) => {
+          {catalogClosed ? (
+            <p className="border-2 border-[#23262D] bg-[#111214] pad-box-sm font-mono text-[11px] leading-relaxed text-[#8E939D]">
+              {lineupConfirmed
+                ? 'Your events are confirmed. The list has been emailed to you.'
+                : `That is all ${counted_max} of your events. Cancel one above if you want to swap it for something else.`}
+            </p>
+          ) : (
+          GROUPS.map((group) => {
             const cards = catalog.filter((c) => groupOf(c) === group.key);
             if (!cards.length) return null;
 
@@ -1204,11 +1287,11 @@ export const ParticipantDashboardPage: React.FC = () => {
                 </div>
               </div>
             );
-          })}
+          }))}
 
           {/* Nothing above this sends mail. The participant presses this when the
               line-up is the one they want, and only then does it go out. */}
-          {registrationComplete && registrations.length > 0 && (
+          {registrationComplete && registrations.length > 0 && !lineupConfirmed && (
             <div className="mt-10 border-t-2 border-[#23262D] pt-7 text-center">
               <p className="mb-4 font-mono text-xs leading-relaxed text-[#B8B8B2]">
                 Happy with your {registrations.length} event

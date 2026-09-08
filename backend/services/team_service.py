@@ -213,10 +213,11 @@ def create_team(
         _hard_delete_team(team_id)
         raise
 
-    for uid in ids:
-        if uid != captain_id:
-            _send_invite(participants[uid], participants[captain_id], team_name, event)
-
+    # No invite mail. The ONLY mail this flow sends is the one the participant
+    # asks for by pressing Confirm on their dashboard; anything sent before
+    # that is an event-by-event notification through the side door, which is
+    # exactly what Confirm exists to replace. A teammate sees the invitation on
+    # their own dashboard, under "Team invitations".
     return {"success": True, **_team_view(team_id)}
 
 
@@ -274,8 +275,8 @@ def respond_to_invite(user_id: str, team_id: str, accept: bool) -> Dict[str, Any
         # press sends the list. Mailing here as well would put an event-by-event
         # confirmation back into the flow through the side door.
         #
-        # The INVITE mail in _send_invite stays: without it a teammate is never
-        # told there is something to accept, and the team can never complete.
+        # Nor does the invite: a teammate is told there is something to accept
+        # by the invitation panel on their own dashboard, not by email.
         return {
             "success": True,
             "team_id": team_id,
@@ -388,9 +389,8 @@ def swap_member(captain_id: str, team_id: str, out_user_id: str, in_user_id: str
     )
     regs.rpc_register(in_user_id, team["event_code"], team_id=team_id, status="PENDING_ACCEPTANCE")
 
-    captain = db.select_one("participants", f"select=name,email&user_id=eq.{captain_id}")
-    _send_invite(incoming, captain or {}, team["team_name"], event)
-
+    # No mail here either — the replacement teammate sees the invitation on
+    # their dashboard, same as any other invite.
     return {"success": True, **_team_view(team_id)}
 
 
@@ -597,7 +597,13 @@ def _insert_team(event_code: str, team_name: str, captain_id: str) -> List[Dict[
 
 
 def _send_invite(member: Dict[str, Any], captain: Dict[str, Any], team_name: str, event) -> None:
-    """Best-effort — the invitation also shows on the teammate's dashboard."""
+    """
+    NOT CALLED. Kept for the day invite mail is wanted again.
+
+    Nothing in this flow emails before the participant presses Confirm on
+    their dashboard — that press is the only thing that sends mail. The
+    invitation reaches a teammate through the panel on their dashboard.
+    """
     try:
         from services.email_service import send_simple_email
 

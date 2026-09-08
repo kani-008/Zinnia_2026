@@ -71,7 +71,7 @@ export interface EventDef {
   window: WindowCode | null;
   /** blocks this event occupies across all its rounds */
   blocks: BlockCode[];
-  /** false for Paper Verse (R13) and Short Film — they are exempt from the 3-event ceiling */
+  /** true for every event: nothing is exempt from the 3-event ceiling */
   countsTowardLimit: boolean;
   isActive: boolean;
   /** ISO timestamp; Short Film closes two days earlier (§7.1) */

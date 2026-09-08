@@ -216,9 +216,6 @@ export const ParticipantTeamsPage: React.FC = () => {
         )}
 
         <section>
-          <ComicSectionTitle tone="cyan" className="mb-3 flex items-center gap-2">
-            <ComicBolt tone="cyan" className="w-4 h-4" /> Teams
-          </ComicSectionTitle>
 
           {/* py-* on bodyClassName would be overridden by .pad-panel, so the
               empty state's extra breathing room goes on an inner block. */}

@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS zin26.events (
     -- Set where capacity is fixed by the timetable rather than by preference,
     -- so the admin panel renders the field read-only.
     capacity_is_locked  BOOLEAN NOT NULL DEFAULT false,
-    -- false for Paper Verse and Short Film only (D3, D3a).
+    -- true for every event: nothing is exempt from the 3-event ceiling.
     counts_toward_limit BOOLEAN NOT NULL DEFAULT true,
     -- Minutes ONE participant is occupied, not how long the desk is open.
     duration_min        INT NOT NULL DEFAULT 0,
@@ -212,13 +212,13 @@ VALUES
     -- NOTE: this exceeds what 2 panels of fifteen-minute slots hold. B1-B4 is
     -- 180 minutes per panel = 12 slots each = 24. 30 teams needs a third panel,
     -- shorter slots, or more time - a scheduling decision, not a code one.
-    ('PAPER_PRESENTATION', 'Paper Verse',        'TECH',     'SLOT',    2, 3,   30, true,  false,  15, NULL,        false, true, '2026-09-22T23:59:59+05:30', 5),
+    ('PAPER_PRESENTATION', 'Paper Verse',        'TECH',     'SLOT',    2, 3,   30, true,  true,   15, NULL,        false, true, '2026-09-22T23:59:59+05:30', 5),
     ('BORDERLAND',         'Borderland @ GCEE',  'NON_TECH', 'FIXED',   3, 3, NULL, false, true,  120, NULL,        true,  true, '2026-09-22T23:59:59+05:30', 6),
     ('THINK_STRIKE_WIN',   'Think, Strike, Win', 'NON_TECH', 'FIXED',   3, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-22T23:59:59+05:30', 7),
     ('PLOT_TWIST',         'Plot Twist',         'NON_TECH', 'FIXED',   3, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-22T23:59:59+05:30', 8),
     -- Online, no block, no count. Closes two days before everything else.
     -- Exactly 1 per the 4 September ruling.
-    ('SHORT_FILM',         'Short Film',         'NON_TECH', 'ONLINE',  1, 1, NULL, false, false,   0, NULL,        false, true, '2026-09-20T23:59:59+05:30', 9)
+    ('SHORT_FILM',         'Short Film',         'NON_TECH', 'ONLINE',  1, 1, NULL, false, true,    0, NULL,        false, true, '2026-09-20T23:59:59+05:30', 9)
 ON CONFLICT (code) DO UPDATE SET
     name = EXCLUDED.name, category = EXCLUDED.category, type = EXCLUDED.type,
     min_team = EXCLUDED.min_team, max_team = EXCLUDED.max_team,

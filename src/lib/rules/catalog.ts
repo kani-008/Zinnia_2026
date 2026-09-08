@@ -40,7 +40,7 @@ export const WINDOWS: Record<WindowCode, WindowDef> = {
 
 export const EVENTS: Record<EventCode, EventDef> = {
   // Capacity is FIXED at 24 by the timeline (2 panels x 12), not an admin-set
-  // number like the other events (§4.4). Exempt from the 3-event ceiling (R13).
+  // number like the other events (§4.4). Counts toward the 3-event ceiling.
   PAPER_PRESENTATION: {
     code: 'PAPER_PRESENTATION',
     name: 'Paper Verse',
@@ -52,7 +52,7 @@ export const EVENTS: Record<EventCode, EventDef> = {
     durationMin: 15,
     window: null,
     blocks: [],
-    countsTowardLimit: false,
+    countsTowardLimit: true,
     isActive: true,
     regClosesAt: CLOSES_DEFAULT,
   },
@@ -176,8 +176,8 @@ export const EVENTS: Record<EventCode, EventDef> = {
     regClosesAt: CLOSES_DEFAULT,
   },
 
-  // Off-campus and asynchronous: occupies no block, does not count toward the
-  // ceiling, and closes early. Requires an on-campus event to exist (R7).
+  // Off-campus and asynchronous: occupies no block, but it still counts
+  // toward the ceiling, and closes early. Requires an on-campus event (R7).
   SHORT_FILM: {
     code: 'SHORT_FILM',
     name: 'Short Film',
@@ -191,7 +191,7 @@ export const EVENTS: Record<EventCode, EventDef> = {
     durationMin: 0,
     window: null,
     blocks: [],
-    countsTowardLimit: false,
+    countsTowardLimit: true,
     isActive: true,
     regClosesAt: CLOSES_SHORT_FILM,
   },
