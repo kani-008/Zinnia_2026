@@ -19,6 +19,19 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "").strip()
 SMTP_PASS = (os.getenv("SMTP_PASS", "") or os.getenv("SMTP_PASSWORD", "")).replace(" ", "").strip()
 SMTP_FROM = os.getenv("SMTP_FROM", "Zinnia 2026 <zinnia2026@gcee.ac.in>")
+
+
+class RecipientRefused(Exception):
+    """
+    The server permanently refused the address - 550 5.1.1, no such user.
+
+    Kept distinct from every other send failure because the CALLER can act on
+    it and only on it: a typo in an address is something the participant can
+    fix on the form, whereas a dead SMTP server or a bad password is not their
+    problem and must not block their registration. Everything else still
+    returns False and is treated as "try again later".
+    """
+
 APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:5173").rstrip("/")
 
 def generate_qr_png_bytes(data: str) -> bytes:
@@ -659,6 +672,12 @@ def send_simple_email(to: str, subject: str, html: str, text: str = None) -> boo
                 server.login(SMTP_USER, SMTP_PASS)
                 server.send_message(msg)
         return True
+    except smtplib.SMTPRecipientsRefused as e:
+        # The address itself was rejected at RCPT TO. This is a synchronous
+        # 5.x.x, not a bounce that arrives later, so the caller can still tell
+        # the participant about it while they are looking at the form.
+        print(f"[SMTP] '{subject}' refused for {recipient}: {e.recipients}")
+        raise RecipientRefused(recipient) from e
     except Exception as e:
         print(f"[SMTP Error] Failed to deliver '{subject}' to {recipient}: {e}")
         return False

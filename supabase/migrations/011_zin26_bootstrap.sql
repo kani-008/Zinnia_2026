@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS zin26.events (
     -- Set where capacity is fixed by the timetable rather than by preference,
     -- so the admin panel renders the field read-only.
     capacity_is_locked  BOOLEAN NOT NULL DEFAULT false,
-    -- false for Paper Presentation and Short Film only (D3, D3a).
+    -- false for Paper Verse and Short Film only (D3, D3a).
     counts_toward_limit BOOLEAN NOT NULL DEFAULT true,
     -- Minutes ONE participant is occupied, not how long the desk is open.
     duration_min        INT NOT NULL DEFAULT 0,
@@ -204,14 +204,21 @@ VALUES
     ('LAST_SIGNAL',        'The Last Signal',    'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'MORNING',   false, true, '2026-09-22T23:59:59+05:30', 2),
     ('LOST_IN_SQL',        'Lost in SQL',        'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'AFTERNOON', false, true, '2026-09-22T23:59:59+05:30', 3),
     ('GADGET_CODES',       'Gadget Codes',       'TECH',     'FIXED',   2, 2, NULL, false, true,  180, NULL,        true,  true, '2026-09-22T23:59:59+05:30', 4),
-    -- 2 panels x 12 fifteen-minute slots is exactly what the timeline holds,
-    -- so capacity is fixed rather than coordinator-editable.
-    ('PAPER_PRESENTATION', 'Paper Presentation', 'TECH',     'SLOT',    2, 3,   24, true,  false,  15, NULL,        false, true, '2026-09-22T23:59:59+05:30', 5),
+    -- 30 TEAMS (coordinators' ruling), counted as teams and not as heads: a
+    -- team of 2 and a team of 3 each take one of the 30. capacity_map() and
+    -- zin26.register_participant_event both count distinct team_id for an
+    -- event with max_team > 1.
+    --
+    -- NOTE: this exceeds what 2 panels of fifteen-minute slots hold. B1-B4 is
+    -- 180 minutes per panel = 12 slots each = 24. 30 teams needs a third panel,
+    -- shorter slots, or more time - a scheduling decision, not a code one.
+    ('PAPER_PRESENTATION', 'Paper Verse',        'TECH',     'SLOT',    2, 3,   30, true,  false,  15, NULL,        false, true, '2026-09-22T23:59:59+05:30', 5),
     ('BORDERLAND',         'Borderland @ GCEE',  'NON_TECH', 'FIXED',   3, 3, NULL, false, true,  120, NULL,        true,  true, '2026-09-22T23:59:59+05:30', 6),
     ('THINK_STRIKE_WIN',   'Think, Strike, Win', 'NON_TECH', 'FIXED',   3, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-22T23:59:59+05:30', 7),
     ('PLOT_TWIST',         'Plot Twist',         'NON_TECH', 'FIXED',   3, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-22T23:59:59+05:30', 8),
     -- Online, no block, no count. Closes two days before everything else.
-    ('SHORT_FILM',         'Short Film',         'NON_TECH', 'ONLINE',  1, 1, NULL, false, false,   0, NULL,        false, true, '2026-09-20T23:59:59+05:30', 9)
+    -- Team of 3, superseding the 4 September ruling of exactly 1.
+    ('SHORT_FILM',         'Short Film',         'NON_TECH', 'ONLINE',  3, 3, NULL, false, false,   0, NULL,        false, true, '2026-09-20T23:59:59+05:30', 9)
 ON CONFLICT (code) DO UPDATE SET
     name = EXCLUDED.name, category = EXCLUDED.category, type = EXCLUDED.type,
     min_team = EXCLUDED.min_team, max_team = EXCLUDED.max_team,

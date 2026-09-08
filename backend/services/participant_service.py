@@ -167,6 +167,7 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
     import secrets
 
     from services import pending_registration as pending
+    from services.email_service import RecipientRefused
     from services.participant_auth_service import send_pending_otp_email
 
     invalid = _validate_details(data)
@@ -204,7 +205,20 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
 
     otp = f"{secrets.randbelow(1000000):06d}"
     token = pending.mint(details, otp)
-    sent = send_pending_otp_email(details, otp)
+
+    try:
+        sent = send_pending_otp_email(details, otp)
+    except RecipientRefused:
+        # The address was rejected outright, so the code screen would be a dead
+        # end - a code that cannot arrive, and no way to tell that from a slow
+        # inbox. Sending them back to the field they mistyped is the only
+        # useful answer. Nothing was written, so there is nothing to undo.
+        return {
+            "success": False,
+            "error_code": "EMAIL_UNDELIVERABLE",
+            "field": "email",
+            "message": "That email address does not exist - check it for typos.",
+        }
 
     return {
         "success": True,
@@ -220,12 +234,21 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _mask_email_for_pending(email: str) -> str:
-    """am*********@gmail.com — enough to recognise, not enough to harvest."""
-    name, _, domain = (email or "").partition("@")
-    if not domain:
-        return email or ""
-    head = name[:2] if len(name) > 2 else name[:1]
-    return f"{head}{'*' * max(len(name) - len(head), 1)}@{domain}"
+    """
+    NOT masked, deliberately - the participant typed this address seconds ago.
+
+    Masking is right on the LOGIN screen, where the address belongs to whoever
+    owns the UserID being probed and must not leak. Here it is the person's own
+    input being read back to them, and masking hid exactly the characters a
+    typo lives in: "ka****************@gmail.com" looks identical whether the
+    address is right or wrong.
+
+    That matters because the mistake is otherwise undetectable at send time.
+    Gmail ACCEPTS a message for a non-existent mailbox and bounces it minutes
+    later to the sender, so the server cannot tell the participant anything -
+    seeing the address is the only chance they get to spot it.
+    """
+    return (email or "").strip()
 
 
 def promote_pending(details: Dict[str, Any]) -> Dict[str, Any]:
@@ -534,6 +557,100 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
             "confirms the payment."
         ),
     }
+
+
+def _own_payment(user_id: str = "", registration_id: str = "") -> Optional[Dict[str, Any]]:
+    """The caller's own latest payment row, or None. Shared by the proof CRUD."""
+    from services.registration_state import resolve_participant
+
+    participant = resolve_participant(registration_id=registration_id, user_id=user_id)
+    if not participant:
+        return None
+    return db.select_one(
+        "payments",
+        f"select=id,user_id,status,screenshot_url&user_id=eq.{participant['user_id']}"
+        f"&order=created_at.desc",
+    )
+
+
+def payment_proof_url(user_id: str = "", registration_id: str = "") -> Dict[str, Any]:
+    """
+    GET /api/participant/payment/proof - READ of the participant's own proof.
+
+    The column holds a reference, never an image and never a usable URL: a
+    "gdrive:<id>" for Drive, or an object path in a private Supabase bucket.
+    Both are turned into a short-lived viewable URL here rather than being
+    stored as one, because a stored signed URL expires and a stored public one
+    leaks the proof to anybody who finds the row.
+    """
+    payment = _own_payment(user_id=user_id, registration_id=registration_id)
+    if payment is None:
+        return {"success": False, "error_code": "NOT_FOUND", "message": "Registration not found."}
+
+    stored = payment.get("screenshot_url")
+    if not stored:
+        return {"success": False, "error_code": "NO_SCREENSHOT", "message": "No screenshot on file."}
+
+    from services import drive_storage as drive
+
+    if drive.is_drive_ref(stored):
+        # The same token-gated proxy the treasurer's panel uses. The token IS
+        # the authorisation - it names one file for five minutes - so this is
+        # not a role check being skipped.
+        token = drive.proxy_token(drive.file_id_of(stored), ttl=300)
+        return {"success": True, "url": f"/api/admin/payment-proof?t={token}", "expires_in": 300}
+
+    signed = db.sign_file_url(stored, expires_in=300)
+    if not signed:
+        return {
+            "success": False,
+            "error_code": "SIGN_FAILED",
+            "message": "That screenshot could not be opened. Upload it again.",
+        }
+    return {"success": True, "url": signed, "expires_in": 300}
+
+
+def remove_payment_proof(user_id: str = "", registration_id: str = "") -> Dict[str, Any]:
+    """
+    POST /api/participant/payment/proof/remove - DELETE of the proof.
+
+    Clears the reference and deletes the stored file, so a replaced screenshot
+    does not leave an orphan behind in Drive forever.
+
+    Refused once the treasurer has APPROVED: at that point the image is the
+    evidence behind a decision that has already been made, and letting the
+    payer delete it would leave an approved payment with nothing to show for
+    it. Before that it is theirs to replace.
+    """
+    payment = _own_payment(user_id=user_id, registration_id=registration_id)
+    if payment is None:
+        return {"success": False, "error_code": "NOT_FOUND", "message": "Registration not found."}
+
+    stored = payment.get("screenshot_url")
+    if not stored:
+        return {"success": False, "error_code": "NO_SCREENSHOT", "message": "No screenshot on file."}
+
+    if str(payment.get("status", "")).upper() == "APPROVED":
+        return {
+            "success": False,
+            "error_code": "ALREADY_APPROVED",
+            "message": "This payment is already verified - the screenshot cannot be removed.",
+        }
+
+    # The row is updated first. If the file delete fails the reference is
+    # already gone, which is the harmless direction: an unreferenced file costs
+    # storage, a reference to a deleted file breaks the treasurer's view.
+    db.update("payments", f"id=eq.{payment['id']}", {"screenshot_url": None})
+
+    from services import drive_storage as drive
+
+    if drive.is_drive_ref(stored):
+        try:
+            drive.delete(drive.file_id_of(stored))
+        except Exception as e:
+            print(f"[payment] proof reference cleared but Drive delete failed: {type(e).__name__}: {e}")
+
+    return {"success": True, "message": "Screenshot removed. Upload a new one before submitting."}
 
 
 def payment_status(user_id: str = "", registration_id: str = "") -> Dict[str, Any]:

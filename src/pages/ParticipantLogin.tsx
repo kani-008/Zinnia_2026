@@ -104,7 +104,7 @@ export const ParticipantLoginPage: React.FC = () => {
     <ComicPageShell>
       <WebsiteNavbar />
 
-      <main className="mx-auto max-w-md px-5 pb-24 pt-28">
+      <main className="mx-auto max-w-md px-4 sm:px-6 pb-24 pt-4 sm:pt-6">
         <header className="mb-8">
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <ComicChip tone="cyan" rotate={-2}>

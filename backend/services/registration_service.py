@@ -19,7 +19,7 @@ OFFICIAL_EVENT_REGISTRY = {
     "the-last-signal": {"id": "the-last-signal", "code": "02", "mission_name": "THE LAST SIGNAL", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
     "lost-at-sql": {"id": "lost-at-sql", "code": "03", "mission_name": "LOST AT SQL", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
     "gadget-codes": {"id": "gadget-codes", "code": "04", "mission_name": "GADGET CODES", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
-    "paper-presentation": {"id": "paper-presentation", "code": "05", "mission_name": "PAPER PRESENTATION", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
+    "paper-presentation": {"id": "paper-presentation", "code": "05", "mission_name": "PAPER VERSE", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
     "borderland-at-gcee": {"id": "borderland-at-gcee", "code": "06", "mission_name": "BORDERLAND AT GCEE", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
     "think-strike-and-win": {"id": "think-strike-and-win", "code": "07", "mission_name": "THINK, STRIKE AND WIN", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},
     "plot-twist": {"id": "plot-twist", "code": "08", "mission_name": "PLOT TWIST", "team_size_min": 1, "team_size_max": 2, "status": "AVAILABLE"},

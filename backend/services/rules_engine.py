@@ -107,8 +107,11 @@ def display_index(code: str) -> int:
 
 EVENTS: Dict[str, EventDef] = {
     "PAPER_PRESENTATION": EventDef(
-        "PAPER_PRESENTATION", "Paper Presentation", "TECH", "SLOT",
-        2, 3, 24, 15, None, (), False, _CLOSES_DEFAULT,
+        # capacity is 30 TEAMS, not 30 people: capacity_map() and
+        # zin26.register_participant_event both count distinct teams for an
+        # event with max_team > 1, so a team of 2 and a team of 3 each take one.
+        "PAPER_PRESENTATION", "Paper Verse", "TECH", "SLOT",
+        2, 3, 30, 15, None, (), False, _CLOSES_DEFAULT,
     ),
     "GADGET_CODES": EventDef(
         "GADGET_CODES", "Gadget Codes", "TECH", "FIXED",
@@ -144,12 +147,17 @@ EVENTS: Dict[str, EventDef] = {
         3, 3, None, 60, None, ("B3", "B4"), True, _CLOSES_DEFAULT,
     ),
     "SHORT_FILM": EventDef(
-        # Team of exactly 1 (ruling of 4 September 2026). It is online, occupies
-        # no block and counts toward no limit, so team composition affects no
-        # rule - which is why it is registered individually rather than as a
-        # team. Keep in step with src/lib/rules/catalog.ts and zin26.events.
+        # Team of 3, like the other non-tech events. This SUPERSEDES the
+        # 4 September 2026 ruling that made it exactly 1.
+        #
+        # Being a team event now has two consequences worth knowing: it is
+        # registered through create_team rather than individually, and R8 runs
+        # R1-R7 for EVERY member - so all three need an on-campus event of
+        # their own before the team can be created (R7), not just the captain.
+        #
+        # Keep in step with src/lib/rules/catalog.ts and zin26.events.
         "SHORT_FILM", "Short Film", "NON_TECH", "ONLINE",
-        1, 1, None, 0, None, (), False, _CLOSES_SHORT_FILM,
+        3, 3, None, 0, None, (), False, _CLOSES_SHORT_FILM,
     ),
 }
 
@@ -363,7 +371,7 @@ def can_register(
             return _no("R7", "NEEDS_ON_CAMPUS_EVENT", "Register for at least one other event first")
         return _ok()
 
-    # R1 — Paper Presentation and Short Film are exempt from the count, never
+    # R1 — Paper Verse and Short Film are exempt from the count, never
     # from the clash rules below.
     if target.counts_toward_limit:
         counted = sum(1 for c in held if _ev(c).counts_toward_limit)
@@ -562,7 +570,7 @@ def evaluate_catalog(
             "max_team": event.max_team,
             # Two different questions the dashboard asks. `is_team_event` means a
             # team is mandatory (min > 1 — Borderland needs three); `allows_team`
-            # means one is merely permitted (max > 1). Paper Presentation is both,
+            # means one is merely permitted (max > 1). Paper Verse is both,
             # Debugging is neither, and Short Film is the case that separates them.
             "is_team_event": event.min_team > 1,
             # 1-3, so a team is optional here.

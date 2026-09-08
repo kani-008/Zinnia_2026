@@ -10,6 +10,7 @@ import type {
   CreateTeamRequest,
   DashboardResponse,
   EventCode,
+  ApiResult,
   MutationResponse,
   MyTeamsResponse,
   OtpIdentifier,
@@ -176,6 +177,19 @@ export const verifyRegistrationEmail = (
 /* ==========================================================================
    Steps 6-9 — payment and the status hub
    ========================================================================== */
+
+/** The participant's own proof image, as a short-lived viewable URL. */
+export const getPaymentProof = (registrationId: string): Promise<ApiResult<{ url: string; expires_in: number }>> =>
+  request<ApiResult<{ url: string; expires_in: number }>>(
+    `/api/participant/payment/proof?registration_id=${encodeURIComponent(registrationId)}`,
+  );
+
+/** Deletes the stored proof so a replacement can be uploaded. */
+export const removePaymentProof = (registrationId: string): Promise<MutationResponse> =>
+  request<MutationResponse>('/api/participant/payment/proof/remove', {
+    method: 'POST',
+    body: { registration_id: registrationId },
+  });
 
 export const getPaymentStatus = (who: {
   registration_id?: string;

@@ -102,7 +102,7 @@ export const EventScheduleView: React.FC<{
     {
       id: 'paper-presentation',
       code: '05',
-      mission_name: 'PAPER PRESENTATION',
+      mission_name: 'PAPER VERSE',
       start_time: '11:00 AM',
       time_display: '11:00 AM – 03:00 PM',
       duration: '4 hrs',

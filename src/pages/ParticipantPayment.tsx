@@ -30,7 +30,13 @@ import {
   REGISTRATION_STEPS,
   TREASURER_PAYMENT_CONFIG,
 } from '../config/site';
-import { getPaymentStatus, saveSession, submitPayment } from '../lib/participant/api';
+import {
+  getPaymentProof,
+  getPaymentStatus,
+  removePaymentProof,
+  saveSession,
+  submitPayment,
+} from '../lib/participant/api';
 import { clearRegistrationDraft } from '../lib/participant/draft';
 import type { PaymentStatusData } from '../lib/participant/types';
 import {
@@ -122,6 +128,12 @@ export const ParticipantPaymentPage: React.FC = () => {
   };
   const [showForm, setShowForm] = useState(false);
 
+  // The stored proof, as a short-lived viewable URL. The column holds a
+  // reference (a Drive id or a private object path), never something an <img>
+  // can load, so it has to be exchanged for a URL each time it is shown.
+  const [storedProofUrl, setStoredProofUrl] = useState<string | null>(null);
+  const [removingProof, setRemovingProof] = useState(false);
+
   const rid = status?.registration_id ?? registrationId;
 
   const load = useCallback(async () => {
@@ -160,6 +172,45 @@ export const ParticipantPaymentPage: React.FC = () => {
     if (handoff?.details) return;
     void load();
   }, [load, handoff]);
+
+  // Resolve the stored reference into something an <img> can show, whenever
+  // there is one and the participant has not just replaced it locally.
+  const storedRef = status?.payment?.screenshot_url ?? null;
+  useEffect(() => {
+    let cancelled = false;
+    if (!storedRef || !rid) {
+      setStoredProofUrl(null);
+      return;
+    }
+    void getPaymentProof(rid).then((r) => {
+      if (!cancelled) setStoredProofUrl(r.success ? r.url : null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [storedRef, rid]);
+
+  /**
+   * Delete the stored proof so a new one can take its place.
+   *
+   * A real delete, not a UI toggle: the row's reference is cleared and the file
+   * removed, so replacing a screenshot does not leave an orphan in Drive. The
+   * server refuses once the treasurer has approved the payment - at that point
+   * the image is the evidence behind a decision already made.
+   */
+  const onRemoveProof = async () => {
+    if (!rid || removingProof) return;
+    setRemovingProof(true);
+    const result = await removePaymentProof(rid);
+    setRemovingProof(false);
+
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
+    setStoredProofUrl(null);
+    await load();
+  };
 
   const copyUpi = async () => {
     try {
@@ -492,14 +543,18 @@ export const ParticipantPaymentPage: React.FC = () => {
 
         <ComicPanel tone="yellow" className="mb-6">
           <div className="flex items-baseline justify-between gap-4">
-            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">
+            <span className="font-mono text-sm font-bold uppercase tracking-[0.18em] text-[#EEEEEA] sm:text-base">
               Amount payable
             </span>
             <span className="font-comic text-3xl font-black text-[#E5BD00] sm:text-4xl">
               ₹{status.expected_amount || REGISTRATION_FEE_PER_HEAD}
             </span>
           </div>
-          <div className="mt-6 flex flex-col items-center gap-5 sm:flex-row sm:items-start">
+          {/* Stacked at every width: the UPI id and payee sat beside the QR on
+              desktop, which put the thing being copied off to one side of the
+              thing being scanned. They are two ways of doing the same payment,
+              so they read better one under the other. */}
+          <div className="mt-6 flex flex-col items-center gap-5">
             <div className="w-full max-w-[280px] shrink-0 bg-white p-3 border-[3px] border-[#090A0B] shadow-[5px_5px_0px_#090A0B] -rotate-1 sticker-pop sm:w-[240px]">
               {/* Built from TREASURER_PAYMENT_CONFIG, the same source as the UPI
                   id printed beside it. A static image could not follow that
@@ -512,12 +567,13 @@ export const ParticipantPaymentPage: React.FC = () => {
               />
             </div>
 
-            <div className="flex-1 space-y-3">
+            {/* Label on its own line, value indented under it. */}
+            <div className="w-full max-w-[280px] space-y-3 pl-6" >
               <div>
                 <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">UPI ID</p>
                 <button
                   onClick={copyUpi}
-                  className="mt-1 flex items-center gap-2 font-mono text-sm font-bold text-[#EEEEEA] transition-colors hover:text-[#0FA9C6]"
+                  className="mt-1 flex items-center gap-2 pl-2 font-mono text-sm font-bold text-[#EEEEEA] transition-colors hover:text-[#0FA9C6]"
                 >
                   {TREASURER_PAYMENT_CONFIG.upiId || '—'}
                   {copied ? <Check size={14} className="text-[#0FA9C6]" /> : <Copy size={14} className="text-[#71767B]" />}
@@ -525,7 +581,7 @@ export const ParticipantPaymentPage: React.FC = () => {
               </div>
               <div>
                 <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">Payee</p>
-                <p className="mt-1 font-mono text-sm text-[#EEEEEA]">{TREASURER_PAYMENT_CONFIG.payeeName || '—'}</p>
+                <p className="mt-1 pl-2 font-mono text-sm text-[#EEEEEA]">{TREASURER_PAYMENT_CONFIG.payeeName || '—'}</p>
               </div>
               
             </div>
@@ -554,11 +610,7 @@ export const ParticipantPaymentPage: React.FC = () => {
               label={<>Payment screenshot <RequiredMark /></>}
               htmlFor="screenshot"
               error={fieldError === 'screenshot' ? error : null}
-              hint={
-                status.payment?.screenshot_url && !proof
-                  ? 'A screenshot is already on file. Choose a new one only if you want to replace it.'
-                  : 'Max 5 MB.'
-              }
+              hint="Max 5 MB."
             >
               <input
                 id="screenshot"
@@ -584,13 +636,34 @@ export const ParticipantPaymentPage: React.FC = () => {
                     <X size={15} />
                   </button>
                 </div>
+              ) : storedProofUrl ? (
+                /* What is actually on file, shown rather than described. The
+                   cross deletes it; the picker only comes back once it is gone,
+                   so there is never a moment where two proofs are in play. */
+                <div className="relative inline-block">
+                  <img
+                    src={storedProofUrl}
+                    alt="The payment screenshot on file"
+                    className="max-h-56 w-auto rounded-sm border-2 border-[#0FA9C6] object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void onRemoveProof()}
+                    disabled={removingProof}
+                    title="Remove this screenshot"
+                    aria-label="Remove the screenshot on file"
+                    className="absolute -right-2.5 -top-2.5 grid h-8 w-8 place-items-center rounded-full border-2 border-[#090A0B] bg-[#D51F55] text-white shadow-[2px_2px_0px_#090A0B] transition-transform hover:scale-110 disabled:opacity-50"
+                  >
+                    {removingProof ? <Loader2 size={14} className="animate-spin" /> : <X size={15} />}
+                  </button>
+                </div>
               ) : (
                 <label
                   htmlFor="screenshot"
-                  className="flex cursor-pointer items-center justify-center gap-3 rounded-full border border-dashed border-[#0FA9C6]/40 bg-[#111214] px-5 py-4 font-mono text-xs text-[#B8B8B2] transition-colors hover:border-[#0FA9C6] hover:text-[#EEEEEA]"
+                  className="flex cursor-pointer items-center justify-center gap-3 rounded-sm border border-dashed border-[#0FA9C6]/40 bg-[#111214] px-5 py-4 font-mono text-xs text-[#B8B8B2] transition-colors hover:border-[#0FA9C6] hover:text-[#EEEEEA]"
                 >
                   <ImagePlus size={16} className="text-[#0FA9C6]" />
-                  {status.payment?.screenshot_url ? 'Replace the screenshot on file' : 'Tap to choose the payment screenshot'}
+                  Tap to choose the payment screenshot
                 </label>
               )}
             </ComicField>

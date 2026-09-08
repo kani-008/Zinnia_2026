@@ -8,7 +8,7 @@ export const WebsiteFooter: React.FC = () => {
   return (
     <footer
       id="contact"
-      className="relative z-30 bg-[#060608] w-full overflow-hidden"
+      className="relative z-30 bg-[#060608] w-full overflow-hidden mt-auto"
     >
       {/* ── Torn Paper Divider ── */}
       <div className="w-full -translate-y-1/2 overflow-visible">
@@ -71,36 +71,12 @@ export const WebsiteFooter: React.FC = () => {
               </svg>
             </a>
           </div>
-
-          {/* ─── DEVELOPERS (commented out) ───
-          <div className="flex flex-col items-center sm:items-start shrink-0 space-y-2 sm:space-y-3">
-            <div>
-              <h4 className="font-sans font-black text-sm sm:text-base text-[#EEEEEA] uppercase tracking-wider">
-                DEVELOPERS
-              </h4>
-              <svg className="w-16 sm:w-20 h-2 sm:h-2.5 mt-1" viewBox="0 0 80 6" fill="none">
-                <path d="M2 3C16 1 28 5 42 3C56 1 68 5 78 3" stroke="#0FA9C6" strokeWidth="2.2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm font-mono font-medium">
-              {developers.map((name) => (
-                <li key={name}>
-                  <span className="text-[#B8B8B2] flex items-center gap-2 tracking-wider">
-                    <span className="text-[#0FA9C6] font-bold">&rarr;</span>
-                    <span>{name}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          ─── end DEVELOPERS ─── */}
         </div>
 
         {/* ── Bottom strip ── */}
-        <div className="border-t border-[#1C1C22]/60 py-5">
-          <div className="flex items-center justify-center sm:justify-start gap-2 font-mono text-[10px] sm:text-xs tracking-wider uppercase text-[#9CA3AF]">
-            <span className="text-[#F5D90A] text-sm">⚡</span>
-            <span>© 2026 ZINNIA &rsquo;26. ALL RIGHTS RESERVED.</span>
+        <div className=" text-center">
+          <div className="flex items-center justify-center text-center font-mono text-[10px] sm:text-xs tracking-wider uppercase text-[#9CA3AF] -mb-1">
+            <span>© 2026 ZINNIA&rsquo;26. ALL RIGHTS RESERVED.</span>
           </div>
         </div>
       </div>

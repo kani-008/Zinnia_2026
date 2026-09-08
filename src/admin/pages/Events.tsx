@@ -20,7 +20,7 @@ import type { AdminEvent } from '../types';
 /**
  * Why an event's capacity might not be editable. The flag itself comes from
  * zin26.events.capacity_is_locked — the reason is copy, so it lives here.
- * Paper Presentation runs on two panels of twelve 15-minute slots, which is
+ * Paper Verse runs on two panels of twelve 15-minute slots, which is
  * exactly what the timeline holds; setting it to 30 would mean discovering on
  * the day that six teams have nowhere to present.
  */

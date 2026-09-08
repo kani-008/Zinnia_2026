@@ -65,9 +65,9 @@ const isClosed = (ev: EventDef, now: Date): boolean => now.getTime() >= new Date
    ==========================================================================
    FIXED events swallow whole blocks, and R2/R3/R5 already govern those
    collisions. What the minute budget actually polices is the RUNNING events
-   plus Paper Presentation sharing a window.
+   plus Paper Verse sharing a window.
 
-   Paper Presentation counts 15 minutes against MORNING. Its panel is not
+   Paper Verse counts 15 minutes against MORNING. Its panel is not
    assigned until the shortlist (§4.4), so which half of the day it lands in is
    unknown at registration time; charging it to the morning is the conservative
    reading of R6's "PaperPres(if morning slot)". */
@@ -155,7 +155,7 @@ export function canRegister(input: CanRegisterInput): Decision {
     return { ok: true, warnings };
   }
 
-  // R1 — Paper Presentation and Short Film are exempt from the count, never
+  // R1 — Paper Verse and Short Film are exempt from the count, never
   // from the clash rules below.
   if (ev.countsTowardLimit && countedCount(existing) >= config.maxCountedEvents) {
     return reject(
@@ -166,7 +166,7 @@ export function canRegister(input: CanRegisterInput): Decision {
   }
 
   // R2 — Gadget Codes runs B1-B4, so it combines with nothing on campus,
-  // Paper Presentation included. Short Film is the only permitted addition.
+  // Paper Verse included. Short Film is the only permitted addition.
   if (eventCode === 'GADGET_CODES' && onCampus(existing).length > 0) {
     return reject('R2', 'Gadget Codes runs all day and cannot be combined with another event.', participant.userId);
   }

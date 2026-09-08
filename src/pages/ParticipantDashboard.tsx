@@ -280,7 +280,7 @@ export const ParticipantDashboardPage: React.FC = () => {
     return (
       <ComicPageShell>
         <WebsiteNavbar />
-        <main className="mx-auto max-w-xl px-5 pt-32 text-center">
+        <main className="mx-auto max-w-xl px-5 pt-8 sm:pt-12 text-center">
           <ComicAlert tone="pink" className="text-left">
             {error ?? 'Could not load your dashboard.'}
           </ComicAlert>
@@ -628,18 +628,31 @@ export const ParticipantDashboardPage: React.FC = () => {
           ? 'bg-[#0FA9C6] text-[#090A0B] border-2 border-[#0FA9C6] shadow-[3px_3px_0px_#08758A] hover:bg-[#15C3E5] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#08758A]'
           : 'bg-[#D51F55] text-white border-2 border-[#D51F55] shadow-[3px_3px_0px_#A81443] hover:bg-[#E82C64] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#A81443]';
 
+    // The hand-drawn frame is an SVG with preserveAspectRatio="none", so its
+    // border sits a PROPORTION of the card in, not a fixed number of pixels:
+    // the path bulges inward to x=18 of a 260-wide viewBox, i.e. 6.9% of the
+    // width. px-5 (20px) fell inside that on any card wider than ~290px, which
+    // is why the expanded details crossed the border on a phone. A percentage
+    // tracks the frame at every width the row is used at.
+    //
+    // The number tag is the opposite case - a fixed 46px sticker - so the extra
+    // indent that clears IT stays in pixels.
     return (
       <ComicHandDrawnCard
         key={card.event_code}
         code={number}
         variant={variant}
         className={`row-card transition-all duration-200 ${locked ? 'opacity-70 hover:opacity-85 !cursor-default' : '!cursor-default'}`}
-        innerClassName="w-full px-5 sm:px-6 pt-4 pb-5 text-left select-text"
+        innerClassName={
+          open
+            ? 'w-full px-[12%] pt-6 pb-8 text-left select-text'
+            : 'w-full px-5 sm:px-6 pt-4 pb-5 text-left select-text'
+        }
       >
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
           {/* Only the identity clears the number tag; the action below spans
               the card, so it sits centred instead of shunted right. */}
-          <div className="min-w-0 flex-1 pl-9 sm:pl-10">
+          <div className="min-w-0 flex-1 pl-5">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-sans font-black text-base sm:text-lg uppercase tracking-wider leading-tight text-[#EEEEEA]">
                 {card.name}
@@ -777,7 +790,7 @@ export const ParticipantDashboardPage: React.FC = () => {
     <ComicPageShell>
       <WebsiteNavbar />
 
-      <main className="mx-auto max-w-5xl px-5 pb-24 pt-28">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-24 pt-4 sm:pt-6">
         {/* Identity strip — §4.2: who you are and n/3, on every screen.
             The login ID is the headline fact here, not a footnote: it is the
             ONLY way back into this dashboard, so it is labelled, legible and
@@ -1026,22 +1039,19 @@ export const ParticipantDashboardPage: React.FC = () => {
         )}
 
         <section>
-          <div className="mb-5 flex flex-wrap items-center gap-3">
-            <ComicSectionTitle tone="cyan" className="flex items-center gap-2">
-              <ComicBolt tone="yellow" className="w-4 h-4" /> Event catalog
+          <div className="mb-5 flex items-center justify-between gap-2 sm:gap-4">
+            <ComicSectionTitle tone="cyan" className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-xl shrink-0">
+              <ComicBolt tone="yellow" className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> Event catalog
             </ComicSectionTitle>
-            <ComicChip tone="yellow" rotate={1.5}>
-              {catalog.length} active events
-            </ComicChip>
 
             {/* The rules that decide what combines with what. Reading them
                 before picking beats finding out from a rejection. */}
             <button
               type="button"
               onClick={() => setShowRules(true)}
-              className="inline-flex items-center gap-1.5 border-2 border-[#0FA9C6] bg-[#111214] px-3 py-1.5 font-sans text-[11px] font-bold uppercase tracking-wider text-[#0FA9C6] shadow-[2px_2px_0px_#090A0B] transition-colors hover:bg-[#0FA9C6] hover:text-[#090A0B]"
+              className="shrink-0 inline-flex items-center justify-center border-2 border-[#090A0B] bg-[#0FA9C6] px-2.5 py-1 sm:px-3.5 sm:py-1.5 font-sans text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#090A0B] shadow-[2.5px_2.5px_0px_#090A0B] -rotate-1 transition-all hover:rotate-0 hover:bg-[#15C3E5] hover:-translate-y-0.5 hover:shadow-[3.5px_3.5px_0px_#090A0B] active:translate-x-0.5 active:translate-y-0.5 active:shadow-[1px_1px_0px_#090A0B] cursor-pointer"
             >
-              <Info size={13} /> Registration description
+              Registration description
             </button>
           </div>
 

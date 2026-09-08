@@ -113,6 +113,31 @@ class ParticipantController:
         )
 
     @staticmethod
+    def payment_proof():
+        """GET /api/participant/payment/proof - the participant's own proof image."""
+        endpoint = "GET /api/participant/payment/proof"
+        return _guard(endpoint, lambda: _respond(
+            participant_service.payment_proof_url(
+                user_id=request.args.get("user_id", ""),
+                registration_id=request.args.get("registration_id", request.args.get("rid", "")),
+            ),
+            endpoint,
+        ))
+
+    @staticmethod
+    def remove_payment_proof():
+        """POST /api/participant/payment/proof/remove - delete it so a new one can go up."""
+        endpoint = "POST /api/participant/payment/proof/remove"
+        body = request.get_json(silent=True) or {}
+        return _guard(endpoint, lambda: _respond(
+            participant_service.remove_payment_proof(
+                user_id=str(body.get("user_id", "")),
+                registration_id=str(body.get("registration_id", body.get("rid", ""))),
+            ),
+            endpoint,
+        ))
+
+    @staticmethod
     def payment_status():
         """GET /api/participant/payment/status?user_id=..."""
         endpoint = "GET /api/participant/payment/status"

@@ -37,18 +37,53 @@ def capacity_map() -> Dict[str, Optional[int]]:
     """
     Seats remaining per event. None means unlimited.
 
+    A TEAM event's capacity counts TEAMS; an individual event counts heads.
+    This mirrors zin26.register_participant_event (migration 012) exactly — that
+    function is what actually performs the insert, so anything counted
+    differently here is a pre-check that disagrees with the authority.
+
+    It did disagree: every member of a team wrote one registrations row and this
+    counted rows, so a 30-team Paper Verse field was exhausted by 10-15
+    teams and the card went FULL on every dashboard while the database would
+    still have accepted twice as many.
+
     One grouped read rather than a query per card — the dashboard renders nine
     cards and this is on the critical path for every page load.
     """
-    events = db.select("events", "select=code,capacity,is_active")
-    taken = {}
-    for row in db.select("registrations", "select=event_code&status=neq.CANCELLED"):
-        taken[row["event_code"]] = taken.get(row["event_code"], 0) + 1
+    events = db.select("events", "select=code,capacity,is_active,max_team")
 
-    out = {}
+    # A team event is counted by distinct team_id, so the rows have to carry it.
+    rows = db.select("registrations", "select=event_code,team_id&status=neq.CANCELLED")
+
+    heads: Dict[str, int] = {}
+    teams: Dict[str, set] = {}
+    teamless: Dict[str, int] = {}
+    for row in rows:
+        code = row["event_code"]
+        heads[code] = heads.get(code, 0) + 1
+        team_id = row.get("team_id")
+        if team_id:
+            teams.setdefault(code, set()).add(team_id)
+        else:
+            # A row on a team event with no team_id should not exist. Counting
+            # it as one seat keeps the pre-check conservative: a malformed row
+            # must not silently uncap the event.
+            teamless[code] = teamless.get(code, 0) + 1
+
+    out: Dict[str, Optional[int]] = {}
     for e in events:
+        code = e["code"]
         cap = e.get("capacity")
-        out[e["code"]] = None if cap is None else max(cap - taken.get(e["code"], 0), 0)
+        if cap is None:
+            out[code] = None
+            continue
+
+        counted = (
+            len(teams.get(code, ())) + teamless.get(code, 0)
+            if (e.get("max_team") or 1) > 1
+            else heads.get(code, 0)
+        )
+        out[code] = max(cap - counted, 0)
     return out
 
 

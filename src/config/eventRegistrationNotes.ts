@@ -27,7 +27,7 @@ export interface EventRegistrationNotes {
 
 /** Applies to every event; shown under the event-specific points. */
 export const GENERAL_NOTES: EventNote[] = [
-  { tone: 'info', text: 'You can hold at most 3 counted events. Paper Presentation and Short Film do not count towards that 3.' },
+  { tone: 'info', text: 'You can hold at most 3 counted events. Paper Verse and Short Film do not count towards that 3.' },
   { tone: 'info', text: 'For a team event you register as the captain. Every teammate has to accept from their own dashboard before the team is confirmed.' },
   { tone: 'info', text: 'You can cancel freely until registrations close on 22 September. After that no self-service changes.' },
 ];
@@ -38,7 +38,7 @@ export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {
     when: '11:00 AM - 3:00 PM (all four blocks)',
     team: 'Team of 2',
     notes: [
-      { tone: 'warn', text: 'This is the big one: registering Gadget Codes means you CANNOT register any other on-campus event, including Paper Presentation. It occupies the whole day.' },
+      { tone: 'warn', text: 'This is the big one: registering Gadget Codes means you CANNOT register any other on-campus event, including Paper Verse. It occupies the whole day.' },
       { tone: 'info', text: 'Short Film is the only thing you may add alongside it, because it is online and takes no time slot.' },
       { tone: 'info', text: 'Rounds 1 and 2 run 11:00-1:00. Qualifying teams play the Final from 2:00-3:00.' },
     ],

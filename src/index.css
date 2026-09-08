@@ -1532,6 +1532,32 @@ body {
   vector-effect: non-scaling-stroke;
 }
 
+/* The same non-uniform stretch throws the DOUBLE line out of balance. The
+   inner print line sits ~5 viewBox units inside the main ink; on a 1140px-wide
+   panel that is 5 x (1140/242) = 23px at the sides but only 5 x (350/309) = 6px
+   top and bottom, so the border reads as a thin outline that gapes open on the
+   left and right.
+
+   Pushing the inner line outward by a PERCENTAGE of the width corrects it in
+   the same units the distortion is measured in, which a fixed pixel inset
+   could not. fill-box so the origin is the path's own box rather than the
+   whole SVG viewport. */
+.comic-frame-fluid > .card-svg-frame .card-inner {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scaleX(1.022);
+}
+
+/* A wider panel stretches the same 5 units further, so it needs a bigger
+   correction. One value cannot serve both: the amount that evens out a 960px
+   panel would close the gap to under 2px on a phone, where the untouched gap
+   is only ~7px to begin with. */
+@media (min-width: 640px) {
+  .comic-frame-fluid > .card-svg-frame .card-inner {
+    transform: scaleX(1.031);
+  }
+}
+
 /* =========================================================================
    OUTLINED CYAN NAV BUTTON (secondary CTA)
    .comic-button is white-outlined (nav links) and .comic-button-cyan is solid

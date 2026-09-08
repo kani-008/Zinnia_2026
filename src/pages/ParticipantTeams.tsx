@@ -157,7 +157,7 @@ export const ParticipantTeamsPage: React.FC = () => {
     <ComicPageShell>
       <WebsiteNavbar />
 
-      <main className="mx-auto max-w-3xl px-5 pb-24 pt-28">
+      <main className="mx-auto max-w-3xl px-4 sm:px-6 pb-24 pt-4 sm:pt-6">
         <header className="mb-8 flex items-start justify-between gap-4">
           <div>
             <ComicHeading>My teams</ComicHeading>

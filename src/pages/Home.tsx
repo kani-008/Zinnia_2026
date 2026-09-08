@@ -1119,11 +1119,11 @@ export const WebsiteHomePage: React.FC = () => {
                         <br />
                         <span>SQL</span>
                       </>
-                    ) : e.mission_name.toLowerCase().includes('paper presentation') ? (
+                    ) : e.mission_name.toLowerCase().includes('paper verse') || e.mission_name.toLowerCase().includes('paper presentation') ? (
                       <>
                         <span>PAPER</span>
                         <br />
-                        <span>PRESENTATION</span>
+                        <span>VERSE</span>
                       </>
                     ) : (
                       <span>{e.mission_name}</span>

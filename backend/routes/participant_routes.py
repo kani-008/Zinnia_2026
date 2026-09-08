@@ -31,6 +31,17 @@ participant_bp.route("/api/participant/payment/submit", methods=["POST"])(
 )
 
 # Polled by the confirmation screen while it waits, so a looser limit.
+# The proof image itself: read it back, or delete it so a new one can replace
+# it. Both are keyed on the registration reference the payment screen already
+# holds, the same key /payment/status and /payment/submit use.
+participant_bp.route("/api/participant/payment/proof", methods=["GET"])(
+    rate_limit(60)(ParticipantController.payment_proof)
+)
+
+participant_bp.route("/api/participant/payment/proof/remove", methods=["POST"])(
+    rate_limit(20)(ParticipantController.remove_payment_proof)
+)
+
 participant_bp.route("/api/participant/payment/status", methods=["GET"])(
     rate_limit(60)(ParticipantController.payment_status)
 )

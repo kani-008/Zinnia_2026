@@ -9,7 +9,7 @@ import { DEFAULT_CONFIG } from '../../lib/rules/catalog';
  *
  * The site has ONE pass: a flat fee per participant (D6) that covers up to
  * `maxCountedEvents` counted events — technical or non-technical, mixed freely.
- * Paper Presentation and Short Film do not count toward that ceiling. Team
+ * Paper Verse and Short Film do not count toward that ceiling. Team
  * events are paid per member. Those are the rules the backend actually
  * enforces, so that is what is shown; there are no combo tiers.
  */
@@ -49,7 +49,7 @@ export const RegistrationPassCard: React.FC = () => {
           <li className="flex items-start gap-2 p-3 bg-[#222228] border border-[#3A3A40] rounded-lg">
             <Zap className="w-4 h-4 text-[#FF3366] shrink-0 mt-0.5" />
             <span>
-              <strong className="text-white">Paper Presentation</strong> and{' '}
+              <strong className="text-white">Paper Verse</strong> and{' '}
               <strong className="text-white">Short Film</strong> don&apos;t use up a slot.
             </span>
           </li>

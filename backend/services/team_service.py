@@ -21,6 +21,7 @@ their quota immediately.
 from __future__ import annotations
 
 import datetime as dt
+import secrets
 from typing import Any, Dict, List, Optional
 
 from services import event_registration_service as regs
@@ -183,15 +184,7 @@ def create_team(
         }
 
     # Team row first: everything below needs its team_id.
-    team_rows = db.insert(
-        "teams",
-        {
-            "event_code": event_code,
-            "team_name": team_name,
-            "captain_user_id": captain_id,
-            "status": "PENDING_ACCEPTANCE",
-        },
-    )
+    team_rows = _insert_team(event_code, team_name, captain_id)
     if not team_rows:
         raise Zin26Error("team insert returned nothing")
     team_id = team_rows[0]["team_id"]
@@ -543,6 +536,65 @@ def _rpc_confirm_team(team_id: str) -> int:
     raise Zin26Error(
         f"could not confirm team - is migration 012 applied? HTTP {r.status_code} {body[:200]}"
     )
+
+
+# --- team ids ---------------------------------------------------------------
+#
+# ZIN26-PP0001: the event in two letters, then four digits. zin26.teams.team_id
+# is a plain TEXT primary key with no default and no sequence, so the value has
+# to be supplied on insert - it was not, which is why every team creation failed
+# with a not-null violation and the table sat empty.
+
+TEAM_ID_PREFIX = {
+    "PAPER_PRESENTATION": "PP",
+    "GADGET_CODES": "GC",
+    "BORDERLAND": "BL",
+    "THINK_STRIKE_WIN": "TS",
+    "PLOT_TWIST": "PT",
+    "SHORT_FILM": "SF",
+}
+
+# Attempts before giving up. With ~30 teams against 9999 numbers a first-pick
+# collision is under 0.5%, so this only ever runs twice in practice.
+_TEAM_ID_ATTEMPTS = 8
+
+
+def _new_team_id(event_code: str) -> str:
+    """
+    Random four digits, never sequential.
+
+    Sequential ids leak how many teams have registered and let anyone holding
+    one guess its neighbours - and a team id is what a captain shares with
+    teammates, so it travels. secrets, not random, for the same reason.
+    """
+    prefix = TEAM_ID_PREFIX.get(event_code, event_code[:2].upper())
+    return f"ZIN26-{prefix}{secrets.randbelow(9999) + 1:04d}"
+
+
+def _insert_team(event_code: str, team_name: str, captain_id: str) -> List[Dict[str, Any]]:
+    """Insert the team row, re-rolling the id if that number is already taken."""
+    last: Optional[Exception] = None
+    for _ in range(_TEAM_ID_ATTEMPTS):
+        try:
+            return db.insert(
+                "teams",
+                {
+                    "team_id": _new_team_id(event_code),
+                    "event_code": event_code,
+                    "team_name": team_name,
+                    "captain_user_id": captain_id,
+                    "status": "PENDING_ACCEPTANCE",
+                },
+            )
+        except Zin26Error as e:
+            # Only a primary-key clash is worth retrying; anything else is a
+            # real failure and re-rolling the id would just hide it.
+            if e.code != "DUPLICATE":
+                raise
+            last = e
+    raise Zin26Error(
+        f"could not allocate a team id for {event_code} after {_TEAM_ID_ATTEMPTS} attempts"
+    ) from last
 
 
 def _send_invite(member: Dict[str, Any], captain: Dict[str, Any], team_name: str, event) -> None:

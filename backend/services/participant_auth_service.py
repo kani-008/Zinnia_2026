@@ -24,6 +24,7 @@ import time
 from typing import Any, Dict, Optional
 
 from services import zin26_db as db
+from services.email_service import RecipientRefused
 from services.participant_service import is_valid_user_id
 
 AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY")
@@ -125,7 +126,17 @@ def request_otp(user_id: str = "", *, registration_id: str = "") -> Dict[str, An
 
         details = pending.details_of(payload)
         otp = f"{secrets.randbelow(1000000):06d}"
-        sent = send_pending_otp_email(details, otp)
+        try:
+            sent = send_pending_otp_email(details, otp)
+        except RecipientRefused:
+            return {
+                "success": False,
+                "error_code": "EMAIL_UNDELIVERABLE",
+                "field": "email",
+                "message": (
+                    "That email address does not exist. Use the link below to correct it."
+                ),
+            }
 
         return {
             "success": True,
@@ -133,7 +144,9 @@ def request_otp(user_id: str = "", *, registration_id: str = "") -> Dict[str, An
             # browser must carry this one forward or the resent code will not
             # verify against what it still holds.
             "registration_id": pending.mint(details, otp),
-            "email_hint": _mask_email(str(details.get("email", ""))),
+            # Full address, not masked - same reason as the register path: this
+            # is the participant's own input and a typo has to be visible.
+            "email_hint": str(details.get("email", "")).strip(),
             "expires_in": pending.PENDING_TTL_SECONDS,
             "email_sent": sent,
             "message": "We emailed you a 6-digit code.",
@@ -405,6 +418,10 @@ def send_pending_otp_email(details: Dict[str, Any], otp: str) -> bool:
                 f"It expires in 10 minutes. Your registration is not created until you enter it.</p>"
             ),
         )
+    except RecipientRefused:
+        # Deliberately NOT swallowed: the address does not exist, and the only
+        # useful thing to do is tell the participant so they can fix it.
+        raise
     except Exception as e:
         print(f"[participant_auth] pending OTP email not sent: {type(e).__name__}: {e}")
         if os.getenv("ALLOW_EMAIL_SIMULATION", "false").lower() == "true":

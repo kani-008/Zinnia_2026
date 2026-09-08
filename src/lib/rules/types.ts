@@ -33,7 +33,7 @@ export type RuleId =
 export type EventCategory = 'TECH' | 'NON_TECH';
 
 /**
- * SLOT    — assigned a numbered slot (Paper Presentation's 24 panels)
+ * SLOT    — assigned a numbered slot (Paper Verse's 24 panels)
  * FIXED   — pinned to specific blocks, same for everyone
  * RUNNING — floats anywhere inside its window, 30 min a head
  * ONLINE  — off-campus, occupies no block (Short Film)
@@ -71,7 +71,7 @@ export interface EventDef {
   window: WindowCode | null;
   /** blocks this event occupies across all its rounds */
   blocks: BlockCode[];
-  /** false for Paper Presentation (R13) and Short Film — they are exempt from the 3-event ceiling */
+  /** false for Paper Verse (R13) and Short Film — they are exempt from the 3-event ceiling */
   countsTowardLimit: boolean;
   isActive: boolean;
   /** ISO timestamp; Short Film closes two days earlier (§7.1) */

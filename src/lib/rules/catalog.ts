@@ -5,7 +5,7 @@
 // the spec, so this file and the server agree by construction.
 //
 // TEAM SIZES (spec rule, matches the seed exactly):
-//   TECH team events are 2 students - except Paper Presentation, which is 2-3.
+//   TECH team events are 2 students - except Paper Verse, which is 2-3.
 //   NON_TECH team events are 3 students, maximum 3.
 //   Short Film is online and stays 1-3 (solo or team, §4.8).
 
@@ -43,12 +43,12 @@ export const EVENTS: Record<EventCode, EventDef> = {
   // number like the other events (§4.4). Exempt from the 3-event ceiling (R13).
   PAPER_PRESENTATION: {
     code: 'PAPER_PRESENTATION',
-    name: 'Paper Presentation',
+    name: 'Paper Verse',
     category: 'TECH',
     type: 'SLOT',
     minTeam: 2,
     maxTeam: 3,
-    capacity: 24,
+    capacity: 30,
     durationMin: 15,
     window: null,
     blocks: [],
@@ -183,10 +183,11 @@ export const EVENTS: Record<EventCode, EventDef> = {
     name: 'Short Film',
     category: 'NON_TECH',
     type: 'ONLINE',
-    // Exactly 1 (ruling of 4 September 2026): online, no block, no count, so
-    // team size affects no rule. Mirrors rules_engine.EVENTS["SHORT_FILM"].
-    minTeam: 1,
-    maxTeam: 1,
+    // Team of 3, superseding the 4 September 2026 ruling of exactly 1. Online,
+    // no block, no count - but every member still needs an on-campus event of
+    // their own (R7 via R8). Mirrors rules_engine.EVENTS["SHORT_FILM"].
+    minTeam: 3,
+    maxTeam: 3,
     capacity: null,
     durationMin: 0,
     window: null,

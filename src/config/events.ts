@@ -165,7 +165,6 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     rules: [
       'Teams of 2 to 3 participants.',
       'Presentation duration: 8 mins presentation + 2 mins Q&A.',
-      'Topics: AI/ML, Cloud, Cyber Security, Web3, IoT, Big Data.',
       'Standard IEEE slide format recommended.'
     ],
     coordinators: [
