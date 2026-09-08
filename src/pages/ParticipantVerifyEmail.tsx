@@ -7,17 +7,16 @@
 // the participant code: that is released when the treasurer verifies payment.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Loader2, MailCheck } from 'lucide-react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { REGISTRATION_STEPS } from '../config/site';
 import { requestOtp, saveSession, verifyRegistrationEmail } from '../lib/participant/api';
+import { clearRegistrationDraft } from '../lib/participant/draft';
 import {
   ComicAlert,
   ComicCTA,
-  ComicChip,
-  ComicField,
   ComicGhostButton,
   ComicHeading,
   ComicInput,
@@ -25,24 +24,39 @@ import {
   ComicPanel,
   ComicStepper,
 } from '../components/ui/comic';
+import { useToastOn } from '../components/ui/toast';
 
 
 export const ParticipantVerifyEmailPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const registrationId = (searchParams.get('rid') ?? '').trim();
+  // Stateful, not a plain read of ?rid=: while the registration is still
+  // pending, a resend mints a NEW token carrying the new code's hash, and the
+  // old one stops verifying. Verification then swaps in the real registration
+  // id of the row it just created.
+  const [registrationId, setRegistrationId] = useState(
+    () => (searchParams.get('rid') ?? '').trim(),
+  );
 
   const [otp, setOtp] = useState('');
   const [emailHint, setEmailHint] = useState('');
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Failures surface as a slide-in toast rather than a box above the form,
+  // which on a phone appeared off-screen above the button just pressed.
+  useToastOn(error);
   const [cooldown, setCooldown] = useState(0);
-  const [verified, setVerified] = useState(false);
 
   const otpRef = useRef<HTMLInputElement | null>(null);
   const requestedOnce = useRef(false);
+
+  // Set only when the details form navigated here, so a refresh or a pasted
+  // link still gets a code sent automatically.
+  const handoff = useLocation().state as { codeSent?: boolean; emailHint?: string } | null;
+  const codeAlreadySent = Boolean(handoff?.codeSent);
 
   const sendCode = useCallback(async () => {
     if (sending || !registrationId) return;
@@ -56,18 +70,32 @@ export const ParticipantVerifyEmailPage: React.FC = () => {
       setError(result.message);
       return;
     }
+    // Carry the refreshed pending token forward, or the code that just went out
+    // will not match the one this page still holds.
+    if (result.registration_id) setRegistrationId(result.registration_id);
     setEmailHint(result.email_hint);
     setCooldown(60);
     otpRef.current?.focus();
   }, [sending, registrationId]);
 
   // The participant typed their email one screen ago; asking them to click
-  // "send" again is a wasted step, so the first code goes out automatically.
+  // "send" again is a wasted step, so the first code goes out automatically —
+  // UNLESS the details form already sent one on its way here, which it flags
+  // through navigation state. Requesting again there mailed a second code and
+  // invalidated the first, so whichever arrived first no longer worked.
   useEffect(() => {
     if (requestedOnce.current) return;
     requestedOnce.current = true;
+
+    if (codeAlreadySent) {
+      if (handoff?.emailHint) setEmailHint(handoff.emailHint);
+      setCooldown(60);
+      otpRef.current?.focus();
+      return;
+    }
+
     void sendCode();
-  }, [sendCode]);
+  }, [sendCode, codeAlreadySent, handoff]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -93,7 +121,19 @@ export const ParticipantVerifyEmailPage: React.FC = () => {
     }
 
     saveSession({ token: result.token, user: result.user, expires_at: result.expires_at });
-    setVerified(true);
+
+    // The address is confirmed, so there is nothing left to go back and fix.
+    // Dropping the draft here stops the next registration on a shared laptop
+    // from opening with this person's details already in the form.
+    clearRegistrationDraft();
+
+    // Straight to payment. The "Address confirmed" screen that used to sit here
+    // only restated what the participant had just done and asked them to press
+    // one more button to continue — a step that could be skipped, so it is.
+    // replace: true so Back does not return to a code screen whose token has
+    // already been spent.
+    const paidRid = result.user?.registration_id ?? registrationId;
+    navigate(`/participant/payment?rid=${encodeURIComponent(paidRid)}`, { replace: true });
   };
 
   if (!registrationId) {
@@ -114,128 +154,65 @@ export const ParticipantVerifyEmailPage: React.FC = () => {
     );
   }
 
-  if (verified) {
-    return (
-      <ComicPageShell>
-        <WebsiteNavbar />
-        <main className="mx-auto max-w-xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 text-center overflow-hidden">
-          <div className="mb-5 flex justify-center">
-            <ComicChip tone="cyan" rotate={-2}>
-              <CheckCircle2 size={12} /> Email verified
-            </ComicChip>
-          </div>
-
-          <ComicHeading>Address confirmed</ComicHeading>
-
-          <p className="mt-4 font-mono text-xs leading-relaxed text-[#B8B8B2] sm:text-sm">
-            We can reach you{emailHint ? <> at <span className="font-bold text-[#0FA9C6]">{emailHint}</span></> : null}.
-            Next: the registration fee. Your registration code and master QR are issued once the
-            treasurer confirms the payment.
-          </p>
-
-          <ComicStepper steps={REGISTRATION_STEPS} current={3} className="mt-6 justify-center" />
-
-          <ComicPanel tone="cyan" className="my-8 text-left">
-            <ul className="space-y-2 font-mono text-xs">
-              <li className="flex items-center gap-2 text-[#0FA9C6]">
-                <CheckCircle2 size={14} /> Email verified
-              </li>
-              <li className="flex items-center gap-2 text-[#71767B]">
-                <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-[#71767B]" />{' '}
-                Payment — next
-              </li>
-              <li className="flex items-center gap-2 text-[#71767B]">
-                <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-[#71767B]" />{' '}
-                Registration confirmed — after the treasurer verifies your payment
-              </li>
-            </ul>
-          </ComicPanel>
-
-          <div className="flex justify-center">
-            <ComicCTA
-              tone="cyan"
-              fullWidth={false}
-              onClick={() =>
-                navigate(`/participant/payment?rid=${encodeURIComponent(registrationId)}`, {
-                  replace: true,
-                })
-              }
-            >
-              Continue to payment
-            </ComicCTA>
-          </div>
-        </main>
-      </ComicPageShell>
-    );
-  }
-
   return (
     <ComicPageShell>
       <WebsiteNavbar />
 
       <main className="mx-auto max-w-md w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 overflow-hidden">
         <header className="mb-8">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <ComicChip tone="cyan" rotate={-2}>
-              <MailCheck size={12} /> Step 2 of 4
-            </ComicChip>
-            <ComicChip tone="yellow" rotate={1.5}>
-              Code expires in 10 min
-            </ComicChip>
-          </div>
-
-          <ComicHeading>Check your email</ComicHeading>
-
-          <p className="mt-4 font-mono text-xs leading-relaxed text-[#B8B8B2] sm:text-sm">
-            {emailHint ? (
-              <>
-                We sent a 6-digit code to{' '}
-                <span className="font-bold text-[#0FA9C6]">{emailHint}</span>. Enter it below to
-                confirm the address is yours. Payment opens only after this step.
-              </>
-            ) : sending ? (
-              <>Sending your code…</>
-            ) : (
-              <>We will send a 6-digit code to the address you registered with.</>
-            )}
-          </p>
+          <ComicHeading fluid>Email confirmation</ComicHeading>
 
           <ComicStepper steps={REGISTRATION_STEPS} current={2} className="mt-6" />
         </header>
 
-        {error && <ComicAlert tone="pink" className="mb-6">{error}</ComicAlert>}
-
         <form onSubmit={onVerify}>
           <ComicPanel tone="cyan">
-            <ComicField
-              label="6-digit code"
-              htmlFor="otp"
-              hint={
+            {/* The instruction moved inside the panel, next to the field it is
+                about. The visible "6-digit code" label went with it — the copy
+                below and the 000000 placeholder already say what goes here — so
+                the input carries its name for assistive tech instead. */}
+            <p id="otp-help" className="mb-4 font-mono text-xs leading-relaxed text-[#B8B8B2]">
+              {emailHint ? (
                 <>
-                  Wrong address?{' '}
-                  <button
-                    type="button"
-                    onClick={() => navigate('/participant/register')}
-                    className="font-bold uppercase tracking-wide text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
-                  >
-                    Register again with the correct email
-                  </button>
+                  We have sent the code to{' '}
+                  <span className="font-bold text-[#0FA9C6]">{emailHint}</span> — enter the code to
+                  confirm the address.
                 </>
-              }
-            >
-              <ComicInput
-                id="otp"
-                ref={otpRef}
-                inputMode="numeric"
-                maxLength={6}
-                className="text-center text-2xl tracking-[0.4em]"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                autoComplete="one-time-code"
-                required
-              />
-            </ComicField>
+              ) : sending ? (
+                <>Sending your code…</>
+              ) : (
+                <>
+                  We have sent the code to the address you registered with — enter the code to
+                  confirm the address.
+                </>
+              )}
+            </p>
+
+            <ComicInput
+              id="otp"
+              ref={otpRef}
+              aria-label="6-digit code"
+              aria-describedby="otp-help"
+              inputMode="numeric"
+              maxLength={6}
+              className="text-center text-2xl tracking-[0.4em]"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="000000"
+              autoComplete="one-time-code"
+              required
+            />
+
+            <p className="mt-3 font-mono text-[11px] leading-relaxed text-[#71767B]">
+              Wrong address?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/participant/register')}
+                className="font-bold uppercase tracking-wide text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
+              >
+                Change email address
+              </button>
+            </p>
           </ComicPanel>
 
           <div className="mt-7">

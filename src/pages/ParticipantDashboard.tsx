@@ -62,6 +62,7 @@ import {
   ComicPanel,
   ComicSectionTitle,
 } from '../components/ui/comic';
+import { useToastOn } from '../components/ui/toast';
 
 interface DashboardData {
   participant: RegistrationView;
@@ -103,6 +104,10 @@ export const ParticipantDashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Failures surface as a slide-in toast rather than a box above the form,
+  // which on a phone appeared off-screen above the button just pressed.
+  useToastOn(error);
   const [busyEvent, setBusyEvent] = useState<EventCode | null>(null);
   const [copiedId, setCopiedId] = useState(false);
 
@@ -356,7 +361,6 @@ export const ParticipantDashboardPage: React.FC = () => {
           </ComicAlert>
         )}
 
-        {error && <ComicAlert tone="pink" className="mb-6">{error}</ComicAlert>}
 
         {/* THE PASS PANEL — the only thing payment verification gates.
             Confirmed: the code, the master QR and the group link, in the page

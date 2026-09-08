@@ -113,12 +113,20 @@ export const ComicChip: React.FC<ComicChipProps> = ({
    HEADING — display type with the comic ink stroke
    ========================================================================== */
 
-export const ComicHeading: React.FC<{ className?: string; children: React.ReactNode }> = ({
-  className = '',
-  children,
-}) => (
+/**
+ * `fluid` swaps the breakpoint-stepped sizes for a clamp, so the heading grows
+ * with the viewport instead of snapping at `sm:` and `md:`. Opt-in rather than
+ * the default: the stepped scale is what every other page is laid out around.
+ */
+export const ComicHeading: React.FC<{
+  className?: string;
+  fluid?: boolean;
+  children: React.ReactNode;
+}> = ({ className = '', fluid = false, children }) => (
   <h1
-    className={`font-display uppercase text-[#EEEEEA] text-stroke-comic-sm leading-[0.95] text-3xl sm:text-4xl md:text-5xl ${className}`}
+    className={`font-display uppercase text-[#EEEEEA] text-stroke-comic-sm leading-[0.95] ${
+      fluid ? 'text-[clamp(1.5rem,7vw,3.25rem)]' : 'text-3xl sm:text-4xl md:text-5xl'
+    } ${className}`}
   >
     {children}
   </h1>
@@ -212,10 +220,11 @@ export const ComicField: React.FC<ComicFieldProps> = ({
  */
 export const controlClass = (invalid = false) =>
   [
-    // Pill/stadium shape. The extra horizontal padding is not cosmetic — at
-    // rounded-full the curve eats into the corners, so text needs to start
-    // further in than it would in a rectangle.
-    'w-full bg-[#111214] px-4 sm:px-5 py-2.5 sm:py-3 rounded-full',
+    // Near-square corners, matching the hard-cornered panels, chips and step
+    // tags the rest of the comic system uses. The horizontal padding is tighter
+    // than it was under the old pill shape, where the curve ate into the
+    // corners and text had to start further in than a rectangle needs.
+    'w-full bg-[#111214] px-3 sm:px-4 py-2.5 sm:py-3 rounded-sm',
     'font-mono text-xs sm:text-sm text-[#EEEEEA] placeholder-[#71767B]',
     'border outline-none transition-colors duration-150',
     invalid
@@ -440,8 +449,26 @@ export interface ComicStepperProps {
   className?: string;
 }
 
+/**
+ * The registration progress rail: numbered tag, its label directly underneath,
+ * connected left to right.
+ *
+ * It stays a single row at every width. The label sits below its tag rather
+ * than beside it because four side-by-side name+number pairs cannot fit a
+ * phone, and the old layout wrapped into a ragged two-line block that no
+ * longer read as a sequence.
+ *
+ * Sizing is fluid (clamp) rather than stepped at breakpoints — with the row
+ * fixed, a hard jump at `sm:` showed up as a snap in the middle of the rail.
+ * `--step-box` is shared so the connector can offset itself by half a tag and
+ * meet the tags on their centre line; it cannot simply centre itself, because
+ * the label underneath makes each column taller than the tag it belongs to.
+ */
 export const ComicStepper: React.FC<ComicStepperProps> = ({ steps, current, className = '' }) => (
-  <ol className={`flex flex-wrap items-center gap-x-2 gap-y-3 ${className}`}>
+  <ol
+    style={{ '--step-box': 'clamp(1.6rem, 7vw, 2.25rem)' } as React.CSSProperties}
+    className={`flex w-full items-start ${className}`}
+  >
     {steps.map((label, i) => {
       const n = i + 1;
       const done = n < current;
@@ -449,36 +476,38 @@ export const ComicStepper: React.FC<ComicStepperProps> = ({ steps, current, clas
       const tone: Tone = active ? 'cyan' : 'yellow';
 
       return (
-        <li key={label} className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
+        <React.Fragment key={label}>
+          <li className="flex w-[clamp(3.25rem,18vw,6rem)] shrink-0 flex-col items-center gap-[clamp(0.3rem,1.2vw,0.5rem)]">
             {/* sticky-note number tag */}
             <span
               style={{ transform: `rotate(${i % 2 === 0 ? -4 : 3}deg)` }}
-              className={`grid place-items-center w-8 h-8 border-2 border-[#090A0B] shadow-[2.5px_2.5px_0px_#090A0B] font-comic text-sm font-black sticker-pop ${
+              className={`grid h-[var(--step-box)] w-[var(--step-box)] shrink-0 place-items-center border-2 border-[#090A0B] shadow-[2.5px_2.5px_0px_#090A0B] font-comic text-[clamp(0.7rem,2.6vw,0.95rem)] font-black sticker-pop ${
                 active || done ? `${FILL[tone]} text-[#090A0B]` : 'bg-[#23262D] text-[#71767B]'
               }`}
             >
               {done ? '✓' : n}
             </span>
             <span
-              className={`font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] ${
+              className={`text-center font-mono text-[clamp(0.5rem,1.9vw,0.6875rem)] font-bold uppercase leading-tight tracking-[0.08em] ${
                 active ? 'text-[#EEEEEA]' : 'text-[#71767B]'
               }`}
             >
               {label}
             </span>
-          </div>
+          </li>
 
           {n < steps.length && (
             <svg
               viewBox="0 0 40 8"
-              className="w-6 sm:w-8 h-2 stroke-[#3A3F4A] fill-none"
+              preserveAspectRatio="none"
+              style={{ marginTop: 'calc(var(--step-box) / 2 - 4px)' }}
+              className="h-2 min-w-[0.5rem] flex-1 stroke-[#3A3F4A] fill-none"
               aria-hidden="true"
             >
               <path d="M 2 4 Q 20 1 38 4" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           )}
-        </li>
+        </React.Fragment>
       );
     })}
   </ol>

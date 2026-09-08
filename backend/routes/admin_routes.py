@@ -128,3 +128,10 @@ _add("/api/admin/legacy/payments/verify", "admin_legacy_verify",
      require_role(*TREASURER)(AdminController.verify_payment_endpoint), ["POST"])
 _add("/api/admin/legacy/payments/reject", "admin_legacy_reject",
      require_role(*TREASURER)(AdminController.reject_payment_endpoint), ["POST"])
+
+
+# The proof image itself, addressed by a short-lived signed token rather than a
+# bearer header: this URL goes straight into an <img src>, which cannot carry
+# one. The token names one file and expires in five minutes, so it is not a
+# standing grant — see services/drive_storage.
+_add("/api/admin/payment-proof", "admin_payment_proof", AdminPanelController.payment_proof)

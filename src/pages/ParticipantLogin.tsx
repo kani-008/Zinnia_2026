@@ -17,7 +17,6 @@ import { WebsiteNavbar } from '../components/layout/Navbar';
 import { requestOtp, saveSession, verifyOtp } from '../lib/participant/api';
 import type { OtpIdentifier } from '../lib/participant/types';
 import {
-  ComicAlert,
   ComicCTA,
   ComicChip,
   ComicField,
@@ -26,6 +25,7 @@ import {
   ComicPageShell,
   ComicPanel,
 } from '../components/ui/comic';
+import { useToastOn } from '../components/ui/toast';
 
 type Step = 'identify' | 'otp';
 
@@ -40,6 +40,10 @@ export const ParticipantLoginPage: React.FC = () => {
   const [emailHint, setEmailHint] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Failures surface as a slide-in toast rather than a box above the form,
+  // which on a phone appeared off-screen above the button just pressed.
+  useToastOn(error);
   const [cooldown, setCooldown] = useState(0);
 
   const otpRef = useRef<HTMLInputElement | null>(null);
@@ -106,11 +110,6 @@ export const ParticipantLoginPage: React.FC = () => {
             <ComicChip tone="cyan" rotate={-2}>
               <KeyRound size={12} /> Participant login
             </ComicChip>
-            {step === 'otp' && (
-              <ComicChip tone="yellow" rotate={1.5}>
-                Code expires in 10 min
-              </ComicChip>
-            )}
           </div>
 
           <ComicHeading>{step === 'identify' ? 'Log in' : 'Enter your code'}</ComicHeading>
@@ -131,7 +130,6 @@ export const ParticipantLoginPage: React.FC = () => {
           </p>
         </header>
 
-        {error && <ComicAlert tone="pink" className="mb-6">{error}</ComicAlert>}
 
         {step === 'identify' ? (
           <form onSubmit={sendCode}>

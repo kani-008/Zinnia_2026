@@ -96,8 +96,48 @@ def request_otp(user_id: str = "", *, registration_id: str = "") -> Dict[str, An
     UserID has been handed over. Login by email address is gone, and the
     parameter with it, so no caller can reach that path. Never reveals whether
     an identifier exists beyond a generic not-found.
+
+    A third shape reaches this now: a pending token, from someone who has filled
+    the details form but has no row yet. There is nothing to look up for them —
+    the details are inside the token — so that case is answered with a freshly
+    minted token carrying a new code, and the browser swaps the one it holds.
     """
+    from services import pending_registration as pending
     from services.registration_state import resolve_participant
+
+    if pending.is_pending_token(registration_id):
+        # Grace here, none on verify: the whole point of pressing resend is that
+        # the last code is no longer good, so refusing a lapsed token and
+        # demanding the form again is the opposite of what was asked for.
+        payload, reason = pending.open_token(
+            registration_id, grace=pending.RESEND_GRACE_SECONDS
+        )
+        if not payload:
+            return {
+                "success": False,
+                "error_code": "PENDING_EXPIRED" if reason == "EXPIRED" else "NOT_FOUND",
+                "message": (
+                    "This registration attempt is too old to resume. Fill the form again."
+                    if reason == "EXPIRED"
+                    else "No registration found for that."
+                ),
+            }
+
+        details = pending.details_of(payload)
+        otp = f"{secrets.randbelow(1000000):06d}"
+        sent = send_pending_otp_email(details, otp)
+
+        return {
+            "success": True,
+            # A new code means a new hash, so the old token is now stale. The
+            # browser must carry this one forward or the resent code will not
+            # verify against what it still holds.
+            "registration_id": pending.mint(details, otp),
+            "email_hint": _mask_email(str(details.get("email", ""))),
+            "expires_in": pending.PENDING_TTL_SECONDS,
+            "email_sent": sent,
+            "message": "We emailed you a 6-digit code.",
+        }
 
     user_id = (user_id or "").strip().upper()
     if user_id and not is_valid_user_id(user_id):
@@ -278,7 +318,98 @@ def verify_registration_email(
     confirmation email and still releases NO master QR or group link: those
     wait on treasurer approval (treasurer_review_payment).
     """
+    from services import pending_registration as pending
+
+    # The pending path: this call is what CREATES the registration. Everything
+    # before it — the details form, the emailed code — wrote nothing.
+    if pending.is_pending_token(registration_id):
+        payload, reason = pending.open_token(registration_id)
+        if not payload:
+            return {
+                "success": False,
+                "error_code": "PENDING_EXPIRED" if reason == "EXPIRED" else "NOT_FOUND",
+                "message": (
+                    "That registration attempt expired. Fill the form again to get a new code."
+                    if reason == "EXPIRED"
+                    else "We could not read that registration. Fill the form again."
+                ),
+            }
+
+        if not pending.check_otp(payload, otp):
+            # No attempt counter to bump: the token is stateless. The offline
+            # guessing this would otherwise invite is what the PBKDF2 cost in
+            # pending_registration is there to price out.
+            return {
+                "success": False,
+                "error_code": "OTP_INVALID",
+                "message": "Incorrect code. Check the email again, or resend the code.",
+            }
+
+        from services.participant_service import promote_pending
+
+        created = promote_pending(pending.details_of(payload))
+        if not created.get("success"):
+            return created
+
+        participant = created["participant"]
+        user_id = participant["user_id"]
+
+        # A consumed OTP row is this project's proof that an address was
+        # verified (see the note above email_is_verified). The pending code was
+        # never in the table, so one is written and consumed here to leave that
+        # proof behind — otherwise payment would refuse an address we just
+        # proved.
+        now = dt.datetime.now(dt.timezone.utc)
+        db.insert(
+            "login_otps",
+            {
+                "user_id": user_id,
+                "otp_hash": _hash_otp(user_id, secrets.token_hex(8)),
+                "expires_at": now.isoformat(),
+                "consumed_at": now.isoformat(),
+            },
+        )
+
+        from services.registration_state import public_view
+
+        token, expires_at_ms = generate_participant_token(user_id)
+        return {
+            "success": True,
+            "token": token,
+            "expires_at": expires_at_ms,
+            "user": public_view(participant, payment=None, verified=True),
+            "message": "Email verified. You can proceed to payment.",
+        }
+
     result = verify_otp(user_id, otp, registration_id=registration_id)
     if result.get("success"):
         result["message"] = "Email verified. You can proceed to payment."
     return result
+
+
+def send_pending_otp_email(details: Dict[str, Any], otp: str) -> bool:
+    """
+    Same mail as _send_otp_email, for someone who has no participant row yet.
+
+    Kept separate rather than loosening _send_otp_email: that one takes a
+    participant and is used by login, and a details dict is not a participant.
+    """
+    try:
+        from services.email_service import send_simple_email
+
+        return send_simple_email(
+            to=str(details.get("email", "")),
+            subject=f"Your Zinnia 2026 registration code: {otp}",
+            html=(
+                f"<p>Hi {details.get('name', '')},</p>"
+                f"<p>Your registration code is <strong style='font-size:22px;letter-spacing:3px'>"
+                f"{otp}</strong></p>"
+                f"<p>Enter it on the confirmation screen to complete your registration. "
+                f"It expires in 10 minutes. Your registration is not created until you enter it.</p>"
+            ),
+        )
+    except Exception as e:
+        print(f"[participant_auth] pending OTP email not sent: {type(e).__name__}: {e}")
+        if os.getenv("ALLOW_EMAIL_SIMULATION", "false").lower() == "true":
+            print(f"[participant_auth] SIMULATED pending OTP: {otp}")
+        return False

@@ -154,6 +154,40 @@ class AdminPanelController:
             return _fail(e)
 
     @staticmethod
+    def payment_proof():
+        """
+        Stream a Drive-stored proof image.
+
+        Deliberately not behind require_role: an <img src> sends no
+        Authorization header, so the signed ?t= token IS the authorisation. It
+        names one file, expires in five minutes, and is only ever handed out by
+        screenshot_url(), which is role-gated.
+        """
+        from flask import Response, request as flask_request
+
+        from services import drive_storage as drive
+
+        file_id = drive.open_proxy_token((flask_request.args.get("t") or "").strip())
+        if not file_id:
+            return jsonify({"success": False, "message": "That image link expired."}), 403
+
+        try:
+            data, mime = drive.fetch(file_id)
+        except Exception as e:
+            return _fail(e)
+
+        return Response(
+            data,
+            mimetype=mime,
+            headers={
+                # private: the token is per-viewer and short-lived, so a shared
+                # cache must not keep a copy.
+                "Cache-Control": "private, max-age=300",
+                "Content-Length": str(len(data)),
+            },
+        )
+
+    @staticmethod
     def approve_payment(user_id: str):
         try:
             res = svc.review_payment(user_id, approve=True)

@@ -73,9 +73,21 @@ export interface RegistrationView {
   whatsapp_url?: string;
 }
 
-export type RegisterResponse = ApiResult<
-  RegistrationView & { expected_amount: number; message?: string }
->;
+/**
+ * No RegistrationView here: submitting the details form no longer creates a
+ * registration, so there is nothing yet to describe. The server emails a code
+ * and hands back an opaque pending token as `registration_id`; the real
+ * registration is born when that code is verified.
+ */
+export type RegisterResponse = ApiResult<{
+  registration_id: string;
+  /** masked address the code went to */
+  email_hint: string;
+  email_sent: boolean;
+  expected_amount: number;
+  expires_in: number;
+  message?: string;
+}>;
 
 export interface PaymentRecord {
   txn_ref: string | null;

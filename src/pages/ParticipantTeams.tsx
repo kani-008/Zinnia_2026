@@ -21,7 +21,6 @@ import {
 } from '../lib/participant/api';
 import type { TeamInvite, TeamView } from '../lib/participant/types';
 import {
-  ComicAlert,
   ComicBolt,
   ComicChip,
   ComicGhostButton,
@@ -30,6 +29,7 @@ import {
   ComicPanel,
   ComicSectionTitle,
 } from '../components/ui/comic';
+import { useToastOn } from '../components/ui/toast';
 
 const ACCEPT_TIMEOUT_HOURS = 24;
 
@@ -48,6 +48,11 @@ export const ParticipantTeamsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Failures surface as a slide-in toast rather than a box above the form,
+  // which on a phone appeared off-screen above the button just pressed.
+  useToastOn(error);
+  useToastOn(notice, 'info');
   const [notice, setNotice] = useState<string | null>(null);
 
   const me = loadSession()?.user.user_id ?? '';
@@ -169,8 +174,6 @@ export const ParticipantTeamsPage: React.FC = () => {
           </button>
         </header>
 
-        {error && <ComicAlert tone="pink" className="mb-6">{error}</ComicAlert>}
-        {notice && <ComicAlert tone="cyan" className="mb-6">{notice}</ComicAlert>}
 
         {invites.length > 0 && (
           <section className="mb-10">

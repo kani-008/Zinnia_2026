@@ -19,7 +19,6 @@ import {
   ImagePlus,
   Loader2,
   MessageCircle,
-  Receipt,
   RefreshCw,
   ShieldCheck,
   X,
@@ -47,8 +46,10 @@ import {
   ComicPanel,
   ComicStepper,
 } from '../components/ui/comic';
+import { useToastOn } from '../components/ui/toast';
 
-const UTR_REGEX = /^[A-Za-z0-9]{6,30}$/;
+// A UPI UTR is exactly 12 digits — no letters, no spaces.
+const UTR_REGEX = /^\d{12}$/;
 const PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const PROOF_MAX_BYTES = 5 * 1024 * 1024;
 
@@ -68,6 +69,10 @@ export const ParticipantPaymentPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Failures surface as a slide-in toast rather than a box above the form,
+  // which on a phone appeared off-screen above the button just pressed.
+  useToastOn(error);
   // Which field a validation complaint belongs to. The page-level alert sits
   // above a long form, so on a phone it scrolls out of sight and pressing
   // Submit looks like it did nothing at all.
@@ -177,7 +182,7 @@ export const ParticipantPaymentPage: React.FC = () => {
 
     const cleaned = utr.trim();
     if (!UTR_REGEX.test(cleaned)) {
-      failField('utr', 'Enter the UTR / transaction reference exactly as your payment app shows it.');
+      failField('utr', 'The transaction number is 12 digits, numbers only.');
       return;
     }
 
@@ -398,9 +403,6 @@ export const ParticipantPaymentPage: React.FC = () => {
       <main className="mx-auto max-w-2xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 overflow-hidden">
         <header className="mb-8">
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <ComicChip tone="cyan" rotate={-2}>
-              <Receipt size={12} /> Step 3 of 4
-            </ComicChip>
             <ComicChip tone="cyan" rotate={1.5}>
               <CheckCircle2 size={12} /> Email verified
             </ComicChip>
@@ -428,7 +430,6 @@ export const ParticipantPaymentPage: React.FC = () => {
           </ComicAlert>
         )}
 
-        {error && !fieldError && <ComicAlert tone="pink" className="mb-6">{error}</ComicAlert>}
 
         <ComicPanel tone="yellow" className="mb-6">
           <div className="flex items-baseline justify-between gap-4">
@@ -485,13 +486,15 @@ export const ParticipantPaymentPage: React.FC = () => {
               error={fieldError === 'utr' ? error : null}
               label="UTR / transaction reference"
               htmlFor="utr"
-              hint="Your payment app calls this the UTR, RRN, or transaction ID."
+              hint="12 digits. Your payment app calls this the UTR, RRN, or transaction ID."
             >
               <ComicInput
                 id="utr"
                 value={utr}
-                onChange={(e) => setUtr(e.target.value.toUpperCase())}
-                placeholder="e.g. 402912345678"
+                inputMode="numeric"
+                maxLength={12}
+                onChange={(e) => setUtr(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                placeholder="12-digit transaction number"
                 required
               />
             </ComicField>

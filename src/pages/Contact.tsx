@@ -145,6 +145,11 @@ interface Ping {
  * dark chip, roughly 15:1 against the panel, and the accent survives as the
  * chip's border and the bus icon. Colour still groups the rows; contrast does
  * the reading.
+ *
+ * The time is set in font-mono (JetBrains Mono), matching the coordinator
+ * phone numbers above it. Both are figures you read digit by digit, and
+ * Bangers — the comic display face this page uses elsewhere — has no tabular
+ * figures and reads as lettering rather than data.
  */
 const BusRunRow: React.FC<{ run: BusRun; tone: 'cyan' | 'yellow' }> = ({ run, tone }) => (
   <li className="flex items-center justify-between gap-3 border-b border-[#23262D] py-1.5">
@@ -153,7 +158,7 @@ const BusRunRow: React.FC<{ run: BusRun; tone: 'cyan' | 'yellow' }> = ({ run, to
       {run.service}
     </span>
     <span
-      className={`shrink-0 border bg-[#191B1F] px-2 py-0.5 font-comic text-sm font-bold tracking-wide text-[#F4F4F0] ${tone === 'cyan' ? 'border-[#0FA9C6]/70' : 'border-[#E5BD00]/70'
+      className={`shrink-0 border bg-[#191B1F] px-2 py-0.5 font-mono text-sm font-bold text-[#F4F4F0] ${tone === 'cyan' ? 'border-[#0FA9C6]/70' : 'border-[#E5BD00]/70'
         }`}
     >
       {run.time}

@@ -27,6 +27,7 @@ import {
   ComicPageShell,
   ComicPanel,
 } from '../components/ui/comic';
+import { useToastOn } from '../components/ui/toast';
 
 type TeamSpec = { min: number; max: number; name: string };
 
@@ -66,6 +67,10 @@ export const ParticipantTeamCreatePage: React.FC = () => {
   const [slots, setSlots] = useState<SlotState[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Failures surface as a slide-in toast rather than a box above the form,
+  // which on a phone appeared off-screen above the button just pressed.
+  useToastOn(error);
 
   const debounces = useRef<Record<number, number>>({});
 
@@ -216,7 +221,6 @@ export const ParticipantTeamCreatePage: React.FC = () => {
           </p>
         </header>
 
-        {error && <ComicAlert tone="pink" className="mb-6">{error}</ComicAlert>}
 
         <form onSubmit={onSubmit}>
           <ComicPanel tone="cyan" bodyClassName="space-y-6">

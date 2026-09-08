@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+
+import { ComicToaster } from './components/ui/toast';
 import { WebsiteHomePage } from './pages/Home';
 import { WebsiteRegisterPage } from './pages/Register';
 import { WebsitePaymentPage } from './pages/Payment';
@@ -40,6 +42,8 @@ export function App() {
   return (
     <div className="relative w-full max-w-full min-h-screen bg-[#0D0D0F] overflow-x-hidden">
       <ScrollToTop />
+      {/* Mounted once for the whole app; renders nothing until something is raised. */}
+      <ComicToaster />
       {/* Routes */}
       <Routes>
         <Route path="/" element={<WebsiteHomePage />} />

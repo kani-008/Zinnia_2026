@@ -156,9 +156,19 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
     """
     POST /api/participant/register
 
-    Creates the zin26.participants row and its AWAITING_PAYMENT payment row.
-    The UserID is issued here; the participant does not wait for a treasurer.
+    Validates the details, emails a code, and WRITES NOTHING. The row is created
+    by promote_pending() once that code comes back — see
+    services/pending_registration for why the details wait outside the database.
+
+    The consequence worth knowing: filling this form twice is harmless. Only a
+    verified registration occupies the address, so someone who abandoned the
+    form earlier is not locked out by their own unfinished attempt.
     """
+    import secrets
+
+    from services import pending_registration as pending
+    from services.participant_auth_service import send_pending_otp_email
+
     invalid = _validate_details(data)
     if invalid:
         return invalid
@@ -166,6 +176,8 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
     email = str(data["email"]).strip().lower()
     phone = re.sub(r"\D", "", str(data["phone"]))
 
+    # Only a COMPLETED registration holds the address. An unverified attempt
+    # leaves no row, so there is nothing here for it to collide with.
     existing = db.select_one("participants", f"select=user_id,email&email=eq.{db.enc(email)}")
     if existing:
         return {
@@ -180,6 +192,62 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
             ),
         }
 
+    details = {
+        "name": str(data["name"]).strip(),
+        "email": email,
+        "phone": phone,
+        "college": str(data["college"]).strip(),
+        "department": str(data["department"]).strip(),
+        "year": str(data["year"]).strip(),
+        "food_preference": str(data.get("food_preference", "VEG")).strip().upper(),
+    }
+
+    otp = f"{secrets.randbelow(1000000):06d}"
+    token = pending.mint(details, otp)
+    sent = send_pending_otp_email(details, otp)
+
+    return {
+        "success": True,
+        # Same field the browser already carries through the flow; it simply
+        # holds a pending token now instead of a master_qr_token.
+        "registration_id": token,
+        "email_hint": _mask_email_for_pending(email),
+        "email_sent": sent,
+        "expected_amount": REGISTRATION_FEE,
+        "expires_in": pending.PENDING_TTL_SECONDS,
+        "message": "We have sent a 6-digit code to your email. Enter it to complete your registration.",
+    }
+
+
+def _mask_email_for_pending(email: str) -> str:
+    """am*********@gmail.com — enough to recognise, not enough to harvest."""
+    name, _, domain = (email or "").partition("@")
+    if not domain:
+        return email or ""
+    head = name[:2] if len(name) > 2 else name[:1]
+    return f"{head}{'*' * max(len(name) - len(head), 1)}@{domain}"
+
+
+def promote_pending(details: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    The verified code is in: create the participant and their payment row.
+
+    This is the ONLY place a zin26.participants row is born from the public
+    flow. Called by verify_registration_email once the OTP checks out.
+    """
+    email = str(details.get("email", "")).strip().lower()
+
+    # Re-checked here, not just at register time: two tabs can both pass the
+    # earlier check and arrive with valid codes for the same address.
+    existing = db.select_one("participants", f"select=user_id&email=eq.{db.enc(email)}")
+    if existing:
+        return {
+            "success": False,
+            "error_code": "DUPLICATE_EMAIL",
+            "field": "email",
+            "message": "This email is already registered. Log in with your UserID instead.",
+        }
+
     user_id = _next_user_id()
 
     try:
@@ -187,13 +255,13 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
             "participants",
             {
                 "user_id": user_id,
-                "name": str(data["name"]).strip(),
+                "name": str(details.get("name", "")).strip(),
                 "email": email,
-                "phone": phone,
-                "college": str(data["college"]).strip(),
-                "department": str(data["department"]).strip(),
-                "year": str(data["year"]).strip(),
-                "food_preference": str(data.get("food_preference", "VEG")).strip().upper(),
+                "phone": re.sub(r"\D", "", str(details.get("phone", ""))),
+                "college": str(details.get("college", "")).strip(),
+                "department": str(details.get("department", "")).strip(),
+                "year": str(details.get("year", "")).strip(),
+                "food_preference": str(details.get("food_preference", "VEG")).strip().upper(),
                 "payment_status": "PENDING",
             },
         )
@@ -219,17 +287,7 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
         },
     )
 
-    # The participant-facing code (user_id) exists now, but it is a
-    # confirmation credential and is not released until the treasurer verifies
-    # the payment. The browser gets the internal registration_id instead.
-    from services.registration_state import public_view
-
-    return {
-        "success": True,
-        **public_view(participant, payment=None, verified=False),
-        "expected_amount": REGISTRATION_FEE,
-        "message": "Details saved. We have sent a 6-digit code to your email to verify the address.",
-    }
+    return {"success": True, "participant": participant}
 
 
 def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, Any]:
@@ -267,12 +325,15 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
             "error_code": "INVALID_USER_ID",
             "message": "That UserID does not look right - check it against your registration email.",
         }
-    if not utr or len(utr) < 6:
+    # A UPI UTR is exactly 12 digits. Enforced server-side as well as in the
+    # form, because the browser is not the guard here: a bad reference means
+    # the treasurer cannot find the payment in the bank statement at all.
+    if not re.fullmatch(r"\d{12}", utr or ""):
         return {
             "success": False,
             "error_code": "VALIDATION_ERROR",
             "field": "utr_number",
-            "message": "Enter the UTR / transaction reference from your payment app.",
+            "message": "The transaction number is 12 digits, numbers only.",
         }
 
     # Proof screenshot (§4.1 "participant uploads screenshot + enters transaction
@@ -339,8 +400,25 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
     update: Dict[str, Any] = {"txn_ref": utr, "amount": submitted_amount, "status": "PENDING", "reject_reason": None}
     if proof_bytes is not None and proof_mime:
         stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S")
-        object_path = f"{user_id}/{stamp}.{db.PROOF_MIME_EXT[proof_mime]}"
-        update["screenshot_url"] = db.upload_file(object_path, proof_bytes, proof_mime)
+        ext = db.PROOF_MIME_EXT[proof_mime]
+
+        # Drive when it is configured, Supabase Storage otherwise. The fallback
+        # is not decoration: a Drive outage or a revoked refresh token must not
+        # cost a participant their payment proof, and the two formats coexist in
+        # this column by design (see services/drive_storage).
+        from services import drive_storage as drive
+
+        stored = ""
+        if drive.is_configured():
+            try:
+                stored = drive.upload_bytes(proof_bytes, proof_mime, f"{user_id}_{stamp}.{ext}")
+            except Exception as e:
+                print(f"[payment] Drive upload failed for {user_id}, "
+                      f"falling back to Supabase: {type(e).__name__}: {e}")
+
+        update["screenshot_url"] = stored or db.upload_file(
+            f"{user_id}/{stamp}.{ext}", proof_bytes, proof_mime
+        )
 
     db.update("payments", f"id=eq.{payment['id']}", update)
 

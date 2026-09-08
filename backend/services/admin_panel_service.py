@@ -519,7 +519,26 @@ def screenshot_url(user_id: str) -> Dict[str, Any]:
     if not row or not row.get("screenshot_url"):
         return {"success": False, "error_code": "NO_SCREENSHOT",
                 "message": "No payment screenshot was submitted."}
-    signed = db.sign_file_url(row["screenshot_url"], expires_in=300)
+
+    stored = row["screenshot_url"]
+
+    # Drive proofs are streamed back through this server rather than linked to
+    # Google directly — a drive.google.com view link is rate-limited and often
+    # answers with an interstitial instead of the image, which would stall the
+    # panel. The token authorises this one file for five minutes.
+    from services import drive_storage as drive
+
+    if drive.is_drive_ref(stored):
+        token = drive.proxy_token(drive.file_id_of(stored), ttl=300)
+        return {
+            "success": True,
+            # Relative on purpose: the panel is same-origin, so this works in
+            # local dev and on Vercel without knowing the public host.
+            "url": f"/api/admin/payment-proof?t={token}",
+            "expires_in": 300,
+        }
+
+    signed = db.sign_file_url(stored, expires_in=300)
     if not signed:
         return {"success": False, "error_code": "SIGN_FAILED",
                 "message": "The screenshot could not be opened. It may have been removed."}
