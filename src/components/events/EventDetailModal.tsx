@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Clock, MapPin, Trophy, Users, X } from 'lucide-react';
+import { ArrowRight, Clock, MapPin, Trophy, Users, X, Zap } from 'lucide-react';
 import { EventMission } from '../../types';
 import { loadSession } from '../../lib/participant/api';
 
@@ -180,6 +180,22 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
 
 
         
+        {/* A comic callout, only for events that set urgency_note. Sits above
+            the briefing because it changes what you do, not what you know:
+            someone who reads the brief first and the warning second has
+            already spent the time they were being told to save. */}
+        {event.urgency_note && (
+          <div className="relative border-2 border-[#F5D90A] bg-[#2A2410] px-3.5 py-3 shadow-[4px_4px_0px_#8A7400] -rotate-1">
+            <span className="absolute -top-2.5 left-3 border-2 border-[#F5D90A] bg-[#F5D90A] px-1.5 font-mono text-[9px] font-black uppercase tracking-widest text-[#0D0D0F]">
+              Heads up
+            </span>
+            <p className="flex items-start gap-2 font-mono text-xs sm:text-sm font-bold leading-relaxed text-[#F5D90A]">
+              <Zap className="mt-0.5 w-3.5 h-3.5 shrink-0" />
+              <span>{event.urgency_note}</span>
+            </p>
+          </div>
+        )}
+
         {/* Briefing */}
         <div className="space-y-1.5">
           <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">

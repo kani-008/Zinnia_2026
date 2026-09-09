@@ -163,7 +163,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     venue: 'IT & CSE Seminar Hall',
     description: 'Present original research, innovative ideas, emerging technologies, architectural concepts, or engineering solutions before an esteemed panel of faculty judges. Participants are free to choose a topic of their preference, allowing them to showcase their knowledge, creativity, research skills, and presentation abilities.',
     /** Only 30 TEAMS get in, and it is the one capped event - see rules_engine. */
-    urgency_note: 'Limited slots - only 30 teams get in. Register as soon as you can.',
+    urgency_note: 'Limited slots. Register as soon as you can.',
     /** Short form for the dashboard card; full list stays in `rules`. */
     card_rules: [
       'Teams of 2 to 3. You choose your own topic.',
