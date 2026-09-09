@@ -472,12 +472,15 @@ export const WebsiteHomePage: React.FC = () => {
                   <span className="comic-cta-back" />
                   <button
                     type="button"
-                    className="comic-cta-front px-4 py-3.5 flex items-center justify-center gap-2.5 w-full"
+                    className="comic-cta-front px-3.5 sm:px-5 py-3 sm:py-3.5 flex items-center justify-center gap-2.5 sm:gap-3 w-full"
                   >
-                    <span className="font-comic font-black text-xs xs:text-base tracking-wider uppercase italic text-[#090A0B] whitespace-nowrap">
+                    <span
+                      className="font-comic font-black tracking-wider uppercase italic text-[#090A0B] whitespace-nowrap select-none"
+                      style={{ fontSize: 'clamp(1rem, 4.6vw, 1.35rem)' }}
+                    >
                       {signedIn ? 'GO TO YOUR DASHBOARD' : 'REGISTER FOR ZINNIA'}
                     </span>
-                    <svg viewBox="0 0 32 20" className="w-5 h-4 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
+                    <svg viewBox="0 0 32 20" className="w-5 h-4 sm:w-6 sm:h-4.5 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
                       <path d="M 3 10 L 25 10" strokeWidth="3.2" strokeLinecap="round" />
                       <path d="M 16 3 L 27 10 L 16 17" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>

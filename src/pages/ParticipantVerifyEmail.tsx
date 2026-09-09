@@ -8,10 +8,10 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { BookOpen, ExternalLink, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import { WebsiteNavbar } from '../components/layout/Navbar';
-import { REGISTRATION_STEPS, REGISTRATION_USER_MANUAL_URL } from '../config/site';
+import { REGISTRATION_STEPS } from '../config/site';
 import { requestOtp, verifyRegistrationEmail } from '../lib/participant/api';
 import {
   ComicAlert,
@@ -165,39 +165,9 @@ export const ParticipantVerifyEmailPage: React.FC = () => {
 
       <main className="mx-auto max-w-md w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 overflow-hidden">
         <header className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <ComicHeading fluid>Email confirmation</ComicHeading>
-            <a
-              href={REGISTRATION_USER_MANUAL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-lg border border-[#E5BD00]/50 bg-[#E5BD00]/10 hover:bg-[#E5BD00]/20 text-[#E5BD00] font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 hover:scale-[1.02] shadow-[2px_2px_0px_#090A0B]"
-            >
-              <BookOpen size={14} className="shrink-0" />
-              <span>User Manual</span>
-              <ExternalLink size={12} className="shrink-0 opacity-80" />
-            </a>
-          </div>
-
+          <ComicHeading fluid>Email confirmation</ComicHeading>
           <ComicStepper steps={REGISTRATION_STEPS} current={2} className="mt-6" />
         </header>
-
-        {/* User Manual Guidance Banner */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-[#111214] border border-[#0FA9C6]/30 shadow-[3px_3px_0px_#090A0B]">
-          <div className="flex items-center gap-2.5 text-xs font-mono text-[#B8B8B2]">
-            <BookOpen size={15} className="text-[#0FA9C6] shrink-0" />
-            <span>Need help verifying email? Check the user manual.</span>
-          </div>
-          <a
-            href={REGISTRATION_USER_MANUAL_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-mono font-bold text-[#0FA9C6] hover:text-[#EEEEEA] transition-colors uppercase tracking-wider"
-          >
-            <span>Open Guide</span>
-            <ExternalLink size={12} />
-          </a>
-        </div>
 
         <form onSubmit={onVerify}>
           <ComicPanel tone="cyan">

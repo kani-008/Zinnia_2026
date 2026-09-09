@@ -538,19 +538,7 @@ export const ParticipantPaymentPage: React.FC = () => {
 
       <main className="mx-auto max-w-2xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 overflow-hidden">
         <header className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <ComicHeading fluid>Pay the registration fee</ComicHeading>
-            <a
-              href={REGISTRATION_USER_MANUAL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-lg border border-[#E5BD00]/50 bg-[#E5BD00]/10 hover:bg-[#E5BD00]/20 text-[#E5BD00] font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 hover:scale-[1.02] shadow-[2px_2px_0px_#090A0B]"
-            >
-              <BookOpen size={14} className="shrink-0" />
-              <span>User Manual</span>
-              <ExternalLink size={12} className="shrink-0 opacity-80" />
-            </a>
-          </div>
+          <ComicHeading fluid>Pay the registration fee</ComicHeading>
 
           <ComicStepper steps={REGISTRATION_STEPS} current={3} className="mt-6" />
         </header>
@@ -645,7 +633,7 @@ export const ParticipantPaymentPage: React.FC = () => {
                   className="inline-flex items-center gap-2 pl-2 font-mono text-xs font-bold text-[#0FA9C6] hover:text-[#EEEEEA] transition-colors"
                 >
                   <BookOpen size={13} className="shrink-0" />
-                  <span>View Step-by-Step Manual</span>
+                  <span>Open Guide</span>
                   <ExternalLink size={11} className="shrink-0" />
                 </a>
               </div>

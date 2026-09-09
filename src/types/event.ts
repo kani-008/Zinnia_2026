@@ -26,6 +26,21 @@ export interface EventMission {
   tagline?: string;
   icon_name?: string;
   rules: string[];
+  /**
+   * The three-or-so lines the dashboard card shows.
+   *
+   * Deliberately not `rules`: the card sits inside a small panel a
+   * participant reads while choosing, and the full list belongs in the
+   * event popup they open once they are interested. Falls back to `rules`
+   * when absent, so a new event is never blank.
+   */
+  card_rules?: string[];
+  /**
+   * A comic callout at the top of the event popup, for the one or two
+   * events where something is genuinely urgent - a capped field, an early
+   * close. Optional on purpose: if every event shouts, none of them do.
+   */
+  urgency_note?: string;
   status: EventStatus;
   
   // Results Finalization

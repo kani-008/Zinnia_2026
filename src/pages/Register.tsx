@@ -18,14 +18,11 @@ import {
   Calendar, 
   Check, 
   Info, 
-  Loader2,
-  BookOpen,
-  ExternalLink
+  Loader2
 } from 'lucide-react';
 import { FoodMark } from '../components/ui/FoodMark';
 import { VegNonVegToggle } from '../components/ui/VegNonVegToggle';
 import { SelectField } from '../components/ui/SelectField';
-import { REGISTRATION_USER_MANUAL_URL } from '../config/site';
 
 const ACADEMIC_YEAR_OPTIONS = [
   { value: 'I', label: '1st Year (B.E. / B.Tech)' },
@@ -370,16 +367,6 @@ export const WebsiteRegisterPage: React.FC = () => {
               Register your team and select events to claim your digital QR passport credentials.
             </p>
           </div>
-          <a
-            href={REGISTRATION_USER_MANUAL_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 self-center sm:self-auto px-3.5 py-1.5 rounded-lg border border-[#E5BD00]/50 bg-[#E5BD00]/10 hover:bg-[#E5BD00]/20 text-[#E5BD00] font-mono text-xs font-bold tracking-wider uppercase transition-all duration-200 hover:scale-[1.02] shadow-[2px_2px_0px_#090A0B] shrink-0"
-          >
-            <BookOpen size={14} className="shrink-0" />
-            <span>User Manual</span>
-            <ExternalLink size={12} className="shrink-0 opacity-80" />
-          </a>
         </div>
 
         {/* General Error Banner */}

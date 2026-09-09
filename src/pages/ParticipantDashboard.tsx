@@ -40,8 +40,10 @@ import {
 
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { ComicHandDrawnCard } from '../components/events/ComicHandDrawnCard';
+import { EventDetailModal } from '../components/events/EventDetailModal';
 import { EVENTS } from '../lib/rules/catalog';
 import { OFFICIAL_MISSIONS } from '../config/events';
+import type { EventMission } from '../types';
 import {
   cancelRegistration,
   clearSession,
@@ -199,6 +201,10 @@ let reloadMountConsumed = false;
 export const ParticipantDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [openCard, setOpenCard] = useState<string | null>(null);
+  /** Full event detail, shown in the same popup the Events page uses. */
+  const [detailMission, setDetailMission] = useState<EventMission | null>(null);
+  /** Just the coordinators, in a small popup of their own. */
+  const [coordMission, setCoordMission] = useState<EventMission | null>(null);
   // Whether the registration description is open. While it is, the dashboard
   // is replaced by it so it reads as its own page with a way back.
   const [showRules, setShowRules] = useState(false);
@@ -637,7 +643,10 @@ export const ParticipantDashboardPage: React.FC = () => {
 
                           {/* Expanded Content Panel */}
                           {open && (
-                            <div className="mt-3 w-full bg-[#0B0D10]/95 border-2 border-dashed border-[#23262D] p-3 text-left space-y-2.5">
+                            // my-4 so the panel is not welded to the button
+                            // above or the card edge below; px-4/py-3.5 and
+                            // break-words keep long rules inside the border.
+                            <div className="my-4 w-full overflow-hidden bg-[#0B0D10]/95 border-2 border-dashed border-[#23262D] px-4 py-3.5 text-left space-y-2.5 break-words">
                               <p className="font-mono text-xs leading-relaxed text-[#C2C6CE]">
                                 {mission.description}
                               </p>
@@ -651,13 +660,13 @@ export const ParticipantDashboardPage: React.FC = () => {
                                   {mission.venue}
                                 </span>
                               </div>
-                              {mission.rules?.length > 0 && (
+                              {(mission.card_rules ?? mission.rules)?.length > 0 && (
                                 <div className="border-t border-[#1C1E23] pt-2">
                                   <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#71767B] mb-1">
                                     Rules:
                                   </p>
                                   <ul className="space-y-1 font-mono text-[10.5px] leading-relaxed text-[#9DA2AC]">
-                                    {mission.rules.slice(0, 4).map((r) => (
+                                    {(mission.card_rules ?? mission.rules).map((r) => (
                                       <li key={r} className="flex items-start gap-1.5">
                                         <span className="text-[#E5BD00] font-bold select-none">•</span>
                                         <span>{r}</span>
@@ -666,6 +675,30 @@ export const ParticipantDashboardPage: React.FC = () => {
                                   </ul>
                                 </div>
                               )}
+
+                              {/* Opens the SAME popup the Events page uses -
+                                  prize, every rule, and the coordinators' phone
+                                  numbers, which is what "contact the event
+                                  coordinator" needs. It opens over the
+                                  dashboard; it does not navigate away. */}
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#1C1E23] pt-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setDetailMission(mission)}
+                                  className="font-mono text-[10.5px] font-bold uppercase tracking-wider text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
+                                >
+                                  More about this event
+                                </button>
+                              {mission.coordinators?.length ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setCoordMission(mission)}
+                                  className="font-mono text-[10.5px] font-bold uppercase tracking-wider text-[#E5BD00] underline underline-offset-2 hover:text-[#0FA9C6]"
+                                >
+                                  Event coordinator
+                                </button>
+                              ) : null}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -821,8 +854,16 @@ export const ParticipantDashboardPage: React.FC = () => {
         className={`row-card transition-all duration-200 ${locked ? 'opacity-70 hover:opacity-85 !cursor-default' : '!cursor-default'}`}
         innerClassName={
           open
-            ? 'w-full px-[12%] pt-6 pb-8 text-left select-text'
-            : 'w-full px-5 sm:px-6 pt-4 pb-5 text-left select-text'
+            // Expanded, the frame is taller and its top ink drops further in
+            // (~16px at this height against ~4px at the bottom), which left the
+            // first line 8px from the border and 28px of dead space under the
+            // last. Weighted to the top to cancel that.
+            ? 'w-full px-[12%] pt-[38px] pb-[18px] text-left select-text'
+            // The hand-drawn frame is not vertically symmetric: its ink sits
+            // ~3px below the content box at the top and ~5px above it at the
+            // bottom, so equal padding rendered as 13px of clearance above and
+            // 25px below. These two cancel that out at ~19px each.
+            : 'w-full px-5 sm:px-6 pt-[22px] pb-[14px] text-left select-text'
         }
       >
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
@@ -924,7 +965,7 @@ export const ParticipantDashboardPage: React.FC = () => {
         </div>
 
         {open && mission && (
-          <div className="mt-4 w-full border-t-2 border-dashed border-[#23262D] pt-3 space-y-2.5">
+          <div className="my-4 w-full overflow-hidden border-t-2 border-dashed border-[#23262D] pt-3.5 pb-1 space-y-2.5 break-words">
             <p className="font-mono text-xs leading-relaxed text-[#C2C6CE]">{mission.description}</p>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] text-[#8E939D]">
               <span className="flex items-center gap-1">
@@ -936,9 +977,9 @@ export const ParticipantDashboardPage: React.FC = () => {
                 {mission.venue}
               </span>
             </div>
-            {mission.rules?.length > 0 && (
+            {(mission.card_rules ?? mission.rules)?.length > 0 && (
               <ul className="space-y-1 font-mono text-[10.5px] leading-relaxed text-[#9DA2AC]">
-                {mission.rules.slice(0, 4).map((r) => (
+                {(mission.card_rules ?? mission.rules).map((r) => (
                   <li key={r} className="flex items-start gap-1.5">
                     <span className="text-[#E5BD00] font-bold select-none">*</span>
                     <span>{r}</span>
@@ -946,6 +987,26 @@ export const ParticipantDashboardPage: React.FC = () => {
                 ))}
               </ul>
             )}
+
+            {/* Same popups as the row layout above. */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#1C1E23] pt-2">
+              <button
+                type="button"
+                onClick={() => setDetailMission(mission)}
+                className="font-mono text-[10.5px] font-bold uppercase tracking-wider text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
+              >
+                More about this event
+              </button>
+              {mission.coordinators?.length ? (
+                <button
+                  type="button"
+                  onClick={() => setCoordMission(mission)}
+                  className="font-mono text-[10.5px] font-bold uppercase tracking-wider text-[#E5BD00] underline underline-offset-2 hover:text-[#0FA9C6]"
+                >
+                  Event coordinator
+                </button>
+              ) : null}
+            </div>
           </div>
         )}
       </ComicHandDrawnCard>
@@ -1339,6 +1400,60 @@ export const ParticipantDashboardPage: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Full event detail, opened from "More about this event" on a card. */}
+      <EventDetailModal event={detailMission} onClose={() => setDetailMission(null)} />
+
+      {/* Coordinators on their own, deliberately small: a participant opening
+          this wants a name and a number to ring, not the whole event brief. */}
+      {coordMission && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setCoordMission(null)}
+          role="presentation"
+        >
+          <div
+            className="w-full max-w-xs border-2 border-[#E5BD00] bg-[#111214] p-4 shadow-[5px_5px_0px_#090A0B]"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Coordinators for ${coordMission.title}`}
+          >
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <p className="font-comic text-sm uppercase tracking-wider text-[#E5BD00]">
+                Event coordinator
+              </p>
+              <button
+                type="button"
+                onClick={() => setCoordMission(null)}
+                aria-label="Close"
+                className="shrink-0 text-[#71767B] transition-colors hover:text-[#EEEEEA]"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <p className="mb-3 font-mono text-[11px] text-[#8E939D]">{coordMission.title}</p>
+
+            <ul className="space-y-2">
+              {coordMission.coordinators?.map((c) => (
+                <li key={c.phone} className="border-2 border-[#23262D] bg-[#0B0D10] px-3 py-2">
+                  <p className="font-mono text-xs font-bold text-[#EEEEEA]">{c.name}</p>
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-[#71767B]">
+                    {c.role}
+                  </p>
+                  <a
+                    href={`tel:${c.phone.replace(/\s/g, '')}`}
+                    className="mt-1 inline-block font-mono text-xs font-bold text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
+                  >
+                    {c.phone}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </ComicPageShell>
   );
 };

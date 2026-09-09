@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { WebsiteFooter } from '../components/layout/Footer';
 import { store } from '../services/store';
-import { REGISTRATION_FEE_PER_HEAD, REGISTRATION_USER_MANUAL_URL } from '../config/site';
+import { REGISTRATION_FEE_PER_HEAD } from '../config/site';
 import { 
   CheckCircle2, 
   Copy, 
@@ -16,8 +16,7 @@ import {
   Users,
   AlertCircle,
   ExternalLink,
-  QrCode,
-  BookOpen
+  QrCode
 } from 'lucide-react';
 import { FoodMark } from '../components/ui/FoodMark';
 
@@ -157,16 +156,6 @@ export const WebsiteConfirmationPage: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-3">
-            <a
-              href={REGISTRATION_USER_MANUAL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#111214] border border-[#E5BD00]/50 text-xs font-mono font-bold uppercase tracking-wider text-[#E5BD00] hover:bg-[#E5BD00]/20 transition-all shadow-[2px_2px_0px_#090A0B]"
-            >
-              <BookOpen size={14} className="shrink-0" />
-              <span>User Manual</span>
-              <ExternalLink size={12} className="shrink-0 opacity-80" />
-            </a>
 
             {teamId && (
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#111214] border border-[#EEEEEA]/20 text-xs font-mono">

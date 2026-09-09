@@ -59,7 +59,18 @@ export const ParticipantLoginPage: React.FC = () => {
     return () => window.clearInterval(id);
   }, [cooldown]);
 
-  const identifier = (): OtpIdentifier => ({ user_id: userId.trim().toUpperCase() });
+  const normalizeUserId = (raw: string): string => {
+    const trimmed = raw.trim().toUpperCase();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('ZIN26-')) return trimmed;
+    if (trimmed.startsWith('ZIN26')) {
+      const rest = trimmed.slice(5).replace(/^-/, '');
+      return `ZIN26-${rest}`;
+    }
+    return `ZIN26-${trimmed}`;
+  };
+
+  const identifier = (): OtpIdentifier => ({ user_id: normalizeUserId(userId) });
 
   const sendCode = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -134,14 +145,10 @@ export const ParticipantLoginPage: React.FC = () => {
               <ComicField label="Your UserID" htmlFor="user_id">
                 <ComicInput
                   id="user_id"
-                  prefix="ZIN26-"
-                  className="text-lg tracking-[0.1em]"
-                  value={userId.replace(/^ZIN26-?/i, '')}
-                  onChange={(e) => {
-                    const clean = e.target.value.toUpperCase().replace(/^ZIN26-?/i, '').trim();
-                    setUserId(clean ? `ZIN26-${clean}` : '');
-                  }}
-                  placeholder="0142"
+                  className="text-base text-center sm:text-lg tracking-[0.05em]"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value.toUpperCase())}
+                  placeholder="ZIN26-0000"
                   autoComplete="username"
                   required
                 />
@@ -181,7 +188,7 @@ export const ParticipantLoginPage: React.FC = () => {
                   className="inline-flex items-center gap-1.5 font-bold uppercase tracking-wide text-[#E5BD00] hover:text-[#0FA9C6] transition-colors"
                 >
                   <BookOpen size={13} />
-                  <span>Need help? View User Manual</span>
+                  <span>Need help? Open Guide</span>
                   <ExternalLink size={11} />
                 </a>
               </p>

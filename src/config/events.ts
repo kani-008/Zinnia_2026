@@ -162,15 +162,20 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     duration: '4 hrs',
     venue: 'IT & CSE Seminar Hall',
     description: 'Present original research, innovative ideas, emerging technologies, architectural concepts, or engineering solutions before an esteemed panel of faculty judges. Participants are free to choose a topic of their preference, allowing them to showcase their knowledge, creativity, research skills, and presentation abilities.',
+    /** Only 30 TEAMS get in, and it is the one capped event - see rules_engine. */
+    urgency_note: 'Limited slots - only 30 teams get in. Register as soon as you can.',
+    /** Short form for the dashboard card; full list stays in `rules`. */
+    card_rules: [
+      'Teams of 2 to 3. You choose your own topic.',
+      '8 slides maximum.',
+      '8 minutes to present, then 2 minutes of Q&A.',
+    ],
     rules: [
       'Teams of 2 to 3 participants.',
       'The topic can be chosen by the participants based on their area of interest or preference.',
-      'Participants must prepare and present their content using a PowerPoint presentation.',
       'The presentation should contain a maximum of 8 slides.',
       'Presentation duration: 8 minutes, followed by 2 minutes of Q&A.',
-      'The presentation should be original and relevant to the chosen topic.',
       'Participants should be prepared to answer questions from the judges during the Q&A session.',
-      'Participants may change their chosen topic themselves. For any doubt about a topic, contact the event coordinator.'
     ],
     coordinators: [
       { name: 'Kanishkar', role: 'STUDENT COORDINATOR', phone: '+91 87787 84819' },
