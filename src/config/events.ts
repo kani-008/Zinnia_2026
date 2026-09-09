@@ -161,11 +161,16 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     schedule_time: '11:00 AM - 03:00 PM',
     duration: '4 hrs',
     venue: 'IT & CSE Seminar Hall',
-    description: 'Present original research manuscripts, architectural discoveries, and innovative engineering paradigms before an esteemed panel of faculty judges.',
+    description: 'Present original research, innovative ideas, emerging technologies, architectural concepts, or engineering solutions before an esteemed panel of faculty judges. Participants are free to choose a topic of their preference, allowing them to showcase their knowledge, creativity, research skills, and presentation abilities.',
     rules: [
       'Teams of 2 to 3 participants.',
-      'Presentation duration: 8 mins presentation + 2 mins Q&A.',
-      'Standard IEEE slide format recommended.'
+      'The topic can be chosen by the participants based on their area of interest or preference.',
+      'Participants must prepare and present their content using a PowerPoint presentation.',
+      'The presentation should contain a maximum of 8 slides.',
+      'Presentation duration: 8 minutes, followed by 2 minutes of Q&A.',
+      'The presentation should be original and relevant to the chosen topic.',
+      'Participants should be prepared to answer questions from the judges during the Q&A session.',
+      'Participants may change their chosen topic themselves. For any doubt about a topic, contact the event coordinator.'
     ],
     coordinators: [
       { name: 'Kanishkar', role: 'STUDENT COORDINATOR', phone: '+91 87787 84819' },

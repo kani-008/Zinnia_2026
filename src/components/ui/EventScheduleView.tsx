@@ -70,17 +70,15 @@ export const EventScheduleView: React.FC<{
   const sparkRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<(HTMLDivElement | null)[]>([]);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
-  /** Node centres as offsets down the spine — measured on layout, not per frame. */
   const nodeCentresRef = useRef<number[]>([]);
   const rowBoundsRef = useRef<{ top: number; bottom: number; tone: Tone }[]>([]);
   const [spineGradient, setSpineGradient] = useState<string>(
     'linear-gradient(180deg, #E5BD00 0%, #0FA9C6 50%, #D51F55 100%)'
   );
   const [spineHeight, setSpineHeight] = useState<number>(0);
-  const targetProgressRef = useRef<number>(0);
-  const currentProgressRef = useRef<number>(0);
-  const isAnimatingRef = useRef<boolean>(false);
+  const spineHeightRef = useRef<number>(0);
   const [activeItemIndex, setActiveItemIndex] = useState<number>(0);
+  const [isAtNode, setIsAtNode] = useState<boolean>(false);
 
   const allEvents = store.getEvents();
   const getEventFromStore = (id: string): EventMission | undefined =>
@@ -339,19 +337,21 @@ export const EventScheduleView: React.FC<{
   // and the schedule blocks are what make the gaps in the day legible.
   const filteredTimeline = masterTimelineItems;
 
-  // Scroll-driven animation: progress line travels down with physics-based smooth damping (lerp)
+  // Scroll-driven animation: progress line and spark travel with zero latency in 1:1 sync with scroll
   useEffect(() => {
-    let animId: number | null = null;
+    let scrollRafId: number | null = null;
 
-    // One layout read per resize/filter change, reused by every scroll frame.
+    // Measures positions and establishes multi-stop gradient without layout thrashing
     const measure = () => {
       const spineEl = spineContainerRef.current;
       if (!spineEl) return;
       const spineRect = spineEl.getBoundingClientRect();
       const spineTop = spineRect.top;
       const totalH = spineRect.height;
+      spineHeightRef.current = totalH;
       setSpineHeight(totalH);
 
+      // Measure node centres down the spine for shape-morphing at square nodes
       nodeCentresRef.current = nodeRefs.current.map((node) => {
         if (!node) return Number.POSITIVE_INFINITY;
         const r = node.getBoundingClientRect();
@@ -399,16 +399,14 @@ export const EventScheduleView: React.FC<{
         sparkRef.current.style.opacity = isVisible ? '1' : progress >= 0.995 ? '0.7' : '0';
       }
 
-      const spineEl = spineContainerRef.current;
-      if (!spineEl) return;
-      const totalHeight = spineEl.getBoundingClientRect().height;
+      // Use cached spine height instead of getBoundingClientRect() to avoid forced synchronous reflows
+      const totalHeight = spineHeightRef.current || spineContainerRef.current?.offsetHeight || 1;
       const currentDistance = progress * totalHeight;
 
       const bounds = rowBoundsRef.current;
       if (bounds.length > 0) {
         let activeIdx = 0;
         for (let i = 0; i < bounds.length; i += 1) {
-          // Stay on this card until currentDistance actually passes its bottom boundary
           if (currentDistance <= bounds[i].bottom || i === bounds.length - 1) {
             activeIdx = i;
             break;
@@ -416,81 +414,71 @@ export const EventScheduleView: React.FC<{
         }
         setActiveItemIndex((prev) => (prev !== activeIdx ? activeIdx : prev));
       }
-    };
 
-    const runAnimationLoop = () => {
-      if (isAnimatingRef.current) return;
-      isAnimatingRef.current = true;
-
-      const tick = () => {
-        const target = targetProgressRef.current;
-        const current = currentProgressRef.current;
-        const diff = target - current;
-
-        // When difference is tiny, snap to target and sleep
-        if (Math.abs(diff) < 0.0004) {
-          currentProgressRef.current = target;
-          applyProgress(target);
-          isAnimatingRef.current = false;
-          return;
+      // Check if spark head has reached any square event node
+      let nearNode = false;
+      const centres = nodeCentresRef.current;
+      for (let i = 0; i < centres.length; i += 1) {
+        if (Math.abs(currentDistance - centres[i]) <= 24) {
+          nearNode = true;
+          break;
         }
-
-        // 0.16 damping factor: highly responsive with silky smooth ease-out
-        const next = current + diff * 0.16;
-        currentProgressRef.current = next;
-        applyProgress(next);
-
-        animId = requestAnimationFrame(tick);
-      };
-
-      animId = requestAnimationFrame(tick);
+      }
+      setIsAtNode((prev) => (prev !== nearNode ? nearNode : prev));
     };
 
-    const updateTargetFromScroll = () => {
+    // Computes progress dynamically in 1:1 real-time lockstep with current scroll position
+    const updateProgress = () => {
       const spineEl = spineContainerRef.current;
       if (!spineEl) return;
 
       const rect = spineEl.getBoundingClientRect();
       const windowHeight = window.innerHeight;
-      const triggerY = windowHeight * 0.65;
-      const totalHeight = rect.height;
+      // Trigger line at 60% of viewport (optimal focus point for both mobile and laptop)
+      const triggerY = windowHeight * 0.60;
+      const totalHeight = spineHeightRef.current || rect.height;
 
       if (totalHeight <= 0) return;
 
       const currentDistance = triggerY - rect.top;
-      targetProgressRef.current = Math.min(Math.max(currentDistance / totalHeight, 0), 1);
-      runAnimationLoop();
+      const progress = Math.min(Math.max(currentDistance / totalHeight, 0), 1);
+      applyProgress(progress);
+    };
+
+    // Direct, latency-free scroll handler scheduled at native refresh rate (60/120 FPS)
+    const handleScroll = () => {
+      if (scrollRafId !== null) return;
+      scrollRafId = requestAnimationFrame(() => {
+        scrollRafId = null;
+        updateProgress();
+      });
     };
 
     const handleResize = () => {
       measure();
-      updateTargetFromScroll();
+      updateProgress();
     };
 
-    window.addEventListener('scroll', updateTargetFromScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
 
-    measure();
-    // Initial instant positioning without lag
-    const spineEl = spineContainerRef.current;
-    if (spineEl) {
-      const rect = spineEl.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const triggerY = windowHeight * 0.65;
-      const totalHeight = rect.height;
-      if (totalHeight > 0) {
-        const initial = Math.min(Math.max((triggerY - rect.top) / totalHeight, 0), 1);
-        targetProgressRef.current = initial;
-        currentProgressRef.current = initial;
-        applyProgress(initial);
-      }
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && spineContainerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        measure();
+        updateProgress();
+      });
+      resizeObserver.observe(spineContainerRef.current);
     }
 
+    measure();
+    updateProgress();
+
     return () => {
-      window.removeEventListener('scroll', updateTargetFromScroll);
+      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
-      if (animId) cancelAnimationFrame(animId);
-      isAnimatingRef.current = false;
+      if (resizeObserver) resizeObserver.disconnect();
+      if (scrollRafId !== null) cancelAnimationFrame(scrollRafId);
     };
   }, [filteredTimeline.length]);
 
@@ -692,16 +680,18 @@ export const EventScheduleView: React.FC<{
             className="absolute -inset-1 rounded-full blur-[3px] pointer-events-none transition-colors duration-300"
             style={{ backgroundColor: activeConfig.glowRgba }}
           />
-          {/* Comic Diamond Spark Head matching active event card color */}
+          {/* Comic Spark Head: smooth animation from Diamond to Square at nodes and back */}
           <div
-            className="relative w-3.5 h-3.5 border-2 border-[#090A0B] rotate-45 flex items-center justify-center transition-all duration-300"
+            className={`relative w-3.5 h-3.5 border-2 border-[#090A0B] flex items-center justify-center transition-all duration-300 ease-out ${
+              isAtNode
+                ? 'rotate-0 rounded-[2.5px] scale-[1.18]'
+                : 'rotate-45 rounded-none scale-100'
+            }`}
             style={{
               backgroundColor: activeConfig.hex,
               boxShadow: `${activeConfig.glowCss}, 2px 2px 0px #090A0B`,
             }}
-          >
-            <div className="w-1 h-1 bg-white rounded-full animate-pulse" />
-          </div>
+          />
         </div>
 
         <div className="space-y-7 relative z-10">
