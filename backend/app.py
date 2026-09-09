@@ -10,9 +10,11 @@ from dotenv import load_dotenv
 # Ensure backend root is on python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Load server environment variables
-load_dotenv(override=True)
-load_dotenv(os.path.join(os.path.dirname(__file__), ".env"), override=True)
+# Load server environment variables (workspace root first, then backend/.env)
+parent_env = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env"))
+if os.path.exists(parent_env):
+    load_dotenv(parent_env, override=False)
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"), override=False)
 
 from flask import Flask
 from flask_cors import CORS
@@ -42,9 +44,10 @@ def check_db_connection():
         headers = {
             "apikey": supabase_key,
             "Authorization": f"Bearer {supabase_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Accept-Profile": "zin26",
         }
-        r = requests.get(f"{supabase_url}/rest/v1/teams?select=count", headers=headers, timeout=5)
+        r = requests.get(f"{supabase_url}/rest/v1/events?select=count", headers=headers, timeout=5)
         if r.status_code == 200:
             print(f"[DB] Database connected successfully! ({supabase_url})")
         elif r.status_code == 401:

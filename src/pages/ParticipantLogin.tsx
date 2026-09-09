@@ -11,9 +11,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { KeyRound, Loader2, Mail } from 'lucide-react';
+import { BookOpen, ExternalLink, KeyRound, Loader2, Mail } from 'lucide-react';
 
 import { WebsiteNavbar } from '../components/layout/Navbar';
+import { REGISTRATION_USER_MANUAL_URL } from '../config/site';
 import { requestOtp, saveSession, verifyOtp } from '../lib/participant/api';
 import type { OtpIdentifier } from '../lib/participant/types';
 import {
@@ -161,16 +162,30 @@ export const ParticipantLoginPage: React.FC = () => {
               </ComicCTA>
             </div>
 
-            <p className="mt-5 text-center font-mono text-[11px] text-[#71767B]">
-              Not registered yet?{' '}
-              <button
-                type="button"
-                onClick={() => navigate('/participant/register')}
-                className="font-bold uppercase tracking-wide text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
-              >
-                Register here
-              </button>
-            </p>
+            <div className="mt-5 space-y-2 text-center font-mono text-[11px]">
+              <p className="text-[#71767B]">
+                Not registered yet?{' '}
+                <button
+                  type="button"
+                  onClick={() => navigate('/participant/register')}
+                  className="font-bold uppercase tracking-wide text-[#0FA9C6] underline underline-offset-2 hover:text-[#E5BD00]"
+                >
+                  Register here
+                </button>
+              </p>
+              <p>
+                <a
+                  href={REGISTRATION_USER_MANUAL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 font-bold uppercase tracking-wide text-[#E5BD00] hover:text-[#0FA9C6] transition-colors"
+                >
+                  <BookOpen size={13} />
+                  <span>Need help? View User Manual</span>
+                  <ExternalLink size={11} />
+                </a>
+              </p>
+            </div>
           </form>
         ) : (
           <form onSubmit={submitCode}>

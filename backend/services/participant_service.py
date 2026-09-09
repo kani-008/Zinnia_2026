@@ -204,6 +204,9 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     otp = f"{secrets.randbelow(1000000):06d}"
+    print(f"\n[OTP] ========================================")
+    print(f"[OTP] Registration OTP for {email}: {otp}")
+    print(f"[OTP] ========================================\n")
     token = pending.mint(details, otp)
 
     try:

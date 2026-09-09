@@ -126,6 +126,9 @@ def request_otp(user_id: str = "", *, registration_id: str = "") -> Dict[str, An
 
         details = pending.details_of(payload)
         otp = f"{secrets.randbelow(1000000):06d}"
+        print(f"\n[OTP] ========================================")
+        print(f"[OTP] Pending Registration OTP for {details.get('email')}: {otp}")
+        print(f"[OTP] ========================================\n")
         try:
             sent = send_pending_otp_email(details, otp)
         except RecipientRefused:
@@ -168,6 +171,9 @@ def request_otp(user_id: str = "", *, registration_id: str = "") -> Dict[str, An
     user_id = participant["user_id"]
 
     otp = f"{secrets.randbelow(1000000):06d}"
+    print(f"\n[OTP] ========================================")
+    print(f"[OTP] Login OTP for {user_id} ({participant.get('email')}): {otp}")
+    print(f"[OTP] ========================================\n")
     expires_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=OTP_TTL_SECONDS)
 
     # One live code per participant. Requesting a new one drops the old, so a

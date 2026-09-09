@@ -22,6 +22,10 @@ export const PARTICIPANTS_WHATSAPP_GROUP_URL =
   (import.meta.env.VITE_WHATSAPP_GROUP_URL as string) ||
   'https://chat.whatsapp.com/DthX9rMcTk9BgLh3gQOHx6?s=sw&p=a&mlu=0&ilr=4';
 
+export const REGISTRATION_USER_MANUAL_URL =
+  (import.meta.env.VITE_REGISTRATION_USER_MANUAL_URL as string) ||
+  'https://drive.google.com/file/d/1mWcxWw88khKUkovE3mqnjJMCS79JulSh/view?usp=sharing';
+
 export const SITE_CONFIG = {
   name: 'ZINNIA 2026',
   tagline: 'CSE Department Symposium // CHRONOS Temporal Protocol',
@@ -32,6 +36,7 @@ export const SITE_CONFIG = {
   registrationFeePerHead: REGISTRATION_FEE_PER_HEAD,
   payment: TREASURER_PAYMENT_CONFIG,
   whatsappGroupUrl: PARTICIPANTS_WHATSAPP_GROUP_URL,
+  userManualUrl: REGISTRATION_USER_MANUAL_URL,
 };
 
 // Progress indicator for the registration flow (§4.1). One constant so every
