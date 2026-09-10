@@ -46,7 +46,10 @@ PARTICIPANT_FIELDS = (
     "payment_status,master_qr_token,created_at"
 )
 
-PAYMENT_FIELDS = "id,user_id,amount,txn_ref,status,reject_reason,screenshot_url,approved_at,created_at"
+PAYMENT_FIELDS = (
+    "id,user_id,amount,txn_ref,status,reject_reason,screenshot_url,payee_upi,"
+    "approved_at,created_at"
+)
 
 
 # --- lookups -----------------------------------------------------------------
@@ -171,5 +174,8 @@ def payment_view(payment: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         "status": payment.get("status"),
         "reject_reason": payment.get("reject_reason"),
         "screenshot_url": payment.get("screenshot_url"),
+        # Which receiving account this participant was told to pay. Empty on
+        # rows written before the fee was split across two accounts.
+        "payee_upi": payment.get("payee_upi"),
         "submitted_at": payment.get("created_at"),
     }

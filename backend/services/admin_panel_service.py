@@ -159,7 +159,7 @@ def _latest_payments() -> Dict[str, Dict[str, Any]]:
     rows = _cached("payments", lambda: db.select(
         "payments",
         "select=id,user_id,amount,txn_ref,status,reject_reason,screenshot_url,"
-        "created_at,approved_at&order=created_at.asc",
+        "payee_upi,approval_note,created_at,approved_at&order=created_at.asc",
     ))
     latest: Dict[str, Dict[str, Any]] = {}
     attempts: Dict[str, int] = defaultdict(int)
@@ -434,6 +434,23 @@ def _event_roster_rows(event_code: str) -> List[Dict[str, Any]]:
 # ==============================================================================
 # F1 — PAYMENT VERIFICATION
 # ==============================================================================
+def _payee_bank(payee_upi: Any) -> str:
+    """
+    Which bank took this payment, for the queue's Bank column.
+
+    Resolved through the configured accounts, never parsed out of the VPA: a
+    UPI handle suffix names the payment app's sponsor bank rather than the
+    account the money reached, so reading "@okaxis" as "Axis" would send the
+    treasurer to the wrong statement. Empty for a row written before the fee
+    was split across two accounts.
+    """
+    if not payee_upi:
+        return ""
+    from services import pending_registration as pending
+
+    return pending.payee_by_upi(str(payee_upi)).get("bank", "")
+
+
 def _flags(p: Dict[str, Any], pay: Dict[str, Any], verified: bool, dup_refs: set) -> List[str]:
     flags = []
     amount = pay.get("amount")
@@ -447,6 +464,10 @@ def _flags(p: Dict[str, Any], pay: Dict[str, Any], verified: bool, dup_refs: set
         flags.append("NO_SCREENSHOT")
     if not verified:
         flags.append("EMAIL_UNVERIFIED")
+    # Approved without a bank check. Last in the list but the one that matters
+    # most at reconciliation time: this money will never appear in a statement.
+    if pay.get("approval_note"):
+        flags.append("BYPASSED")
     return flags
 
 
@@ -481,6 +502,8 @@ def _queue_rows() -> List[Dict[str, Any]]:
             "payment_attempt_status": pay.get("status"),
             "reject_reason": pay.get("reject_reason"),
             "screenshot_url": pay.get("screenshot_url"),
+            "payee_bank": _payee_bank(pay.get("payee_upi")),
+            "approval_note": pay.get("approval_note"),
             "submitted_at": pay.get("created_at") if pay.get("txn_ref") else None,
             "approved_at": pay.get("approved_at"),
             "attempt_no": pay.get("attempt_no", 0),
@@ -580,7 +603,8 @@ def payment_detail(user_id: str) -> Dict[str, Any]:
         )
         f_attempts = pool.submit(
             db.select, "payments",
-            f"select=id,amount,txn_ref,status,reject_reason,screenshot_url,created_at,approved_at"
+            f"select=id,amount,txn_ref,status,reject_reason,screenshot_url,approval_note,"
+            f"created_at,approved_at"
             f"&user_id=eq.{enc_uid}&order=created_at.desc",
         )
         f_regs = pool.submit(
@@ -622,6 +646,7 @@ def payment_detail(user_id: str) -> Dict[str, Any]:
         "payment_attempt_status": pay.get("status"),
         "reject_reason": pay.get("reject_reason"),
         "screenshot_url": pay.get("screenshot_url"),
+        "approval_note": pay.get("approval_note"),
         "submitted_at": pay.get("created_at") if pay.get("txn_ref") else None,
         "approved_at": pay.get("approved_at"),
         "attempt_no": pay["attempt_no"],
@@ -657,7 +682,7 @@ def screenshot_url(user_id: str) -> Dict[str, Any]:
     return proof_reference.resolve(row["screenshot_url"])
 
 
-def review_payment(user_id: str, approve: bool, reason: str = "") -> Dict[str, Any]:
+def review_payment(user_id: str, approve: bool, reason: str = "", bypass: bool = False) -> Dict[str, Any]:
     """
     Wraps participant_service.treasurer_review_payment, which already owns this
     transition: it sends the confirmation email, holds registrations on
@@ -668,13 +693,14 @@ def review_payment(user_id: str, approve: bool, reason: str = "") -> Dict[str, A
     admin = getattr(g, "admin", None) or {}
     res = treasurer_review_payment(
         user_id=user_id,
-        action="APPROVE" if approve else "REJECT",
+        action="BYPASS" if bypass else ("APPROVE" if approve else "REJECT"),
         reason=reason,
         admin_name=admin.get("name", "Treasurer"),
         admin_id=str(admin.get("id", "")),
     )
     if res.get("success"):
-        log_action("PAYMENT_APPROVE" if approve else "PAYMENT_REJECT", "participant",
+        log_action("PAYMENT_BYPASS" if bypass else ("PAYMENT_APPROVE" if approve else "PAYMENT_REJECT"),
+                   "participant",
                    user_id, reason=reason or None,
                    detail={"already_approved": bool(res.get("already_approved")),
                            "email_sent": res.get("email_sent")})

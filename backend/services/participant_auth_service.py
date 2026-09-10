@@ -358,10 +358,15 @@ def verify_registration_email(
             # Already verified; re-submitting the same token is a refresh, not a
             # second registration. Hand the same token back rather than erroring.
             details = pending.details_of(payload)
+            account = pending.payee_for(payload)
             return {
                 "success": True,
                 "registration_id": registration_id,
                 "details": _display_details(details),
+                "payee_upi_id": account.get("upi_id", ""),
+                "payee_name": account.get("payee_name", ""),
+                "payee_bank": account.get("bank", ""),
+                "payee_phone": account.get("payee_phone", ""),
                 "message": "Email already verified. Continue to payment.",
             }
 
@@ -380,10 +385,23 @@ def verify_registration_email(
         # verifies and then walks away leaves nothing behind, the same as
         # someone who abandoned the details form.
         details = pending.details_of(payload)
+        verified_token = pending.mint_verified(details)
+
+        # The payment screen renders from this handoff without calling the
+        # status endpoint, so the account has to travel with the token. Reopened
+        # rather than recomputed: whatever is inside the signed token is what
+        # every later reader will see, and a second derivation here could drift
+        # from it if the account config changed between the two calls.
+        verified_payload, _ = pending.open_token(verified_token)
+        account = pending.payee_for(verified_payload)
         return {
             "success": True,
-            "registration_id": pending.mint_verified(details),
+            "registration_id": verified_token,
             "details": _display_details(details),
+            "payee_upi_id": account.get("upi_id", ""),
+            "payee_name": account.get("payee_name", ""),
+            "payee_bank": account.get("bank", ""),
+            "payee_phone": account.get("payee_phone", ""),
             "expires_in": pending.VERIFIED_TTL_SECONDS,
             "message": "Email verified. Complete the payment to finish registering.",
         }

@@ -106,6 +106,11 @@ CREATE TABLE IF NOT EXISTS zin26.payments (
     -- Object PATH in the private payment-proofs bucket, never a URL: a stored
     -- signed URL expires and a stored public one leaks.
     screenshot_url TEXT,
+    -- VPA of the receiving account this participant was shown. The fee is split
+    -- across two accounts (see 014); NULL means the row predates that split.
+    -- Stamped once at INSERT and never updated, so a resubmission after a
+    -- rejection still reconciles against the account the money went to.
+    payee_upi      TEXT,
     status         TEXT NOT NULL DEFAULT 'PENDING'
                      CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
     reject_reason  TEXT,

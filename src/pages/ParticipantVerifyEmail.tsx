@@ -137,7 +137,18 @@ export const ParticipantVerifyEmailPage: React.FC = () => {
     const paidRid = result.registration_id ?? registrationId;
     navigate(`/participant/payment?rid=${encodeURIComponent(paidRid)}`, {
       replace: true,
-      state: { details: result.details },
+      state: {
+        details: result.details,
+        // Forwarded so the payment screen can draw the right QR on its first
+        // paint. It re-fetches too, but only to cover a reload, where this
+        // state is gone.
+        payee: {
+          upi_id: result.payee_upi_id ?? '',
+          name: result.payee_name ?? '',
+          bank: result.payee_bank ?? '',
+          phone: result.payee_phone ?? '',
+        },
+      },
     });
   };
 

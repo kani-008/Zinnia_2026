@@ -79,6 +79,10 @@ _add("/api/admin/payments/<user_id>/approve", "admin_payment_approve",
      require_role(*TREASURER)(AdminPanelController.approve_payment), ["POST"])
 _add("/api/admin/payments/<user_id>/reject", "admin_payment_reject",
      require_role(*TREASURER)(AdminPanelController.reject_payment), ["POST"])
+# Approves without a matching bank reference, for cash taken at a desk. Same
+# TREASURER gate as approve - it confirms a registration and releases the pass.
+_add("/api/admin/payments/<user_id>/bypass", "admin_payment_bypass",
+     require_role(*TREASURER)(AdminPanelController.bypass_payment), ["POST"])
 # Re-sends the UserID, master QR and WhatsApp link to an approved participant.
 # Re-approving does not do this: treasurer_review_payment returns early on an
 # already-approved record without emailing.

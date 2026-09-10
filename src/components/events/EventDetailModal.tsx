@@ -138,7 +138,8 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             </div>
             <div className="text-white font-bold mt-0.5 text-[11px] sm:text-xs leading-snug break-words">
               {event.team_size_min}
-              {event.team_size_min !== event.team_size_max ? ` - ${event.team_size_max}` : ''} Members
+              {event.team_size_min !== event.team_size_max ? ` - ${event.team_size_max}` : ''}{' '}
+              {event.team_size_max === 1 ? 'Member' : 'Members'}
             </div>
           </div>
           <div className="p-2.5 bg-[#1A1A1E] border border-[#2E2E33] rounded-lg">
@@ -199,7 +200,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
         {/* Briefing */}
         <div className="space-y-1.5">
           <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
-            // BRIEFING
+            BRIEFING
           </h4>
           <p className="font-mono text-xs sm:text-sm text-[#E4E4E7] leading-relaxed whitespace-pre-line font-normal">
             {event.description}
@@ -212,7 +213,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
         {event.rules && event.rules.length > 0 && (
           <div className="space-y-2">
             <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
-              // RULES &amp; GUIDELINES
+              RULES &amp; GUIDELINES
             </h4>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1.5">
               {event.rules.map((rule, i) => (
@@ -270,20 +271,29 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
         {/* Coordinators */}
         {event.coordinators && event.coordinators.length > 0 && (
           <div className="space-y-1.5">
-            <h4 className="font-mono text-xs text-[#A8A8AC] uppercase tracking-wider font-bold">
-              // HELPLINE &amp; COORDINATORS
+            <h4 className="font-mono text-xs text-[#F5D90A] uppercase tracking-wider font-bold">
+              HELPLINE &amp; COORDINATORS
             </h4>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {event.coordinators.map((c, i) => (
+                // w-full on mobile so the name and the number share one row
+                // with room to breathe; at 375px they were sharing a narrow
+                // chip and the number broke across two lines mid-digits.
                 <div
                   key={i}
-                  className="text-xs font-mono text-[#D0D0D4] flex items-center gap-1.5 bg-[#1A1A1E] px-2.5 py-1 rounded border border-[#2E2E33]"
+                  className="w-full sm:w-auto text-xs font-mono text-[#D0D0D4] flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 bg-[#1A1A1E] px-2.5 py-1.5 rounded border border-[#2E2E33]"
                 >
                   <span>
                     {c.name} ({c.role}):
                   </span>
                   {c.phone && (
-                    <a href={`tel:${c.phone}`} className="text-[#3CE7FF] hover:underline font-bold">
+                    // whitespace-nowrap: a phone number split over two lines is
+                    // unreadable and uncopyable. Underlined always, not on
+                    // hover - it is a tel: link and touch has no hover.
+                    <a
+                      href={`tel:${c.phone}`}
+                      className="shrink-0 whitespace-nowrap font-bold text-[#3CE7FF] underline underline-offset-2 hover:text-[#F5D90A]"
+                    >
                       {c.phone}
                     </a>
                   )}

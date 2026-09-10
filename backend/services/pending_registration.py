@@ -98,6 +98,122 @@ def is_pending_token(value: str) -> bool:
     return (value or "").startswith(f"{_PREFIX}.")
 
 
+# --- which account this participant pays into ----------------------------------
+#
+# The fee is split across two receiving accounts. The reason is not tidiness: a
+# personal savings account taking several hundred small credits from unrelated
+# payers is the pattern bank fraud systems flag, and an account frozen mid-fest
+# traps money that has already been collected. Two accounts halve the count each
+# one sees.
+#
+# The choice is made when the VERIFIED token is minted, because that is the last
+# moment before the payment screen and there is no UserID yet - the participant
+# row is not created until the payment is submitted (promote_pending).
+#
+# It is DERIVED FROM THE EMAIL, not drawn at random. mint_verified() can
+# legitimately run more than once for the same person: check_otp() is stateless
+# and consumes nothing, a resend re-mints, and re-submitting the details form
+# mints again. A random pick would therefore show one participant two different
+# accounts on two visits, and a payment made against the first QR would be
+# recorded against the second account. Keyed on the address the answer never
+# moves, and nothing has to be written down to remember it.
+#
+# HMAC rather than a bare hash so the assignment cannot be predicted, or ground
+# out offline, by someone who only knows the address.
+
+PAYEE_A = "A"
+PAYEE_B = "B"
+
+
+def _account(suffix: str) -> Dict[str, str]:
+    """One configured receiving account. Empty upi_id means "not configured"."""
+    return {
+        "key": PAYEE_B if suffix else PAYEE_A,
+        "upi_id": (os.getenv(f"TREASURER_UPI_ID{suffix}") or "").strip(),
+        "payee_name": (os.getenv(f"TREASURER_PAYEE_NAME{suffix}") or "").strip(),
+        # The phone number a UPI app resolves to THIS account. Optional, and
+        # the payment screen hides the "pay via number" shortcut when it is
+        # unset - a number belonging to the other account would route the money
+        # past the split and make the treasurer's badge wrong.
+        "payee_phone": (os.getenv(f"TREASURER_PAYEE_PHONE{suffix}") or "").strip(),
+        # Short label for the treasurer's badge - whichever bank actually
+        # receives the money. Deliberately not hardcoded: a UPI handle suffix
+        # names the app's sponsor bank, not the destination account, so only
+        # whoever owns the account can say what this should read.
+        "bank": (os.getenv(f"TREASURER_BANK_LABEL{suffix}") or "").strip()
+        or (PAYEE_B if suffix else PAYEE_A),
+    }
+
+
+def payee_accounts() -> Tuple[Dict[str, str], ...]:
+    """
+    Configured accounts, primary first. Never empty, and never longer than the
+    number actually configured - so with TREASURER_UPI_ID_2 unset every
+    participant is sent to the primary account and the split silently does not
+    happen, which is the correct behaviour rather than an error.
+    """
+    primary = _account("")
+    second = _account("_2")
+    return (primary, second) if second["upi_id"] else (primary,)
+
+
+def choose_payee(email: str) -> str:
+    """Which account this address pays into. Stable for a given address."""
+    if len(payee_accounts()) < 2:
+        return PAYEE_A
+    digest = hmac.new(
+        AUTH_SECRET_KEY.encode(),
+        f"payee:{(email or '').strip().lower()}".encode(),
+        hashlib.sha256,
+    ).digest()
+    return PAYEE_B if digest[-1] & 1 else PAYEE_A
+
+
+def payee_for(payload: Optional[Dict[str, Any]]) -> Dict[str, str]:
+    """
+    {key, bank, upi_id, payee_name} for a token payload.
+
+    Falls back to the primary account for a token minted before the split
+    existed - those carry no "p" key and stay valid for VERIFIED_TTL_SECONDS
+    after a deploy - and for a token naming an account that is no longer
+    configured, which is what happens if TREASURER_UPI_ID_2 is withdrawn while
+    tokens carrying "B" are still in flight.
+    """
+    accounts = payee_accounts()
+    wanted = str((payload or {}).get("p") or "") or PAYEE_A
+    for acc in accounts:
+        if acc["key"] == wanted:
+            return dict(acc)
+    return dict(accounts[0])
+
+
+def payee_by_upi(upi_id: str) -> Dict[str, str]:
+    """
+    The account a STORED vpa belongs to, for reading a payments row back.
+
+    An empty value means the row predates the split, when there was one account
+    only - so it resolves to the primary, which is what those participants
+    actually paid. A vpa matching nothing configured is handed back as-is with
+    no label rather than relabelled: the money did go there, and guessing would
+    send the treasurer to the wrong bank statement.
+    """
+    stored = (upi_id or "").strip()
+    accounts = payee_accounts()
+    if not stored:
+        return dict(accounts[0])
+    for acc in accounts:
+        if acc["upi_id"] and acc["upi_id"].lower() == stored.lower():
+            return dict(acc)
+    return {"key": "", "upi_id": stored, "payee_name": "", "bank": "", "payee_phone": ""}
+
+
+def payee_of(payload: Dict[str, Any]) -> str:
+    """The raw account key in the token. details_of() cannot see it - it is a
+    top-level sibling of "v" and "x", deliberately outside the "d" sub-dict,
+    because _FIELDS would silently drop it."""
+    return str((payload or {}).get("p") or "")
+
+
 def mint(details: Dict[str, Any], otp: str, *, ttl: int = PENDING_TTL_SECONDS) -> str:
     """Package validated details plus the code's hash into one signed string."""
     email = str(details.get("email", "")).strip().lower()
@@ -148,16 +264,24 @@ def open_token(token: str, *, grace: int = 0) -> Tuple[Optional[Dict[str, Any]],
     return payload, ""
 
 
-def mint_verified(details: Dict[str, Any]) -> str:
+def mint_verified(details: Dict[str, Any], *, payee: str = "") -> str:
     """
     A token for someone whose address is proven but who has no row yet.
 
     Carries no OTP hash — the code has already done its job — and is marked so
     the payment endpoints can tell it apart from one still awaiting a code. The
     participant row is created from this at payment submission.
+   
+    Also fixes which of the receiving accounts this participant is sent to, so
+    the payment screen, the stored payments row and the treasurer's badge all
+    agree without any of them having to ask again. `payee` overrides the
+    derivation; it exists for tests.
     """
     payload = {
         "d": {k: details.get(k) for k in _FIELDS},
+        # Top level, not inside "d": _FIELDS is a hard whitelist and would drop
+        # it without a word. The signature covers the whole body either way.
+        "p": payee or choose_payee(str(details.get("email", ""))),
         "v": 1,
         "x": int(time.time()) + VERIFIED_TTL_SECONDS,
     }

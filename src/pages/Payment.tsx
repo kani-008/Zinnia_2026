@@ -2,15 +2,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { store } from '../services/store';
-import { TREASURER_PAYMENT_CONFIG, REGISTRATION_FEE_PER_HEAD, REGISTRATION_USER_MANUAL_URL } from '../config/site';
+import { TREASURER_PAYMENT_CONFIG, REGISTRATION_FEE_PER_HEAD } from '../config/site';
 import { QRCodeSVG } from 'qrcode.react';
+import { PaymentSupportModal } from '../components/ui/PaymentSupportModal';
 import { 
   CheckCircle2, 
   Copy, 
   Check, 
   AlertCircle, 
   ArrowRight, 
-  ArrowLeft,
+  ArrowLeft, 
   ShieldCheck, 
   Smartphone,
   Loader2,
@@ -18,8 +19,7 @@ import {
   Receipt,
   ChevronUp,
   Phone,
-  BookOpen,
-  ExternalLink
+  HelpCircle
 } from 'lucide-react';
 
 const UTR_REGEX = /^[A-Z0-9]{10,30}$/;
@@ -38,6 +38,7 @@ export const WebsitePaymentPage: React.FC = () => {
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [copiedNumber, setCopiedNumber] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -359,47 +360,16 @@ export const WebsitePaymentPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Pay via Mobile Number (GPay / PhonePe / Paytm) */}
-              <div className="w-full p-3 bg-[#08090A] border border-[#EEEEEA]/30 shadow-[3px_3px_0px_#090A0B] rounded-xl flex items-center justify-between gap-2">
-                <div className="text-left font-mono truncate">
-                  <div className="text-[10px] text-[#E5BD00] font-bold uppercase">PAY VIA NUMBER (GPAY / PHONEPE / PAYTM)</div>
-                  <div className="text-sm text-[#EEEEEA] font-bold tracking-wider">8778784819</div>
-                </div>
+              {/* Payment Support */}
+              <div className="w-full p-3 bg-[#111214] border border-[#E5BD00]/30 shadow-[3px_3px_0px_#090A0B] rounded-xl text-left font-mono text-xs text-[#B8B8B2] flex items-center justify-end">
                 <button
                   type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText('8778784819');
-                    setCopiedNumber(true);
-                    setTimeout(() => setCopiedNumber(false), 2000);
-                  }}
-                  className="min-h-[36px] px-3 py-1.5 bg-[#0FA9C6] hover:bg-[#EEEEEA] text-[#090A0B] font-mono font-bold rounded-lg text-xs uppercase border border-[#090A0B] shadow-[2px_2px_0px_#090A0B] flex items-center gap-1 cursor-pointer transition-colors shrink-0"
+                  onClick={() => setShowSupportModal(true)}
+                  className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[#E5BD00] hover:text-[#0FA9C6] transition-colors cursor-pointer group"
                 >
-                  {copiedNumber ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : <Copy className="w-3.5 h-3.5 stroke-[2.5]" />}
-                  <span>{copiedNumber ? 'COPIED' : 'COPY'}</span>
+                  <HelpCircle className="w-4 h-4 text-[#E5BD00] group-hover:text-[#0FA9C6] shrink-0 transition-colors" />
+                  <span className="underline underline-offset-4 decoration-dotted">Any issue?</span>
                 </button>
-              </div>
-
-              {/* Payment Support Notice */}
-              <div className="w-full p-3 bg-[#111214] border border-[#E5BD00]/30 shadow-[3px_3px_0px_#090A0B] rounded-xl text-left font-mono text-xs text-[#B8B8B2] flex flex-col gap-2">
-                <div className="flex items-center gap-2.5">
-                  <Phone className="w-4 h-4 text-[#E5BD00] shrink-0" />
-                  <div>
-                    <span className="text-[11px] text-[#B8B8B2] block">Contact if any issues arise:</span>
-                    <a href="tel:8903664244" className="font-bold text-[#E5BD00] hover:text-[#0FA9C6] transition-colors">
-                      Kishore : 8903664244
-                    </a>
-                  </div>
-                </div>
-                <a
-                  href={REGISTRATION_USER_MANUAL_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="pt-1.5 border-t border-[#EEEEEA]/10 flex items-center gap-2 text-xs font-bold text-[#0FA9C6] hover:text-[#EEEEEA] transition-colors"
-                >
-                  <BookOpen className="w-3.5 h-3.5 shrink-0" />
-                  <span>View Step-by-Step Manual</span>
-                  <ExternalLink className="w-3 h-3 shrink-0" />
-                </a>
               </div>
 
             </div>
@@ -720,6 +690,11 @@ export const WebsitePaymentPage: React.FC = () => {
           </div>
         </>
       )}
+
+      <PaymentSupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+      />
 
     </div>
   );

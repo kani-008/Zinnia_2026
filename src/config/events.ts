@@ -24,6 +24,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Predict the Output - analyze code and determine the correct output.',
       'Fill in the Blanks - complete missing parts of the code correctly.',
       'Race against time - solve as many challenges as possible before the clock runs out and claim the top spot.',
+      'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [
       { name: 'Prabakaran D', role: 'STUDENT COORDINATOR', phone: '+91 63692 20453' },
@@ -60,6 +61,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Skills tested: logical reasoning, critical thinking, evidence analysis, deduction and decision-making.',
       'Objective: prove your innocence, uncover the hidden connections between the suspects, and identify the person responsible.',
       'Winning criteria: accuracy + reasoning + speed + score.',
+      'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [
       { name: 'Abdul Razith', role: 'STUDENT COORDINATOR', phone: '+91 90470 57868' },
@@ -94,6 +96,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Skills tested: SELECT, WHERE, GROUP BY, HAVING, JOIN, subqueries, aggregate functions and data analysis.',
       'Objective: analyze the database, uncover hidden clues, eliminate suspects, and identify the culprit.',
       'Winning criteria: accuracy + speed + score.',
+      'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [
       { name: 'Vignesh', role: 'STUDENT COORDINATOR', phone: '+91 80154 91593' },
@@ -134,6 +137,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Round 3: solve puzzles and collect passcode fragments.',
       'Arrange the fragments to unlock the final coding challenge.',
       'Complete all challenges within the given time.',
+      'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [
       { name: 'Muhammed Umer', role: 'STUDENT COORDINATOR', phone: '+91 94458 86230' },
@@ -171,11 +175,13 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       '8 minutes to present, then 2 minutes of Q&A.',
     ],
     rules: [
-      'Teams of 2 to 3 participants.',
-      'The topic can be chosen by the participants based on their area of interest or preference.',
-      'The presentation should contain a maximum of 8 slides.',
-      'Presentation duration: 8 minutes, followed by 2 minutes of Q&A.',
-      'Participants should be prepared to answer questions from the judges during the Q&A session.',
+      'Team Size: Each team must consist of 2–3 members.',
+      'Topic: Teams may choose any topic based on their area of interest or preference.',
+      'Slide Limit: The presentation must not exceed 8 slides',
+      'Duration: Each team gets 6–8 minutes to present, followed by 2 minutes of Q&A.',
+      'Q&A: All team members should be prepared to answer questions from the judges.',
+      'Laptop: Each team must bring at least one laptop with the presentation ready to run. Ensure the laptop is fully charged before the event, and carry your charger as a backup, since charging points may be limited at the venue.',
+      'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [
       { name: 'Kanishkar', role: 'STUDENT COORDINATOR', phone: '+91 87787 84819' },
@@ -211,6 +217,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Any misbehavior, cheating, or violation of event rules may result in immediate disqualification.',
       'Participants must follow the rules and instructions for each game to continue in the event.',
       'Requirement: one mobile phone per team, with enough battery and internet connectivity throughout the event.',
+      'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [
       { name: 'Praveenraja', role: 'STUDENT COORDINATOR', phone: '+91 63822 79383' },
@@ -253,6 +260,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Lucky Strikers can be used only during the first 5 questions.',
       'Use strategy and teamwork to maximize your score.',
       'After all 8 questions the scores are calculated; the team with the highest total score is declared the winner.',
+      'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [
       { name: 'Sivabalan', role: 'STUDENT COORDINATOR', phone: '+91 63845 11989' },
@@ -289,7 +297,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Speed Advantage: Teams that solve Round 1 faster earn a free hint advantage in Round 2.',
       'Round 2 Twist: Receive one final twist clue that may change your theory to refine your answer.',
       'Hints: Solve a mini-puzzle to unlock a hint — costs time (unless earned free from Round 1).',
-      'Winning: Rankings are based on accuracy (closeness to the real hidden climax) and speed.'
+      'Winning: Rankings are based on accuracy (closeness to the real hidden climax) and speed.',
+      'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [
       { name: 'Hariharan', role: 'STUDENT COORDINATOR', phone: '+91 88388 69405' },
@@ -325,7 +334,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Only original content is permitted; previously published films are not allowed.',
       'Participants must have the rights to all music, footage, and other media used.',
       'Offensive, discriminatory, or inappropriate content is not permitted.',
-      'Films will be judged based on story, creativity, direction, originality, and overall impact.'
+      'Films will be judged based on story, creativity, direction, originality, and overall impact.',
+      'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [
       { name: 'Aswin Sanjeev Kumar', role: 'STUDENT COORDINATOR', phone: '+91 79040 98102' },

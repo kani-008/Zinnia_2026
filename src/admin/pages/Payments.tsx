@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Check, ExternalLink, ImageOff, Loader2, Search, Send, X } from 'lucide-react';
+import { Check, ExternalLink, ImageOff, KeyRound, Loader2, Search, Send, X } from 'lucide-react';
 import { useAdminQuery } from '../hooks/useAdminQuery';
 import { adminFetch } from '../auth/adminFetch';
 import {
@@ -31,6 +31,16 @@ const REJECT_PRESETS = [
   'The amount received is less than the registration fee.',
   'The payment screenshot is unreadable — please send a clearer image.',
   'This transaction reference has already been used for another registration.',
+];
+
+// A bypass is only as good as its reason: it is the sole record that this
+// money was never checked against a statement. The presets are the shapes that
+// actually happen at a desk, so the box is rarely left to freehand.
+const BYPASS_PRESETS = [
+  'Paid in cash to the treasurer at the registration desk.',
+  'Paid in cash to a coordinator, handed over to the treasurer.',
+  'Paid by direct bank transfer outside UPI.',
+  'Fee waived by the organising committee.',
 ];
 
 const ago = (iso: string | null) => {
@@ -72,6 +82,7 @@ function Drawer({
   const [problem, setProblem] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState(false);
+  const [bypassing, setBypassing] = useState(false);
 
   const p = data?.payment;
 
@@ -153,12 +164,12 @@ function Drawer({
     [loadShot],
   );
 
-  const act = async (approve: boolean, reason?: string) => {
+  const act = async (kind: 'approve' | 'reject' | 'bypass', reason?: string) => {
     setBusy(true);
     setProblem(null);
     try {
       const res = await adminFetch<{ email_failed?: boolean; message?: string }>(
-        `/api/admin/payments/${userId}/${approve ? 'approve' : 'reject'}`,
+        `/api/admin/payments/${userId}/${kind}`,
         { method: 'POST', body: JSON.stringify(reason ? { reason } : {}) },
       );
       onActioned();
@@ -194,14 +205,16 @@ function Drawer({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (rejecting) return;
+      if (rejecting || bypassing) return;
       if (e.key === 'Escape') onClose();
-      if (e.key.toLowerCase() === 'a' && p?.txn_ref) act(true);
+      if (e.key.toLowerCase() === 'a' && p?.txn_ref) act('approve');
       if (e.key.toLowerCase() === 'r' && p?.txn_ref) setRejecting(true);
+      // No shortcut for bypass on purpose. It confirms a registration without
+      // any check, so it should cost a deliberate click, not a stray keypress.
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [p, rejecting]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [p, rejecting, bypassing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-black/60" onClick={onClose}>
@@ -378,6 +391,13 @@ function Drawer({
 
               <FlagChips flags={p.flags} />
 
+              {p.approval_note && (
+                <p className="rounded border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[12.5px] text-amber-200">
+                  <span className="font-semibold">Approved without a bank check.</span>{' '}
+                  {p.approval_note}
+                </p>
+              )}
+
               {p.reject_reason && p.payment_status === 'REJECTED' && (
                 <p className="rounded border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-200">
                   {p.reject_reason}
@@ -392,7 +412,7 @@ function Drawer({
                   variant="primary"
                   className="w-full"
                   disabled={busy || !p.txn_ref || p.payment_status === 'APPROVED'}
-                  onClick={() => act(true)}
+                  onClick={() => act('approve')}
                 >
                   <Check className="w-3.5 h-3.5" />
                   {p.payment_status === 'APPROVED' ? 'Already approved' : 'Approve'}
@@ -406,6 +426,16 @@ function Drawer({
                   <X className="w-3.5 h-3.5" />
                   Reject
                 </Button>
+                {p.payment_status !== 'APPROVED' && (
+                  <Button
+                    className="w-full"
+                    disabled={busy}
+                    onClick={() => setBypassing(true)}
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    Bypass — paid outside UPI
+                  </Button>
+                )}
                 {p.payment_status === 'APPROVED' && (
                   <Button className="w-full" disabled={busy} onClick={resend}>
                     <Send className="w-3.5 h-3.5" />
@@ -432,7 +462,20 @@ function Drawer({
           onClose={() => setRejecting(false)}
           onConfirm={(reason) => {
             setRejecting(false);
-            act(false, reason);
+            act('reject', reason);
+          }}
+        />
+
+        <ReasonDialog
+          open={bypassing}
+          title="Approve without a bank check?"
+          description="For money taken in cash or outside UPI. This confirms the registration and emails the pass, exactly like Approve, but there will be no matching entry in any bank statement. What you write here is stored on the payment and is the only record of why."
+          presets={BYPASS_PRESETS}
+          confirmLabel="Bypass and confirm"
+          onClose={() => setBypassing(false)}
+          onConfirm={(reason) => {
+            setBypassing(false);
+            act('bypass', reason);
           }}
         />
       </aside>
@@ -573,7 +616,7 @@ export function Payments() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-[13px]">
+            <table className="w-full min-w-[1080px] text-[13px]">
               <thead>
                 <tr className="border-y border-white/8 bg-white/[0.02]">
                   <th className="w-9 px-3 py-2.5">
@@ -587,7 +630,7 @@ export function Payments() {
                       disabled={!cleanIds.length}
                     />
                   </th>
-                  {['UserID', 'Name', 'College', 'Amount', 'Reference', 'Waiting', 'Events', 'Flags', 'Status'].map(
+                  {['UserID', 'Name', 'College', 'Amount', 'Reference', 'Bank', 'Waiting', 'Events', 'Flags', 'Status'].map(
                     (h) => (
                       <th
                         key={h}
@@ -634,6 +677,11 @@ export function Payments() {
                           </span>
                           {r.txn_ref && <CopyButton value={r.txn_ref} label="reference" />}
                         </span>
+                      </td>
+                      <td className="px-3 py-2.5 whitespace-nowrap text-white/70">
+                        {/* Which bank statement this reference should appear
+                            in. Sits beside Reference for that reason. */}
+                        {r.payee_bank || <span className="text-white/20">—</span>}
                       </td>
                       <td className="px-3 py-2.5 font-mono tabular-nums text-white/45">
                         {ago(r.submitted_at)}

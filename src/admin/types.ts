@@ -68,6 +68,10 @@ export interface PaymentRow {
   txn_ref: string | null;
   reject_reason: string | null;
   screenshot_url: string | null;
+  /** bank that received this payment, e.g. "SBI"; empty on pre-split rows */
+  payee_bank: string;
+  /** treasurer's reason if approved without a bank check; null on a normal approval */
+  approval_note: string | null;
   submitted_at: string | null;
   approved_at: string | null;
   attempt_no: number;
@@ -84,6 +88,7 @@ export interface PaymentAttempt {
   status: string;
   reject_reason: string | null;
   screenshot_url: string | null;
+  approval_note?: string | null;
   created_at: string;
   approved_at: string | null;
 }

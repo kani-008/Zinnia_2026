@@ -254,7 +254,7 @@ def _mask_email_for_pending(email: str) -> str:
     return (email or "").strip()
 
 
-def promote_pending(details: Dict[str, Any]) -> Dict[str, Any]:
+def promote_pending(details: Dict[str, Any], *, payee_upi: str = "") -> Dict[str, Any]:
     """
     The verified code is in: create the participant and their payment row.
 
@@ -320,6 +320,12 @@ def promote_pending(details: Dict[str, Any]) -> Dict[str, Any]:
             "user_id": user_id,
             "amount": REGISTRATION_FEE,
             "status": "PENDING",
+            # Which of the receiving accounts this participant was shown. It is
+            # stamped here, at the only insert on this path, and never touched
+            # again - a resubmission after a rejection must reconcile against
+            # the account the money actually went to, not whichever one the
+            # config would pick today.
+            **({"payee_upi": payee_upi} if payee_upi else {}),
         },
     )
 
@@ -350,6 +356,10 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
     from services import pending_registration as pending
 
     pending_details = None
+    # Empty on the resubmission path, where there is no token to read. Empty
+    # resolves to the primary account, which is exactly what payment_status
+    # showed that participant, so the stored row and the QR agree.
+    pending_payee_upi = ""
     if pending.is_pending_token(registration_id):
         payload, reason = pending.open_token(registration_id)
         if not payload or not pending.is_verified_payload(payload):
@@ -389,6 +399,11 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
         # participant behind whenever the image turned out to be the wrong type
         # or too large.
         pending_details = pending.details_of(payload)
+
+        # Read off the token, never off the request: participant_controller
+        # copies every posted form field into `data`, so a payee taken from
+        # there would be attacker-chosen. The token is signed.
+        pending_payee_upi = pending.payee_for(payload).get("upi_id", "")
 
     # Everything in this block is about finding an EXISTING registration. On the
     # pending path there deliberately is not one yet — user_id is assigned by
@@ -466,7 +481,7 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
     # registration can be created. This is the first and only write for a
     # participant who reached here through the pending flow.
     if pending_details is not None:
-        created = promote_pending(pending_details)
+        created = promote_pending(pending_details, payee_upi=pending_payee_upi)
         if not created.get("success"):
             return created
         user_id = created["participant"]["user_id"]
@@ -507,7 +522,12 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
         payment = (
             db.insert(
                 "payments",
-                {"user_id": user_id, "amount": REGISTRATION_FEE, "status": "PENDING"},
+                {
+                    "user_id": user_id,
+                    "amount": REGISTRATION_FEE,
+                    "status": "PENDING",
+                    **({"payee_upi": pending_payee_upi} if pending_payee_upi else {}),
+                },
             )
             or [{}]
         )[0]
@@ -717,6 +737,13 @@ def payment_status(user_id: str = "", registration_id: str = "") -> Dict[str, An
             }
 
         d = pending.details_of(payload)
+
+        # The payment screen builds its QR from this. It is resolved fresh from
+        # the token on every call rather than remembered anywhere, so a token
+        # minted before the split - or one naming an account that has since
+        # been unconfigured - falls back to the primary account instead of
+        # rendering a blank payee.
+        acct = pending.payee_for(payload)
         return {
             "success": True,
             "registration_id": registration_id,
@@ -729,6 +756,10 @@ def payment_status(user_id: str = "", registration_id: str = "") -> Dict[str, An
             "user_id": None,
             "payment": None,
             "expected_amount": REGISTRATION_FEE,
+            "payee_upi_id": acct.get("upi_id", ""),
+            "payee_name": acct.get("payee_name", ""),
+            "payee_bank": acct.get("bank", ""),
+            "payee_phone": acct.get("payee_phone", ""),
         }
 
     participant = resolve_participant(registration_id=registration_id, user_id=user_id)
@@ -738,11 +769,20 @@ def payment_status(user_id: str = "", registration_id: str = "") -> Dict[str, An
     payment = latest_payment(participant["user_id"])
     verified = email_is_verified(participant["user_id"])
 
+    # From the stored row, not re-derived: a participant who paid before the
+    # second account was configured must keep reading as the account they
+    # actually paid, whatever the config says now.
+    acct = pending.payee_by_upi((payment or {}).get("payee_upi") or "")
+
     return {
         "success": True,
         **public_view(participant, payment=payment, verified=verified),
         "payment": payment_view(payment),
         "expected_amount": REGISTRATION_FEE,
+        "payee_upi_id": acct.get("upi_id", ""),
+        "payee_name": acct.get("payee_name", ""),
+        "payee_bank": acct.get("bank", ""),
+        "payee_phone": acct.get("payee_phone", ""),
     }
 
 
@@ -797,9 +837,28 @@ def treasurer_review_payment(
     )
 
     action = (action or "").strip().upper()
-    if action not in ("APPROVE", "VERIFY", "REJECT"):
-        return {"success": False, "error_code": "VALIDATION_ERROR", "message": "action must be APPROVE or REJECT."}
-    approve = action in ("APPROVE", "VERIFY")
+    if action not in ("APPROVE", "VERIFY", "REJECT", "BYPASS"):
+        return {
+            "success": False,
+            "error_code": "VALIDATION_ERROR",
+            "message": "action must be APPROVE, REJECT or BYPASS.",
+        }
+
+    # BYPASS is an APPROVE that skips the bank check. Someone who paid the
+    # treasurer in cash has no transaction reference that will ever appear in a
+    # statement, so the usual gate below would refuse them forever. The reason
+    # is mandatory and is stored on the payment: it is the only thing that
+    # afterwards tells a cash approval apart from a verified one.
+    bypass = action == "BYPASS"
+    approve = bypass or action in ("APPROVE", "VERIFY")
+
+    if bypass and not (reason or "").strip():
+        return {
+            "success": False,
+            "error_code": "REASON_REQUIRED",
+            "field": "reason",
+            "message": "Say how this payment was received - it is the only record that it was not bank-verified.",
+        }
 
     payment = None
     if payment_id:
@@ -813,7 +872,18 @@ def treasurer_review_payment(
         return {"success": False, "error_code": "NOT_FOUND", "message": "Registration not found."}
     user_id = participant["user_id"]
     payment = payment or latest_payment(user_id)
-    if not payment or not payment.get("txn_ref"):
+
+    # A bypass has to work precisely when this check would fail, so it is the
+    # one path allowed past a missing reference. A row is created if there is
+    # none, because the approval has to be recorded somewhere.
+    if not payment and bypass:
+        payment = (db.insert("payments", {
+            "user_id": user_id,
+            "amount": REGISTRATION_FEE,
+            "status": "PENDING",
+        }) or [{}])[0]
+
+    if not payment or (not payment.get("txn_ref") and not bypass):
         return {
             "success": False,
             "error_code": "NO_PAYMENT",
@@ -836,6 +906,10 @@ def treasurer_review_payment(
         approval: Dict[str, Any] = {"status": "APPROVED", "approved_at": now_iso, "reject_reason": None}
         if re.fullmatch(r"[0-9a-fA-F-]{36}", (admin_id or "").strip()):
             approval["approved_by"] = admin_id.strip()
+        if bypass:
+            # Written only on a bypass. A normal approval leaves it NULL, and
+            # that difference is what the queue's Bypassed flag reads.
+            approval["approval_note"] = (reason or "").strip()[:500]
         db.update("payments", f"id=eq.{payment['id']}", approval)
         db.update("participants", f"user_id=eq.{user_id}", {"payment_status": "APPROVED"})
         participant["payment_status"] = "APPROVED"
@@ -854,7 +928,13 @@ def treasurer_review_payment(
             "success": True,
             **public_view(participant, payment={**payment, "status": "APPROVED"}, verified=email_is_verified(user_id)),
             "email_sent": email_sent,
-            "message": f"Payment approved. Registration {user_id} confirmed and the participant has been emailed.",
+            "bypassed": bypass,
+            "message": (
+                f"Bypassed. Registration {user_id} is confirmed without a bank check, "
+                f"marked on the record, and the participant has been emailed."
+                if bypass else
+                f"Payment approved. Registration {user_id} confirmed and the participant has been emailed."
+            ),
         }
 
     # REJECT

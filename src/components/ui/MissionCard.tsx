@@ -69,7 +69,12 @@ export const MissionCard: React.FC<MissionCardProps> = ({
           </div>
           <div className="flex items-center gap-1.5 justify-end">
             <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <span>{mission.team_size_min}-{mission.team_size_max} Members</span>
+            <span>
+              {mission.team_size_min === mission.team_size_max
+                ? mission.team_size_min
+                : `${mission.team_size_min}-${mission.team_size_max}`}{' '}
+              {mission.team_size_max === 1 ? 'Member' : 'Members'}
+            </span>
           </div>
         </div>
       </div>

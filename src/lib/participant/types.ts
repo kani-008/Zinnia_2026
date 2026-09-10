@@ -96,6 +96,8 @@ export interface PaymentRecord {
   reject_reason: string | null;
   /** storage path of the uploaded payment proof, once one is on file */
   screenshot_url?: string | null;
+  /** VPA this payment was sent to; null on rows written before the split */
+  payee_upi?: string | null;
   submitted_at?: string | null;
 }
 
@@ -103,6 +105,21 @@ export interface PaymentRecord {
 export type PaymentStatusData = RegistrationView & {
   payment: PaymentRecord | null;
   expected_amount: number;
+  /**
+   * Which of the two receiving accounts THIS participant pays into. Chosen
+   * server-side when the verified token is minted and carried inside it, so
+   * the QR, the copyable ID and the stored payments row cannot disagree.
+   *
+   * Optional because a token minted before the split carries no account and
+   * stays valid for hours after a deploy; the payment screen falls back to the
+   * build-time config in that case.
+   */
+  payee_upi_id?: string;
+  payee_name?: string;
+  /** short bank label, e.g. "SBI" — shown to the treasurer, not the payer */
+  payee_bank?: string;
+  /** number that resolves to THIS account; empty hides the "pay via number" shortcut */
+  payee_phone?: string;
 };
 
 export type PaymentStatusResponse = ApiResult<PaymentStatusData>;
@@ -152,6 +169,16 @@ export type VerifyOtpResponse = ApiResult<{
 export type VerifyRegistrationResponse = ApiResult<{
   registration_id: string;
   details: { name: string; email: string; college: string };
+  /**
+   * The account this participant must pay into. It travels with the token
+   * because the payment screen paints from navigation state and never calls
+   * the status endpoint on this path — without it the QR would fall back to
+   * the build-time default and half the payments would land in one account.
+   */
+  payee_upi_id?: string;
+  payee_name?: string;
+  payee_bank?: string;
+  payee_phone?: string;
   expires_in?: number;
   message?: string;
 }>;

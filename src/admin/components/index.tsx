@@ -66,6 +66,7 @@ const FLAG_LABEL: Record<string, [Tone, string, string]> = {
   RESUBMISSION: ['warn', 'Resubmitted', 'Not the first attempt'],
   NO_SCREENSHOT: ['neutral', 'No proof', 'No payment screenshot was submitted'],
   EMAIL_UNVERIFIED: ['warn', 'Email', 'Email address has not been verified'],
+  BYPASSED: ['crit', 'Bypassed', 'Approved without a bank check - this money will never appear in a statement'],
 };
 
 export function FlagChips({ flags }: { flags?: string[] | null }) {

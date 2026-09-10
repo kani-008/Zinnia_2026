@@ -12,11 +12,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  BookOpen,
   Check,
   CheckCircle2,
   Copy,
-  ExternalLink,
+  HelpCircle,
   Hourglass,
   ImagePlus,
   Loader2,
@@ -28,10 +27,10 @@ import {
 
 import { QRCodeSVG } from 'qrcode.react';
 import { WebsiteNavbar } from '../components/layout/Navbar';
+import { PaymentSupportModal } from '../components/ui/PaymentSupportModal';
 import {
   REGISTRATION_FEE_PER_HEAD,
   REGISTRATION_STEPS,
-  REGISTRATION_USER_MANUAL_URL,
   TREASURER_PAYMENT_CONFIG,
 } from '../config/site';
 import {
@@ -84,7 +83,11 @@ export const ParticipantPaymentPage: React.FC = () => {
   // submitted. It also means no "Loading registration status" screen between
   // the code and the payment form.
   const handoff = useLocation().state as
-    | { details?: { name: string; email: string; college: string } }
+    | {
+        details?: { name: string; email: string; college: string };
+        /** which receiving account this participant was assigned, from verify */
+        payee?: { upi_id: string; name: string; bank: string; phone: string };
+      }
     | null;
 
   const [status, setStatus] = useState<PaymentStatusData | null>(() =>
@@ -100,10 +103,19 @@ export const ParticipantPaymentPage: React.FC = () => {
           user_id: null,
           payment: null,
           expected_amount: REGISTRATION_FEE_PER_HEAD,
+          payee_upi_id: handoff.payee?.upi_id ?? '',
+          payee_name: handoff.payee?.name ?? '',
+          payee_bank: handoff.payee?.bank ?? '',
+          payee_phone: handoff.payee?.phone ?? '',
         } as PaymentStatusData)
       : null,
   );
   const [loading, setLoading] = useState(!handoff?.details);
+  // Whether the account to pay is settled. True immediately when the verify
+  // screen handed one over; otherwise it takes the status call. The QR waits on
+  // this rather than on `loading`, because `loading` is false on the handoff
+  // path and gating the whole page would blank the form for everyone.
+  const [payeeSettled, setPayeeSettled] = useState(Boolean(handoff?.payee?.upi_id));
   const [utr, setUtr] = useState('');
   const [proof, setProof] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
@@ -111,6 +123,7 @@ export const ParticipantPaymentPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [copiedNumber, setCopiedNumber] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   // Failures surface as a slide-in toast rather than a box above the form,
   // which on a phone appeared off-screen above the button just pressed.
@@ -168,13 +181,18 @@ export const ParticipantPaymentPage: React.FC = () => {
     }
 
     setStatus(result);
+    setPayeeSettled(true);
     if (result.payment?.txn_ref) setUtr(result.payment.txn_ref);
   }, [registrationId, legacyUserId, navigate]);
 
   useEffect(() => {
     // Already painted from the handoff; a fetch would only re-derive what we
     // were just given, and would put a loading state in front of the form.
-    if (handoff?.details) return;
+    //
+    // The account is part of "what we were given" now. A tab opened before the
+    // fee was split across two banks has details but no account, so it still
+    // has to ask - otherwise it would draw a QR for the wrong bank.
+    if (handoff?.details && handoff.payee?.upi_id) return;
     void load();
   }, [load, handoff]);
 
@@ -219,7 +237,7 @@ export const ParticipantPaymentPage: React.FC = () => {
 
   const copyUpi = async () => {
     try {
-      await navigator.clipboard.writeText(TREASURER_PAYMENT_CONFIG.upiId ?? '');
+      await navigator.clipboard.writeText(payeeUpi);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -229,7 +247,7 @@ export const ParticipantPaymentPage: React.FC = () => {
 
   const copyNumber = async () => {
     try {
-      await navigator.clipboard.writeText('8778784819');
+      await navigator.clipboard.writeText(payeePhone);
       setCopiedNumber(true);
       window.setTimeout(() => setCopiedNumber(false), 1800);
     } catch {
@@ -263,13 +281,23 @@ export const ParticipantPaymentPage: React.FC = () => {
     setError(null);
   };
 
+  // ONE resolved account, feeding the QR, the copy button and the printed ID.
+  // They must never disagree: scanning and copying would then pay two different
+  // banks, and the payments row records only one of them.
+  //
+  // The server value wins. TREASURER_PAYMENT_CONFIG is a fallback for a token
+  // minted before the split, which stays valid for hours after a deploy.
+  const payeeUpi = status?.payee_upi_id || TREASURER_PAYMENT_CONFIG.upiId || '';
+  const payeeName = status?.payee_name || TREASURER_PAYMENT_CONFIG.payeeName || '';
+  const payeePhone = status?.payee_phone ?? '';
+
   // upi://pay is the standard intent every Indian UPI app understands.
   // Amount and note are prefilled so the participant cannot mistype either.
   // pa is NOT percent-encoded: a VPA is already URL-safe, and turning its "@"
   // into %40 makes some UPI apps fail to parse the intent. Matches the legacy
   // payment page, which has been scanned in production.
-  const upiLink = `upi://pay?pa=${TREASURER_PAYMENT_CONFIG.upiId ?? ''}`
-    + `&pn=${encodeURIComponent(TREASURER_PAYMENT_CONFIG.payeeName ?? '')}`
+  const upiLink = `upi://pay?pa=${payeeUpi}`
+    + `&pn=${encodeURIComponent(payeeName)}`
     + `&am=${status?.expected_amount || REGISTRATION_FEE_PER_HEAD}`
     + `&cu=INR`
     + `&tn=${encodeURIComponent('ZINNIA26 ' + (status?.user_id || ''))}`;
@@ -336,7 +364,15 @@ export const ParticipantPaymentPage: React.FC = () => {
     // token, which still answers from the token itself — OTP_VERIFIED with no
     // payment — and bounced the participant straight back to the form they had
     // just completed.
-    setStatus(result as unknown as PaymentStatusData);
+    setStatus((prev) => ({
+      ...(result as unknown as PaymentStatusData),
+      // The submit endpoint answers with the registration, not the payee. Left
+      // to itself this cast would blank the account on the confirmation screen.
+      payee_upi_id: prev?.payee_upi_id,
+      payee_name: prev?.payee_name,
+      payee_bank: prev?.payee_bank,
+      payee_phone: prev?.payee_phone,
+    }));
 
     // Green, and it leaves on its own. A standing badge on this screen said
     // "complete" every time the page was opened, long after the moment it was
@@ -536,7 +572,7 @@ export const ParticipantPaymentPage: React.FC = () => {
     <ComicPageShell>
       <WebsiteNavbar />
 
-      <main className="mx-auto max-w-2xl w-full px-5 sm:px-8 pb-24 pt-6 sm:pt-10 overflow-hidden">
+      <main className="mx-auto w-full max-w-2xl sm:max-w-[480px] px-5 sm:px-6 pb-24 pt-6 sm:pt-10 overflow-hidden">
         <header className="mb-6">
           <ComicHeading fluid>Pay the registration fee</ComicHeading>
 
@@ -571,15 +607,30 @@ export const ParticipantPaymentPage: React.FC = () => {
               so they read better one under the other. */}
           <div className="mt-6 flex flex-col items-center gap-5">
             <div className="w-full max-w-[280px] shrink-0 bg-white p-3 border-[3px] border-[#090A0B] shadow-[5px_5px_0px_#090A0B] -rotate-1 sticker-pop sm:w-[240px]">
-              {/* Built from TREASURER_PAYMENT_CONFIG, the same source as the UPI
-                  id printed beside it. A static image could not follow that
-                  config, so scanning and copying could pay different accounts. */}
-              <QRCodeSVG
-                value={upiLink}
-                level="M"
-                className="block h-auto w-full"
-                aria-label={`UPI payment QR for ${TREASURER_PAYMENT_CONFIG.payeeName}`}
-              />
+              {/* Built from the same resolved account as the UPI id printed
+                  beside it. A static image could not follow that, so scanning
+                  and copying could pay different banks.
+
+                  Held back until the account is known. The fee is split across
+                  two banks and the wrong QR here is not a cosmetic flicker: it
+                  is money in the wrong account, recorded against the other one.
+                  Only this box waits - the amount and the form are already up. */}
+              {payeeSettled ? (
+                <QRCodeSVG
+                  value={upiLink}
+                  level="M"
+                  className="block h-auto w-full"
+                  aria-label={`UPI payment QR for ${payeeName}`}
+                />
+              ) : (
+                <div
+                  role="status"
+                  aria-label="Loading the payment QR"
+                  className="flex aspect-square w-full items-center justify-center bg-[#EEEEEA]"
+                >
+                  <Loader2 size={26} className="animate-spin text-[#71767B]" />
+                </div>
+              )}
             </div>
 
             {/* Label on its own line, value indented under it. */}
@@ -590,52 +641,45 @@ export const ParticipantPaymentPage: React.FC = () => {
                   onClick={copyUpi}
                   className="mt-1 flex items-center gap-2 pl-2 font-mono text-sm font-bold text-[#EEEEEA] transition-colors hover:text-[#0FA9C6]"
                 >
-                  {TREASURER_PAYMENT_CONFIG.upiId || '—'}
+                  {payeeSettled ? payeeUpi || '—' : '…'}
                   {copied ? <Check size={14} className="text-[#0FA9C6]" /> : <Copy size={14} className="text-[#71767B]" />}
                 </button>
               </div>
 
-              <div>
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">
-                  Pay via Number
-                </p>
-                <button
-                  onClick={copyNumber}
-                  type="button"
-                  className="mt-1 flex items-center gap-2 pl-2 font-mono text-sm font-bold text-[#EEEEEA] transition-colors hover:text-[#E5BD00]"
-                >
-                  8778784819
-                  {copiedNumber ? <Check size={14} className="text-[#0FA9C6]" /> : <Copy size={14} className="text-[#71767B]" />}
-                </button>
-              </div>
+              {/* Shown only for the account this number resolves to. The fee is
+                  split across two banks; offering one bank's number to someone
+                  assigned the other would route the money past the split and
+                  leave the treasurer reconciling against the wrong statement. */}
+              {/* {payeeSettled && payeePhone && (
+                <div>
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">
+                    Pay via Number
+                  </p>
+                  <button
+                    onClick={copyNumber}
+                    type="button"
+                    className="mt-1 flex items-center gap-2 pl-2 font-mono text-sm font-bold text-[#EEEEEA] transition-colors hover:text-[#E5BD00]"
+                  >
+                    {payeePhone}
+                    {copiedNumber ? <Check size={14} className="text-[#0FA9C6]" /> : <Copy size={14} className="text-[#71767B]" />}
+                  </button>
+                </div>
+              )} */}
 
               <div>
                 <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">Payee</p>
-                <p className="mt-1 pl-2 font-mono text-sm text-[#EEEEEA]">{TREASURER_PAYMENT_CONFIG.payeeName || '—'}</p>
+                <p className="mt-1 pl-2 font-mono text-sm text-[#EEEEEA]">{payeeName || '—'}</p>
               </div>
 
-              <div className="pt-2 border-t border-[#B8B8B2]/15 space-y-2">
-                <div>
-                  <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-[#B8B8B2]">Payment Support</p>
-                  <p className="mt-0.5 pl-2 font-mono text-[11px] text-[#B8B8B2]">Contact if any issues arise:</p>
-                  <a
-                    href="tel:8903664244"
-                    className="mt-1 flex items-center gap-1.5 pl-2 font-mono text-sm font-bold text-[#E5BD00] hover:text-[#0FA9C6] transition-colors"
-                  >
-                    <Phone size={14} className="shrink-0" />
-                    <span>Kishore : 8903664244</span>
-                  </a>
-                </div>
-                <a
-                  href={REGISTRATION_USER_MANUAL_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 pl-2 font-mono text-xs font-bold text-[#0FA9C6] hover:text-[#EEEEEA] transition-colors"
+              <div className="pt-2 border-t border-[#B8B8B2]/15 flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowSupportModal(true)}
+                  className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[#E5BD00] hover:text-[#0FA9C6] transition-colors cursor-pointer group"
                 >
-                  <BookOpen size={13} className="shrink-0" />
-                  <span>Open Guide</span>
-                  <ExternalLink size={11} className="shrink-0" />
-                </a>
+                  <HelpCircle size={14} className="shrink-0 text-[#E5BD00] group-hover:text-[#0FA9C6] transition-colors" />
+                  <span className="underline underline-offset-4 decoration-dotted">Any issue?</span>
+                </button>
               </div>
             </div>
           </div>
@@ -746,6 +790,11 @@ export const ParticipantPaymentPage: React.FC = () => {
 
         </form>
       </main>
+
+      <PaymentSupportModal
+        isOpen={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+      />
     </ComicPageShell>
   );
 };

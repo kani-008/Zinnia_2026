@@ -231,6 +231,29 @@ class AdminPanelController:
             return _fail(e)
 
     @staticmethod
+    def bypass_payment(user_id: str):
+        """
+        Approve without a bank check, for money taken in cash.
+
+        The reason is mandatory and is not a formality: it is stored on the
+        payment and is the only thing that afterwards separates this from an
+        approval checked against a statement.
+        """
+        try:
+            body = request.get_json(silent=True) or {}
+            reason = (body.get("reason") or "").strip()
+            if not reason:
+                return jsonify({
+                    "success": False,
+                    "error_code": "REASON_REQUIRED",
+                    "message": "Say how this payment was received - it is the record that it was not bank-verified.",
+                }), 400
+            res = svc.review_payment(user_id, approve=True, reason=reason, bypass=True)
+            return jsonify(res), 200 if res.get("success") else 400
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
     def resend_pass(user_id: str):
         try:
             res = svc.resend_pass(user_id)
