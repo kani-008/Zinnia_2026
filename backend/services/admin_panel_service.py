@@ -39,6 +39,7 @@ from __future__ import annotations
 import datetime as dt
 from collections import defaultdict
 from contextlib import contextmanager
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
@@ -48,6 +49,12 @@ from services import zin26_db as db
 from services.audit_service import log_action
 
 QUEUE_PAGE_SIZE = 50
+
+# The treasurer's screen asks for the whole queue in one go and filters by status
+# in the browser, because each Supabase round trip costs about a second whatever
+# it returns - five statuses meant five of them. A cap is still enforced here so
+# a caller cannot ask the server to build an unbounded response.
+QUEUE_MAX_PAGE_SIZE = 500
 REGISTRATION_FEE = 250
 
 # A seat is occupied unless the registration was cancelled. This mirrors
@@ -93,59 +100,114 @@ def _hours_since(value: Optional[str]) -> float:
 # cached_reads() memoises the shared tables for the duration of one build. It is
 # OFF unless a caller opens the block, so every other screen keeps reading live
 # and nothing outside the export path changes behaviour.
-_snapshot: Optional[Dict[str, Any]] = None
+# Thread-local, not a module global. Under a threaded server two admins loading
+# a screen at once both opened a block; the second saw the first's dict as its
+# "outer" and restored it on exit, so one request's snapshot outlived it and
+# served rows to the other. Same data shape, so it never crashed - it just meant
+# a treasurer could act on another request's stale read.
+_local = threading.local()
+
+
+def _get_snapshot() -> Optional[Dict[str, Any]]:
+    return getattr(_local, "snapshot", None)
+
+
+# Every shared table, and the one way to read it. Named here rather than inline
+# so prefetch() runs exactly the readers the cached accessors use - two copies of
+# a select string is how a column ends up fetched on one path and not another.
+_READERS: Dict[str, Any] = {
+    "events": lambda: db.select(
+        "events",
+        "select=code,name,capacity,capacity_is_locked,is_active,reg_closes_at,"
+        "min_team,max_team,sort_order,category,type&order=sort_order",
+    ),
+    "registrations": lambda: db.select(
+        "registrations", f"select=reg_id,user_id,event_code,team_id,status&{LIVE_REG}"),
+    "teams": lambda: db.select(
+        "teams", "select=team_id,event_code,team_name,captain_user_id,status,topic,created_at"),
+    "team_members": lambda: db.select(
+        "team_members", "select=team_id,user_id,role,accept_status"),
+    "participants": lambda: db.select(
+        "participants",
+        "select=user_id,name,email,phone,college,department,year,food_preference,"
+        "payment_status,master_qr_token,created_at",
+    ),
+    "payments": lambda: db.select(
+        "payments",
+        "select=id,user_id,amount,txn_ref,status,reject_reason,screenshot_url,"
+        "payee_upi,approval_note,created_at,approved_at&order=created_at.asc",
+    ),
+    "verified_emails": lambda: db.select(
+        "login_otps", "select=user_id&consumed_at=not.is.null"),
+}
 
 
 @contextmanager
 def cached_reads():
     """Fetch each shared table at most once for the duration of the block."""
-    global _snapshot
-    outer = _snapshot          # nesting is harmless: the inner block reuses
-    _snapshot = {} if outer is None else outer
+    outer = _get_snapshot()    # nesting is harmless: the inner block reuses
+    _local.snapshot = {} if outer is None else outer
     try:
         yield
     finally:
-        _snapshot = outer
+        _local.snapshot = outer
+
+
+def prefetch(*keys: str) -> None:
+    """
+    Fill the snapshot for these tables in ONE parallel batch.
+
+    The reads are independent, and against a remote PostgREST each costs about
+    the same however few rows come back - the treasurer's queue needed five and
+    paid for five round trips in a row, which is why switching between Pending
+    and Approved took seconds on four registrations. Issued together, the screen
+    waits for the slowest instead of the sum.
+
+    A no-op outside cached_reads(), so nothing changes for callers that have not
+    opted in, and it skips whatever the snapshot already holds.
+    """
+    snap = _get_snapshot()
+    if snap is None:
+        return
+    todo = [k for k in keys if k not in snap and k in _READERS]
+    if not todo:
+        return
+    # Written from this thread once the results are in, so the workers never
+    # touch the snapshot and the thread-local keeps a single writer.
+    with ThreadPoolExecutor(max_workers=len(todo)) as pool:
+        pending = {k: pool.submit(_READERS[k]) for k in todo}
+        for key, future in pending.items():
+            snap[key] = future.result()
 
 
 def _cached(key: str, fetch):
-    if _snapshot is None:
+    snap = _get_snapshot()
+    if snap is None:
         return fetch()
-    if key not in _snapshot:
-        _snapshot[key] = fetch()
-    return _snapshot[key]
+    if key not in snap:
+        snap[key] = fetch()
+    return snap[key]
 
 
 def _events() -> List[Dict[str, Any]]:
-    return _cached("events", lambda: db.select(
-        "events",
-        "select=code,name,capacity,capacity_is_locked,is_active,reg_closes_at,"
-        "min_team,max_team,sort_order,category,type&order=sort_order",
-    ))
+    return _cached("events", _READERS["events"])
 
 
 def _registrations() -> List[Dict[str, Any]]:
-    return _cached("registrations", lambda: db.select(
-        "registrations", f"select=reg_id,user_id,event_code,team_id,status&{LIVE_REG}"))
+    return _cached("registrations", _READERS["registrations"])
 
 
 def _teams() -> List[Dict[str, Any]]:
-    return _cached("teams", lambda: db.select(
-        "teams", "select=team_id,event_code,team_name,captain_user_id,status,topic,created_at"))
+    return _cached("teams", _READERS["teams"])
 
 
 def _team_members() -> List[Dict[str, Any]]:
     """Shared by the event rosters and the Teams sheet, which both re-read it."""
-    return _cached("team_members", lambda: db.select(
-        "team_members", "select=team_id,user_id,role,accept_status"))
+    return _cached("team_members", _READERS["team_members"])
 
 
 def _participants() -> List[Dict[str, Any]]:
-    return _cached("participants", lambda: db.select(
-        "participants",
-        "select=user_id,name,email,phone,college,department,year,food_preference,"
-        "payment_status,master_qr_token,created_at",
-    ))
+    return _cached("participants", _READERS["participants"])
 
 
 def _latest_payments() -> Dict[str, Dict[str, Any]]:
@@ -156,11 +218,7 @@ def _latest_payments() -> Dict[str, Dict[str, Any]]:
     the treasurer needs the history — so without collapsing to the latest, a
     participant who paid twice would appear twice in the queue.
     """
-    rows = _cached("payments", lambda: db.select(
-        "payments",
-        "select=id,user_id,amount,txn_ref,status,reject_reason,screenshot_url,"
-        "payee_upi,approval_note,created_at,approved_at&order=created_at.asc",
-    ))
+    rows = _cached("payments", _READERS["payments"])
     latest: Dict[str, Dict[str, Any]] = {}
     attempts: Dict[str, int] = defaultdict(int)
     for r in rows:
@@ -175,8 +233,7 @@ def _latest_payments() -> Dict[str, Dict[str, Any]]:
 
 def _verified_emails() -> set:
     """A consumed OTP is proof the address works."""
-    rows = _cached("verified_emails", lambda: db.select(
-        "login_otps", "select=user_id&consumed_at=not.is.null"))
+    rows = _cached("verified_emails", _READERS["verified_emails"])
     return {r["user_id"] for r in rows}
 
 
@@ -518,8 +575,20 @@ def _queue_rows() -> List[Dict[str, Any]]:
     return rows
 
 
-def payments_queue(status: str = "PENDING", q: str = "", flag: str = "", page: int = 1) -> Dict[str, Any]:
-    rows = _queue_rows()
+def payments_queue(
+    status: str = "PENDING",
+    q: str = "",
+    flag: str = "",
+    page: int = 1,
+    page_size: int = QUEUE_PAGE_SIZE,
+) -> Dict[str, Any]:
+    # Five independent tables, fetched together rather than one after another.
+    # Everything below this block is pure Python over `rows`, so the block can
+    # close as soon as they are in hand.
+    with cached_reads():
+        prefetch("participants", "payments", "verified_emails", "events", "registrations")
+        rows = _queue_rows()
+
     status = (status or "PENDING").upper()
 
     def bucket(r):
@@ -546,13 +615,16 @@ def payments_queue(status: str = "PENDING", q: str = "", flag: str = "", page: i
               reverse=(status != "PENDING"))
 
     page = max(1, int(page or 1))
-    start = (page - 1) * QUEUE_PAGE_SIZE
+    size = max(1, min(int(page_size or QUEUE_PAGE_SIZE), QUEUE_MAX_PAGE_SIZE))
+    start = (page - 1) * size
     return {
         "success": True,
-        "payments": rows[start:start + QUEUE_PAGE_SIZE],
+        "payments": rows[start:start + size],
         "page": page,
-        "page_size": QUEUE_PAGE_SIZE,
+        "page_size": size,
         "total": len(rows),
+        # Every status, counted over all rows - which is what lets the screen
+        # filter locally and still show honest badges.
         "counts": counts,
     }
 

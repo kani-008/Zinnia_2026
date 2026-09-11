@@ -501,19 +501,40 @@ export function Payments() {
     return () => window.clearTimeout(id);
   }, [q]);
 
+  // Deliberately WITHOUT the status. Every round trip to Supabase costs about a
+  // second whatever it returns, so asking again for each tab meant a second of
+  // blank screen per click - and, while it loaded, the previous tab's rows sat
+  // under the new tab's heading. The whole queue comes down once and the status
+  // is applied below, in the browser, where it is instant and cannot be stale.
   const path = useMemo(() => {
-    const sp = new URLSearchParams({ status });
+    const sp = new URLSearchParams({ status: 'ALL', page_size: '500' });
     if (term.trim()) sp.set('q', term.trim());
     return `/api/admin/payments?${sp}`;
-  }, [status, term]);
+  }, [term]);
 
-  const { data, error, loading, reload } = useAdminQuery<{
+  // keepPrevious: switching status swaps the whole path, and blanking the table
+  // for the round trip is what the treasurer felt as lag.
+  const { data, error, loading, refreshing, reload } = useAdminQuery<{
     payments: PaymentRow[];
     total: number;
     counts: Record<string, number>;
-  }>(path, 45000);
+  }>(path, 45000, true);
 
-  const rows = data?.payments || [];
+  // Mirrors payments_queue's own bucket(): a row with no reference has not paid,
+  // whatever its participant status says. The two must agree or the tab badges,
+  // which the server computes, would not match the rows the browser shows.
+  const bucketOf = (r: PaymentRow) =>
+    !r.txn_ref ? 'UNPAID' : String(r.payment_status || 'PENDING').toUpperCase();
+
+  const allRows = data?.payments || [];
+  const rows = useMemo(
+    () => (status === 'ALL' ? allRows : allRows.filter((r) => bucketOf(r) === status)),
+    [allRows, status],
+  );
+
+  // The server caps what it will build. If the fest ever outgrows that, say so
+  // rather than quietly showing a slice and calling it the queue.
+  const truncated = (data?.total ?? 0) > allRows.length;
   const cleanIds = rows.filter((r) => !r.flags?.length && r.txn_ref).map((r) => r.user_id);
 
   const toggle = useCallback((id: string) => {
@@ -603,12 +624,23 @@ export function Payments() {
           </div>
         )}
 
+        {/* The rows below stay on screen while a new status loads, so the hint
+            is what says they are not the answer yet. Blanking the table for a
+            round trip is what made switching tabs feel slow. */}
         <SectionTitle
-          title={`${data?.total ?? 0} registrations`}
-          hint={status === 'PENDING' ? 'oldest first' : undefined}
+          title={`${rows.length} registrations`}
+          hint={
+            refreshing
+              ? 'updating…'
+              : truncated
+                ? `showing ${allRows.length} of ${data?.total} — narrow with search`
+                : status === 'PENDING'
+                  ? 'oldest first'
+                  : undefined
+          }
         />
 
-        {loading && !data ? (
+        {(loading && !data) || (refreshing && !rows.length) ? (
           <Spinner />
         ) : !rows.length ? (
           <div className="px-5 py-12 text-center text-sm text-white/35">

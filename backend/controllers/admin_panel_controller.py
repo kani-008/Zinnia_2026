@@ -133,6 +133,7 @@ class AdminPanelController:
                 q=request.args.get("q", ""),
                 flag=request.args.get("flag", ""),
                 page=int(request.args.get("page", 1) or 1),
+                page_size=int(request.args.get("page_size", 0) or svc.QUEUE_PAGE_SIZE),
             )), 200
         except Exception as e:
             return _fail(e)
