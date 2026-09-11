@@ -68,6 +68,7 @@ class ParticipantTeamController:
                     str(data.get("team_name", "")),
                     list(data.get("member_user_ids") or []),
                     bool(data.get("confirm_warnings", False)),
+                    str(data.get("topic", "")),
                 ),
                 endpoint,
             ),

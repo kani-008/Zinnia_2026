@@ -58,6 +58,12 @@ export interface WindowDef {
 }
 
 export interface EventDef {
+  /**
+   * The team chooses its own subject, so the captain is asked for it when the
+   * team is created. Mirrors rules_engine.TOPIC_EVENTS on the server, which is
+   * the side that actually enforces it.
+   */
+  asksTopic?: boolean;
   code: EventCode;
   name: string;
   category: EventCategory;

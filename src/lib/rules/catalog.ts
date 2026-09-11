@@ -43,6 +43,7 @@ export const EVENTS: Record<EventCode, EventDef> = {
   // number like the other events (§4.4). Counts toward the 3-event ceiling.
   PAPER_PRESENTATION: {
     code: 'PAPER_PRESENTATION',
+    asksTopic: true,
     name: 'Paper Verse',
     category: 'TECH',
     type: 'SLOT',

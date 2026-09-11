@@ -116,6 +116,7 @@ def create_team(
     team_name: str,
     member_user_ids: List[str],
     confirm_warnings: bool = False,
+    topic: str = "",
 ) -> Dict[str, Any]:
     """POST /api/participant/teams/create"""
     event = rules.EVENTS.get(event_code)
@@ -132,6 +133,18 @@ def create_team(
     if not team_name:
         return {"success": False, "error_code": "VALIDATION_ERROR", "field": "team_name",
                 "message": "Give your team a name."}
+
+    # Only the events that actually let a team choose. Anything sent for another
+    # event is dropped rather than stored, so a stray field cannot put a topic
+    # on a team that has no such thing.
+    topic = (topic or "").strip() if event_code in rules.TOPIC_EVENTS else ""
+    if event_code in rules.TOPIC_EVENTS:
+        if not topic:
+            return {"success": False, "error_code": "VALIDATION_ERROR", "field": "topic",
+                    "message": "Tell us the topic your team will present."}
+        if len(topic) > rules.TOPIC_MAX_LEN:
+            return {"success": False, "error_code": "VALIDATION_ERROR", "field": "topic",
+                    "message": f"Keep the topic under {rules.TOPIC_MAX_LEN} characters."}
 
     # Captain first, then teammates, de-duplicated — a captain who also types
     # their own code into a teammate field should not fail R9 for it.
@@ -184,7 +197,7 @@ def create_team(
         }
 
     # Team row first: everything below needs its team_id.
-    team_rows = _insert_team(event_code, team_name, captain_id)
+    team_rows = _insert_team(event_code, team_name, captain_id, topic)
     if not team_rows:
         raise Zin26Error("team insert returned nothing")
     team_id = team_rows[0]["team_id"]
@@ -488,6 +501,7 @@ def _team_view(team_id: str) -> Dict[str, Any]:
         "event_name": event.name if event else team["event_code"],
         "status": team["status"],
         "captain_user_id": team["captain_user_id"],
+        "topic": team.get("topic"),
         "created_at": team["created_at"],
         "members": [
             {
@@ -570,7 +584,9 @@ def _new_team_id(event_code: str) -> str:
     return f"ZIN26-{prefix}{secrets.randbelow(9999) + 1:04d}"
 
 
-def _insert_team(event_code: str, team_name: str, captain_id: str) -> List[Dict[str, Any]]:
+def _insert_team(
+    event_code: str, team_name: str, captain_id: str, topic: str = ""
+) -> List[Dict[str, Any]]:
     """Insert the team row, re-rolling the id if that number is already taken."""
     last: Optional[Exception] = None
     for _ in range(_TEAM_ID_ATTEMPTS):
@@ -583,6 +599,9 @@ def _insert_team(event_code: str, team_name: str, captain_id: str) -> List[Dict[
                     "team_name": team_name,
                     "captain_user_id": captain_id,
                     "status": "PENDING_ACCEPTANCE",
+                    # Omitted rather than written empty, so a team with no topic
+                    # reads as NULL like every team created before the column.
+                    **({"topic": topic} if topic else {}),
                 },
             )
         except Zin26Error as e:

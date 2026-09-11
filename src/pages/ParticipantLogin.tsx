@@ -15,7 +15,7 @@ import { BookOpen, ExternalLink, KeyRound, Loader2, Mail } from 'lucide-react';
 
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { REGISTRATION_USER_MANUAL_URL } from '../config/site';
-import { requestOtp, saveSession, verifyOtp } from '../lib/participant/api';
+import { normalizeUserId, requestOtp, saveSession, verifyOtp } from '../lib/participant/api';
 import type { OtpIdentifier } from '../lib/participant/types';
 import {
   ComicCTA,
@@ -58,17 +58,6 @@ export const ParticipantLoginPage: React.FC = () => {
     const id = window.setInterval(() => setCooldown((c) => Math.max(c - 1, 0)), 1000);
     return () => window.clearInterval(id);
   }, [cooldown]);
-
-  const normalizeUserId = (raw: string): string => {
-    const trimmed = raw.trim().toUpperCase();
-    if (!trimmed) return '';
-    if (trimmed.startsWith('ZIN26-')) return trimmed;
-    if (trimmed.startsWith('ZIN26')) {
-      const rest = trimmed.slice(5).replace(/^-/, '');
-      return `ZIN26-${rest}`;
-    }
-    return `ZIN26-${trimmed}`;
-  };
 
   const identifier = (): OtpIdentifier => ({ user_id: normalizeUserId(userId) });
 

@@ -265,6 +265,8 @@ export interface TeamView {
   event_name: string;
   status: 'PENDING_ACCEPTANCE' | 'CONFIRMED' | 'CANCELLED';
   captain_user_id: string;
+  /** null for every event that does not ask for one, and for older teams */
+  topic?: string | null;
   members: TeamMemberView[];
 }
 
@@ -285,6 +287,8 @@ export interface CreateTeamRequest {
   event_code: EventCode;
   team_name: string;
   member_user_ids: string[];
+  /** the subject the team will present; required for events with asksTopic */
+  topic?: string;
   /** set on the retry once the participant has accepted an R15 warning */
   confirm_warnings?: boolean;
 }

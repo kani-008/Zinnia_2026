@@ -131,7 +131,7 @@ def _registrations() -> List[Dict[str, Any]]:
 
 def _teams() -> List[Dict[str, Any]]:
     return _cached("teams", lambda: db.select(
-        "teams", "select=team_id,event_code,team_name,captain_user_id,status,created_at"))
+        "teams", "select=team_id,event_code,team_name,captain_user_id,status,topic,created_at"))
 
 
 def _team_members() -> List[Dict[str, Any]]:
@@ -417,6 +417,9 @@ def _event_roster_rows(event_code: str) -> List[Dict[str, Any]]:
             "event_code": event_code,
             "team_name": t.get("team_name"),
             "team_status": t.get("status"),
+            # Only Paper Verse teams have one; the column is added to that tab
+            # alone, so it is simply unused elsewhere.
+            "topic": t.get("topic"),
             "user_id": r["user_id"],
             "name": p.get("name"),
             "email": p.get("email"),

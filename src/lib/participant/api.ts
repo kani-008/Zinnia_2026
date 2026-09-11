@@ -35,6 +35,22 @@ const SESSION_KEY = 'zin26_participant_session';
    Session — 30-day token from §4.2, held in localStorage
    ========================================================================== */
 
+/**
+ * Turn whatever someone typed or pasted into a canonical UserID.
+ *
+ * Accepts "ZIN26-0142", "zin26 0142", "ZIN260142" and bare "0142" alike,
+ * because people paste the whole code from their confirmation email as often
+ * as they type the digits. Used by the login screen and the team builder so a
+ * code that works in one cannot be rejected by the other.
+ */
+export function normalizeUserId(raw: string): string {
+  const trimmed = (raw ?? '').trim().toUpperCase().replace(/\s+/g, '');
+  if (!trimmed) return '';
+  if (trimmed.startsWith('ZIN26-')) return trimmed;
+  if (trimmed.startsWith('ZIN26')) return `ZIN26-${trimmed.slice(5).replace(/^-/, '')}`;
+  return `ZIN26-${trimmed}`;
+}
+
 export function saveSession(session: Session): void {
   try {
     window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));

@@ -13,7 +13,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, ExternalLink, Loader2, UserPlus, Users, X } from 'lucide-react';
 
 import { WebsiteNavbar } from '../components/layout/Navbar';
-import { createTeam, loadSession, lookupTeammate } from '../lib/participant/api';
+import { createTeam, loadSession, lookupTeammate, normalizeUserId } from '../lib/participant/api';
 import { EVENTS } from '../lib/rules/catalog';
 import type { EventCode, TeammateLookup } from '../lib/participant/types';
 import {
@@ -63,6 +63,11 @@ export const ParticipantTeamCreatePage: React.FC = () => {
   const spec = TEAM_SIZES[eventCode];
 
   const [teamName, setTeamName] = useState('');
+  const [topic, setTopic] = useState('');
+
+  // Read from the shared catalogue rather than comparing the code inline, the
+  // same way TEAM_SIZES is. The server re-checks it on submit regardless.
+  const asksTopic = Boolean(EVENTS[eventCode]?.asksTopic);
   const [codes, setCodes] = useState<string[]>([]);
   const [slots, setSlots] = useState<SlotState[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -98,7 +103,7 @@ export const ParticipantTeamCreatePage: React.FC = () => {
       setSlots((prev) => prev.map((s, i) => (i === index ? { status: 'checking' } : s)));
 
       debounces.current[index] = window.setTimeout(async () => {
-        const result = await lookupTeammate(value.trim().toUpperCase(), eventCode);
+        const result = await lookupTeammate(value, eventCode);
 
         setSlots((prev) =>
           prev.map((s, i) => {
@@ -115,10 +120,13 @@ export const ParticipantTeamCreatePage: React.FC = () => {
   );
 
   const setCode = (index: number, value: string) => {
-    // Strip accidental ZIN26- prefix if pasted or typed by user so only the rest is stored
-    const cleanSuffix = value.toUpperCase().replace(/^ZIN26-?/i, '').trim();
-    setCodes((prev) => prev.map((c, i) => (i === index ? cleanSuffix : c)));
-    check(index, cleanSuffix ? `ZIN26-${cleanSuffix}` : '');
+    // The whole UserID lives in the box, exactly as the login screen does it.
+    // People paste "ZIN26-0142" straight out of their confirmation email, and
+    // a field that silently ate the prefix left them staring at a code that
+    // looked wrong. Stored as typed; normalised only where it is used.
+    const typed = value.toUpperCase();
+    setCodes((prev) => prev.map((c, i) => (i === index ? typed : c)));
+    check(index, normalizeUserId(typed));
   };
 
   const addSlot = () => {
@@ -140,25 +148,23 @@ export const ParticipantTeamCreatePage: React.FC = () => {
     setSubmitting(true);
     setError(null);
 
-    const memberIds = codes
-      .map((c) => c.trim().toUpperCase())
-      .filter(Boolean)
-      .map((c) => (c.startsWith('ZIN26-') ? c : `ZIN26-${c}`));
+    const memberIds = codes.map(normalizeUserId).filter(Boolean);
 
-    let result = await createTeam({
+    // Built once and reused by the retry below: the confirm path is a separate
+    // object literal, and a topic added to only one of them would vanish for
+    // anyone who tripped a warning.
+    const payload = {
       event_code: eventCode,
       team_name: teamName.trim(),
       member_user_ids: memberIds,
-    });
+      ...(asksTopic ? { topic: topic.trim() } : {}),
+    };
+
+    let result = await createTeam(payload);
 
     if (!result.success && result.error_code === 'CONFIRMATION_REQUIRED') {
       if (window.confirm(result.message)) {
-        result = await createTeam({
-          event_code: eventCode,
-          team_name: teamName.trim(),
-          member_user_ids: memberIds,
-          confirm_warnings: true,
-        });
+        result = await createTeam({ ...payload, confirm_warnings: true });
       } else {
         setSubmitting(false);
         return;
@@ -202,7 +208,8 @@ export const ParticipantTeamCreatePage: React.FC = () => {
   const rows = codes.length + 1;
   const sizeOk = total >= spec.min && total <= spec.max;
   const anyBlocked = slots.some((s) => s.status === 'blocked' || s.status === 'error');
-  const canSubmit = Boolean(teamName.trim()) && sizeOk && !anyBlocked && !submitting;
+  const canSubmit =
+    Boolean(teamName.trim()) && (!asksTopic || Boolean(topic.trim())) && sizeOk && !anyBlocked && !submitting;
 
   return (
     <ComicPageShell>
@@ -243,10 +250,23 @@ export const ParticipantTeamCreatePage: React.FC = () => {
                 id="team_name"
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
-                placeholder="Pick something your coordinators can read out"
+                placeholder="Enter a team name"
                 required
               />
             </ComicField>
+
+            {asksTopic && (
+              <ComicField label="Presentation topic" htmlFor="topic">
+                <ComicInput
+                  id="topic"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="Enter your presentation topic"
+                  maxLength={160}
+                  required
+                />
+              </ComicField>
+            )}
 
             <div>
               <div className="mb-2 flex items-center justify-between gap-3">
@@ -266,11 +286,11 @@ export const ParticipantTeamCreatePage: React.FC = () => {
                       <div className="flex gap-2">
                         <ComicInput
                           className="flex-1"
-                          prefix="ZIN26-"
                           invalid={slot.status === 'blocked' || slot.status === 'error'}
                           value={code}
                           onChange={(e) => setCode(index, e.target.value)}
-                          placeholder="0142"
+                          placeholder="ZIN26-0000"
+                          autoComplete="off"
                         />
                         {codes.length > Math.max(spec.min - 1, 0) && (
                           <button

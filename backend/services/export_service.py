@@ -23,6 +23,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from services import admin_panel_service as panel
+from services import rules_engine as rules
 from services import zin26_db as db
 from services.audit_service import log_action
 
@@ -156,10 +157,16 @@ EVENT_COLUMNS = [
     ("accept_status", "Accepted"),
 ]
 
+EVENT_COLUMNS_WITH_TOPIC = EVENT_COLUMNS[:2] + [("topic", "Topic")] + EVENT_COLUMNS[2:]
+
 TEAM_COLUMNS = [
     ("team_id", "Team ID"),
     ("event_name", "Event"),
     ("team_name", "Team"),
+    # Blank for every event that does not ask for one. Kept on this tab
+    # unconditionally because the tab spans all events and already has an Event
+    # column to read it against.
+    ("topic", "Topic"),
     ("status", "Status"),
     ("captain_user_id", "Captain UserID"),
     ("captain_name", "Captain"),
@@ -245,6 +252,7 @@ def _team_rows() -> List[Dict[str, Any]]:
             "event_code": t["event_code"],
             "event_name": events.get(t["event_code"], t["event_code"]),
             "team_name": t.get("team_name"),
+            "topic": t.get("topic"),
             "status": t.get("status"),
             "captain_user_id": t.get("captain_user_id"),
             "captain_name": people.get(t.get("captain_user_id") or "", {}).get("name"),
@@ -321,7 +329,15 @@ def _collect_sheets(
                 catalog = [e for e in catalog if e["code"] in allowed]
             for ev in catalog:
                 rows = [r for r in panel._event_roster_rows(ev["code"]) if _match(r, filters)]
-                out.append((ev["name"], EVENT_COLUMNS, rows))
+                # The Topic column appears only on the tabs where a topic is
+                # actually collected, rather than adding an empty column to all
+                # nine rosters. rules_engine owns that list.
+                columns = (
+                    EVENT_COLUMNS_WITH_TOPIC
+                    if ev["code"] in rules.TOPIC_EVENTS
+                    else EVENT_COLUMNS
+                )
+                out.append((ev["name"], columns, rows))
 
         if "food" in sheets:
             # Two tabs, not one with a column: the counts go to two different

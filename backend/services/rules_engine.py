@@ -105,6 +105,20 @@ def display_index(code: str) -> int:
     return DISPLAY_ORDER.index(code) if code in DISPLAY_ORDER else len(DISPLAY_ORDER)
 
 
+# Events whose teams pick their own subject, so the captain is asked for it when
+# the team is created. Paper Verse's published rules say it outright: "Teams may
+# choose any topic based on their area of interest or preference." Coordinators
+# previously learnt what a team was presenting when it walked into the hall.
+#
+# A set rather than a field on EventDef, because EventDef is positional and a
+# tenth field would mean editing all nine definitions to say "no topic".
+TOPIC_EVENTS: frozenset = frozenset({"PAPER_PRESENTATION"})
+
+# Long enough for a real research title, short enough to render in a table cell
+# and in the exported roster without wrapping into uselessness.
+TOPIC_MAX_LEN = 160
+
+
 EVENTS: Dict[str, EventDef] = {
     "PAPER_PRESENTATION": EventDef(
         # capacity is 30 TEAMS, not 30 people: capacity_map() and
