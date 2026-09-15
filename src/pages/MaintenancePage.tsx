@@ -40,7 +40,7 @@ export const MaintenancePage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#08090A] text-[#EEEEEA] flex flex-col justify-between overflow-x-hidden select-none">
+    <div className="relative min-h-screen w-full bg-[#08090A] text-[#EEEEEA] flex flex-col justify-between overflow-x-hidden">
       {/* Dynamic Background Glows & Grid */}
       <div 
         className="fixed inset-0 pointer-events-none opacity-20"

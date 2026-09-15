@@ -174,7 +174,7 @@ export const WebsiteEventsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-[#F2F2F0] select-none">
+    <div className="min-h-screen bg-[#0D0D0F] text-[#F2F2F0]">
       {/* Top Navbar */}
       <WebsiteNavbar />
 

@@ -534,7 +534,7 @@ export const WebsitePaymentPage: React.FC = () => {
                       type="text"
                       readOnly
                       value={`₹${authoritativeAmount}`}
-                      className="w-full min-h-[48px] px-4 py-3 bg-[#17181C] border border-[#EEEEEA]/20 text-[#E5BD00] font-mono text-base font-bold rounded-xl shadow-[2px_2px_0px_#090A0B] cursor-not-allowed select-none focus:outline-none"
+                      className="w-full min-h-[48px] px-4 py-3 bg-[#17181C] border border-[#EEEEEA]/20 text-[#E5BD00] font-mono text-base font-bold rounded-xl shadow-[2px_2px_0px_#090A0B] cursor-not-allowed focus:outline-none"
                     />
                     <span className="block text-[11px] text-[#B8B8B2] font-mono">
                       ₹{REGISTRATION_FEE_PER_HEAD} × {memberCount} member{memberCount > 1 ? 's' : ''}

@@ -304,7 +304,7 @@ export const WebsiteHomePage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full max-w-full min-h-screen bg-transparent text-[#EEEEEA] flex flex-col justify-between pb-4 select-none scroll-smooth overflow-x-hidden">
+    <div className="relative w-full max-w-full min-h-screen bg-transparent text-[#EEEEEA] flex flex-col justify-between pb-4 scroll-smooth overflow-x-hidden">
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
@@ -322,7 +322,7 @@ export const WebsiteHomePage: React.FC = () => {
       {/* =========================================================================
           2. HERO SECTION (Matched to Reference Image)
           ========================================================================= */}
-      <section className="relative z-30 max-w-6xl mx-auto w-full pt-1 sm:pt-2 pb-1 sm:pb-2 px-3 sm:px-6 select-none overflow-hidden md:overflow-visible">
+      <section className="relative z-30 max-w-6xl mx-auto w-full pt-1 sm:pt-2 pb-1 sm:pb-2 px-3 sm:px-6 overflow-hidden md:overflow-visible">
 
         {/* Background Comic Halftone Decorative Layer */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
@@ -426,7 +426,7 @@ export const WebsiteHomePage: React.FC = () => {
               {/* CENTER: ZINNIA '26 Title */}
               <div className="relative inline-flex items-center justify-center py-2 px-1">
                 <h1
-                  className="font-display text-[#FFFFFF] uppercase select-none -rotate-[2deg] text-center whitespace-nowrap relative z-10"
+                  className="font-display text-[#FFFFFF] uppercase -rotate-[2deg] text-center whitespace-nowrap relative z-10"
                   style={{
                     fontSize: 'clamp(72px, 21.5vw, 125px)',
                     lineHeight: '0.85',
@@ -436,7 +436,7 @@ export const WebsiteHomePage: React.FC = () => {
                 >
                   ZINNIA
                 </h1>
-                <span className="font-comic text-3xl sm:text-4xl text-[#0FA9C6] font-black leading-none select-none drop-shadow-[3px_3px_0px_#090A0B] -rotate-3 tracking-wider -translate-y-3 sm:-translate-y-4 ml-0.5 shrink-0 relative z-20">
+                <span className="font-comic text-3xl sm:text-4xl text-[#0FA9C6] font-black leading-none drop-shadow-[3px_3px_0px_#090A0B] -rotate-3 tracking-wider -translate-y-3 sm:-translate-y-4 ml-0.5 shrink-0 relative z-20">
                   '26
                 </span>
               </div>
@@ -475,7 +475,7 @@ export const WebsiteHomePage: React.FC = () => {
                     className="comic-cta-front px-3.5 sm:px-5 py-3 sm:py-3.5 flex items-center justify-center gap-2.5 sm:gap-3 w-full"
                   >
                     <span
-                      className="font-comic font-black tracking-wider uppercase italic text-[#090A0B] whitespace-nowrap select-none"
+                      className="font-comic font-black tracking-wider uppercase italic text-[#090A0B] whitespace-nowrap"
                       style={{ fontSize: 'clamp(1rem, 4.6vw, 1.35rem)' }}
                     >
                       {signedIn ? 'GO TO YOUR DASHBOARD' : 'REGISTER FOR ZINNIA'}
@@ -499,14 +499,14 @@ export const WebsiteHomePage: React.FC = () => {
             {/* Giant ZINNIA '26 Title (Desktop) */}
             <div className="relative inline-flex items-start justify-center max-w-full">
               <h1
-                className="font-display md:text-[7.5rem] lg:text-[9.5rem] text-[#FFFFFF] tracking-tight leading-none uppercase select-none"
+                className="font-display md:text-[7.5rem] lg:text-[9.5rem] text-[#FFFFFF] tracking-tight leading-none uppercase"
                 style={{
                   textShadow: '5px 5px 0px #090A0B, 9px 9px 0px #000, 0 0 35px rgba(60, 231, 255, 0.45)',
                 }}
               >
                 ZINNIA
               </h1>
-              <span className="font-comic md:text-5xl lg:text-6xl text-[#0FA9C6] font-black leading-none -translate-y-3 ml-2 select-none drop-shadow-[3px_3px_0px_#090A0B]">
+              <span className="font-comic md:text-5xl lg:text-6xl text-[#0FA9C6] font-black leading-none -translate-y-3 ml-2 drop-shadow-[3px_3px_0px_#090A0B]">
                 '26
               </span>
             </div>
@@ -896,17 +896,17 @@ export const WebsiteHomePage: React.FC = () => {
           </div>
 
           {/* Timeline Status Callout */}
-          <div
+          {/* <div
             onClick={() => triggerComicFX('TIMELINE!')}
             className="mt-3.5 sm:mt-4 px-3 xs:px-4 py-1 bg-[#111214] border-[1.5px] sm:border-[2px] border-[#E5BD00] shadow-[2px_2px_0px_#090A0B] sm:shadow-[2.5px_2.5px_0px_#090A0B] rotate-1 sticker-pop cursor-pointer max-w-full text-center"
           >
             <span className="font-mono text-[10px] xs:text-xs uppercase text-[#E5BD00] font-bold tracking-wider">
               ⏰ TIMELINE MONITORED &bull; 24 SEPTEMBER 2026 &bull; GCE ERODE CSE
             </span>
-          </div>
+          </div> */}
 
           {/* Down Chevron Arrow */}
-          <div className="flex justify-center mt-3">
+          {/* <div className="flex justify-center mt-3">
             <button
               type="button"
               className="text-[#B8B8B2] hover:text-[#EEEEEA] transition-colors cursor-pointer animate-bounce"
@@ -914,7 +914,7 @@ export const WebsiteHomePage: React.FC = () => {
             >
               <ChevronDown className="w-6 h-6 sm:w-7 sm:h-7" />
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -927,7 +927,7 @@ export const WebsiteHomePage: React.FC = () => {
         className="relative z-30 max-w-7xl mx-auto w-full pt-6 sm:pt-10 pb-0 px-2 sm:px-4 mt-2 sm:mt-4 mb-0 overflow-hidden md:overflow-visible"
       >
         {/* Section Header */}
-        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8 sm:mb-12 w-full max-w-6xl mx-auto px-2 select-none">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8 sm:mb-12 w-full max-w-6xl mx-auto px-2">
           {/* Left Side: Bold Fluid Gradient Line + 3 Theme Color Dots */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 flex-1 justify-end min-w-0">
             <span
@@ -952,7 +952,7 @@ export const WebsiteHomePage: React.FC = () => {
 
           {/* Title */}
           <div className="px-1 sm:px-3 shrink-0">
-            <h2 className="font-display italic text-2xl xs:text-3xl sm:text-5xl md:text-6xl text-[#EEEEEA] tracking-wider sm:tracking-widest uppercase select-none drop-shadow-[2px_2px_0px_#090A0B] text-center whitespace-nowrap">
+            <h2 className="font-display italic text-2xl xs:text-3xl sm:text-5xl md:text-6xl text-[#EEEEEA] tracking-wider sm:tracking-widest uppercase drop-shadow-[2px_2px_0px_#090A0B] text-center whitespace-nowrap">
               EVENTS
             </h2>
           </div>

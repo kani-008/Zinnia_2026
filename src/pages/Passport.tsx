@@ -147,7 +147,7 @@ export const WebsitePassportPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#08090A] text-[#EEEEEA] flex flex-col justify-between font-sans select-none relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#08090A] text-[#EEEEEA] flex flex-col justify-between font-sans relative overflow-x-hidden">
       {/* Sound FX Popup */}
       {soundFX && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[150] pointer-events-none animate-bounce">

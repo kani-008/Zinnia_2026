@@ -180,7 +180,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Slide Limit: The presentation must not exceed 8 slides',
       'Duration: Each team gets 6–8 minutes to present, followed by 2 minutes of Q&A.',
       'Q&A: All team members should be prepared to answer questions from the judges.',
-      'Laptop: Each team must bring at least one laptop with the presentation ready to run. Ensure the laptop is fully charged before the event, and carry your charger as a backup, since charging points may be limited at the venue.',
+      'Teams must carry the final presentation soft copy in PPT/PPTX format and submit it to the event coordinators before the presentation.',
       'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [

@@ -1685,20 +1685,22 @@ body {
    therefore cannot clear the ink at every size, which is what made some cards
    look cramped and others roomy. max() tracks the ink: the rem floor covers
    narrow panels, the percentage takes over as the panel widens.
-   Vertical is a fixed 24/32px — the ink's vertical inset is ~3.2% of height,
-   and 32px clears panels up to ~1000px tall (the tallest here is the
-   registration form at ~900px). */
+   Vertically the ink is a fraction of HEIGHT (~3.6% from the top, ~4.5% from
+   the bottom), so no fixed value can clear every panel: the contact page's bus
+   timetable is 1210px tall on a phone and its border ran through the text.
+   The rem values below are the floor; ComicPanel measures its own height and
+   sets --ink-pad-top / --ink-pad-bottom, and max() takes whichever is larger. */
 .pad-panel {
-  padding-top: 2.25rem;
-  padding-bottom: 2.75rem;
+  padding-top: max(2.25rem, var(--ink-pad-top, 0px));
+  padding-bottom: max(2.75rem, var(--ink-pad-bottom, 0px));
   padding-left: max(1.5rem, 6%);
   padding-right: max(1.75rem, 7%);
 }
 
 @media (min-width: 640px) {
   .pad-panel {
-    padding-top: 2.75rem;
-    padding-bottom: 3.25rem;
+    padding-top: max(2.75rem, var(--ink-pad-top, 0px));
+    padding-bottom: max(3.25rem, var(--ink-pad-bottom, 0px));
     padding-left: max(2rem, 6%);
     padding-right: max(2.25rem, 7%);
   }

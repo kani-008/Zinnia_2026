@@ -14,7 +14,7 @@
 // Tone -> frame variant mapping reuses .tech / .non-tech / .special, which are
 // the same custom-property switches the Events section uses.
 
-import React from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import { ComicFrame } from './ComicFrame';
 
@@ -65,21 +65,90 @@ export interface ComicPanelProps {
   children: React.ReactNode;
 }
 
+/**
+ * Where the frame's inner print line sits, as a fraction of the panel's HEIGHT.
+ *
+ * ComicFrame stretches with preserveAspectRatio="none", so its ink lands at a
+ * fixed fraction of the panel's height, while .pad-panel pads by a fixed number
+ * of pixels. Read straight off ComicFrame's path data: in a viewBox spanning
+ * y=5..314 (309 units) the inner line dips to y=16 along the top and rises to
+ * y=300 along the bottom.
+ */
+const INK_TOP = 11 / 309;
+const INK_BOTTOM = 14 / 309;
+/** Gap kept between that ink and the first or last line of content. */
+const INK_CLEARANCE_PX = 12;
+
+/**
+ * Grow a panel's vertical padding with its height, so a tall panel never draws
+ * its border through the text.
+ *
+ * The fixed padding assumed panels stay short. The contact page's bus timetable
+ * runs to 1210px on a phone, where the ink reaches 43px down from the top and
+ * 55px up from the bottom - past 36px and 44px of padding, so the heading and
+ * the last line of notes both sat on the line. Below roughly 650px this works
+ * out smaller than the .pad-panel floor and changes nothing.
+ *
+ * Written only when the value actually changes, so the observer cannot chase
+ * its own tail: each extra pixel of padding moves the ink by under a twentieth
+ * of a pixel, and the rounding settles within a frame or two.
+ */
+function useInkClearance(ref: React.RefObject<HTMLDivElement | null>) {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+
+    let raf = 0;
+    const apply = () => {
+      const height = el.getBoundingClientRect().height;
+      const top = `${Math.ceil(height * INK_TOP + INK_CLEARANCE_PX)}px`;
+      const bottom = `${Math.ceil(height * INK_BOTTOM + INK_CLEARANCE_PX)}px`;
+      if (el.style.getPropertyValue('--ink-pad-top') !== top) {
+        el.style.setProperty('--ink-pad-top', top);
+      }
+      if (el.style.getPropertyValue('--ink-pad-bottom') !== bottom) {
+        el.style.setProperty('--ink-pad-bottom', bottom);
+      }
+    };
+
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(apply);
+    });
+    observer.observe(el);
+    apply();
+
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [ref]);
+}
+
 export const ComicPanel: React.FC<ComicPanelProps> = ({
   tone = 'cyan',
   className = '',
   bodyClassName = '',
   children,
-}) => (
-  // comic-frame-fluid pins the ink's stroke width so a tall panel's border
-  // stays even (see index.css) — the event cards keep their original scaling.
-  <div className={`comic-frame-box comic-frame-fluid ${FRAME_VARIANT[tone]} relative ${className}`}>
-    <ComicFrame />
-    {/* .pad-panel, not a flat p-*: the frame's ink sits at a percentage of the
-        panel width, so the inset has to scale with it (see index.css). */}
-    <div className={`relative z-10 pad-panel ${bodyClassName}`}>{children}</div>
-  </div>
-);
+}) => {
+  const boxRef = useRef<HTMLDivElement>(null);
+  useInkClearance(boxRef);
+
+  return (
+    // comic-frame-fluid pins the ink's stroke width so a tall panel's border
+    // stays even (see index.css) — the event cards keep their original scaling.
+    <div
+      ref={boxRef}
+      className={`comic-frame-box comic-frame-fluid ${FRAME_VARIANT[tone]} relative ${className}`}
+    >
+      <ComicFrame />
+      {/* .pad-panel, not a flat p-*: the frame's ink sits at a percentage of the
+          panel width, so the inset has to scale with it (see index.css). Its
+          vertical padding also follows the panel's height - see useInkClearance. */}
+      <div className={`relative z-10 pad-panel ${bodyClassName}`}>{children}</div>
+    </div>
+  );
+};
 
 /* ==========================================================================
    CHIP — the rotated sticker badge ("9 ACTIVE EVENTS", "STEP 2 OF 3")

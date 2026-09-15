@@ -155,7 +155,7 @@ export const WebsiteNavbar: React.FC = () => {
       )}
 
       {/* Top Header Navbar (Sticky) */}
-      <div className={`sticky top-0 ${mobileMenuOpen ? 'z-[110]' : 'z-50'} w-full bg-[#08090A]/90 backdrop-blur-md border-b border-[#EEEEEA]/10 select-none shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-colors`}>
+      <div className={`sticky top-0 ${mobileMenuOpen ? 'z-[110]' : 'z-50'} w-full bg-[#08090A]/90 backdrop-blur-md border-b border-[#EEEEEA]/10 shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-colors`}>
         <header className="max-w-7xl mx-auto w-full flex items-center justify-between gap-2 sm:gap-4 py-1.5 px-3 sm:px-6">
           {/* Left: Illustrated ZINNIA Comic Logo */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">

@@ -29,7 +29,7 @@ export interface EventRegistrationNotes {
 export const GENERAL_NOTES: EventNote[] = [
   { tone: 'info', text: 'You can hold at most 3 events in total. Every event counts towards that 3, including Paper Verse and Short Film.' },
   { tone: 'info', text: 'For a team event you register as the captain. Every teammate has to accept from their own dashboard before the team is confirmed.' },
-  { tone: 'info', text: 'You can cancel freely until registrations close on 22 September. After that no self-service changes.' },
+  { tone: 'info', text: 'You can cancel freely until registrations close on 23 September at 11:59 PM. After that no self-service changes.' },
 ];
 
 export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {
@@ -120,7 +120,7 @@ export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {
     notes: [
       { tone: 'info', text: 'Uses one of your 3 events, but it clashes with nothing - it is online and takes no time slot.' },
       { tone: 'warn', text: 'You must already be registered for at least one on-campus event before you can enter this.' },
-      { tone: 'warn', text: 'Registration AND submission both close on 20 September - two days earlier than every other event.' },
+      { tone: 'warn', text: 'Registration AND submission both close on 20 September - three days earlier than every other event.' },
       { tone: 'info', text: 'Video is 8 minutes maximum. You submit a link in the WhatsApp group, not a file.' },
     ],
   },

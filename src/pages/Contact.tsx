@@ -102,20 +102,31 @@ const COORDINATORS: Coordinator[] = [
 interface BusRun {
   time: string;
   service: string;
+  /** Boarding point, when one group departs from more than one stop. */
+  stop?: string;
 }
 
 /** Cyan group — departures from Erode Bus Stand. */
 const FROM_ERODE: BusRun[] = [
   { time: '8:00 AM', service: 'Route Bus' },
-  { time: '8:00 AM', service: 'Town Govt Bus' },
-  { time: '8:30 AM', service: 'Town Govt Bus 5B' },
+  { time: '8:00 AM', service: 'Town  Bus' },
+  { time: '8:30 AM', service: 'Town  Bus 5B' },
 ];
 
 /** Yellow group — departures from Chithode. */
 const FROM_CHITHODE: BusRun[] = [
   { time: '8:15 – 8:20 AM', service: 'Route Bus' },
-  { time: '8:30 – 8:35 AM', service: 'Town Govt Bus' },
-  { time: 'Around 8:50 AM', service: 'Town Govt Bus 5B' },
+  { time: '8:30 – 8:35 AM', service: 'Town Bus ' },
+  { time: 'Around 8:50 AM', service: 'Town Bus 5B' },
+];
+
+/**
+ * Green group - Town Bus B16, boarding at Bhavani and five minutes later at
+ * Lakshmi Nagar (Bhavani Bypass). One bus, two stops, so each row names its stop.
+ */
+const FROM_BHAVANI: BusRun[] = [
+  { time: '8:00 AM', service: 'Town Bus B16', stop: 'Bhavani Bus stand' },
+  { time: '8:05 AM', service: 'Town Bus B16', stop: 'Lakshmi Nagar (Bhavani Bypass) bus stop' },
 ];
 
 /**
@@ -125,9 +136,9 @@ const FROM_CHITHODE: BusRun[] = [
  */
 const EXTRA_NOTES: string[] = [
   'Route buses from Erode Bus Stand and Chithode reach the college by around 8:45 AM.',
-  'Town bus from Lakshmi Nagar / Bhavani Bypass departs about 8:10 AM and reaches the college by 8:30 AM.',
-  'Bus No. 3 and B12 run roughly every 5 minutes from Lakshmi Nagar or Bhavani Bypass — get down at the Government College of Engineering stop, then a short walk to campus.',
-  'Bus No. 3 runs roughly every 10 minutes from Erode Bus Stand — get down at the Government College of Engineering (IRTT) stop, then a short walk to campus.',
+  'Town bus from Lakshmi Nagar( Bhavani Bypass ) reaches the college by 8:30 AM.',
+  'Town Bus No. 3 and B12 run roughly every 5 minutes from Lakshmi Nagar( Bhavani Bypass ) — get down at the Government College of Engineering (IRTT) Bus stop, then a short walk to campus.',
+  'Town Bus No. 3 runs roughly every 10 minutes from Erode Bus Stand — get down at the Government College of Engineering (IRTT) Bus stop, then a short walk to campus.',
 ];
 
 interface Ping {
@@ -151,16 +162,26 @@ interface Ping {
  * Bangers — the comic display face this page uses elsewhere — has no tabular
  * figures and reads as lettering rather than data.
  */
-const BusRunRow: React.FC<{ run: BusRun; tone: 'cyan' | 'yellow' }> = ({ run, tone }) => (
+/** One colour per departure point, so each row reads as part of its box. */
+const BUS_ROW_TONE = {
+  cyan: { icon: 'text-[#0FA9C6]', chip: 'border-[#0FA9C6]/70' },
+  yellow: { icon: 'text-[#E5BD00]', chip: 'border-[#E5BD00]/70' },
+  green: { icon: 'text-[#1DB954]', chip: 'border-[#1DB954]/70' },
+} as const;
+
+const BusRunRow: React.FC<{ run: BusRun; tone: keyof typeof BUS_ROW_TONE }> = ({ run, tone }) => (
   <li className="flex items-center justify-between gap-3 border-b border-[#23262D] py-1.5">
-    <span className="flex items-center gap-2 font-mono text-xs text-[#EEEEEA]">
-      <Bus size={13} className={tone === 'cyan' ? 'text-[#0FA9C6]' : 'text-[#E5BD00]'} />
-      {run.service}
+    <span className="flex min-w-0 items-center gap-2 font-mono text-xs text-[#EEEEEA]">
+      <Bus size={13} className={`shrink-0 ${BUS_ROW_TONE[tone].icon}`} />
+      <span className="min-w-0">
+        {run.service}
+        {run.stop && (
+          <span className="block text-[10px] leading-snug text-[#B8B8B2]">{run.stop}</span>
+        )}
+      </span>
     </span>
     <span
-      className={`shrink-0 border bg-[#191B1F] px-2 py-0.5 font-mono text-sm font-bold text-[#F4F4F0] ${
-        tone === 'cyan' ? 'border-[#0FA9C6]/70' : 'border-[#E5BD00]/70'
-      }`}
+      className={`shrink-0 border bg-[#191B1F] px-2 py-0.5 font-mono text-sm font-bold text-[#F4F4F0] ${BUS_ROW_TONE[tone].chip}`}
     >
       {run.time}
     </span>
@@ -220,7 +241,7 @@ export const WebsiteContactPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative w-full min-h-screen bg-[#08090A] text-[#EEEEEA] flex flex-col justify-between p-3 sm:p-5 md:p-6 select-none scroll-smooth">
+    <div className="relative w-full min-h-screen bg-[#08090A] text-[#EEEEEA] flex flex-col justify-between p-3 sm:p-5 md:p-6 scroll-smooth">
       {/* Floating Interactive Comic Sound FX Pop */}
       {interactiveSoundText && (
         <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 z-80 pointer-events-none animate-bounce">
@@ -361,12 +382,12 @@ export const WebsiteContactPage: React.FC = () => {
                     Government bus services to the college campus
                   </p>
                 </div>
-                <ComicChip tone="yellow" rotate={2} className="ml-auto">
+                {/* <ComicChip tone="yellow" rotate={2} className="ml-auto">
                   <Clock size={11} /> Morning departures
-                </ComicChip>
+                </ComicChip> */}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {/* FROM ERODE BUS STAND — cyan, matching technical events */}
                 <div className="border-2 border-[#0FA9C6]/40 bg-[#111214] pad-box">
                   <div className="mb-3 flex items-center gap-2 border-b-2 border-[#0FA9C6]/30 pb-2.5">
@@ -394,6 +415,23 @@ export const WebsiteContactPage: React.FC = () => {
                   <ul className="row-list">
                     {FROM_CHITHODE.map((run) => (
                       <BusRunRow key={`${run.time}-${run.service}`} run={run} tone="yellow" />
+                    ))}
+                  </ul>
+                </div>
+
+                {/* FROM BHAVANI - green, a third colour so its rows stay their own group.
+                    Spans both columns on tablets, where a third box would otherwise
+                    sit alone beside a gap; one of three on wide screens. */}
+                <div className="sm:col-span-2 lg:col-span-1 border-2 border-[#1DB954]/45 bg-[#111214] pad-box">
+                  <div className="mb-3 flex items-center gap-2 border-b-2 border-[#1DB954]/35 pb-2.5">
+                    <Bus size={15} className="text-[#1DB954] shrink-0" />
+                    <h4 className="font-mono text-xs sm:text-sm uppercase tracking-wider font-bold text-[#1DB954]">
+                      From Bhavani
+                    </h4>
+                  </div>
+                  <ul className="row-list">
+                    {FROM_BHAVANI.map((run) => (
+                      <BusRunRow key={`${run.time}-${run.stop}`} run={run} tone="green" />
                     ))}
                   </ul>
                 </div>

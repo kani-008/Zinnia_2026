@@ -55,8 +55,14 @@ export interface TimelineFlowItem {
   /** Inauguration, refreshment, lunch, prize distribution — nothing to open. */
   milestone?: boolean;
   venue: string;
-  tagline: string;
+  /** Omit to show no tagline line at all. */
+  tagline?: string;
   description: string;
+  /**
+   * Show the whole description instead of clipping it at two lines. Only for a
+   * card whose description is the point of the card, such as lunch.
+   */
+  full_description?: boolean;
 }
 
 export const EventScheduleView: React.FC<{
@@ -211,8 +217,8 @@ export const EventScheduleView: React.FC<{
       color_theme: 'gold',
       milestone: true,
       venue: 'Near Auditorium',
-      tagline: 'Nothing is scheduled against this hour.',
-      description: 'Every event pauses. The afternoon block starts again at 2:00.',
+      description: 'Lunch will be served while the events continue as scheduled',
+      full_description: true,
     },
     {
       key: 'gadget-codes-final',
@@ -563,11 +569,11 @@ export const EventScheduleView: React.FC<{
   const activeConfig = TONE_CONFIG[activeTone];
 
   return (
-    <section className="relative w-full py-10 px-3 sm:px-6 max-w-7xl mx-auto space-y-8 select-none">
+    <section className="relative w-full py-10 px-3 sm:px-6 max-w-7xl mx-auto space-y-8">
       {/* =========================================================================
           SECTION HEADER (Themed with 3 Event Card Colors, matching EVENTS header on Homepage)
           ========================================================================= */}
-      <div className="flex items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8 w-full max-w-6xl mx-auto px-2 select-none">
+      <div className="flex items-center justify-center gap-2 sm:gap-4 mb-6 sm:mb-8 w-full max-w-6xl mx-auto px-2">
         {/* Left Side: Bold Fluid Gradient Line + 3 Theme Color Dots */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 flex-1 justify-end min-w-0">
           <span
@@ -592,7 +598,7 @@ export const EventScheduleView: React.FC<{
 
         {/* Title */}
         <div className="px-1 sm:px-3 shrink-0">
-          <h2 className="font-display italic text-lg xs:text-xl sm:text-4xl md:text-5xl lg:text-6xl text-[#EEEEEA] tracking-wider sm:tracking-widest uppercase select-none drop-shadow-[2px_2px_0px_#090A0B] text-center whitespace-nowrap">
+          <h2 className="font-display italic text-lg xs:text-xl sm:text-4xl md:text-5xl lg:text-6xl text-[#EEEEEA] tracking-wider sm:tracking-widest uppercase drop-shadow-[2px_2px_0px_#090A0B] text-center whitespace-nowrap">
             EVENT SCHEDULE
           </h2>
         </div>
@@ -782,11 +788,17 @@ export const EventScheduleView: React.FC<{
                           {item.mission_name}
                         </h3>
 
-                        <p className={`font-mono text-xs font-semibold tracking-wide mt-0.5 ${tone.text}`}>
-                          {item.tagline}
-                        </p>
+                        {item.tagline && (
+                          <p className={`font-mono text-xs font-semibold tracking-wide mt-0.5 ${tone.text}`}>
+                            {item.tagline}
+                          </p>
+                        )}
 
-                        <p className="font-mono text-xs text-[#B8B8B2] mt-2 line-clamp-2 leading-relaxed font-normal">
+                        <p
+                          className={`font-mono text-xs text-[#B8B8B2] mt-2 leading-relaxed font-normal ${
+                            item.full_description ? '' : 'line-clamp-2'
+                          }`}
+                        >
                           {item.description}
                         </p>
 

@@ -19,9 +19,9 @@ import type {
   WindowDef,
 } from './types';
 
-/** Registration closes end-of-day 22 September IST for everything... */
-const CLOSES_DEFAULT = '2026-09-22T18:29:59+00:00';
-/** ...except Short Film, which closes two days earlier (§7.1, §4.8). */
+/** Registration closes end-of-day 23 September IST for everything... */
+export const CLOSES_DEFAULT = '2026-09-23T18:29:59+00:00';
+/** ...except Short Film, which closes three days earlier (§7.1, §4.8). */
 const CLOSES_SHORT_FILM = '2026-09-20T18:29:59+00:00';
 
 export const BLOCKS: Record<BlockCode, BlockDef> = {

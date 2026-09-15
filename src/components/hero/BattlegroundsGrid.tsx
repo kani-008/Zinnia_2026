@@ -152,7 +152,7 @@ export const BattlegroundsGrid: React.FC<BattlegroundsGridProps> = ({
   ];
 
   return (
-    <div className="relative w-full max-w-[280px] sm:max-w-[310px] md:max-w-[340px] select-none">
+    <div className="relative w-full max-w-[280px] sm:max-w-[310px] md:max-w-[340px]">
       {/* 9 BATTLEGROUNDS Header Banner */}
       <div className="w-full bg-[#090A0B] text-[#E5BD00] border-[2.5px] border-[#090A0B] shadow-[3px_3px_0px_#090A0B] py-1.5 px-3 text-center mb-2.5">
         <h3 className="font-comic text-sm sm:text-base md:text-lg uppercase tracking-wider font-black">

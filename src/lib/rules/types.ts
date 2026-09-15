@@ -80,7 +80,7 @@ export interface EventDef {
   /** true for every event: nothing is exempt from the 3-event ceiling */
   countsTowardLimit: boolean;
   isActive: boolean;
-  /** ISO timestamp; Short Film closes two days earlier (§7.1) */
+  /** ISO timestamp; Short Film closes three days earlier (§7.1) */
   regClosesAt: string;
 }
 

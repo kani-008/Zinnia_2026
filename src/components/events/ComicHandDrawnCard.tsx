@@ -172,7 +172,7 @@ export const ComicHandDrawnCard: React.FC<ComicHandDrawnCardProps> = ({
       ====================================================== */}
       <div
         className={`relative z-10 w-full flex-1 flex flex-col items-center justify-between ${
-          innerClassName ?? 'h-full px-4 sm:px-5 pt-12 sm:pt-14 pb-7 sm:pb-8 text-center select-none'
+          innerClassName ?? 'h-full px-4 sm:px-5 pt-12 sm:pt-14 pb-7 sm:pb-8 text-center'
         }`}
       >
         {children}

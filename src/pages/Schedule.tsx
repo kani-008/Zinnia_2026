@@ -7,7 +7,7 @@ import { EventScheduleView } from '../components/ui/EventScheduleView';
 
 export const WebsiteSchedulePage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#0D0D0F] text-[#F2F2F0] select-none flex flex-col justify-between">
+    <div className="min-h-screen bg-[#0D0D0F] text-[#F2F2F0] flex flex-col justify-between">
       {/* Top Navbar */}
       <WebsiteNavbar />
 

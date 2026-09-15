@@ -209,19 +209,32 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
     print(f"[OTP] ========================================\n")
     token = pending.mint(details, otp)
 
+    # Copy these details to the separate leads spreadsheet - everyone who fills
+    # this form, including those who never verify or pay. Started BEFORE the
+    # email so the two run side by side, and finished in the `finally` so it is
+    # bounded on every way out of this function. It cannot raise, cannot change
+    # what this call returns, and does nothing at all until LEADS_SHEET_URL is
+    # set. No database is involved: see services/leads_sheet.
+    from services import leads_sheet
+
+    lead = leads_sheet.capture(details)
+
     try:
-        sent = send_pending_otp_email(details, otp)
-    except RecipientRefused:
-        # The address was rejected outright, so the code screen would be a dead
-        # end - a code that cannot arrive, and no way to tell that from a slow
-        # inbox. Sending them back to the field they mistyped is the only
-        # useful answer. Nothing was written, so there is nothing to undo.
-        return {
-            "success": False,
-            "error_code": "EMAIL_UNDELIVERABLE",
-            "field": "email",
-            "message": "That email address does not exist - check it for typos.",
-        }
+        try:
+            sent = send_pending_otp_email(details, otp)
+        except RecipientRefused:
+            # The address was rejected outright, so the code screen would be a dead
+            # end - a code that cannot arrive, and no way to tell that from a slow
+            # inbox. Sending them back to the field they mistyped is the only
+            # useful answer. Nothing was written, so there is nothing to undo.
+            return {
+                "success": False,
+                "error_code": "EMAIL_UNDELIVERABLE",
+                "field": "email",
+                "message": "That email address does not exist - check it for typos.",
+            }
+    finally:
+        leads_sheet.finish(lead)
 
     return {
         "success": True,
