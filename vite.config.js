@@ -23,7 +23,13 @@ export default defineConfig({
       ignored: ['**/backend/**']
     },
     host: true,
-    port: 5173,
+    // Vite does not read PORT on its own. The editor's preview tool assigns a
+    // free port through it when 5173 is taken by another dev server; a plain
+    // `npm run dev` still gets 5173. strictPort only when a port was assigned,
+    // so Vite binds exactly that one instead of drifting to the next free port
+    // where the preview would never find it.
+    port: process.env.PORT ? Number(process.env.PORT) : 5173,
+    strictPort: Boolean(process.env.PORT),
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL || 'http://127.0.0.1:5000',
