@@ -180,7 +180,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Slide Limit: The presentation must not exceed 8 slides',
       'Duration: Each team gets 6–8 minutes to present, followed by 2 minutes of Q&A.',
       'Q&A: All team members should be prepared to answer questions from the judges.',
-      'Teams must carry the final presentation soft copy in PPT/PPTX format and submit it to the event coordinators before the presentation.',
+      'Teams must carry the final presentation soft copy in PPT/PPTX format and submit it to zinnia2026@gcee.ac.in before the presentation.',
       'The soft copy of your final paper must be submitted one day prior to the event day',
       'For any queries, contact the event coordinators listed below.',
     ],
