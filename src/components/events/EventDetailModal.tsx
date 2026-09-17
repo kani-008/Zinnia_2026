@@ -42,6 +42,27 @@ const renderPrizeContent = (prizeText?: string, textColor = 'text-white') => {
   );
 };
 
+// Briefing and rule copy are plain strings in config/events.ts. Any email
+// address in them becomes a mailto link, so Paper Verse's "submit it to
+// zinnia2026@gcee.ac.in" is one tap instead of a copy-paste. split() with a
+// capturing group puts every match at an odd index.
+const EMAIL_RE = /([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g;
+
+const linkifyEmails = (text: string): React.ReactNode =>
+  text.split(EMAIL_RE).map((part, i) =>
+    i % 2 === 1 ? (
+      <a
+        key={i}
+        href={`mailto:${part}`}
+        className="text-[#3CE7FF] underline underline-offset-2 break-all hover:text-[#F5D90A] transition-colors"
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    ),
+  );
+
 export interface EventDetailModalProps {
   /** null closes the modal, so callers can pass their selection state directly. */
   event: EventMission | null;
@@ -203,7 +224,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             BRIEFING
           </h4>
           <p className="font-mono text-xs sm:text-sm text-[#E4E4E7] leading-relaxed whitespace-pre-line font-normal">
-            {event.description}
+            {linkifyEmails(event.description)}
           </p>
         </div>
 
@@ -219,7 +240,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
               {event.rules.map((rule, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs font-mono text-[#D4D4D8] font-normal leading-snug">
                   <span className="text-[#3CE7FF] shrink-0 font-bold">•</span>
-                  <span>{rule}</span>
+                  <span>{linkifyEmails(rule)}</span>
                 </li>
               ))}
             </ul>
