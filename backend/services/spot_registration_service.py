@@ -239,7 +239,9 @@ def desk_upi_accounts() -> List[Dict[str, str]]:
     """
     from services import pending_registration as pending
 
-    website = {str(a.get("upi_id") or "").strip().lower() for a in pending.payee_accounts()}
+    # Every website account with an ID set - the third one included even while it
+    # is switched off, so it can never quietly become a desk account.
+    website = {str(a.get("upi_id") or "").strip().lower() for a in pending.known_accounts()}
     website.discard("")
     seen: set = set()
     accounts = []

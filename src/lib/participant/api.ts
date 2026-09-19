@@ -156,8 +156,42 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
    Step 1-2 — details -> registration record (returns registration_id only)
    ========================================================================== */
 
+/* --------------------------------------------------------------------------
+   Account tickets. Verification hands back a small signed note of which UPI
+   account this address was given; it is kept here and sent back whenever the
+   details form is filled again, so a change in the accounts on offer can never
+   move someone who may already have paid. The note holds no personal details
+   (the address is an HMAC tag) and the server ignores any it did not sign or
+   that belongs to another address. A few are kept, for shared computers.
+   -------------------------------------------------------------------------- */
+
+const PAYEE_TICKETS_KEY = 'zin26_payee_tickets';
+const MAX_PAYEE_TICKETS = 5;
+
+function readPayeeTickets(): string[] {
+  try {
+    const list = JSON.parse(window.localStorage.getItem(PAYEE_TICKETS_KEY) || '[]');
+    return Array.isArray(list) ? list.filter((t) => typeof t === 'string').slice(0, MAX_PAYEE_TICKETS) : [];
+  } catch {
+    return [];
+  }
+}
+
+function keepPayeeTicket(ticket?: string): void {
+  if (!ticket) return;
+  try {
+    const list = [ticket, ...readPayeeTickets().filter((t) => t !== ticket)].slice(0, MAX_PAYEE_TICKETS);
+    window.localStorage.setItem(PAYEE_TICKETS_KEY, JSON.stringify(list));
+  } catch {
+    /* storage unavailable: the account is then chosen afresh, as before tickets existed */
+  }
+}
+
 export const registerParticipant = (details: ParticipantDetails): Promise<RegisterResponse> =>
-  request<RegisterResponse>('/api/participant/register', { method: 'POST', body: details });
+  request<RegisterResponse>('/api/participant/register', {
+    method: 'POST',
+    body: { ...details, payee_tickets: readPayeeTickets() },
+  });
 
 /* ==========================================================================
    Steps 3-5 and login — one OTP mechanism, three identifiers
@@ -181,14 +215,17 @@ export const verifyOtp = (who: OtpIdentifier, otp: string): Promise<VerifyOtpRes
  * success as "email verified" and returns a session so the participant stays
  * signed in through payment. Sends no confirmation email and returns no code.
  */
-export const verifyRegistrationEmail = (
+export const verifyRegistrationEmail = async (
   registrationId: string,
   otp: string,
-): Promise<VerifyRegistrationResponse> =>
-  request<VerifyRegistrationResponse>('/api/participant/register/verify-email', {
+): Promise<VerifyRegistrationResponse> => {
+  const result = await request<VerifyRegistrationResponse>('/api/participant/register/verify-email', {
     method: 'POST',
     body: { registration_id: registrationId, otp },
   });
+  if (result.success) keepPayeeTicket(result.payee_ticket);
+  return result;
+};
 
 /* ==========================================================================
    Steps 6-9 — payment and the status hub

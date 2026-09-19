@@ -1026,6 +1026,132 @@ def test_each_desk_login_sees_its_own_till_and_everyone_the_same_capacity(h):
     assert everyone["capacity"] == one["capacity"]
 
 
+@with_harness()
+def test_a_desk_slot_set_to_the_switched_off_third_website_account_is_still_ignored(h):
+    os.environ["TREASURER_UPI_ID_3"] = "desk2@upi"
+    os.environ["TREASURER_UPI_3_ENABLED"] = "false"
+    try:
+        assert [a["key"] for a in spot.desk_upi_accounts()] == ["D1"], "a website account, on or off"
+    finally:
+        os.environ.pop("TREASURER_UPI_ID_3", None)
+        os.environ.pop("TREASURER_UPI_3_ENABLED", None)
+
+
+# ==============================================================================
+# The website's money path, end to end: the account shown is the account recorded
+# ==============================================================================
+
+WEBSITE_ACCOUNTS = {
+    "TREASURER_UPI_ID": "acct.a@upi", "TREASURER_PAYEE_NAME": "Payee A", "TREASURER_BANK_LABEL": "SBI",
+    "TREASURER_UPI_ID_2": "acct.b@upi", "TREASURER_PAYEE_NAME_2": "Payee B", "TREASURER_BANK_LABEL_2": "Union Bank",
+    "TREASURER_UPI_ID_3": "acct.c@upi", "TREASURER_PAYEE_NAME_3": "Payee C", "TREASURER_BANK_LABEL_3": "SBI (C)",
+}
+LABELS = {"acct.a@upi": "SBI", "acct.b@upi": "Union Bank", "acct.c@upi": "SBI (C)"}
+
+
+def _website_accounts(third_on: bool):
+    """Three website accounts, the third switched on or off. Returns the undo."""
+    keys = list(WEBSITE_ACCOUNTS) + ["TREASURER_UPI_3_ENABLED"]
+    saved = {k: os.environ.get(k) for k in keys}
+    os.environ.update(WEBSITE_ACCOUNTS)
+    os.environ["TREASURER_UPI_3_ENABLED"] = "true" if third_on else "false"
+
+    def undo():
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    return undo
+
+
+def _website_flow(h, email, n, tickets=None, pay=True):
+    """
+    Everything a participant does on the website: the details form, the
+    emailed code, the payment screen, and submitting the payment. Returns the
+    account shown at each step and the one the payment row was recorded with.
+    """
+    from services import drive_storage as drive
+    from services import participant_auth_service as auth
+
+    codes = []
+    h._patch(auth, "send_pending_otp_email", lambda details, otp: codes.append(otp) or True)
+    h._patch(drive, "is_configured", lambda: False)
+    h._patch(db, "upload_file", lambda path, data, mime: f"payment-proofs/{path}")
+
+    form = {"name": "Web Payer", "email": email, "phone": "9123456780", "college": "GCEE",
+            "department": "CSE", "year": "II", "food_preference": "VEG"}
+    if tickets is not None:
+        form["payee_tickets"] = tickets
+    reg = participants.register_participant(form)
+    assert reg["success"], reg
+    ver = auth.verify_registration_email(registration_id=reg["registration_id"], otp=codes[-1])
+    assert ver["success"] and ver["payee_upi_id"], ver
+    screen = participants.payment_status(registration_id=ver["registration_id"])
+    out = {"verified": ver["payee_upi_id"], "screen": screen["payee_upi_id"], "ticket": ver["payee_ticket"],
+           "recorded": None, "bank": None}
+    if pay:
+        res = participants.submit_payment(
+            {"registration_id": ver["registration_id"], "utr_number": f"{510000000000 + n}"}, _Upload())
+        assert res["success"], res
+        row = h.fake.select_one("participants", f"email=eq.{email}")
+        pay_row = h.fake.select_one("payments", f"user_id=eq.{row['user_id']}")
+        out["recorded"] = pay_row["payee_upi"]
+        out["bank"] = panel._payee_bank(pay_row["payee_upi"])
+    return out
+
+
+@with_harness(now_iso=WEBSITE_OPEN)
+def test_website_with_two_accounts_every_payment_is_recorded_against_the_qr_shown(h):
+    undo = _website_accounts(third_on=False)
+    try:
+        used = set()
+        for n in range(16):
+            r = _website_flow(h, f"two{n}@test.com", n)
+            assert r["verified"] == r["screen"] == r["recorded"], r
+            assert r["bank"] == LABELS[r["recorded"]], r
+            used.add(r["recorded"])
+        assert used == {"acct.a@upi", "acct.b@upi"}, f"switched off, only A and B take money: {used}"
+    finally:
+        undo()
+
+
+@with_harness(now_iso=WEBSITE_OPEN)
+def test_website_with_the_third_account_on_all_three_share_and_each_payment_matches_its_qr(h):
+    undo = _website_accounts(third_on=True)
+    try:
+        used = {}
+        for n in range(36):
+            r = _website_flow(h, f"three{n}@test.com", 100 + n)
+            assert r["verified"] == r["screen"] == r["recorded"], r
+            assert r["bank"] == LABELS[r["recorded"]], r
+            used[r["recorded"]] = used.get(r["recorded"], 0) + 1
+        assert set(used) == {"acct.a@upi", "acct.b@upi", "acct.c@upi"}, f"all three take money: {used}"
+    finally:
+        undo()
+
+
+@with_harness(now_iso=WEBSITE_OPEN)
+def test_website_switch_flipped_mid_registration_never_moves_the_account(h):
+    """Given C, the switch goes off, the form is filled again: still C, and the payment is recorded to C."""
+    from services import pending_registration as pending
+
+    undo = _website_accounts(third_on=True)
+    try:
+        email = next(f"flip{n}@test.com" for n in range(200)
+                     if pending.choose_payee(f"flip{n}@test.com") == "C")
+        first = _website_flow(h, email, 900, pay=False)
+        assert first["verified"] == "acct.c@upi"
+
+        os.environ["TREASURER_UPI_3_ENABLED"] = "false"          # flipped mid-fest
+        assert pending.choose_payee(email) != "C", "a fresh choice would move them off C"
+        again = _website_flow(h, email, 901, tickets=[first["ticket"]])
+        assert again["verified"] == again["screen"] == again["recorded"] == "acct.c@upi", again
+        assert again["bank"] == "SBI (C)"
+    finally:
+        undo()
+
+
 def test_a_desk_login_reaches_the_desk_and_nothing_else():
     from flask import Flask
 

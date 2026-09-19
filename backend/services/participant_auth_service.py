@@ -146,7 +146,8 @@ def request_otp(user_id: str = "", *, registration_id: str = "") -> Dict[str, An
             # A new code means a new hash, so the old token is now stale. The
             # browser must carry this one forward or the resent code will not
             # verify against what it still holds.
-            "registration_id": pending.mint(details, otp),
+            # ...and it keeps the account the old one carried, if it had one.
+            "registration_id": pending.mint(details, otp, payee=pending.carried_payee(payload)),
             # Full address, not masked - same reason as the register path: this
             # is the participant's own input and a typo has to be visible.
             "email_hint": str(details.get("email", "")).strip(),
@@ -385,7 +386,10 @@ def verify_registration_email(
         # verifies and then walks away leaves nothing behind, the same as
         # someone who abandoned the details form.
         details = pending.details_of(payload)
-        verified_token = pending.mint_verified(details)
+        # An account this person was already given (carried through a resend,
+        # or by the ticket from an earlier visit) wins; only a first-timer is
+        # assigned one fresh. See pending.choose_payee.
+        verified_token = pending.mint_verified(details, payee=pending.carried_payee(payload))
 
         # The payment screen renders from this handoff without calling the
         # status endpoint, so the account has to travel with the token. Reopened
@@ -402,6 +406,8 @@ def verify_registration_email(
             "payee_name": account.get("payee_name", ""),
             "payee_bank": account.get("bank", ""),
             "payee_phone": account.get("payee_phone", ""),
+            # Kept by the browser and sent back if the form is filled again.
+            "payee_ticket": pending.payee_ticket(details.get("email", ""), pending.payee_of(verified_payload)),
             "expires_in": pending.VERIFIED_TTL_SECONDS,
             "message": "Email verified. Complete the payment to finish registering.",
         }

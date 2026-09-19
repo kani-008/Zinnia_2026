@@ -123,12 +123,27 @@ def is_pending_token(value: str) -> bool:
 
 PAYEE_A = "A"
 PAYEE_B = "B"
+# A third account, held in reserve. It takes NEW payers only while
+# TREASURER_UPI_3_ENABLED is true - so it can be brought in (say, when one of
+# the first two nears its bank's limits) by changing one setting and
+# redeploying, and taken out again the same way.
+PAYEE_C = "C"
+
+_SUFFIX = {PAYEE_A: "", PAYEE_B: "_2", PAYEE_C: "_3"}
+
+_TRUE = {"1", "true", "yes", "on"}
 
 
-def _account(suffix: str) -> Dict[str, str]:
+def third_account_enabled() -> bool:
+    """TREASURER_UPI_3_ENABLED=true (or 1 / yes / on). Anything else, or unset, is off."""
+    return (os.getenv("TREASURER_UPI_3_ENABLED") or "").strip().lower() in _TRUE
+
+
+def _account(key: str) -> Dict[str, str]:
     """One configured receiving account. Empty upi_id means "not configured"."""
+    suffix = _SUFFIX[key]
     return {
-        "key": PAYEE_B if suffix else PAYEE_A,
+        "key": key,
         "upi_id": (os.getenv(f"TREASURER_UPI_ID{suffix}") or "").strip(),
         "payee_name": (os.getenv(f"TREASURER_PAYEE_NAME{suffix}") or "").strip(),
         # The phone number a UPI app resolves to THIS account. Optional, and
@@ -140,33 +155,67 @@ def _account(suffix: str) -> Dict[str, str]:
         # receives the money. Deliberately not hardcoded: a UPI handle suffix
         # names the app's sponsor bank, not the destination account, so only
         # whoever owns the account can say what this should read.
-        "bank": (os.getenv(f"TREASURER_BANK_LABEL{suffix}") or "").strip()
-        or (PAYEE_B if suffix else PAYEE_A),
+        "bank": (os.getenv(f"TREASURER_BANK_LABEL{suffix}") or "").strip() or key,
     }
+
+
+def known_accounts() -> Tuple[Dict[str, str], ...]:
+    """
+    Every account that has a UPI ID set, primary first, whether or not it is
+    taking new payers. This is what a token or a stored payment is read back
+    against: someone assigned the third account, or who already paid into it,
+    still resolves to it after TREASURER_UPI_3_ENABLED is switched off - the
+    money went there, and relabelling it would send the treasurer to the wrong
+    bank statement.
+    """
+    primary = _account(PAYEE_A)
+    rest = tuple(a for a in (_account(PAYEE_B), _account(PAYEE_C)) if a["upi_id"])
+    return (primary,) + rest
 
 
 def payee_accounts() -> Tuple[Dict[str, str], ...]:
     """
-    Configured accounts, primary first. Never empty, and never longer than the
-    number actually configured - so with TREASURER_UPI_ID_2 unset every
-    participant is sent to the primary account and the split silently does not
-    happen, which is the correct behaviour rather than an error.
+    The accounts NEW payers are split across, primary first. Never empty, and
+    never longer than the number actually configured - so with
+    TREASURER_UPI_ID_2 unset every participant is sent to the primary account
+    and the split silently does not happen, which is the correct behaviour
+    rather than an error. The third account is in only while it is enabled.
     """
-    primary = _account("")
-    second = _account("_2")
-    return (primary, second) if second["upi_id"] else (primary,)
+    return tuple(a for a in known_accounts()
+                 if a["key"] != PAYEE_C or third_account_enabled())
 
 
 def choose_payee(email: str) -> str:
-    """Which account this address pays into. Stable for a given address."""
-    if len(payee_accounts()) < 2:
+    """
+    Which account this address pays into. Stable for a given address.
+
+    Bringing the third account in moves as few people as possible: about one
+    address in three goes to it, and every other address keeps the account it
+    had before - the original A/B split is computed exactly as it always was.
+    Switching it off sends that third back to their A/B account.
+
+    This answer is stable only while the switch stays put, so it is used ONLY
+    for someone never given an account before. Anyone who was - holding a
+    token, resending a code, or filling the form again with the account ticket
+    their browser kept - carries the account they were first shown instead
+    (carried_payee / payee_from_tickets). A switch flipped mid-fest therefore
+    never moves a person who may already have paid.
+    """
+    active = {a["key"] for a in payee_accounts()}
+    if len(active) < 2:
         return PAYEE_A
     digest = hmac.new(
         AUTH_SECRET_KEY.encode(),
         f"payee:{(email or '').strip().lower()}".encode(),
         hashlib.sha256,
     ).digest()
-    return PAYEE_B if digest[-1] & 1 else PAYEE_A
+    if PAYEE_C in active and PAYEE_B not in active:
+        # Only A and C: C simply stands where B would.
+        return PAYEE_C if digest[-1] & 1 else PAYEE_A
+    two_way = PAYEE_B if digest[-1] & 1 else PAYEE_A
+    if PAYEE_C in active and digest[0] % 3 == 0:
+        return PAYEE_C
+    return two_way
 
 
 def payee_for(payload: Optional[Dict[str, Any]]) -> Dict[str, str]:
@@ -179,7 +228,7 @@ def payee_for(payload: Optional[Dict[str, Any]]) -> Dict[str, str]:
     configured, which is what happens if TREASURER_UPI_ID_2 is withdrawn while
     tokens carrying "B" are still in flight.
     """
-    accounts = payee_accounts()
+    accounts = known_accounts()
     wanted = str((payload or {}).get("p") or "") or PAYEE_A
     for acc in accounts:
         if acc["key"] == wanted:
@@ -198,7 +247,7 @@ def payee_by_upi(upi_id: str) -> Dict[str, str]:
     send the treasurer to the wrong bank statement.
     """
     stored = (upi_id or "").strip()
-    accounts = payee_accounts()
+    accounts = known_accounts()
     if not stored:
         return dict(accounts[0])
     for acc in accounts:
@@ -214,14 +263,22 @@ def payee_of(payload: Dict[str, Any]) -> str:
     return str((payload or {}).get("p") or "")
 
 
-def mint(details: Dict[str, Any], otp: str, *, ttl: int = PENDING_TTL_SECONDS) -> str:
-    """Package validated details plus the code's hash into one signed string."""
+def mint(details: Dict[str, Any], otp: str, *, ttl: int = PENDING_TTL_SECONDS, payee: str = "") -> str:
+    """
+    Package validated details plus the code's hash into one signed string.
+
+    `payee` is an account this person was already given (from a token they
+    hold, or their account ticket). It rides along to verification so the
+    account never moves between visits; see choose_payee.
+    """
     email = str(details.get("email", "")).strip().lower()
     payload = {
         "d": {k: details.get(k) for k in _FIELDS},
         "h": _otp_hash(email, otp),
         "x": int(time.time()) + ttl,
     }
+    if payee:
+        payload["p"] = payee
     body = _b64e(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode())
     return f"{_PREFIX}.{body}.{_sign(body)}"
 
@@ -287,6 +344,83 @@ def mint_verified(details: Dict[str, Any], *, payee: str = "") -> str:
     }
     body = _b64e(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode())
     return f"{_PREFIX}.{body}.{_sign(body)}"
+
+
+def carried_payee(payload: Optional[Dict[str, Any]]) -> str:
+    """
+    The account a token already carries, if it is still a known account; else
+    "" (never given one, or the account has since been removed entirely).
+    """
+    p = payee_of(payload or {})
+    return p if p in {a["key"] for a in known_accounts()} else ""
+
+
+# --- the account ticket ------------------------------------------------------------
+#
+# Someone can be given an account, pay it, lose the page, and fill the form
+# again - a new token, so nothing of the old one is left to carry. If the set of
+# accounts on offer changed meanwhile (TREASURER_UPI_3_ENABLED flipped),
+# choose_payee could now name a different account and the payment would be
+# recorded against the wrong one. So verification also hands the browser a
+# small signed ticket to keep, naming the account; the form sends it back.
+#
+# It holds no personal details: the address is reduced to an HMAC tag, so the
+# ticket is useless to anyone reading the browser's storage, cannot be forged,
+# and cannot be replayed for another address.
+
+PAYEE_TICKET_TTL_SECONDS = 30 * 24 * 60 * 60  # well past the fest
+_TICKET_PREFIX = "pay1"
+
+
+def _ticket_sig(body: str) -> str:
+    # Its own domain, so a ticket's signature can never pass for a token's.
+    return hmac.new(AUTH_SECRET_KEY.encode(), f"payee-ticket:{body}".encode(), hashlib.sha256).hexdigest()[:32]
+
+
+def _email_tag(email: str) -> str:
+    return hmac.new(
+        AUTH_SECRET_KEY.encode(), f"ticket-email:{(email or '').strip().lower()}".encode(), hashlib.sha256
+    ).hexdigest()[:24]
+
+
+def payee_ticket(email: str, payee: str) -> str:
+    """The signed note of which account this address was given."""
+    body = _b64e(json.dumps(
+        {"e": _email_tag(email), "p": payee, "x": int(time.time()) + PAYEE_TICKET_TTL_SECONDS},
+        separators=(",", ":"), sort_keys=True,
+    ).encode())
+    return f"{_TICKET_PREFIX}.{body}.{_ticket_sig(body)}"
+
+
+def payee_from_tickets(tickets: Any, email: str) -> str:
+    """
+    The account named by whichever of these tickets is genuine, unexpired, for
+    THIS address and still a known account; "" if none is. Accepts one ticket
+    or a list (a shared computer may hold several people's).
+    """
+    if isinstance(tickets, str):
+        tickets = [tickets]
+    if not isinstance(tickets, (list, tuple)):
+        return ""
+    known = {a["key"] for a in known_accounts()}
+    tag = _email_tag(email)
+    for ticket in tickets[:10]:
+        try:
+            prefix, body, sig = str(ticket or "").split(".", 2)
+        except ValueError:
+            continue
+        if prefix != _TICKET_PREFIX or not hmac.compare_digest(sig, _ticket_sig(body)):
+            continue
+        try:
+            data = json.loads(_b64d(body))
+        except Exception:
+            continue
+        if int(data.get("x", 0)) < int(time.time()) or not hmac.compare_digest(str(data.get("e", "")), tag):
+            continue
+        p = str(data.get("p") or "")
+        if p in known:
+            return p
+    return ""
 
 
 def is_verified_payload(payload: Dict[str, Any]) -> bool:

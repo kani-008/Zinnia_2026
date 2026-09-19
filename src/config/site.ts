@@ -26,6 +26,21 @@ export const REGISTRATION_USER_MANUAL_URL =
   (import.meta.env.VITE_REGISTRATION_USER_MANUAL_URL as string) ||
   'https://drive.google.com/file/d/1mWcxWw88khKUkovE3mqnjJMCS79JulSh/view?usp=sharing';
 
+/** The fest day, for anything counted back from it. Keep in step with SITE_CONFIG.date. */
+export const EVENT_DAY_ISO = '2026-09-24';
+
+/**
+ * Paper Verse: the captain emails the team's PPT one day before the fest.
+ * Worked out from EVENT_DAY_ISO in IST, so it cannot drift from the fest date
+ * ("23 September 2026").
+ */
+export const PAPER_VERSE_PPT_DUE = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'Asia/Kolkata',
+}).format(new Date(new Date(`${EVENT_DAY_ISO}T12:00:00+05:30`).getTime() - 86_400_000));
+
 export const SITE_CONFIG = {
   name: 'ZINNIA 2026',
   tagline: 'CSE Department Symposium // CHRONOS Temporal Protocol',

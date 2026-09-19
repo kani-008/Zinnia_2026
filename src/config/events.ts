@@ -1,4 +1,5 @@
 import { EventMission } from '../types';
+import { PAPER_VERSE_PPT_DUE, SITE_CONFIG } from './site';
 
 export const OFFICIAL_MISSIONS: EventMission[] = [
   // TECHNICAL EVENTS (01 - 05)
@@ -180,8 +181,8 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Slide Limit: The presentation must not exceed 8 slides',
       'Duration: Each team gets 6–8 minutes to present, followed by 2 minutes of Q&A.',
       'Q&A: All team members should be prepared to answer questions from the judges.',
-      'Teams must carry the final presentation soft copy in PPT/PPTX format and submit it to zinnia2026@gcee.ac.in before the presentation.',
-      'The soft copy of your final paper must be submitted one day prior to the event day',
+      `PPT submission: the team captain must email the final presentation (PPT/PPTX) to ${SITE_CONFIG.primaryEmail} by ${PAPER_VERSE_PPT_DUE}, one day before the event, with the team name and topic in the email.`,
+      'Carry a soft copy of the final presentation (PPT/PPTX) on the day as well.',
       'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [

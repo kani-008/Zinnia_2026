@@ -15,6 +15,7 @@ import { ArrowLeft, Check, ExternalLink, Loader2, UserPlus, Users, X } from 'luc
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { createTeam, loadSession, lookupTeammate, normalizeUserId } from '../lib/participant/api';
 import { EVENTS } from '../lib/rules/catalog';
+import { PAPER_VERSE_PPT_DUE, SITE_CONFIG } from '../config/site';
 import type { EventCode, TeammateLookup } from '../lib/participant/types';
 import {
   ComicAlert,
@@ -242,6 +243,23 @@ export const ParticipantTeamCreatePage: React.FC = () => {
           </p>
         </header>
 
+        {/* Paper Verse only: the one deadline that falls before the fest day, set
+            right where the captain names the team and its topic. */}
+        {eventCode === 'PAPER_PRESENTATION' && (
+          <ComicAlert tone="yellow" className="mb-6">
+            <span className="block font-bold uppercase tracking-[0.12em] text-[#E5BD00]">
+              Captain: submit your PPT one day before
+            </span>
+            <span className="mt-1 block text-[#EEEEEA]">
+              Email the final presentation (PPT/PPTX) to{' '}
+              <a href={`mailto:${SITE_CONFIG.primaryEmail}`} className="font-bold underline underline-offset-2">
+                {SITE_CONFIG.primaryEmail}
+              </a>{' '}
+              by <strong className="text-[#E5BD00]">{PAPER_VERSE_PPT_DUE}</strong>, with your{' '}
+              <strong>team name</strong> and <strong>topic</strong> in the email.
+            </span>
+          </ComicAlert>
+        )}
 
         <form onSubmit={onSubmit}>
           <ComicPanel tone="cyan" bodyClassName="space-y-6">

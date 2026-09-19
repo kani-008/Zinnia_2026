@@ -205,7 +205,9 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
     print(f"\n[OTP] ========================================")
     print(f"[OTP] Registration OTP for {email}: {otp}")
     print(f"[OTP] ========================================\n")
-    token = pending.mint(details, otp)
+    # Someone filling the form again keeps the account they were first given -
+    # their browser sends back the account ticket from that verification.
+    token = pending.mint(details, otp, payee=pending.payee_from_tickets(data.get("payee_tickets"), email))
 
     # Copy these details to the separate leads spreadsheet - everyone who fills
     # this form, including those who never verify or pay. Started BEFORE the
@@ -505,6 +507,17 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
         if not created.get("success"):
             return created
         user_id = created["participant"]["user_id"]
+
+        # A payments row left by an earlier attempt that never reached a payment
+        # reference: nothing was paid against it, so it takes the account on THIS
+        # token - the QR the participant is looking at now. A row that already
+        # has a reference is never touched: see the resubmission update below.
+        earlier = db.select_one(
+            "payments", f"select=id,txn_ref,payee_upi&user_id=eq.{user_id}&order=created_at.desc"
+        )
+        if (earlier and pending_payee_upi and not earlier.get("txn_ref")
+                and (earlier.get("payee_upi") or "") != pending_payee_upi):
+            db.update("payments", f"id=eq.{earlier['id']}", {"payee_upi": pending_payee_upi})
 
         # The address was proven by the emailed code, which never reached the
         # table because no row existed to hang it on. A consumed OTP row is how

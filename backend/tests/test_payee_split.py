@@ -293,7 +293,202 @@ def test_the_account_is_read_from_the_token_not_the_request():
     assert 'pending_payee_upi = pending.payee_for(payload)' in source, (
         "submit_payment must take the account from the token payload"
     )
-    assert 'data.get("payee' not in source, "the account must never come off the request"
+    # The one thing about the account taken off the request is the account
+    # TICKET, and only through payee_from_tickets, which checks its signature and
+    # that it was issued for this very address (see the ticket tests below).
+    ticket_reads = source.count('pending.payee_from_tickets(data.get("payee_tickets")')
+    assert ticket_reads == 1 and source.count('data.get("payee') == ticket_reads, (
+        "the account must never come off the request, except as a signed ticket"
+    )
+
+
+# --- the third account, switched on and off ---------------------------------------
+
+ACCOUNT_C = "c.person@bank-three"
+THIRD_KEYS = ("TREASURER_UPI_ID_3", "TREASURER_PAYEE_NAME_3", "TREASURER_BANK_LABEL_3",
+              "TREASURER_PAYEE_PHONE_3", "TREASURER_UPI_3_ENABLED")
+MANY = [f"person{i}@test.com" for i in range(900)]
+
+
+def _third(enabled: bool) -> None:
+    os.environ["TREASURER_UPI_ID_3"] = ACCOUNT_C
+    os.environ["TREASURER_PAYEE_NAME_3"] = "Account Three"
+    os.environ["TREASURER_BANK_LABEL_3"] = "Canara"
+    os.environ["TREASURER_UPI_3_ENABLED"] = "true" if enabled else "false"
+
+
+def _no_third() -> None:
+    for k in THIRD_KEYS:
+        os.environ.pop(k, None)
+
+
+def test_the_third_account_is_off_until_its_switch_says_true():
+    _configure()
+    _third(enabled=False)
+    try:
+        assert [a["key"] for a in pending.payee_accounts()] == ["A", "B"]
+        assert {pending.choose_payee(e) for e in MANY} == {"A", "B"}, "no new payer goes to it while off"
+        for value in ("", "false", "0", "no", "off", "maybe"):
+            os.environ["TREASURER_UPI_3_ENABLED"] = value
+            assert not pending.third_account_enabled(), repr(value)
+        for value in ("true", "TRUE", " True ", "1", "yes", "on"):
+            os.environ["TREASURER_UPI_3_ENABLED"] = value
+            assert pending.third_account_enabled(), repr(value)
+    finally:
+        _no_third()
+
+
+def test_the_switch_alone_does_nothing_without_a_third_upi_id():
+    _configure()
+    _no_third()
+    os.environ["TREASURER_UPI_3_ENABLED"] = "true"
+    try:
+        assert [a["key"] for a in pending.payee_accounts()] == ["A", "B"]
+    finally:
+        _no_third()
+
+
+def test_switching_it_on_moves_about_a_third_to_it_and_nobody_else():
+    _configure()
+    _no_third()
+    before = {e: pending.choose_payee(e) for e in MANY}
+    _third(enabled=True)
+    try:
+        after = {e: pending.choose_payee(e) for e in MANY}
+        moved = [e for e in MANY if after[e] != before[e]]
+        assert moved and all(after[e] == "C" for e in moved), "people only ever move to the new account"
+        share = sum(1 for v in after.values() if v == "C") / len(MANY)
+        assert 0.27 < share < 0.40, share
+        a = sum(1 for v in after.values() if v == "A")
+        b = sum(1 for v in after.values() if v == "B")
+        assert abs(a - b) < 0.12 * len(MANY), (a, b)
+
+        os.environ["TREASURER_UPI_3_ENABLED"] = "false"
+        assert {e: pending.choose_payee(e) for e in MANY} == before, "switching off restores every old account"
+    finally:
+        _no_third()
+
+
+def test_someone_on_the_third_account_still_reads_as_it_after_it_is_switched_off():
+    _configure()
+    _third(enabled=True)
+    try:
+        email = next(e for e in MANY if pending.choose_payee(e) == "C")
+        payload, err = pending.open_token(pending.mint_verified(_details(email)))
+        assert not err and pending.payee_of(payload) == "C"
+
+        os.environ["TREASURER_UPI_3_ENABLED"] = "false"
+        account = pending.payee_for(payload)
+        assert (account["upi_id"], account["bank"]) == (ACCOUNT_C, "Canara"), "their QR must not change"
+        assert pending.payee_by_upi(ACCOUNT_C)["bank"] == "Canara", "a payment already made keeps its label"
+        assert pending.choose_payee(email) in ("A", "B"), "a fresh assignment no longer uses it"
+    finally:
+        _no_third()
+
+
+def test_with_only_the_first_and_third_accounts_the_third_stands_in_for_the_second():
+    _configure(second=False)
+    _third(enabled=True)
+    try:
+        choices = [pending.choose_payee(e) for e in MANY]
+        assert set(choices) == {"A", "C"}
+        assert 0.40 < choices.count("C") / len(choices) < 0.60
+    finally:
+        _no_third()
+        _configure()
+
+
+# --- carrying an account through re-visits (account tickets) ----------------------
+
+def test_an_account_ticket_names_the_account_for_that_address_only():
+    _configure()
+    ticket = pending.payee_ticket("Ticket@Test.com", "B")
+    assert pending.payee_from_tickets([ticket], "ticket@test.com") == "B"
+    assert pending.payee_from_tickets(ticket, " TICKET@test.com ") == "B", "one ticket or a list"
+    assert pending.payee_from_tickets([ticket], "someone.else@test.com") == "", "not replayable for another address"
+    assert pending.payee_from_tickets(["junk", None, 42, ticket], "ticket@test.com") == "B"
+    assert pending.payee_from_tickets(None, "ticket@test.com") == ""
+    assert pending.payee_from_tickets({"x": ticket}, "ticket@test.com") == ""
+
+
+def test_a_forged_altered_or_expired_ticket_is_ignored():
+    _configure()
+    ticket = pending.payee_ticket("t@test.com", "A")
+    prefix, body, sig = ticket.split(".")
+    forged_body = pending._b64e(pending._b64d(body).replace(b'"A"', b'"B"'))
+    assert pending.payee_from_tickets([f"{prefix}.{forged_body}.{sig}"], "t@test.com") == ""
+    assert pending.payee_from_tickets([f"{prefix}.{body}.{'0' * len(sig)}"], "t@test.com") == ""
+
+    import json, time
+    stale = pending._b64e(json.dumps({"e": pending._email_tag("t@test.com"), "p": "A",
+                                      "x": int(time.time()) - 1}, separators=(",", ":"), sort_keys=True).encode())
+    assert pending.payee_from_tickets([f"pay1.{stale}.{pending._ticket_sig(stale)}"], "t@test.com") == ""
+
+    # A registration token, relabelled as a ticket, is not one: separate signatures.
+    token = pending.mint_verified(_details("t@test.com"), payee="B")
+    _, t_body, t_sig = token.split(".", 2)
+    assert pending.payee_from_tickets([f"pay1.{t_body}.{t_sig}"], "t@test.com") == ""
+
+
+def test_a_ticket_for_an_account_that_no_longer_exists_is_ignored():
+    _configure()
+    _third(enabled=True)
+    ticket = pending.payee_ticket("gone@test.com", "C")
+    _no_third()
+    try:
+        assert pending.payee_from_tickets([ticket], "gone@test.com") == "", "falls back to a fresh assignment"
+    finally:
+        _no_third()
+
+
+def test_the_account_is_carried_through_resend_and_verification():
+    _configure()
+    details = _details("carry@test.com")
+    fresh = pending.choose_payee("carry@test.com")
+    other = "A" if fresh == "B" else "B"
+    # A pending token carrying an account keeps it into the verified token.
+    pending_token = pending.mint(details, "123456", payee=other)
+    payload, _ = pending.open_token(pending_token)
+    assert pending.carried_payee(payload) == other
+    verified, _ = pending.open_token(pending.mint_verified(details, payee=pending.carried_payee(payload)))
+    assert pending.payee_of(verified) == other, "a carried account beats a fresh choice"
+    # Nothing carried: a first-timer is assigned fresh, as always.
+    first, _ = pending.open_token(pending.mint(details, "123456"))
+    assert pending.carried_payee(first) == ""
+    assert pending.payee_of(pending.open_token(pending.mint_verified(details, payee=""))[0]) == fresh
+
+
+def test_flipping_the_switch_never_moves_someone_who_was_already_given_an_account():
+    """
+    The review's scenario, both ways round: given an account, then the switch
+    is flipped, then the person fills the form again (a brand-new token). The
+    ticket from the first verification keeps them on the account they saw.
+    """
+    _configure()
+    for start_on in (True, False):
+        try:
+            _third(enabled=start_on)
+            before = {e: pending.choose_payee(e) for e in MANY[:300]}
+            _third(enabled=not start_on)
+            after = {e: pending.choose_payee(e) for e in MANY[:300]}
+            movers = [e for e in before if before[e] != after[e]]
+            assert movers, "some addresses change account when the switch flips"
+            for email in movers[:25]:
+                _third(enabled=start_on)
+                first, _ = pending.open_token(pending.mint_verified(_details(email)))
+                shown = pending.payee_of(first)
+                ticket = pending.payee_ticket(email, shown)
+
+                _third(enabled=not start_on)              # the switch is flipped mid-fest
+                assert pending.choose_payee(email) != shown, "a fresh choice would move them"
+                again = pending.mint(_details(email), "654321",
+                                     payee=pending.payee_from_tickets([ticket], email))
+                second, _ = pending.open_token(pending.mint_verified(
+                    _details(email), payee=pending.carried_payee(pending.open_token(again)[0])))
+                assert pending.payee_of(second) == shown, (email, shown, pending.payee_of(second))
+                assert pending.payee_for(second)["upi_id"] == pending.payee_for(first)["upi_id"]
+        finally:
+            _no_third()
 
 
 def main() -> int:

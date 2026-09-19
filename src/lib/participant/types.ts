@@ -179,6 +179,8 @@ export type VerifyRegistrationResponse = ApiResult<{
   payee_name?: string;
   payee_bank?: string;
   payee_phone?: string;
+  /** signed note of which account this address was given - kept, and sent back if the form is filled again */
+  payee_ticket?: string;
   expires_in?: number;
   message?: string;
 }>;
