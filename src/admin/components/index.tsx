@@ -67,6 +67,7 @@ const FLAG_LABEL: Record<string, [Tone, string, string]> = {
   NO_SCREENSHOT: ['neutral', 'No proof', 'No payment screenshot was submitted'],
   EMAIL_UNVERIFIED: ['warn', 'Email', 'Email address has not been verified'],
   BYPASSED: ['crit', 'Bypassed', 'Approved without a bank check - this money will never appear in a statement'],
+  ON_SPOT: ['accent', 'On-spot', 'Registered and paid at the on-spot desk'],
 };
 
 export function FlagChips({ flags }: { flags?: string[] | null }) {
@@ -212,7 +213,7 @@ export function Banner({
         'flex items-start gap-2.5 rounded-lg border px-4 py-3 text-sm leading-relaxed',
         TONE[tone],
       )}
-      role={tone === 'crit' ? 'alert' : undefined}
+      role={tone === 'crit' ? 'alert' : 'status'}
     >
       <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
       <div>{children}</div>

@@ -83,9 +83,7 @@ def _next_user_id() -> str:
     Uses the DB sequence rather than count()+1 so two simultaneous
     registrations cannot be handed the same code.
     """
-    import requests
-
-    r = requests.post(
+    r = db.http.post(
         f"{db.SUPABASE_URL}/rest/v1/rpc/next_participant_serial",
         headers=db.write_headers(prefer="return=representation"),
         json={},
@@ -278,7 +276,9 @@ def promote_pending(details: Dict[str, Any], *, payee_upi: str = "") -> Dict[str
 
     # Re-checked here, not just at register time: two tabs can both pass the
     # earlier check and arrive with valid codes for the same address.
-    existing = db.select_one("participants", f"select=user_id,email&email=eq.{db.enc(email)}")
+    existing = db.select_one(
+        "participants", f"select=user_id,email,payment_status&email=eq.{db.enc(email)}"
+    )
     if existing:
         # If this participant was created during an earlier submission attempt that
         # failed before the payment reference was saved, allow them to finish
@@ -287,7 +287,14 @@ def promote_pending(details: Dict[str, Any], *, payee_upi: str = "") -> Dict[str
             "payments",
             f"select=id,txn_ref,status&user_id=eq.{existing['user_id']}&order=created_at.desc",
         )
-        if not payment or not payment.get("txn_ref"):
+        # ...but never an APPROVED one. A cash payment taken at the on-spot desk
+        # has no txn_ref either, and "finishing" it here overwrote that approved
+        # payment with a pending online one.
+        approved = (
+            str(existing.get("payment_status") or "").upper() == "APPROVED"
+            or str((payment or {}).get("status") or "").upper() == "APPROVED"
+        )
+        if not approved and (not payment or not payment.get("txn_ref")):
             return {"success": True, "participant": existing}
 
         return {
@@ -531,6 +538,20 @@ def submit_payment(data: Dict[str, Any], screenshot: Any = None) -> Dict[str, An
         }
 
     payment = db.select_one("payments", f"select=*&user_id=eq.{user_id}&order=created_at.desc")
+
+    # An approved payment is a decision already made - by the treasurer, or at
+    # the on-spot desk where the fee was taken in person. The update below would
+    # turn it back into a pending online submission, so nothing here may touch it.
+    if (
+        str((payment or {}).get("status") or "").upper() == "APPROVED"
+        or str(participant.get("payment_status") or "").upper() == "APPROVED"
+    ):
+        return {
+            "success": False,
+            "error_code": "ALREADY_APPROVED",
+            "message": "This registration is already paid and confirmed - there is nothing to submit.",
+        }
+
     if not payment:
         payment = (
             db.insert(
@@ -922,7 +943,13 @@ def treasurer_review_payment(
         if bypass:
             # Written only on a bypass. A normal approval leaves it NULL, and
             # that difference is what the queue's Bypassed flag reads.
-            approval["approval_note"] = (reason or "").strip()[:500]
+            note = (reason or "").strip()
+            # The on-spot desk marks its own payments with an "ON-SPOT | ..."
+            # note (spot_registration_service). A typed reason must never take
+            # that shape, or a bypass would read as a desk payment.
+            if note.upper().startswith("ON-SPOT |"):
+                note = f"Bypass: {note}"
+            approval["approval_note"] = note[:500]
         db.update("payments", f"id=eq.{payment['id']}", approval)
         db.update("participants", f"user_id=eq.{user_id}", {"payment_status": "APPROVED"})
         participant["payment_status"] = "APPROVED"

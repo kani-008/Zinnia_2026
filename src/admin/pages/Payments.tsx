@@ -391,7 +391,13 @@ function Drawer({
 
               <FlagChips flags={p.flags} />
 
-              {p.approval_note && (
+              {p.approval_note && p.flags?.includes('ON_SPOT') && (
+                <p className="rounded border border-indigo-500/25 bg-indigo-500/10 px-3 py-2 text-[12.5px] text-indigo-200">
+                  <span className="font-semibold">Registered and paid at the on-spot desk.</span>{' '}
+                  {p.approval_note}
+                </p>
+              )}
+              {p.approval_note && !p.flags?.includes('ON_SPOT') && (
                 <p className="rounded border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[12.5px] text-amber-200">
                   <span className="font-semibold">Approved without a bank check.</span>{' '}
                   {p.approval_note}
@@ -521,10 +527,13 @@ export function Payments() {
   }>(path, 45000, true);
 
   // Mirrors payments_queue's own bucket(): a row with no reference has not paid,
-  // whatever its participant status says. The two must agree or the tab badges,
-  // which the server computes, would not match the rows the browser shows.
+  // whatever its participant status says - except a cash payment taken at the
+  // on-spot desk. The two must agree or the tab badges, which the server
+  // computes, would not match the rows the browser shows.
   const bucketOf = (r: PaymentRow) =>
-    !r.txn_ref ? 'UNPAID' : String(r.payment_status || 'PENDING').toUpperCase();
+    !r.txn_ref && !r.flags?.includes('ON_SPOT')
+      ? 'UNPAID'
+      : String(r.payment_status || 'PENDING').toUpperCase();
 
   const allRows = data?.payments || [];
   const rows = useMemo(

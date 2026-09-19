@@ -47,6 +47,9 @@ from flask import g
 
 from services import zin26_db as db
 from services.audit_service import log_action
+from services.spot_registration_service import (
+    ON_SPOT_FEE, desk_account_by_upi, desk_upi_accounts, is_spot_note,
+)
 
 QUEUE_PAGE_SIZE = 50
 
@@ -139,6 +142,16 @@ _READERS: Dict[str, Any] = {
     ),
     "verified_emails": lambda: db.select(
         "login_otps", "select=user_id&consumed_at=not.is.null"),
+    # The on-spot desk's summary. Filtered at the source so the desk dashboard
+    # never pulls the website's payments; is_spot_note() then checks each note
+    # exactly, as the payments queue does.
+    "spot_payments": lambda: db.select(
+        "payments",
+        f"select=user_id,amount,status,approval_note,payee_upi,approved_by,created_at"
+        f"&approval_note=like.{db.enc('ON-SPOT | *')}",
+    ),
+    "spot_registrations": lambda: db.select(
+        "registrations", f"select=user_id,event_code,team_id&source=eq.SPOT&{LIVE_REG}"),
 }
 
 
@@ -308,12 +321,15 @@ def _build_event_rows(admin: Optional[Dict[str, Any]] = None) -> List[Dict[str, 
         if not e.get("is_active"):
             # Distinguish "we hit the cap" from "someone closed it".
             state = "FULL" if (cap is not None and used >= cap) else "CLOSED"
-        elif closes and closes < now:
-            state = "CLOSED"
+        # Capacity before the close date: the on-spot desk keeps filling events
+        # after the website closes, and "Closed" on every row hid that one had
+        # filled up.
         elif cap and used >= cap:
             state = "FULL"
         elif cap and used >= cap * 0.9:
             state = "NEARLY_FULL"
+        elif closes and closes < now:
+            state = "CLOSED"
         else:
             state = "OPEN"
 
@@ -506,27 +522,38 @@ def _payee_bank(payee_upi: Any) -> str:
     """
     if not payee_upi:
         return ""
+    desk = desk_account_by_upi(payee_upi)
+    if desk:
+        return desk["label"]  # an on-spot desk account: "Desk 1" / "Desk 2"
     from services import pending_registration as pending
 
     return pending.payee_by_upi(str(payee_upi)).get("bank", "")
 
 
 def _flags(p: Dict[str, Any], pay: Dict[str, Any], verified: bool, dup_refs: set) -> List[str]:
+    # Taken at the on-spot desk: a different fee, no screenshot and no emailed
+    # code by design, so those three flags would fire on every desk row and
+    # mean nothing. ON_SPOT replaces them.
+    spot = is_spot_note(pay.get("approval_note"))
+
     flags = []
     amount = pay.get("amount")
-    if amount is not None and float(amount) != float(REGISTRATION_FEE):
+    expected = ON_SPOT_FEE if spot else REGISTRATION_FEE
+    if amount is not None and float(amount) != float(expected):
         flags.append("AMOUNT_MISMATCH")
     if pay.get("txn_ref") and pay["txn_ref"] in dup_refs:
         flags.append("DUPLICATE_REF")
     if (pay.get("attempt_no") or 0) > 1:
         flags.append("RESUBMISSION")
-    if pay.get("txn_ref") and not pay.get("screenshot_url"):
+    if pay.get("txn_ref") and not pay.get("screenshot_url") and not spot:
         flags.append("NO_SCREENSHOT")
-    if not verified:
+    if not verified and not spot:
         flags.append("EMAIL_UNVERIFIED")
+    if spot:
+        flags.append("ON_SPOT")
     # Approved without a bank check. Last in the list but the one that matters
     # most at reconciliation time: this money will never appear in a statement.
-    if pay.get("approval_note"):
+    elif pay.get("approval_note"):
         flags.append("BYPASSED")
     return flags
 
@@ -592,7 +619,8 @@ def payments_queue(
     status = (status or "PENDING").upper()
 
     def bucket(r):
-        if not r.get("txn_ref"):
+        # A cash payment at the on-spot desk has no reference but is paid.
+        if not r.get("txn_ref") and not is_spot_note(r.get("approval_note")):
             return "UNPAID"
         return str(r.get("payment_status", "PENDING")).upper()
 
@@ -820,7 +848,12 @@ def resend_pass(user_id: str) -> Dict[str, Any]:
 
     from services.email_service import send_master_qr_email
 
-    res = send_master_qr_email(participant) or {}
+    # A walk-in's pass says they registered at the desk; the online wording
+    # would send them to a website that has closed to pick events.
+    latest = db.select_one(
+        "payments", f"select=approval_note&user_id=eq.{db.enc(uid)}&order=created_at.desc"
+    )
+    res = send_master_qr_email(participant, on_spot=is_spot_note((latest or {}).get("approval_note"))) or {}
     if not res.get("success"):
         log_action("PASS_RESEND_FAILED", "participant", uid,
                    detail={"error": res.get("error"), "status": res.get("status")})
@@ -975,6 +1008,116 @@ def dashboard(mode: str = "registration", admin: Optional[Dict[str, Any]] = None
         data.pop("colleges", None)
 
     return {"success": True, "dashboard": data}
+
+
+# ==============================================================================
+# ON-SPOT DESK SUMMARY
+# ==============================================================================
+def _desk_note_parts(note: Any) -> tuple:
+    """("Cash" | "UPI", "who collected it") from 'ON-SPOT | Cash | collected by <name>'."""
+    parts = str(note or "").split(" | ", 2)
+    method = parts[1] if len(parts) > 1 else ""
+    who = parts[2][len("collected by "):] if len(parts) > 2 and parts[2].startswith("collected by ") else ""
+    return method, who.strip() or "unknown"
+
+
+def _desk_logins() -> List[Dict[str, Any]]:
+    """Every active desk-only login (onspot1, onspot2, ...), from public.admin_users."""
+    from services.supabase_client import get as pub_get
+
+    ok, rows = pub_get("admin_users?select=id,username,name&role=eq.SPOT_DESK&is_active=eq.true&order=username")
+    return rows if ok and isinstance(rows, list) else []
+
+
+def spot_summary(admin: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    GET /api/admin/spot/summary - the on-spot desk's dashboard.
+
+    Each desk login is its own till: onspot1 takes UPI into Desk 1's account,
+    onspot2 into Desk 2's, and each keeps its own cash. So a desk login sees ITS
+    OWN walk-ins, cash, UPI and total - never the other desk's - while the
+    capacity board is the same for everyone: the admin's own rows, plus how
+    many of each event's registrations were taken at the desk.
+
+    Admins and treasurers see every desk side by side, and the day's total.
+    A payment belongs to the login that approved it (payments.approved_by),
+    or, for a row without one, to the name in its "collected by" note.
+    """
+    admin = admin or getattr(g, "admin", None) or {}
+    with cached_reads():
+        prefetch("events", "registrations", "teams", "participants", "spot_payments", "spot_registrations")
+        pays = [
+            p for p in _cached("spot_payments", _READERS["spot_payments"])
+            if is_spot_note(p.get("approval_note")) and str(p.get("status", "")).upper() == "APPROVED"
+        ]
+        spot_regs = _cached("spot_registrations", _READERS["spot_registrations"])
+        capacity = _build_event_rows({"role": "SUPER_ADMIN"})
+    logins = _desk_logins()
+
+    def money(rows):
+        return {"count": len(rows), "amount": sum(float(r.get("amount") or 0) for r in rows)}
+
+    def figures(rows):
+        return {
+            "participants": len({r["user_id"] for r in rows}),
+            "cash": money([r for r in rows if _desk_note_parts(r["approval_note"])[0] == "Cash"]),
+            "upi": money([r for r in rows if _desk_note_parts(r["approval_note"])[0] == "UPI"]),
+            "total": money(rows),
+        }
+
+    upi_by_login = {a["admin"]: a for a in desk_upi_accounts() if a["admin"]}
+
+    # One till per desk login, in username order, then anyone else who took
+    # money at the desk (a treasurer covering it), by name.
+    by_id = {str(l["id"]): l for l in logins}
+    by_name = {str(l.get("name") or ""): l for l in logins}
+    rows_for: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    others: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for p in pays:
+        _method, who = _desk_note_parts(p["approval_note"])
+        login = by_id.get(str(p.get("approved_by") or "")) or (None if p.get("approved_by") else by_name.get(who))
+        if login:
+            rows_for[login["username"]].append(p)
+        else:
+            others[who].append(p)
+
+    tills = []
+    for l in logins:
+        account = upi_by_login.get(str(l["username"]).lower())
+        tills.append({
+            "username": l["username"],
+            "name": l.get("name") or l["username"],
+            "upi_account": {"label": account["label"], "upi_id": account["upi_id"]} if account else None,
+            **figures(rows_for[l["username"]]),
+        })
+    for who in sorted(others, key=str.lower):
+        tills.append({"username": None, "name": who, "upi_account": None, **figures(others[who])})
+
+    # The capacity board: the admin's rows for every viewer, plus the desk's share.
+    desk_heads: Dict[str, set] = defaultdict(set)
+    desk_teams: Dict[str, set] = defaultdict(set)
+    for r in spot_regs:
+        desk_heads[r["event_code"]].add(r["user_id"])
+        if r.get("team_id"):
+            desk_teams[r["event_code"]].add(r["team_id"])
+    for e in capacity:
+        code = e["event_code"]
+        e["desk_used"] = len(desk_teams[code]) if e["capacity_unit"] == "TEAMS" else len(desk_heads[code])
+
+    summary: Dict[str, Any] = {"generated_at": _now(), "fee": ON_SPOT_FEE, "capacity": capacity}
+    if str(admin.get("role") or "").upper() == "SPOT_DESK":
+        username = str(admin.get("username") or "").strip().lower()
+        mine = next((t for t in tills if str(t["username"] or "").lower() == username), None)
+        if mine is None:
+            # Signed in, but not (yet) an active row in admin_users: show zeros for it.
+            account = upi_by_login.get(username)
+            mine = {"username": admin.get("username"), "name": admin.get("name") or admin.get("username"),
+                    "upi_account": {"label": account["label"], "upi_id": account["upi_id"]} if account else None,
+                    **figures([p for p in pays if str(p.get("approved_by") or "") == str(admin.get("id") or "")])}
+        summary.update(scope="MINE", me=mine)
+    else:
+        summary.update(scope="ALL", tills=tills, total=figures(pays))
+    return {"success": True, "summary": summary}
 
 
 # ==============================================================================

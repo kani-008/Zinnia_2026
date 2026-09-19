@@ -16,12 +16,39 @@ import os
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
+from requests.adapters import HTTPAdapter
 from urllib.parse import quote
+from urllib3.util.retry import Retry
 
 from services.passport_service import SUPABASE_URL, SUPABASE_KEY
 
 SCHEMA = "zin26"
 TIMEOUT = 8
+
+# One pooled HTTP session for every call to Supabase.
+#
+# A fresh connection per call costs a TCP + TLS handshake: about 350 ms to
+# Supabase before a single byte of data, against about 25 ms on a kept-alive
+# connection. Screens that need five or six reads paid that handshake five or
+# six times over - the on-spot desk took several seconds to open a participant.
+#
+# pool_maxsize covers the parallel reads the admin panel and the desk issue at
+# once.
+#
+# A kept-alive connection can die while it sits in the pool - a Vercel instance
+# frozen past the server's idle timeout, or a close that crosses the next
+# request. urllib3 reports that as a READ error, so read=1 is what gives a
+# GET/HEAD one more try on a fresh connection. allowed_methods is checked on
+# that path too: a POST/PATCH/DELETE (every insert, update and rpc) is never
+# replayed, so nothing can be written twice. A read that times out is also
+# retried once, so one read can take up to 2 x TIMEOUT before it fails.
+http = requests.Session()
+http.mount("https://", HTTPAdapter(
+    pool_connections=4,
+    pool_maxsize=16,
+    max_retries=Retry(total=1, connect=1, read=1, status=0,
+                      allowed_methods=frozenset({"GET", "HEAD"}), raise_on_status=False),
+))
 
 
 def _base_headers() -> Dict[str, str]:
@@ -87,7 +114,7 @@ def zin26_available() -> Tuple[bool, str]:
     because the former is a one-click dashboard fix and the latter is not.
     """
     try:
-        r = requests.get(
+        r = http.get(
             _url("events", "select=code&limit=1"), headers=read_headers(), timeout=TIMEOUT
         )
     except Exception as e:
@@ -104,7 +131,7 @@ def zin26_available() -> Tuple[bool, str]:
 
 
 def select(table: str, query: str = "select=*") -> List[Dict[str, Any]]:
-    r = requests.get(_url(table, query), headers=read_headers(), timeout=TIMEOUT)
+    r = http.get(_url(table, query), headers=read_headers(), timeout=TIMEOUT)
     if r.status_code not in (200, 206):
         raise Zin26Error(f"select {table} failed: HTTP {r.status_code} {r.text[:200]}")
     return r.json() or []
@@ -116,7 +143,7 @@ def select_one(table: str, query: str) -> Optional[Dict[str, Any]]:
 
 
 def insert(table: str, payload: Any) -> List[Dict[str, Any]]:
-    r = requests.post(_url(table), headers=write_headers(), json=payload, timeout=TIMEOUT)
+    r = http.post(_url(table), headers=write_headers(), json=payload, timeout=TIMEOUT)
     if r.status_code not in (200, 201):
         # 23505 is Postgres' unique_violation. It is surfaced as a distinct code
         # because callers act on it — a duplicate email or a second team entry for
@@ -128,7 +155,7 @@ def insert(table: str, payload: Any) -> List[Dict[str, Any]]:
 
 
 def update(table: str, query: str, payload: Any) -> List[Dict[str, Any]]:
-    r = requests.patch(_url(table, query), headers=write_headers(), json=payload, timeout=TIMEOUT)
+    r = http.patch(_url(table, query), headers=write_headers(), json=payload, timeout=TIMEOUT)
     if r.status_code not in (200, 204):
         raise Zin26Error(f"update {table} failed: HTTP {r.status_code} {r.text[:200]}")
     return (r.json() or []) if r.text else []
@@ -137,7 +164,7 @@ def update(table: str, query: str, payload: Any) -> List[Dict[str, Any]]:
 def delete(table: str, query: str) -> List[Dict[str, Any]]:
     if not query:
         raise Zin26Error("refusing an unfiltered delete", status=400, code="UNSAFE_DELETE")
-    r = requests.delete(_url(table, query), headers=write_headers(), timeout=TIMEOUT)
+    r = http.delete(_url(table, query), headers=write_headers(), timeout=TIMEOUT)
     if r.status_code not in (200, 204):
         raise Zin26Error(f"delete {table} failed: HTTP {r.status_code} {r.text[:200]}")
     return (r.json() or []) if r.text else []
@@ -155,7 +182,7 @@ def rpc(fn: str, payload: Optional[Dict[str, Any]] = None) -> Any:
     Functions are reached with Content-Profile (they are POSTed), not
     Accept-Profile, which is why this does not go through read_headers().
     """
-    r = requests.post(
+    r = http.post(
         _url(f"rpc/{fn}"), headers=write_headers(), json=payload or {}, timeout=TIMEOUT
     )
     if r.status_code not in (200, 201, 204):
@@ -176,7 +203,7 @@ def count(table: str, query: str = "select=*") -> int:
     h = read_headers()
     h["Prefer"] = "count=exact"
     h["Range"] = "0-0"
-    r = requests.get(_url(table, query), headers=h, timeout=TIMEOUT)
+    r = http.get(_url(table, query), headers=h, timeout=TIMEOUT)
     cr = r.headers.get("content-range", "")
     if "/" in cr:
         tail = cr.split("/")[-1]
@@ -205,7 +232,7 @@ def _storage_headers(content_type: Optional[str] = None) -> Dict[str, str]:
 
 def ensure_proof_bucket() -> None:
     """Create the private bucket on first use; a 409 means it already exists."""
-    r = requests.post(
+    r = http.post(
         f"{SUPABASE_URL}/storage/v1/bucket",
         headers=_storage_headers("application/json"),
         json={
@@ -229,7 +256,7 @@ def upload_file(path: str, data: bytes, content_type: str) -> str:
     ensure_proof_bucket()
     h = _storage_headers(content_type)
     h["x-upsert"] = "true"
-    r = requests.post(
+    r = http.post(
         f"{SUPABASE_URL}/storage/v1/object/{PROOF_BUCKET}/{path}",
         headers=h,
         data=data,
@@ -245,7 +272,7 @@ def sign_file_url(object_path: str, expires_in: int = 3600) -> Optional[str]:
     if not object_path or "/" not in object_path:
         return None
     bucket, _, key = object_path.partition("/")
-    r = requests.post(
+    r = http.post(
         f"{SUPABASE_URL}/storage/v1/object/sign/{bucket}/{key}",
         headers=_storage_headers("application/json"),
         json={"expiresIn": expires_in},

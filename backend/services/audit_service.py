@@ -11,10 +11,13 @@ admin activity, which is not participant data and outlives any one data model.
 
 from typing import Any, Dict, Optional
 
-import requests
 from flask import g, request
 
 from services.passport_service import SUPABASE_URL, get_headers
+# The same kept-alive connection pool as every other Supabase call: an audit row
+# is written on each desk action, and a fresh TLS handshake per row added about
+# a third of a second to each one.
+from services.zin26_db import http
 
 TIMEOUT = 4
 
@@ -34,7 +37,7 @@ def log_action(
     """
     try:
         admin = getattr(g, "admin", None) or {}
-        requests.post(
+        http.post(
             f"{SUPABASE_URL}/rest/v1/admin_audit_log",
             headers=get_headers(prefer_return="minimal"),
             timeout=TIMEOUT,
@@ -56,7 +59,7 @@ def log_action(
 def recent(limit: int = 50, offset: int = 0) -> list:
     """Read the log back for the audit screen."""
     try:
-        r = requests.get(
+        r = http.get(
             f"{SUPABASE_URL}/rest/v1/admin_audit_log"
             f"?select=*&order=created_at.desc&limit={int(limit)}&offset={int(offset)}",
             headers=get_headers(),

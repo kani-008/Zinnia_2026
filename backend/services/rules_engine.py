@@ -332,6 +332,7 @@ def can_register(
     remaining_capacity: Optional[int] = None,
     now: Optional[_dt.datetime] = None,
     config: Optional[Dict[str, object]] = None,
+    ignore_close_date: bool = False,
 ) -> Decision:
     """
     Mirror of canRegister() in src/lib/rules/engine.ts, including check order.
@@ -340,6 +341,11 @@ def can_register(
       - R9 runs BEFORE the Short Film early return (the pseudocode as written
         lets Short Film be registered twice);
       - R14 close-date is enforced (the pseudocode omits it entirely).
+
+    `ignore_close_date` is for the admin panel's on-spot desk only (see
+    services/spot_registration_service). It lifts R14 for on-campus events and
+    nothing else: the website stays closed, and Short Film - an online
+    submission - stays closed everywhere.
     """
     cfg = {**DEFAULT_CONFIG, **(config or {})}
     now = now or _dt.datetime.now(_dt.timezone.utc)
@@ -374,7 +380,8 @@ def can_register(
         return _no("R12", "EVENT_FULL", "Event full")
 
     # R14 — each event carries its own close date; Short Film closes early.
-    if now > _parse_iso(target.reg_closes_at):
+    desk_override = ignore_close_date and _is_on_campus(target.code)
+    if now > _parse_iso(target.reg_closes_at) and not desk_override:
         return _no("R14", "REGISTRATION_CLOSED", f"Registrations for {target.name} have closed")
 
     # R7 — online, so no block and no count, but it needs something to hang off.
@@ -449,6 +456,7 @@ def can_cancel(
     event_code: str,
     existing: Sequence[str],
     now: Optional[_dt.datetime] = None,
+    ignore_close_date: bool = False,
 ) -> Decision:
     """
     R14 cancellation, plus the R7 orphan guard.
@@ -456,6 +464,9 @@ def can_cancel(
     Cancelling the last on-campus event while Short Film is held is REJECTED,
     never cascaded — Short Film is not auto-cancelled on the participant's
     behalf (resolved decision, see PHASE1_NOTES.md).
+
+    `ignore_close_date` lifts R14 for on-campus events at the on-spot desk, as
+    in can_register. R7 still applies.
     """
     now = now or _dt.datetime.now(_dt.timezone.utc)
 
@@ -467,7 +478,8 @@ def can_cancel(
     if target.code not in held:
         return _no("R14", "NOT_REGISTERED", f"You are not registered for {target.name}")
 
-    if now > _parse_iso(target.reg_closes_at):
+    desk_override = ignore_close_date and _is_on_campus(target.code)
+    if now > _parse_iso(target.reg_closes_at) and not desk_override:
         return _no(
             "R14",
             "CANCELLATION_CLOSED",
@@ -498,6 +510,7 @@ def can_register_team(
     remaining_capacity: Optional[int] = None,
     now: Optional[_dt.datetime] = None,
     config: Optional[Dict[str, object]] = None,
+    ignore_close_date: bool = False,
 ) -> Decision:
     """
     R8/R10 — every member must independently pass R1-R7, and the rejection
@@ -538,6 +551,7 @@ def can_register_team(
             remaining_capacity=remaining_capacity,
             now=now,
             config=config,
+            ignore_close_date=ignore_close_date,
         )
         if not decision.ok:
             return _no(
@@ -560,6 +574,7 @@ def evaluate_catalog(
     capacity_by_event: Optional[Dict[str, Optional[int]]] = None,
     now: Optional[_dt.datetime] = None,
     config: Optional[Dict[str, object]] = None,
+    ignore_close_date: bool = False,
 ) -> List[Dict[str, object]]:
     """Per-card state for the dashboard grid (§4.3), with an explicit reason."""
     held = set(existing)
@@ -600,6 +615,7 @@ def evaluate_catalog(
             remaining_capacity=capacity_by_event.get(event.code),
             now=now,
             config=config,
+            ignore_close_date=ignore_close_date,
         )
 
         if decision.ok:

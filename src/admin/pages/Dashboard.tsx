@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
+import { isDeskOnly, useAdminAuth } from '../auth/AdminAuthProvider';
 import { useAdminQuery } from '../hooks/useAdminQuery';
 import {
   Banner,
@@ -12,7 +13,7 @@ import {
   StatTile,
   cx,
 } from '../components';
-import type { DashboardData } from '../types';
+import type { AdminEvent, DashboardData, SpotSummary, SpotTill } from '../types';
 
 const inr = (n: number) => '₹' + (n || 0).toLocaleString('en-IN');
 
@@ -122,10 +123,179 @@ function SplitBar({ parts }: { parts: { label: string; n: number; color: string 
   );
 }
 
+/**
+ * A desk-only login (onspot1 / onspot2) sees its own till and the capacity
+ * board, nothing else. Admins and treasurers see their dashboard with every
+ * desk's till as one of its sections.
+ */
 export function Dashboard() {
+  const { user } = useAdminAuth();
+  if (isDeskOnly(user?.role)) return <DeskDashboard />;
+  return <AdminDashboard withDesk={user?.role === 'SUPER_ADMIN' || user?.role === 'TREASURER'} />;
+}
+
+/** Two desks work side by side; both see the running figures within 15 seconds. */
+const SUMMARY_POLL_MS = 15000;
+
+const updatedAt = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+const deskUsedMap = (s?: SpotSummary | null) =>
+  s ? Object.fromEntries(s.capacity.map((e) => [e.event_code, e.desk_used])) : undefined;
+
+/**
+ * The capacity board: one design for the admin and both desks, sorted by
+ * fullness. `deskUsed`, when given, adds how many of each event's seats were
+ * taken at the on-spot desk.
+ */
+function CapacityBoard({
+  rows,
+  manage = false,
+  deskUsed,
+}: {
+  rows: AdminEvent[];
+  manage?: boolean;
+  deskUsed?: Record<string, number>;
+}) {
+  return (
+    <Card>
+      <SectionTitle
+        title="Capacity"
+        hint="sorted by fullness"
+        right={
+          manage ? (
+            <Link to="/admin/events" className="text-[12.5px] text-indigo-300 hover:underline">
+              Manage
+            </Link>
+          ) : undefined
+        }
+      />
+      <div className="px-5 pb-5 space-y-2.5">
+        {rows
+          .slice()
+          .sort((a, b) => (b.pct ?? -1) - (a.pct ?? -1))
+          .map((e) => (
+            <div key={e.event_code} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 items-center">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="truncate text-[13.5px] text-white/80">{e.name}</span>
+                <EventStateChip state={e.state} />
+              </div>
+              <div className="font-mono text-[12.5px] tabular-nums text-white/55 whitespace-nowrap">
+                {e.used}
+                <span className="text-white/25"> / {e.capacity ?? '∞'}</span>
+              </div>
+              <div className="col-span-2">
+                <CapacityBar used={e.used} capacity={e.capacity} />
+                {deskUsed && (deskUsed[e.event_code] ?? 0) > 0 && (
+                  <div className="mt-1 font-mono text-[11px] text-white/35">
+                    {deskUsed[e.event_code]} at the on-spot desk
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        {!rows.length && <div className="text-sm text-white/30">No events configured.</div>}
+      </div>
+    </Card>
+  );
+}
+
+/** One till's figures: walk-ins, cash, UPI, total. */
+function TillTiles({ till, fee, wide = false }: { till: SpotTill; fee: number; wide?: boolean }) {
+  return (
+    <div className={cx('grid gap-3 sm:grid-cols-2', wide && 'xl:grid-cols-4')}>
+      <StatTile label="Walk-ins registered" value={till.participants} />
+      <StatTile label="Cash collected" value={inr(till.cash.amount)} tone="ok" sub={`${till.cash.count} paid in cash`} />
+      <StatTile
+        label="UPI collected"
+        value={inr(till.upi.amount)}
+        tone="ok"
+        sub={
+          till.upi_account
+            ? `${till.upi.count} into ${till.upi_account.label} · ${till.upi_account.upi_id}`
+            : `${till.upi.count} paid by UPI`
+        }
+      />
+      <StatTile label="Total" value={inr(till.total.amount)} tone="accent" sub={`${till.total.count} × ₹${fee}`} />
+    </div>
+  );
+}
+
+/**
+ * onspot1 / onspot2: their own till - what THIS login registered and took, in
+ * cash and into its own UPI account - and the capacity board every login sees.
+ */
+function DeskDashboard() {
+  const { data, error, loading } = useAdminQuery<{ summary: SpotSummary }>(
+    '/api/admin/spot/summary',
+    SUMMARY_POLL_MS,
+  );
+  const s = data?.summary;
+
+  if (loading && !s) return <Spinner label="Loading your desk…" />;
+  if (error && !s) return <Banner>{error}</Banner>;
+  if (!s?.me) return null;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h1 className="text-lg font-semibold tracking-tight text-white">{s.me.name}</h1>
+        {s.me.username && <span className="font-mono text-[12px] text-white/40">{s.me.username}</span>}
+        <span className="font-mono text-[11.5px] text-white/35">updated {updatedAt(s.generated_at)} · every 15 s</span>
+        {error && <span className="text-[12px] text-amber-300/80">refresh failed - showing the last figures</span>}
+      </div>
+      <TillTiles till={s.me} fee={s.fee} wide />
+      <CapacityBoard rows={s.capacity} deskUsed={deskUsedMap(s)} />
+    </div>
+  );
+}
+
+/** For the admin and the treasurer: every desk's till side by side, and the day's total. */
+function DeskTills({ s, error }: { s: SpotSummary; error: string | null }) {
+  return (
+    <section className="space-y-3" aria-label="On-spot desk">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h2 className="text-[15px] font-semibold tracking-tight text-white">On-spot desk</h2>
+        {s.total && (
+          <span className="font-mono text-[12px] text-white/55">
+            {s.total.participants} walk-ins · cash {inr(s.total.cash.amount)} · UPI {inr(s.total.upi.amount)} ·
+            total <span className="text-emerald-300">{inr(s.total.total.amount)}</span>
+          </span>
+        )}
+        <span className="font-mono text-[11.5px] text-white/35">updated {updatedAt(s.generated_at)}</span>
+        {error && <span className="text-[12px] text-amber-300/80">refresh failed - showing the last figures</span>}
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {(s.tills || []).map((till) => (
+          <Card key={till.username ?? till.name}>
+            <SectionTitle
+              title={till.name}
+              hint={
+                till.username
+                  ? `${till.username} · ${till.upi_account ? `UPI ${till.upi_account.label} · ${till.upi_account.upi_id}` : 'cash only'}`
+                  : 'collected at the desk'
+              }
+            />
+            <div className="px-5 pb-5">
+              <TillTiles till={till} fee={s.fee} />
+            </div>
+          </Card>
+        ))}
+        {!s.tills?.length && <div className="text-sm text-white/35">No desk login has been set up yet.</div>}
+      </div>
+    </section>
+  );
+}
+
+function AdminDashboard({ withDesk }: { withDesk: boolean }) {
   const { data, error, loading } = useAdminQuery<{ dashboard: DashboardData }>(
     '/api/admin/dashboard',
   );
+  const desk = useAdminQuery<{ summary: SpotSummary }>(
+    withDesk ? '/api/admin/spot/summary' : null,
+    SUMMARY_POLL_MS,
+  );
+  const deskSummary = desk.data?.summary ?? null;
 
   if (loading && !data) return <Spinner label="Loading dashboard…" />;
   if (error) return <Banner>{error}</Banner>;
@@ -199,39 +369,11 @@ export function Dashboard() {
                   sub="teammates yet to accept" />
       </div>
 
+      {/* 2b. The on-spot desk, one till per desk login, for the admin and the treasurer. */}
+      {withDesk && deskSummary && <DeskTills s={deskSummary} error={desk.error} />}
+
       {/* 3. Capacity board — the object worth projecting during registration week. */}
-      <Card>
-        <SectionTitle
-          title="Capacity"
-          hint="sorted by fullness"
-          right={
-            <Link to="/admin/events" className="text-[12.5px] text-indigo-300 hover:underline">
-              Manage
-            </Link>
-          }
-        />
-        <div className="px-5 pb-5 space-y-2.5">
-          {(d?.capacity || [])
-            .slice()
-            .sort((a, b) => (b.pct ?? -1) - (a.pct ?? -1))
-            .map((e) => (
-              <div key={e.event_code} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 items-center">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="truncate text-[13.5px] text-white/80">{e.name}</span>
-                  <EventStateChip state={e.state} />
-                </div>
-                <div className="font-mono text-[12.5px] tabular-nums text-white/55 whitespace-nowrap">
-                  {e.used}
-                  <span className="text-white/25"> / {e.capacity ?? '∞'}</span>
-                </div>
-                <div className="col-span-2">
-                  <CapacityBar used={e.used} capacity={e.capacity} />
-                </div>
-              </div>
-            ))}
-          {!d?.capacity?.length && <div className="text-sm text-white/30">No events configured.</div>}
-        </div>
-      </Card>
+      <CapacityBoard rows={d?.capacity || []} manage deskUsed={deskUsedMap(deskSummary)} />
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>

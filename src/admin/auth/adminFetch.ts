@@ -7,31 +7,74 @@
  * show it directly instead of inventing their own copy.
  */
 
-const TOKEN_KEY = 'zin26_admin_token';
+export const TOKEN_KEY = 'zin26_admin_token';
 
 /**
- * sessionStorage, not localStorage: a treasurer verifying payments on a shared
- * department machine should not still be signed in after the tab closes. The
- * seven-day token expiry is the server-side ceiling; this is the client floor.
+ * Where the admin token lives.
+ *
+ * sessionStorage by default: a treasurer verifying payments on a shared
+ * department machine should not still be signed in after the tab closes.
+ *
+ * localStorage for the desk-only logins (onspot1 / onspot2), passed as
+ * `persist`: the desk operator keeps leaving the desk tab to check that a UPI
+ * payment has arrived, may close it on the way, and opens the desk again in a
+ * new tab. Signing them out each time would stall the queue at the worst
+ * moment. Their token still expires server-side after seven days, and Sign out
+ * clears it from every tab.
+ *
+ * The seven-day token expiry is the server-side ceiling in both cases.
  */
 export const tokenStore = {
+  /** This tab's own (tab-only) sign-in first, then the desk sign-in shared by every tab. */
   get(): string | null {
     try {
-      return sessionStorage.getItem(TOKEN_KEY);
+      return sessionStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(TOKEN_KEY);
     } catch {
       return null;
     }
   },
-  set(t: string) {
+  /** True when this tab has a tab-only sign-in of its own, so the shared desk one does not apply here. */
+  hasOwn(): boolean {
     try {
-      sessionStorage.setItem(TOKEN_KEY, t);
+      return sessionStorage.getItem(TOKEN_KEY) !== null;
+    } catch {
+      return false;
+    }
+  },
+  set(t: string, persist = false) {
+    try {
+      if (persist) {
+        localStorage.setItem(TOKEN_KEY, t);
+        sessionStorage.removeItem(TOKEN_KEY);
+      } else {
+        // A treasurer signing in on the desk's machine must not sign the desk
+        // out in its other tabs: this tab's own sign-in wins here anyway.
+        sessionStorage.setItem(TOKEN_KEY, t);
+      }
     } catch {
       /* private window, storage disabled — the session just won't survive a reload */
     }
   },
-  clear() {
+  /**
+   * Sign THIS tab out: remove the token it is using - its own tab-only one if
+   * it has one, otherwise the shared desk one. Given `only`, remove it only if
+   * the stored token is still that one, so a 401 for an old token can never
+   * sign out a newer sign-in made meanwhile in another tab.
+   */
+  clear(only?: string | null) {
+    const drop = (store: Storage): boolean => {
+      const current = store.getItem(TOKEN_KEY);
+      if (current === null) return false;
+      if (!only || current === only) store.removeItem(TOKEN_KEY);
+      return true;
+    };
     try {
-      sessionStorage.removeItem(TOKEN_KEY);
+      if (drop(sessionStorage)) return;
+    } catch {
+      /* fall through to the shared store */
+    }
+    try {
+      drop(localStorage);
     } catch {
       /* nothing to do */
     }
@@ -43,11 +86,14 @@ export const UNAUTHORISED_EVENT = 'zin26:admin-unauthorised';
 export class AdminError extends Error {
   code: string;
   status: number;
-  constructor(message: string, code: string, status: number) {
+  /** The parsed error body, for screens that act on its extra fields (field, user_id, …). */
+  data: any;
+  constructor(message: string, code: string, status: number, data: any = null) {
     super(message);
     this.name = 'AdminError';
     this.code = code;
     this.status = status;
+    this.data = data;
   }
 }
 
@@ -76,7 +122,7 @@ export async function adminFetch<T = any>(path: string, opts: Opts = {}): Promis
 
   // Session gone. Clear it and let the provider redirect, wherever we are.
   if (res.status === 401 && !isSignIn) {
-    tokenStore.clear();
+    tokenStore.clear(token);
     window.dispatchEvent(new CustomEvent(UNAUTHORISED_EVENT));
     throw new AdminError('Your session has ended. Please sign in again.', 'UNAUTHORIZED', 401);
   }
@@ -95,6 +141,7 @@ export async function adminFetch<T = any>(path: string, opts: Opts = {}): Promis
       data?.message || 'Something went wrong. Please try again.',
       data?.error_code || 'UNKNOWN',
       res.status,
+      data,
     );
   }
   return data as T;

@@ -18,13 +18,17 @@ from flask import Blueprint
 
 from controllers.admin_controller import AdminController
 from controllers.admin_panel_controller import AdminPanelController
-from middleware.auth_middleware import require_auth, require_role, require_sync_key
+from controllers.spot_registration_controller import SpotRegistrationController as Spot
+from middleware.auth_middleware import require_auth, require_role, require_signed_in, require_sync_key
 from middleware.rate_limiter import rate_limit
 
 admin_bp = Blueprint("admin_bp", __name__)
 
 TREASURER = ("TREASURER",)
 COORDINATOR = ("EVENT_COORDINATOR", "TREASURER")
+# The on-spot desk: treasurers, and the desk-only logins (SPOT_DESK) that can
+# reach nothing else.
+DESK = ("TREASURER", "SPOT_DESK")
 
 
 def _add(rule, endpoint, view, methods=("GET",)):
@@ -41,7 +45,7 @@ _add("/api/admin/auth/login", "admin_auth_login", rate_limit(10)(AdminController
 
 # Revalidates a stored token on page load. Without it the frontend cannot tell
 # a valid session from an expired one except by guessing at a failure.
-_add("/api/admin/me", "admin_me", require_auth(AdminPanelController.me))
+_add("/api/admin/me", "admin_me", require_signed_in(AdminPanelController.me))
 
 
 # ==============================================================================
@@ -88,6 +92,42 @@ _add("/api/admin/payments/<user_id>/bypass", "admin_payment_bypass",
 # already-approved record without emailing.
 _add("/api/admin/payments/<user_id>/resend-pass", "admin_payment_resend",
      require_role(*TREASURER)(AdminPanelController.resend_pass), ["POST"])
+
+
+# ==============================================================================
+# ADMIN PANEL — on-spot registration desk
+# ==============================================================================
+# Walk-ins on the fest day, after the website has closed. TREASURER, like the
+# payment routes - the desk takes the fee and records it as approved - plus the
+# desk-only SPOT_DESK logins (onspot1, onspot2), which reach nothing else.
+_add("/api/admin/spot/participants", "admin_spot_register",
+     require_role(*DESK)(Spot.register_participant), ["POST"])
+_add("/api/admin/spot/search", "admin_spot_search",
+     require_role(*DESK)(Spot.search))
+_add("/api/admin/spot/participants/<user_id>", "admin_spot_person",
+     require_role(*DESK)(Spot.person))
+# Emails the pass: straight after a walk-in registers, and for "Resend pass".
+_add("/api/admin/spot/participants/<user_id>/send-pass", "admin_spot_send_pass",
+     require_role(*DESK)(Spot.send_pass), ["POST"])
+_add("/api/admin/spot/check-member", "admin_spot_check_member",
+     require_role(*DESK)(Spot.check_member))
+# The desk UPI account(s) this login may show a QR for (a desk login: its own;
+# anyone else: a choice of the two), and an early "already registered?" check
+# for the walk-in email field.
+_add("/api/admin/spot/payee", "admin_spot_payee",
+     require_role(*DESK)(Spot.payee))
+_add("/api/admin/spot/check-email", "admin_spot_check_email",
+     require_role(*DESK)(Spot.check_email))
+# The desk's own dashboard: cash and UPI taken, walk-ins, desk registrations per
+# event. The only dashboard a desk login can open.
+_add("/api/admin/spot/summary", "admin_spot_summary",
+     require_role(*DESK)(Spot.summary))
+_add("/api/admin/spot/events/register", "admin_spot_event_register",
+     require_role(*DESK)(Spot.register_event), ["POST"])
+_add("/api/admin/spot/events/cancel", "admin_spot_event_cancel",
+     require_role(*DESK)(Spot.cancel_event), ["POST"])
+_add("/api/admin/spot/teams", "admin_spot_team_create",
+     require_role(*DESK)(Spot.create_team), ["POST"])
 
 
 # ==============================================================================

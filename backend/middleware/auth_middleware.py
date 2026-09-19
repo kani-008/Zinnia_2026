@@ -65,6 +65,18 @@ def decode_admin_token(token: str) -> tuple[bool, dict, str]:
     except Exception as e:
         return False, {}, f"Token decode error: {str(e)}"
 
+# Every role an admin token is ever issued with (auth_service: admin_users and
+# the seed accounts). An allow-list, not a signature check alone: participant
+# sessions are signed with the same AUTH_SECRET_KEY in the same payload.signature
+# format - {"sub", "aud": "participant", "exp"}, no role - so a valid signature
+# proves nothing about being an admin. Without this, any registered participant
+# could send their own session token to require_auth routes and download the
+# full participant export.
+ADMIN_ROLES = frozenset({
+    "SUPER_ADMIN", "TREASURER", "GATE_ADMIN", "FOOD_ADMIN", "EVENT_COORDINATOR", "SPOT_DESK",
+})
+
+
 def get_current_admin():
     """Extract authenticated admin from request headers."""
     auth_header = request.headers.get("Authorization", "")
@@ -78,7 +90,12 @@ def get_current_admin():
         return None
     
     valid, user, _ = decode_admin_token(token)
-    return user if valid else None
+    if not valid:
+        return None
+    # A token meant for another audience, or with no admin role, is not an admin.
+    if user.get("aud") or str(user.get("role", "")).upper() not in ADMIN_ROLES:
+        return None
+    return user
 
 # Standalone key for the Google Sheets sync. Deliberately NOT an admin token:
 # an admin token is revoked only by rotating AUTH_SECRET_KEY, which signs out all
@@ -127,13 +144,39 @@ def require_sync_key(f):
     return wrapper
 
 
-def require_auth(f):
-    """Middleware enforcing valid admin session."""
+# Logins that may use the on-spot desk and nothing else. require_auth ("any
+# signed-in admin") does not admit them: every route behind it shows or exports
+# data - the dashboard, event rosters, the full participant workbook - that a
+# desk login has no business seeing. They reach the desk through require_role
+# routes that name them, and /api/admin/me through require_signed_in.
+DESK_ONLY_ROLES = frozenset({"SPOT_DESK"})
+
+
+def require_signed_in(f):
+    """Any valid admin session, desk-only logins included. For /api/admin/me only."""
     @wraps(f)
     def decorated(*args, **kwargs):
         admin = get_current_admin()
         if not admin:
             return jsonify({"success": False, "error_code": "UNAUTHORIZED", "message": "Authentication required. Please sign in."}), 401
+        g.admin = admin
+        return f(*args, **kwargs)
+    return decorated
+
+
+def require_auth(f):
+    """Middleware enforcing valid admin session. Desk-only logins are refused."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        admin = get_current_admin()
+        if not admin:
+            return jsonify({"success": False, "error_code": "UNAUTHORIZED", "message": "Authentication required. Please sign in."}), 401
+        if str(admin.get("role", "")).upper() in DESK_ONLY_ROLES:
+            return jsonify({
+                "success": False,
+                "error_code": "FORBIDDEN",
+                "message": "This login is for the on-spot desk only.",
+            }), 403
         g.admin = admin
         return f(*args, **kwargs)
     return decorated

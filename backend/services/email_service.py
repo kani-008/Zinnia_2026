@@ -711,6 +711,7 @@ def generate_master_qr_email_html(
     login_url: str,
     whatsapp_url: str,
     qr_cid: str = "cid:master_qr",
+    on_spot: bool = False,
 ) -> str:
     """
     EMAIL #2 — the confirmation, sent only after the treasurer approves the
@@ -718,7 +719,25 @@ def generate_master_qr_email_html(
     the login link. Everything here is released by that approval and by nothing
     earlier; the participant has already had EMAIL #1 and has been picking
     events since they submitted their payment reference.
+
+    `on_spot` is for a pass issued at the admin panel's on-spot desk on the fest
+    day. The website is closed to them by then, so the mail must not send them
+    there to pick events.
     """
+    if on_spot:
+        login_label = "LOG IN TO SEE YOUR EVENTS"
+        closing_title = "REGISTERED AT THE DESK"
+        closing_text = (
+            "Registration on the website has closed. To add or change an event, "
+            "come back to the on-spot registration desk."
+        )
+    else:
+        login_label = "LOG IN &amp; PICK YOUR EVENTS"
+        closing_title = "NOTHING LEFT TO DO"
+        closing_text = (
+            "Your place is secured. If you have not picked all your events yet you still can — "
+            "the catalog stays open on your dashboard until each event closes."
+        )
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -784,15 +803,14 @@ def generate_master_qr_email_html(
 
                 <div style="text-align:center;margin:10px 0 20px 0;">
                   <a href="{login_url}" style="display:inline-block;background-color:#0FA9C6;color:#08090A;font-weight:800;font-size:13px;text-decoration:none;padding:12px 22px;border-radius:8px;text-transform:uppercase;font-family:monospace;">
-                    LOG IN &amp; PICK YOUR EVENTS &rarr;
+                    {login_label} &rarr;
                   </a>
                 </div>
 
                 <div style="background-color:#17181C;border-left:3px solid #0FA9C6;padding:12px 14px;border-radius:4px;">
-                  <div style="font-size:11px;font-weight:700;color:#0FA9C6;text-transform:uppercase;margin-bottom:4px;">NOTHING LEFT TO DO</div>
+                  <div style="font-size:11px;font-weight:700;color:#0FA9C6;text-transform:uppercase;margin-bottom:4px;">{closing_title}</div>
                   <div style="font-size:12px;color:#B8B8B2;line-height:1.6;">
-                    Your place is secured. If you have not picked all your events yet you still can —
-                    the catalog stays open on your dashboard until each event closes.
+                    {closing_text}
                   </div>
                 </div>
               </td>
@@ -814,7 +832,7 @@ def generate_master_qr_email_html(
     """
 
 
-def send_master_qr_email(participant: Dict[str, Any]) -> Dict[str, Any]:
+def send_master_qr_email(participant: Dict[str, Any], on_spot: bool = False) -> Dict[str, Any]:
     """
     EMAIL #2 — the confirmation, sent ONLY from treasurer_review_payment() on
     APPROVE. This is the one and only release point for the registration code,
@@ -855,6 +873,15 @@ def send_master_qr_email(participant: Dict[str, Any]) -> Dict[str, Any]:
     msg["From"] = SMTP_FROM
     msg["To"] = recipient
 
+    closing = (
+        "You registered at the on-spot desk. Registration on the website has\n"
+        "closed - to add or change an event, come back to the desk."
+        if on_spot else
+        "Nothing is left to do. If you have not picked all your events yet you\n"
+        "still can - the catalog stays open on your dashboard until each event\n"
+        "closes."
+    )
+
     text_content = f"""
 ZINNIA 2026 - PAYMENT CONFIRMED
 Government College of Engineering, Erode
@@ -880,16 +907,14 @@ Join the participants WhatsApp group:
 Log in to your dashboard:
 {login_url}
 
-Nothing is left to do. If you have not picked all your events yet you
-still can - the catalog stays open on your dashboard until each event
-closes.
+{closing}
     """
 
     alt = MIMEMultipart("alternative")
     alt.attach(MIMEText(text_content, "plain", "utf-8"))
     alt.attach(
         MIMEText(
-            generate_master_qr_email_html(name, user_id, login_url, whatsapp_url),
+            generate_master_qr_email_html(name, user_id, login_url, whatsapp_url, on_spot=on_spot),
             "html",
             "utf-8",
         )

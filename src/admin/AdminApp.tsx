@@ -1,10 +1,11 @@
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { AdminAuthProvider, RequireRole } from './auth/AdminAuthProvider';
+import { AdminAuthProvider, NotForDeskOnly, RequireRole } from './auth/AdminAuthProvider';
 import { AdminLayout } from './AdminLayout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Payments } from './pages/Payments';
+import { SpotDesk } from './pages/SpotDesk';
 import { Events } from './pages/Events';
 import { Exports } from './pages/Exports';
 import { Settings } from './pages/Settings';
@@ -28,6 +29,7 @@ export default function AdminApp() {
             </RequireRole>
           }
         >
+          {/* Dashboard picks the desk summary for a desk-only login. */}
           <Route index element={<Dashboard />} />
           <Route
             path="payments"
@@ -37,8 +39,30 @@ export default function AdminApp() {
               </RequireRole>
             }
           />
-          <Route path="events" element={<Events />} />
-          <Route path="exports" element={<Exports />} />
+          <Route
+            path="spot"
+            element={
+              <RequireRole roles={['TREASURER', 'SPOT_DESK']}>
+                <SpotDesk />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="events"
+            element={
+              <NotForDeskOnly>
+                <Events />
+              </NotForDeskOnly>
+            }
+          />
+          <Route
+            path="exports"
+            element={
+              <NotForDeskOnly>
+                <Exports />
+              </NotForDeskOnly>
+            }
+          />
           <Route
             path="settings"
             element={

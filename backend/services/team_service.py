@@ -528,9 +528,7 @@ def _hard_delete_team(team_id: str) -> None:
 
 
 def _rpc_confirm_team(team_id: str) -> int:
-    import requests
-
-    r = requests.post(
+    r = db.http.post(
         f"{db.SUPABASE_URL}/rest/v1/rpc/confirm_team",
         headers=db.write_headers(),
         json={"p_team_id": team_id},
@@ -585,9 +583,19 @@ def _new_team_id(event_code: str) -> str:
 
 
 def _insert_team(
-    event_code: str, team_name: str, captain_id: str, topic: str = ""
+    event_code: str,
+    team_name: str,
+    captain_id: str,
+    topic: str = "",
+    status: str = "PENDING_ACCEPTANCE",
 ) -> List[Dict[str, Any]]:
-    """Insert the team row, re-rolling the id if that number is already taken."""
+    """
+    Insert the team row, re-rolling the id if that number is already taken.
+
+    `status` is PENDING_ACCEPTANCE for the website's invite flow. The on-spot
+    desk passes CONFIRMED: every member is standing at the desk, so there is
+    no invitation to wait on.
+    """
     last: Optional[Exception] = None
     for _ in range(_TEAM_ID_ATTEMPTS):
         try:
@@ -598,7 +606,7 @@ def _insert_team(
                     "event_code": event_code,
                     "team_name": team_name,
                     "captain_user_id": captain_id,
-                    "status": "PENDING_ACCEPTANCE",
+                    "status": status,
                     # Omitted rather than written empty, so a team with no topic
                     # reads as NULL like every team created before the column.
                     **({"topic": topic} if topic else {}),

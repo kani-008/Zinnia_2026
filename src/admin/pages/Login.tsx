@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Loader2, LockKeyhole } from 'lucide-react';
-import { useAdminAuth } from '../auth/AdminAuthProvider';
+import { isDeskOnly, useAdminAuth } from '../auth/AdminAuthProvider';
 import { FullPageSpinner } from '../auth/AdminAuthProvider';
 
 export function Login() {
@@ -13,15 +13,16 @@ export function Login() {
   const [busy, setBusy] = useState(false);
 
   if (loading) return <FullPageSpinner />;
-  if (user) return <Navigate to="/admin" replace />;
+  // A desk login's work is the desk, so that is where it lands.
+  if (user) return <Navigate to={isDeskOnly(user.role) ? '/admin/spot' : '/admin'} replace />;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      await signIn(username, password);
-      navigate('/admin', { replace: true });
+      const signedIn = await signIn(username, password);
+      navigate(isDeskOnly(signedIn.role) ? '/admin/spot' : '/admin', { replace: true });
     } catch (err: any) {
       // The server's message is written for a person; show it verbatim.
       setError(err?.message || 'Could not sign you in.');
@@ -95,7 +96,8 @@ export function Login() {
         </form>
 
         <p className="mt-4 text-center text-[11.5px] leading-relaxed text-white/25">
-          Sessions end when you close the tab.
+          Admin and treasurer sessions end when you close the tab. On-spot desk logins stay signed
+          in on this browser until you press Sign out.
         </p>
       </div>
     </div>

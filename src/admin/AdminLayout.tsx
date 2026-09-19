@@ -7,9 +7,10 @@ import {
   LogOut,
   ScrollText,
   Settings as SettingsIcon,
+  UserPlus,
   Wallet,
 } from 'lucide-react';
-import { useAdminAuth } from './auth/AdminAuthProvider';
+import { isDeskOnly, useAdminAuth } from './auth/AdminAuthProvider';
 import { useAdminQuery } from './hooks/useAdminQuery';
 import { cx } from './components';
 import type { AdminRole } from './types';
@@ -19,12 +20,15 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   roles?: AdminRole[]; // omitted = everyone; empty array = SUPER_ADMIN only
+  /** shown to desk-only logins (onspot1 / onspot2), who see nothing else */
+  desk?: boolean;
   end?: boolean;
 }
 
 const NAV: NavItem[] = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true, desk: true },
   { to: '/admin/payments', label: 'Payments', icon: Wallet, roles: ['TREASURER'] },
+  { to: '/admin/spot', label: 'On-spot desk', icon: UserPlus, roles: ['TREASURER', 'SPOT_DESK'], desk: true },
   { to: '/admin/events', label: 'Events', icon: CalendarClock },
   { to: '/admin/exports', label: 'Exports', icon: FileSpreadsheet },
   { to: '/admin/settings', label: 'Settings', icon: SettingsIcon, roles: [] },
@@ -52,6 +56,8 @@ export function AdminLayout() {
   );
 
   const visible = NAV.filter((item) => {
+    // A desk-only login sees the desk and its own dashboard, nothing else.
+    if (isDeskOnly(user?.role)) return !!item.desk;
     if (!item.roles) return true;
     if (user?.role === 'SUPER_ADMIN') return true;
     return item.roles.includes(user!.role);

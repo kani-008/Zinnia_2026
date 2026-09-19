@@ -3,7 +3,9 @@ export type AdminRole =
   | 'TREASURER'
   | 'GATE_ADMIN'
   | 'FOOD_ADMIN'
-  | 'EVENT_COORDINATOR';
+  | 'EVENT_COORDINATOR'
+  /** onspot1 / onspot2: the on-spot desk and nothing else */
+  | 'SPOT_DESK';
 
 export interface AdminUser {
   id: string;
@@ -49,7 +51,9 @@ export type PaymentFlag =
   | 'DUPLICATE_REF'
   | 'RESUBMISSION'
   | 'NO_SCREENSHOT'
-  | 'EMAIL_UNVERIFIED';
+  | 'EMAIL_UNVERIFIED'
+  | 'BYPASSED'
+  | 'ON_SPOT';
 
 export interface PaymentRow {
   user_id: string;
@@ -91,6 +95,142 @@ export interface PaymentAttempt {
   approval_note?: string | null;
   created_at: string;
   approved_at: string | null;
+}
+
+/* ---------------------------------------------------- on-spot desk (/admin/spot) */
+
+export type SpotPaymentMethod = 'CASH' | 'UPI';
+
+export interface SpotPerson {
+  user_id: string;
+  name: string;
+  email: string;
+  phone: string;
+  college: string;
+  department?: string;
+  year?: string;
+  food_preference?: 'VEG' | 'NON_VEG';
+  payment_status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  created_at?: string;
+}
+
+export interface SpotSearchResult {
+  user_id: string;
+  name: string;
+  email: string;
+  phone: string;
+  college: string;
+  payment_status: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
+/** One card of rules_engine.evaluate_catalog, as the desk sees it. */
+export interface SpotCatalogCard {
+  event_code: string;
+  name: string;
+  category: 'TECH' | 'NON_TECH';
+  min_team: number;
+  max_team: number;
+  is_team_event: boolean;
+  allows_team: boolean;
+  asks_topic: boolean;
+  state: 'AVAILABLE' | 'REGISTERED' | 'FULL' | 'BLOCKED';
+  reason?: string;
+  /** rule id behind a FULL/BLOCKED state, e.g. R14 for a passed close date */
+  rule?: string;
+  warnings?: string[];
+}
+
+export interface SpotRegistration {
+  reg_id: number;
+  event_code: string;
+  event_name: string;
+  status: string;
+  source: 'ONLINE' | 'SPOT';
+  team_id: string | null;
+  team_name: string | null;
+  team_status: string | null;
+  is_captain: boolean;
+  captain_user_id: string | null;
+}
+
+export interface SpotDetail {
+  participant: SpotPerson;
+  payment: {
+    amount: number | null;
+    status: string;
+    txn_ref: string | null;
+    approval_note: string | null;
+    is_spot: boolean;
+  } | null;
+  registrations: SpotRegistration[];
+  catalog: SpotCatalogCard[];
+  counted_used: number;
+  counted_max: number;
+}
+
+/** One on-spot desk UPI account - never one of the website's accounts. */
+export interface SpotUpiAccount {
+  /** sent back with the registration; the server checks this login may use it */
+  key: string;
+  /** "Desk 1" / "Desk 2" */
+  label: string;
+  upi_id: string;
+  payee_name: string;
+}
+
+/** GET /api/admin/spot/payee - the desk UPI account(s) this login may show a QR for. */
+export interface SpotPayee {
+  /** true for onspot1 / onspot2: the login is tied to its own account */
+  fixed: boolean;
+  accounts: SpotUpiAccount[];
+  amount: number;
+}
+
+export interface SpotMoney {
+  count: number;
+  amount: number;
+}
+
+/** One desk login's till: what it registered and took. */
+export interface SpotTill {
+  /** null for someone who is not a desk login (a treasurer covering the desk) */
+  username: string | null;
+  name: string;
+  /** the UPI account this login takes payments into; null = cash only */
+  upi_account: { label: string; upi_id: string } | null;
+  participants: number;
+  cash: SpotMoney;
+  upi: SpotMoney;
+  total: SpotMoney;
+}
+
+/** GET /api/admin/spot/summary - the on-spot desk's dashboard. */
+export interface SpotSummary {
+  generated_at: string;
+  fee: number;
+  /** the admin's capacity rows, the same for every viewer, plus the desk's share */
+  capacity: (AdminEvent & { desk_used: number })[];
+  /** MINE: a desk login's own till. ALL: every till, for admins and treasurers. */
+  scope: 'MINE' | 'ALL';
+  me?: SpotTill;
+  tills?: SpotTill[];
+  total?: { participants: number; cash: SpotMoney; upi: SpotMoney; total: SpotMoney };
+}
+
+/** GET /api/admin/spot/check-email */
+export interface SpotEmailCheck {
+  email: string;
+  registered: boolean;
+  user_id: string | null;
+  name: string | null;
+}
+
+export interface SpotMemberCheck {
+  user_id: string;
+  name: string;
+  college: string;
+  payment_status: string;
+  blocked_reason: string | null;
 }
 
 export interface DashboardData {

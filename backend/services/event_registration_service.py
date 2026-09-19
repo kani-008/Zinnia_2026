@@ -16,7 +16,6 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any, Dict, List, Optional
 
-import requests
 
 from services import rules_engine as rules
 from services import zin26_db as db
@@ -344,7 +343,7 @@ def rpc_cancel(user_id: str, event_code: str, event_name: str) -> int:
     member CANCELLED under a team still marked CONFIRMED. One function call is
     one transaction and reports what it did.
     """
-    r = requests.post(
+    r = db.http.post(
         f"{db.SUPABASE_URL}/rest/v1/rpc/cancel_participant_event",
         headers=db.write_headers(),
         json={"p_user_id": user_id, "p_event_code": event_code},
@@ -443,23 +442,32 @@ def _cancel_by_patch(user_id: str, event_code: str, event_name: str) -> int:
     return len(rows)
 
 
-def rpc_register(user_id: str, event_code: str, team_id: Optional[str] = None, status: str = "CONFIRMED") -> str:
+def rpc_register(
+    user_id: str,
+    event_code: str,
+    team_id: Optional[str] = None,
+    status: str = "CONFIRMED",
+    source: str = "ONLINE",
+) -> str:
     """
     Race-safe insert via migration 012/013. Translates the function's sentinel
     exceptions back into domain errors.
+
+    `source` is ONLINE for the website and SPOT for the admin panel's on-spot
+    desk - zin26.registrations has allowed both since migration 011.
     """
     # Deliberately not db.insert(): the capacity check and the insert have to
     # happen under the same row lock. Doing it here in Python would leave the
     # window between "1 seat left" and INSERT open to a second request, which
     # is exactly the concurrency note in §5.
-    r = requests.post(
+    r = db.http.post(
         f"{db.SUPABASE_URL}/rest/v1/rpc/register_participant_event",
         headers=db.write_headers(),
         json={
             "p_user_id": user_id,
             "p_event_code": event_code,
             "p_team_id": team_id,
-            "p_source": "ONLINE",
+            "p_source": source,
             "p_status": status,
         },
         timeout=db.TIMEOUT,
