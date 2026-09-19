@@ -251,3 +251,39 @@ export interface DashboardData {
     created_at: string;
   }[];
 }
+
+/* ------------------------------------------------------------ junior invites */
+
+/** A first-year junior invited to the inauguration and lunch (zin26.juniors). */
+export interface Junior {
+  /** ZIN26-J001 ... - also the content of their QR lunch pass */
+  junior_id: string;
+  name: string;
+  email: string;
+  food_preference: 'VEG' | 'NON_VEG';
+  invite_status: 'PENDING' | 'SENT' | 'FAILED';
+  invite_error: string | null;
+  invited_at: string | null;
+  created_at: string;
+  /** when the food counter scanned their pass; null until then */
+  lunch_at: string | null;
+}
+
+export interface JuniorCounts {
+  total: number;
+  sent: number;
+  failed: number;
+  pending: number;
+  veg: number;
+  non_veg: number;
+  lunch: number;
+}
+
+/** One row of an uploaded sheet, as the server read it. `problem` is empty when it can be added. */
+export interface JuniorPreviewRow {
+  row: number;
+  name: string;
+  email: string;
+  food_preference: 'VEG' | 'NON_VEG' | '';
+  problem: string;
+}

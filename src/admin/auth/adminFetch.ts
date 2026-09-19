@@ -114,7 +114,8 @@ export async function adminFetch<T = any>(path: string, opts: Opts = {}): Promis
   const res = await fetch(path, {
     ...opts,
     headers: {
-      ...(opts.body ? { 'Content-Type': 'application/json' } : {}),
+      // A FormData body (a file upload) sets its own multipart boundary header.
+      ...(opts.body && !(opts.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(opts.headers || {}),
     },

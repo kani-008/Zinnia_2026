@@ -11,6 +11,8 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
+from email.utils import getaddresses
+from html import escape as _html_escape
 from typing import Dict, Any, List, Optional
 
 # SMTP Configuration from Environment
@@ -951,6 +953,228 @@ Log in to your dashboard:
         return {"success": True, "status": "SENT", "recipient": recipient}
     except Exception as e:
         print(f"[SMTP Error] Master QR email to {recipient} failed: {e}")
+        return {"success": False, "status": "FAILED", "recipient": recipient, "error": str(e)}
+
+
+# ==============================================================================
+# FIRST-YEAR INVITE — the seniors' invitation to the juniors, with a lunch pass
+# ==============================================================================
+# Sent from the super admin's "Junior invites" page, one junior at a time. The
+# QR holds the pass code and only the pass code, exactly as a participant's
+# holds their UserID: the food-counter scanner looks the code up and records
+# the meal, so the pass works once.
+
+def _food_label(food_preference: str) -> str:
+    return "Non-veg" if str(food_preference or "").upper().replace("-", "_") in ("NON_VEG", "NONVEG") else "Veg"
+
+
+def generate_junior_invite_email_html(name: str, food: str, pass_code: str, qr_cid: str = "cid:junior_qr") -> str:
+    # A name from a spreadsheet is text, not markup: "A&B" or "<Ravi>" must show as typed.
+    name = _html_escape(name)
+    is_non_veg = "non" in str(food or "").lower()
+    # The site's own Veg / Non-veg colours (VegNonVegToggle).
+    food_badge_bg = "#D51F55" if is_non_veg else "#10B981"
+    food_badge_text = "#FFFFFF" if is_non_veg else "#090A0B"
+    food_badge_icon = "🍗" if is_non_veg else "🥗"
+    food_badge_label = "NON-VEG" if is_non_veg else "VEG"
+
+    # Email-safe fonts only. Gmail and most mail apps ignore web fonts, so the
+    # site's Luckiest Guy / Bangers / JetBrains Mono never reached the inbox - the
+    # junior saw whatever fallback the phone had. System fonts look the same in the
+    # preview and in every inbox: the heaviest system face for the comic title,
+    # the phone's own sans for everything else.
+    display = "'Arial Black','Arial Bold',Gadget,Arial,sans-serif"
+    sans = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zinnia 2026 — your invite and lunch pass</title>
+</head>
+<body style="margin:0;padding:0;background-color:#07090E;font-family:{sans};color:#E4E4E7;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#07090E;padding:32px 10px;">
+    <tr><td align="center">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:560px;background-color:#0F1218;border:1px solid #1E2433;border-radius:18px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.6);">
+
+        <!-- Top Radiant Accent Bar -->
+        <tr>
+          <td style="height:4px;background-color:#E5BD00;background-image:linear-gradient(90deg, #0FA9C6 0%, #E5BD00 50%, #1570EF 100%);font-size:0;line-height:0;">&nbsp;</td>
+        </tr>
+
+        <!-- Comic title, as on the home page: inked white ZINNIA with a cyan glow and
+             a cyan '26 on the same line, the two lines in bold caps, on halftone. -->
+        <tr>
+          <td style="background-color:#0B0D12;background-image:radial-gradient(rgba(255,255,255,0.13) 1.5px, transparent 1.6px);background-size:12px 12px;padding:28px 20px 24px 20px;text-align:center;border-bottom:1px solid #1A2333;">
+            <h1 style="margin:0;font-family:{display};font-size:38px;font-weight:900;line-height:1.1;letter-spacing:1px;color:#FFFFFF;text-transform:uppercase;white-space:nowrap;text-shadow:3px 3px 0 #090A0B,5px 5px 0 #000000,0 0 22px rgba(60,231,255,0.45);">ZINNIA <span style="font-family:{display};font-size:38px;font-weight:900;letter-spacing:1px;color:#0FA9C6;vertical-align:baseline;text-shadow:3px 3px 0 #090A0B;">&#39;26</span></h1>
+            <p style="margin:10px 0 0 0;font-family:{sans};font-size:12px;font-weight:800;color:#3CE7FF;letter-spacing:1.5px;text-transform:uppercase;text-shadow:1.5px 1.5px 0 #090A0B;">Department of Computer Science &amp; Engineering</p>
+            <p style="margin:5px 0 0 0;font-family:{sans};font-size:12px;font-weight:800;color:#E5BD00;letter-spacing:1px;text-shadow:2px 2px 0 #090A0B;">Government College of Engineering, Erode</p>
+          </td>
+        </tr>
+
+        <!-- Main Body Content -->
+        <tr>
+          <td style="padding:26px 24px 8px 24px;font-family:{sans};">
+            <p style="margin:0 0 12px 0;font-family:{sans};font-size:15px;font-weight:700;color:#FFFFFF;">Dear <span style="color:#3CE7FF;">{name}</span>,</p>
+            <p style="margin:0 0 10px 0;font-family:{sans};font-size:13px;color:#E4E4E7;line-height:1.7;">
+              Warm wishes from your seniors &mdash; the final-year students of the Department of Computer Science &amp; Engineering.
+            </p>
+            <p style="margin:0 0 20px 0;font-family:{sans};font-size:13px;color:#E4E4E7;line-height:1.7;">
+              We&rsquo;re happy to invite you to <strong style="color:#FFFFFF;">Zinnia 2026</strong>, our department symposium.
+            </p>
+
+            <!-- Schedule Card -->
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background:#131823;border-left:3px solid #0FA9C6;border-radius:8px;margin-bottom:24px;">
+              <tr>
+                <td style="padding:14px 18px;">
+                  <div style="font-family:{sans};font-size:12px;font-weight:800;color:#F5D90A;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">
+                    &#128197; Thursday, 24 September 2026
+                  </div>
+                  <div style="font-family:{sans};font-size:12.5px;color:#D4D4D8;line-height:1.9;">
+                    <span style="color:#3CE7FF;font-weight:800;">&bull;</span> <strong style="color:#FFFFFF;">9:00 AM</strong> &mdash; Inauguration at the Auditorium<br/>
+                    <span style="color:#3CE7FF;font-weight:800;">&bull;</span> <strong style="color:#FFFFFF;">1:00 &ndash; 2:00 PM</strong> &mdash; Lunch <span style="color:#A8A8AC;">(show the QR pass at the food counter)</span>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Comic lunch pass: yellow ink panel, hard cyan shadow -->
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#141417;border:3px solid #E5BD00;border-radius:4px;box-shadow:6px 6px 0 #0FA9C6;text-align:center;margin-bottom:24px;">
+              <tr>
+                <td style="padding:24px 18px 20px 18px;">
+                  <div style="display:inline-block;background-color:#FFFFFF;border:3px solid #090A0B;padding:10px;box-shadow:5px 5px 0 #E5BD00;">
+                    <img src="{qr_cid}" alt="Lunch pass &mdash; {pass_code}" width="190" height="190" style="display:block;width:190px;height:190px;" />
+                  </div>
+                  <div style="margin-top:18px;">
+                    <div style="font-family:{sans};font-size:16px;font-weight:800;color:#FFFFFF;margin-bottom:8px;">{name}</div>
+                    <div style="display:inline-block;background-color:{food_badge_bg};border:2px solid #090A0B;color:{food_badge_text};font-family:{sans};font-size:12px;font-weight:800;letter-spacing:1px;padding:4px 12px;border-radius:8px;box-shadow:3px 3px 0 #090A0B;">{food_badge_icon} {food_badge_label}</div>
+                  </div>
+                  <div style="margin-top:16px;">
+                    <span style="font-family:{sans};font-size:12px;color:#A8A8AC;">Pass code: </span>
+                    <span style="font-family:{sans};font-size:16px;font-weight:800;letter-spacing:1.5px;color:#E5BD00;">{pass_code}</span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td style="background-color:#090A0B;border-top:3px solid #E5BD00;padding:8px 14px;font-family:{sans};font-size:11px;color:#E5BD00;">
+                  Single-use food counter token &bull; Scan once at lunch
+                </td>
+              </tr>
+            </table>
+
+            <!-- Quick Tip Callout, in the schedule card's style -->
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background:#131823;border-left:3px solid #0FA9C6;border-radius:8px;margin-bottom:20px;">
+              <tr>
+                <td style="padding:14px 18px;font-family:{sans};font-size:12.5px;color:#D4D4D8;line-height:1.9;">
+                  <span style="font-family:{sans};font-size:12px;font-weight:800;color:#F5D90A;letter-spacing:1px;text-transform:uppercase;">&#128161; Keep it safe:</span>
+                  Please download the QR code and keep it safe on your phone &mdash; it&rsquo;s your lunch pass at the counter.
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 18px 0;font-family:{sans};font-size:13px;color:#E4E4E7;line-height:1.7;">
+              We&rsquo;re looking forward to having you with us.
+            </p>
+
+            <p style="margin:0 0 22px 0;font-family:{sans};font-size:13px;color:#E4E4E7;line-height:1.7;border-top:1px solid #1E2433;padding-top:14px;">
+              With warm regards,<br/>
+              <strong style="font-size:15px;color:#F5D90A;">Team Zinnia 2026</strong><br/>
+              <span style="font-size:11px;color:#A8A8AC;">Final Year, CSE</span>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+    """
+
+
+def send_junior_invite_email(junior: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    One first-year's invite and lunch pass: {name, email, food_preference, pass_code}.
+    Never raises; the caller records SENT / FAILED per junior.
+    """
+    recipient = (junior.get("email") or "").strip()
+    pass_code = (junior.get("pass_code") or "").strip().upper()
+    name = (junior.get("name") or "").strip() or "Friend"
+    food = _food_label(junior.get("food_preference"))
+
+    if not recipient or not pass_code:
+        return {"success": False, "status": "SKIPPED", "error": "Missing email or pass code."}
+    # "ravi,kumar@gmail.com" in a To: header is two addresses - the pass would
+    # reach a stranger. Refuse anything that does not parse as exactly itself.
+    parsed = getaddresses([recipient])
+    if len(parsed) != 1 or parsed[0][1] != recipient or any(c in recipient for c in ',;<>()"'):
+        return {"success": False, "status": "FAILED", "recipient": recipient,
+                "error": "The address is not a single email address."}
+    if not SMTP_USER or not SMTP_PASS or SMTP_USER.startswith("your_"):
+        return {"success": False, "status": "FAILED", "recipient": recipient,
+                "error": "SMTP is not configured, so the invite was not sent."}
+
+    png_bytes = generate_qr_png_bytes(pass_code)
+
+    msg = MIMEMultipart("related")
+    msg["Subject"] = f"Zinnia 2026 — your invite and lunch pass, {name}"
+    msg["From"] = SMTP_FROM
+    msg["To"] = recipient
+
+    text_content = f"""Dear {name},
+
+Warm wishes from your seniors - the final-year students of the Department of Computer Science & Engineering.
+
+We're happy to invite you to Zinnia 2026, our department symposium.
+
+Thursday, 24 September 2026
+  * 9:00 AM - Inauguration at the Auditorium
+  * 1:00 - 2:00 PM - Lunch (show the QR pass at the food counter)
+
+[ QR PASS - attached ]
+{name} · {food} · Pass code: {pass_code}
+
+Please download the QR code and keep it safe on your phone - it's your lunch pass at the counter.
+
+We're looking forward to having you with us.
+
+With warm regards,
+Team Zinnia 2026
+Final Year, CSE
+"""
+
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(text_content, "plain", "utf-8"))
+    alt.attach(MIMEText(generate_junior_invite_email_html(name, food, pass_code), "html", "utf-8"))
+    msg.attach(alt)
+
+    qr_image = MIMEImage(png_bytes, "png")
+    qr_image.add_header("Content-ID", "<junior_qr>")
+    qr_image.add_header("Content-Disposition", "inline", filename=f"zinnia2026-{pass_code}.png")
+    msg.attach(qr_image)
+
+    # The copy that saves to the phone: inline images are often not offered for download.
+    qr_file = MIMEImage(png_bytes, "png")
+    qr_file.add_header("Content-Disposition", "attachment", filename=f"zinnia2026-lunch-pass-{pass_code}.png")
+    msg.attach(qr_file)
+
+    try:
+        if SMTP_PORT == 465:
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg, to_addrs=[recipient])
+        else:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(SMTP_USER, SMTP_PASS)
+                server.send_message(msg, to_addrs=[recipient])
+        print(f"[Email] Junior invite sent to {recipient} for {pass_code}")
+        return {"success": True, "status": "SENT", "recipient": recipient}
+    except Exception as e:
+        print(f"[SMTP Error] Junior invite to {recipient} failed: {e}")
         return {"success": False, "status": "FAILED", "recipient": recipient, "error": str(e)}
 
 

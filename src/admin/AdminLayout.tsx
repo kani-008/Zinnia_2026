@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import {
   CalendarClock,
   FileSpreadsheet,
+  GraduationCap,
   LayoutDashboard,
   LogOut,
   ScrollText,
@@ -31,6 +32,7 @@ const NAV: NavItem[] = [
   { to: '/admin/spot', label: 'On-spot desk', icon: UserPlus, roles: ['TREASURER', 'SPOT_DESK'], desk: true },
   { to: '/admin/events', label: 'Events', icon: CalendarClock },
   { to: '/admin/exports', label: 'Exports', icon: FileSpreadsheet },
+  { to: '/admin/juniors', label: 'Junior invites', icon: GraduationCap, roles: [] },
   { to: '/admin/settings', label: 'Settings', icon: SettingsIcon, roles: [] },
   { to: '/admin/audit', label: 'Audit log', icon: ScrollText, roles: [] },
 ];

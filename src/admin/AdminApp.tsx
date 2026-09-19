@@ -8,6 +8,7 @@ import { Payments } from './pages/Payments';
 import { SpotDesk } from './pages/SpotDesk';
 import { Events } from './pages/Events';
 import { Exports } from './pages/Exports';
+import { Juniors } from './pages/Juniors';
 import { Settings } from './pages/Settings';
 import { AuditLog } from './pages/AuditLog';
 
@@ -61,6 +62,14 @@ export default function AdminApp() {
               <NotForDeskOnly>
                 <Exports />
               </NotForDeskOnly>
+            }
+          />
+          <Route
+            path="juniors"
+            element={
+              <RequireRole roles={[]}>
+                <Juniors />
+              </RequireRole>
             }
           />
           <Route

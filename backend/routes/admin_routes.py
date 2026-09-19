@@ -18,6 +18,7 @@ from flask import Blueprint
 
 from controllers.admin_controller import AdminController
 from controllers.admin_panel_controller import AdminPanelController
+from controllers.junior_controller import JuniorController as Juniors
 from controllers.spot_registration_controller import SpotRegistrationController as Spot
 from middleware.auth_middleware import require_auth, require_role, require_signed_in, require_sync_key
 from middleware.rate_limiter import rate_limit
@@ -145,6 +146,16 @@ _add("/api/admin/export/workbook", "admin_export_workbook",
      require_auth(AdminPanelController.export_workbook), ["POST"])
 _add("/api/admin/export/event/<code>", "admin_export_event",
      require_auth(AdminPanelController.export_event))
+
+
+# ==============================================================================
+# ADMIN PANEL — first-year junior invites and lunch passes (SUPER_ADMIN only)
+# ==============================================================================
+_add("/api/admin/juniors", "admin_juniors_list", require_role()(Juniors.listing))
+_add("/api/admin/juniors", "admin_juniors_add", require_role()(Juniors.add), ["POST"])
+_add("/api/admin/juniors/preview", "admin_juniors_preview", require_role()(Juniors.preview), ["POST"])
+_add("/api/admin/juniors/<junior_id>/send", "admin_junior_send", require_role()(Juniors.send), ["POST"])
+_add("/api/admin/juniors/<junior_id>", "admin_junior_remove", require_role()(Juniors.remove), ["DELETE"])
 
 
 # ==============================================================================

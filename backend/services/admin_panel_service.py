@@ -976,9 +976,12 @@ def dashboard(mode: str = "registration", admin: Optional[Dict[str, Any]] = None
     }
 
     from services.supabase_client import get as pub_get
+    # Junior invites are the super admin's business, and their rows name lunch
+    # passes - nobody else's feed shows them.
+    not_juniors = "" if role == "SUPER_ADMIN" else "&or=(target_type.is.null,target_type.neq.junior)"
     ok, recent = pub_get(
         "admin_audit_log?select=admin_name,action,target_type,target_id,created_at"
-        "&order=created_at.desc&limit=12")
+        f"{not_juniors}&order=created_at.desc&limit=12")
 
     data: Dict[str, Any] = {
         "generated_at": _now(),
