@@ -54,6 +54,7 @@ class ParticipantAuthController:
                 auth.request_otp(
                     data.get("user_id", ""),
                     registration_id=data.get("registration_id", ""),
+                    payee_tickets=data.get("payee_tickets"),
                 ),
                 endpoint,
             ),
@@ -90,6 +91,7 @@ class ParticipantRegistrationVerifyController:
                     data.get("user_id", ""),
                     data.get("otp", ""),
                     registration_id=data.get("registration_id", ""),
+                    payee_tickets=data.get("payee_tickets"),
                 ),
                 endpoint,
             ),

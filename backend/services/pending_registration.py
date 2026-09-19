@@ -299,6 +299,11 @@ def open_token(token: str, *, grace: int = 0) -> Tuple[Optional[Dict[str, Any]],
     """
     if not is_pending_token(token):
         return None, "NOT_PENDING"
+    # Tokens are plain ASCII. Anything else is malformed, not a server error:
+    # compare_digest raises on non-ASCII text, and a lone surrogate cannot be
+    # encoded to sign at all.
+    if not isinstance(token, str) or not token.isascii():
+        return None, "MALFORMED"
 
     try:
         _, body, sig = token.split(".", 2)
@@ -346,6 +351,17 @@ def mint_verified(details: Dict[str, Any], *, payee: str = "") -> str:
     return f"{_PREFIX}.{body}.{_sign(body)}"
 
 
+def resolve_payee(email: str, payload: Optional[Dict[str, Any]] = None, tickets: Any = None) -> str:
+    """
+    The account for this person, most-committed first: the account their token
+    already carries, then one named by an account ticket from an earlier
+    verification, and only then a fresh choice (choose_payee). Every step that
+    mints a token - the details form, a resend, verification - asks this, so a
+    flipped switch cannot move someone who was already shown an account.
+    """
+    return carried_payee(payload) or payee_from_tickets(tickets, email) or choose_payee(email)
+
+
 def carried_payee(payload: Optional[Dict[str, Any]]) -> str:
     """
     The account a token already carries, if it is still a known account; else
@@ -369,6 +385,7 @@ def carried_payee(payload: Optional[Dict[str, Any]]) -> str:
 # and cannot be replayed for another address.
 
 PAYEE_TICKET_TTL_SECONDS = 30 * 24 * 60 * 60  # well past the fest
+MAX_TICKETS_READ = 10  # the browser keeps as many (src/lib/participant/api.ts)
 _TICKET_PREFIX = "pay1"
 
 
@@ -404,18 +421,20 @@ def payee_from_tickets(tickets: Any, email: str) -> str:
         return ""
     known = {a["key"] for a in known_accounts()}
     tag = _email_tag(email)
-    for ticket in tickets[:10]:
-        try:
-            prefix, body, sig = str(ticket or "").split(".", 2)
-        except ValueError:
-            continue
-        if prefix != _TICKET_PREFIX or not hmac.compare_digest(sig, _ticket_sig(body)):
+    for ticket in tickets[:MAX_TICKETS_READ]:
+        # A hint, never a failure: anything odd is skipped, never raised on.
+        if not isinstance(ticket, str) or not ticket.isascii() or len(ticket) > 512:
             continue
         try:
+            prefix, body, sig = ticket.split(".", 2)
+            if prefix != _TICKET_PREFIX or not hmac.compare_digest(sig.encode(), _ticket_sig(body).encode()):
+                continue
             data = json.loads(_b64d(body))
+            if int(data.get("x", 0)) < int(time.time()):
+                continue
+            if not hmac.compare_digest(str(data.get("e", "")).encode(), tag.encode()):
+                continue
         except Exception:
-            continue
-        if int(data.get("x", 0)) < int(time.time()) or not hmac.compare_digest(str(data.get("e", "")), tag):
             continue
         p = str(data.get("p") or "")
         if p in known:

@@ -296,7 +296,7 @@ def test_the_account_is_read_from_the_token_not_the_request():
     # The one thing about the account taken off the request is the account
     # TICKET, and only through payee_from_tickets, which checks its signature and
     # that it was issued for this very address (see the ticket tests below).
-    ticket_reads = source.count('pending.payee_from_tickets(data.get("payee_tickets")')
+    ticket_reads = source.count('pending.resolve_payee(email, tickets=data.get("payee_tickets"))')
     assert ticket_reads == 1 and source.count('data.get("payee') == ticket_reads, (
         "the account must never come off the request, except as a signed ticket"
     )
@@ -489,6 +489,24 @@ def test_flipping_the_switch_never_moves_someone_who_was_already_given_an_accoun
                 assert pending.payee_for(second)["upi_id"] == pending.payee_for(first)["upi_id"]
         finally:
             _no_third()
+
+
+def test_odd_tickets_and_tokens_are_ignored_never_a_server_error():
+    _configure()
+    good = pending.payee_ticket("odd@test.com", "B")
+    prefix, body, sig = good.split(".")
+    lone_surrogate = chr(0xD800)
+    odd = [
+        f"{prefix}.{body}." + "\u00e9" * len(sig),     # non-ASCII signature
+        f"{prefix}.{body}{lone_surrogate}.{sig}",       # a lone surrogate in the body
+        "pay1." + "A" * 5000 + ".x",                    # absurdly long
+        12345, None, {"t": good}, ["nested"], b"bytes",
+    ]
+    assert pending.payee_from_tickets(odd, "odd@test.com") == ""
+    assert pending.payee_from_tickets(odd + [good], "odd@test.com") == "B", "a good ticket still counts"
+    for token in ("pend1.\u00e9.\u00e9", f"pend1.abc{lone_surrogate}.def", "pend1." + "\u00e9" * 40):
+        payload, reason = pending.open_token(token)
+        assert payload is None and reason in ("MALFORMED", "BAD_SIGNATURE"), (token, reason)
 
 
 def main() -> int:

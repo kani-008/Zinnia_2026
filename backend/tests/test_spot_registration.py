@@ -1152,6 +1152,100 @@ def test_website_switch_flipped_mid_registration_never_moves_the_account(h):
         undo()
 
 
+def _toggle_and_choose(email):
+    """choose_payee with the third account's switch the other way round, then put back."""
+    from services import pending_registration as pending
+    before = os.environ.get("TREASURER_UPI_3_ENABLED", "false")
+    os.environ["TREASURER_UPI_3_ENABLED"] = "false" if before == "true" else "true"
+    try:
+        return pending.choose_payee(email)
+    finally:
+        os.environ["TREASURER_UPI_3_ENABLED"] = before
+
+
+@with_harness(now_iso=WEBSITE_OPEN)
+def test_website_two_tabs_and_a_resend_across_a_flip_keep_the_first_account(h):
+    """Two tabs of the details form verified either side of a switch flip, then a resend: one account."""
+    from services import participant_auth_service as auth
+    from services import pending_registration as pending
+
+    undo = _website_accounts(third_on=False)
+    try:
+        email = next(f"tabs{n}@test.com" for n in range(300)
+                     if pending.choose_payee(f"tabs{n}@test.com") != _toggle_and_choose(f"tabs{n}@test.com"))
+        codes = []
+        h._patch(auth, "send_pending_otp_email", lambda details, otp: codes.append(otp) or True)
+        form = {"name": "Two Tabs", "email": email, "phone": "9123456781", "college": "GCEE",
+                "department": "CSE", "year": "II", "food_preference": "VEG"}
+        tab1 = participants.register_participant(form)["registration_id"]
+        code1 = codes[-1]
+        tab2 = participants.register_participant(form)["registration_id"]
+        code2 = codes[-1]
+
+        first = auth.verify_registration_email(registration_id=tab1, otp=code1)
+        os.environ["TREASURER_UPI_3_ENABLED"] = "true"                 # flipped between the two tabs
+        second = auth.verify_registration_email(registration_id=tab2, otp=code2,
+                                                payee_tickets=[first["payee_ticket"]])
+        assert second["payee_upi_id"] == first["payee_upi_id"], (first["payee_upi_id"], second["payee_upi_id"])
+
+        resent = auth.request_otp(registration_id=tab2, payee_tickets=[first["payee_ticket"]])
+        third = auth.verify_registration_email(registration_id=resent["registration_id"], otp=codes[-1])
+        assert third["payee_upi_id"] == first["payee_upi_id"], "a resend after the flip keeps it"
+    finally:
+        undo()
+
+
+@with_harness(now_iso=WEBSITE_OPEN)
+def test_website_a_token_from_before_this_change_takes_the_ticket_at_verification(h):
+    from services import participant_auth_service as auth
+    from services import pending_registration as pending
+
+    undo = _website_accounts(third_on=True)
+    try:
+        email = "legacy@test.com"
+        other = "B" if pending.choose_payee(email) != "B" else "A"
+        details = {"name": "Legacy", "email": email, "phone": "9123456782", "college": "GCEE",
+                   "department": "CSE", "year": "II", "food_preference": "VEG"}
+        old_token = pending.mint(details, "111222")                   # no account inside, as before
+        res = auth.verify_registration_email(registration_id=old_token, otp="111222",
+                                             payee_tickets=[pending.payee_ticket(email, other)])
+        assert res["success"], res
+        assert pending.payee_of(pending.open_token(res["registration_id"])[0]) == other
+    finally:
+        undo()
+
+
+@with_harness(now_iso=WEBSITE_OPEN)
+def test_website_submission_never_relabels_a_desk_payment_that_lands_mid_submission(h):
+    """The desk approves the same email between the website's promote and its payment write."""
+    from services import drive_storage as drive
+    from services import pending_registration as pending
+
+    undo = _website_accounts(third_on=False)
+    try:
+        details = {"name": "Race", "email": "race@test.com", "phone": "9123456783", "college": "GCEE",
+                   "department": "CSE", "year": "II", "food_preference": "VEG"}
+        verified = pending.mint_verified(details)
+        real_promote = participants.promote_pending
+
+        def promote_then_desk_lands(d, **kw):
+            out = real_promote(d, **kw)
+            h.fake.insert("payments", {"user_id": out["participant"]["user_id"], "amount": 300,
+                                       "status": "APPROVED", "payee_upi": "desk1@upi",
+                                       "approval_note": "ON-SPOT | UPI | collected by On-spot Desk 1"})
+            return out
+
+        h._patch(participants, "promote_pending", promote_then_desk_lands)
+        h._patch(drive, "is_configured", lambda: False)
+        h._patch(db, "upload_file", lambda path, data, mime: f"payment-proofs/{path}")
+        res = participants.submit_payment({"registration_id": verified, "utr_number": "620000000001"}, _Upload())
+        assert not res["success"] and res["error_code"] == "ALREADY_APPROVED", res
+        approved = [p for p in h.fake.tables["payments"] if p.get("status") == "APPROVED"]
+        assert approved and approved[0]["payee_upi"] == "desk1@upi", "the desk's account must stand"
+    finally:
+        undo()
+
+
 def test_a_desk_login_reaches_the_desk_and_nothing_else():
     from flask import Flask
 

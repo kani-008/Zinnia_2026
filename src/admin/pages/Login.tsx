@@ -94,11 +94,6 @@ export function Login() {
             Sign in
           </button>
         </form>
-
-        <p className="mt-4 text-center text-[11.5px] leading-relaxed text-white/25">
-          Admin and treasurer sessions end when you close the tab. On-spot desk logins stay signed
-          in on this browser until you press Sign out.
-        </p>
       </div>
     </div>
   );

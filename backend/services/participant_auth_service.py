@@ -88,7 +88,7 @@ def _hash_otp(user_id: str, otp: str) -> str:
     return hashlib.sha256(f"{user_id}:{otp}:{AUTH_SECRET_KEY}".encode()).hexdigest()
 
 
-def request_otp(user_id: str = "", *, registration_id: str = "") -> Dict[str, Any]:
+def request_otp(user_id: str = "", *, registration_id: str = "", payee_tickets: Any = None) -> Dict[str, Any]:
     """
     POST /api/participant/auth/request-otp
 
@@ -147,7 +147,10 @@ def request_otp(user_id: str = "", *, registration_id: str = "") -> Dict[str, An
             # browser must carry this one forward or the resent code will not
             # verify against what it still holds.
             # ...and it keeps the account the old one carried, if it had one.
-            "registration_id": pending.mint(details, otp, payee=pending.carried_payee(payload)),
+            "registration_id": pending.mint(
+                details, otp,
+                payee=pending.resolve_payee(str(details.get("email", "")), payload, payee_tickets),
+            ),
             # Full address, not masked - same reason as the register path: this
             # is the participant's own input and a typo has to be visible.
             "email_hint": str(details.get("email", "")).strip(),
@@ -326,7 +329,7 @@ def email_is_verified(user_id: str) -> bool:
 
 
 def verify_registration_email(
-    user_id: str = "", otp: str = "", *, registration_id: str = ""
+    user_id: str = "", otp: str = "", *, registration_id: str = "", payee_tickets: Any = None
 ) -> Dict[str, Any]:
     """
     POST /api/participant/register/verify-email
@@ -389,7 +392,9 @@ def verify_registration_email(
         # An account this person was already given (carried through a resend,
         # or by the ticket from an earlier visit) wins; only a first-timer is
         # assigned one fresh. See pending.choose_payee.
-        verified_token = pending.mint_verified(details, payee=pending.carried_payee(payload))
+        verified_token = pending.mint_verified(
+            details, payee=pending.resolve_payee(str(details.get("email", "")), payload, payee_tickets)
+        )
 
         # The payment screen renders from this handoff without calling the
         # status endpoint, so the account has to travel with the token. Reopened

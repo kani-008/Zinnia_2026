@@ -166,7 +166,19 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
    -------------------------------------------------------------------------- */
 
 const PAYEE_TICKETS_KEY = 'zin26_payee_tickets';
-const MAX_PAYEE_TICKETS = 5;
+/** As many as the server reads (MAX_TICKETS_READ), one per person. */
+const MAX_PAYEE_TICKETS = 10;
+
+/** The ticket's opaque person tag - never an email - so a newer ticket replaces that person's older one. */
+function ticketTag(ticket: string): string {
+  try {
+    const body = ticket.split('.')[1] ?? '';
+    const json = atob(body.replace(/-/g, '+').replace(/_/g, '/'));
+    return String(JSON.parse(json).e ?? ticket);
+  } catch {
+    return ticket;
+  }
+}
 
 function readPayeeTickets(): string[] {
   try {
@@ -180,7 +192,8 @@ function readPayeeTickets(): string[] {
 function keepPayeeTicket(ticket?: string): void {
   if (!ticket) return;
   try {
-    const list = [ticket, ...readPayeeTickets().filter((t) => t !== ticket)].slice(0, MAX_PAYEE_TICKETS);
+    const tag = ticketTag(ticket);
+    const list = [ticket, ...readPayeeTickets().filter((t) => ticketTag(t) !== tag)].slice(0, MAX_PAYEE_TICKETS);
     window.localStorage.setItem(PAYEE_TICKETS_KEY, JSON.stringify(list));
   } catch {
     /* storage unavailable: the account is then chosen afresh, as before tickets existed */
@@ -200,7 +213,8 @@ export const registerParticipant = (details: ParticipantDetails): Promise<Regist
 export const requestOtp = (who: OtpIdentifier): Promise<RequestOtpResponse> =>
   request<RequestOtpResponse>('/api/participant/auth/request-otp', {
     method: 'POST',
-    body: who,
+    // A registration resend re-mints the token; the tickets keep its account.
+    body: who.registration_id ? { ...who, payee_tickets: readPayeeTickets() } : who,
   });
 
 /** Login (§4.2). Returns a session; the code is inside only if confirmed. */
@@ -221,7 +235,7 @@ export const verifyRegistrationEmail = async (
 ): Promise<VerifyRegistrationResponse> => {
   const result = await request<VerifyRegistrationResponse>('/api/participant/register/verify-email', {
     method: 'POST',
-    body: { registration_id: registrationId, otp },
+    body: { registration_id: registrationId, otp, payee_tickets: readPayeeTickets() },
   });
   if (result.success) keepPayeeTicket(result.payee_ticket);
   return result;
