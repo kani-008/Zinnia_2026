@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { DialogHost } from './components/ui/dialog';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 
 import { ComicToaster } from './components/ui/toast';
@@ -54,6 +55,8 @@ export function App() {
       <ScrollToTop />
       {/* Mounted once for the whole app; renders nothing until something is raised. */}
       <ComicToaster />
+      {/* Our own confirm / prompt dialogs, instead of the browser's grey box. */}
+      <DialogHost />
       {/* Routes */}
       <Routes>
         <Route path="/maintenance" element={<MaintenancePage />} />

@@ -8,6 +8,7 @@
 // components/ui/comic.tsx). Team logic below is unchanged.
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { confirmDialog, promptDialog } from '../components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import { Check, Clock, Crown, Loader2, RefreshCw, Users, X } from 'lucide-react';
 
@@ -99,7 +100,16 @@ export const ParticipantTeamsPage: React.FC = () => {
   };
 
   const onCancel = async (team: TeamView) => {
-    if (!window.confirm(`Cancel ${team.team_name} for every member?`)) return;
+    if (
+      !(await confirmDialog({
+        title: 'Cancel this team?',
+        message: `Cancel ${team.team_name} for every member?`,
+        confirmLabel: 'Cancel the team',
+        cancelLabel: 'Keep it',
+        danger: true,
+      }))
+    )
+      return;
 
     setBusy(team.team_id);
     setError(null);
@@ -115,8 +125,15 @@ export const ParticipantTeamsPage: React.FC = () => {
   };
 
   const onSwap = async (team: TeamView, outUserId: string) => {
-    const replacement = window.prompt(`Replace ${outUserId} with which UserID?`, 'ZIN26-');
-    if (!replacement) return;
+    const replacement = await promptDialog({
+      title: 'Swap a teammate',
+      message: `Replace ${outUserId} with which UserID?`,
+      defaultValue: 'ZIN26-',
+      placeholder: 'ZIN26-0000',
+      confirmLabel: 'Swap',
+      transform: (v) => v.toUpperCase(),
+    });
+    if (!replacement || replacement === 'ZIN26-') return;
 
     setBusy(team.team_id);
     setError(null);

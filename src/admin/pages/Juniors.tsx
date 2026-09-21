@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { confirmDialog } from '../../components/ui/dialog';
 import { Check, Loader2, Mail, Send, Square, Trash2, Upload, X } from 'lucide-react';
 import { AdminError, adminFetch } from '../auth/adminFetch';
 import { useAdminQuery } from '../hooks/useAdminQuery';
@@ -211,7 +212,16 @@ export function Juniors() {
 
   const removeOne = async (j: Junior) => {
     if (sending || oneBusy) return;
-    if (!window.confirm(`Remove ${j.junior_id} (${j.name}, ${j.email}) from the list?`)) return;
+    if (
+      !(await confirmDialog({
+        title: 'Remove this junior?',
+        message: `Remove ${j.junior_id} (${j.name}, ${j.email}) from the list?`,
+        confirmLabel: 'Remove',
+        cancelLabel: 'Keep',
+        danger: true,
+      }))
+    )
+      return;
     setOneBusy(j.junior_id);
     setProblem(null);
     try {

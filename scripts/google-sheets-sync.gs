@@ -147,11 +147,41 @@ function writeTab_(ss, tab) {
     sheet.getRange(values.length + 1, 1, stale, sheet.getMaxColumns()).clearContent();
   }
 
+  clearStaleColumns_(sheet, tab.name, numCols);
+
   sheet.getRange(1, 1, 1, numCols)
     .setFontWeight('bold')
-    .setBackground('#2C4788')
+    .setBackground(HEADER_BG_)
     .setFontColor('#FFFFFF');
   sheet.setFrozenRows(1);
+}
+
+var HEADER_BG_ = '#2C4788';
+
+/**
+ * A tab whose export lost columns (the individual events no longer carry the
+ * four team columns) would otherwise keep the old headers and cells on the
+ * right. Only columns THIS script wrote are cleared - never one a coordinator
+ * added by hand beside the roster: the width of the last sync is remembered
+ * per tab, and on the first run it is read from this script's own blue header.
+ */
+function clearStaleColumns_(sheet, name, numCols) {
+  var props = PropertiesService.getDocumentProperties();
+  var key = 'syncCols:' + name;
+  var before = Number(props.getProperty(key)) || 0;
+  if (!before) {
+    var width = sheet.getLastColumn();
+    if (width > numCols) {
+      var bgs = sheet.getRange(1, numCols + 1, 1, width - numCols).getBackgrounds()[0];
+      for (var i = 0; i < bgs.length; i++) {
+        if (String(bgs[i]).toLowerCase() === HEADER_BG_.toLowerCase()) before = numCols + i + 1;
+      }
+    }
+  }
+  if (before > numCols) {
+    sheet.getRange(1, numCols + 1, sheet.getMaxRows(), before - numCols).clear();
+  }
+  props.setProperty(key, String(numCols));
 }
 
 /** A tab that says whether the last run worked, and when. */

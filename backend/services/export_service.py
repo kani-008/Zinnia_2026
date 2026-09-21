@@ -159,6 +159,22 @@ EVENT_COLUMNS = [
 
 EVENT_COLUMNS_WITH_TOPIC = EVENT_COLUMNS[:2] + [("topic", "Topic")] + EVENT_COLUMNS[2:]
 
+# Individual events (Debugging, The Last Signal, Lost in SQL, Short Film) have
+# no team, so Team, Team status, Role and Accepted were four columns that are
+# blank on every row. Their tabs carry only the person.
+TEAM_ONLY_KEYS = ("team_name", "team_status", "role", "accept_status")
+EVENT_COLUMNS_INDIVIDUAL = [c for c in EVENT_COLUMNS if c[0] not in TEAM_ONLY_KEYS]
+
+
+def _event_columns(code: str) -> Sequence[Tuple[str, str]]:
+    """The roster columns for one event: rules_engine decides team or individual, and topic."""
+    if code in rules.TOPIC_EVENTS:
+        return EVENT_COLUMNS_WITH_TOPIC
+    event = rules.EVENTS.get(code)
+    if event is not None and event.max_team <= 1:
+        return EVENT_COLUMNS_INDIVIDUAL
+    return EVENT_COLUMNS
+
 TEAM_COLUMNS = [
     ("team_id", "Team ID"),
     ("event_name", "Event"),
@@ -329,15 +345,10 @@ def _collect_sheets(
                 catalog = [e for e in catalog if e["code"] in allowed]
             for ev in catalog:
                 rows = [r for r in panel._event_roster_rows(ev["code"]) if _match(r, filters)]
-                # The Topic column appears only on the tabs where a topic is
-                # actually collected, rather than adding an empty column to all
-                # nine rosters. rules_engine owns that list.
-                columns = (
-                    EVENT_COLUMNS_WITH_TOPIC
-                    if ev["code"] in rules.TOPIC_EVENTS
-                    else EVENT_COLUMNS
-                )
-                out.append((ev["name"], columns, rows))
+                # Topic only where a topic is collected, and the team columns
+                # only where there are teams - no column that is empty on every
+                # row. rules_engine owns both lists.
+                out.append((ev["name"], _event_columns(ev["code"]), rows))
 
         if "food" in sheets:
             # Two tabs, not one with a column: the counts go to two different

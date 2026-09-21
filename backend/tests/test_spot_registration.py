@@ -533,6 +533,18 @@ def test_non_tech_teams_of_two_and_three_register_and_one_or_four_do_not(h):
     assert not solo["success"] and solo["error_code"] == "NOT_A_TEAM_EVENT", "Short Film stays individual"
 
 
+def test_individual_event_tabs_carry_no_team_columns():
+    from services import export_service as ex
+    solo = [label for _, label in ex._event_columns("DEBUGGING")]
+    assert solo == ["UserID", "Name", "Email", "Phone", "College", "Food", "Payment"], solo
+    for code in ("LAST_SIGNAL", "LOST_IN_SQL", "SHORT_FILM"):
+        assert ex._event_columns(code) == ex.EVENT_COLUMNS_INDIVIDUAL, code
+    team = [label for _, label in ex._event_columns("BORDERLAND")]
+    assert team[:2] == ["Team", "Team status"] and team[-2:] == ["Role", "Accepted"], team
+    assert "Topic" in [label for _, label in ex._event_columns("PAPER_PRESENTATION")]
+    assert ex._event_columns("GADGET_CODES") == ex.EVENT_COLUMNS
+
+
 @with_harness()
 def test_team_size_and_paper_verse_topic_are_enforced(h):
     ids = _three(h)

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { confirmDialog } from '../../components/ui/dialog';
 import { Lock, Unlock } from 'lucide-react';
 import { useAdminQuery } from '../hooks/useAdminQuery';
 import { adminFetch } from '../auth/adminFetch';
@@ -95,10 +96,14 @@ export function Events() {
     if (!ok) {
       // The server refuses a reopen that would exceed capacity unless the
       // operator says so explicitly. Ask, then repeat with the acknowledgement.
-      const confirmed = window.confirm(
-        `${e.used} of ${e.capacity} places are taken.\n\n` +
+      const confirmed = await confirmDialog({
+        title: 'Reopen beyond capacity?',
+        message:
+          `${e.used} of ${e.capacity} places are taken.\n\n` +
           `Reopening will allow registrations beyond capacity. Continue?`,
-      );
+        confirmLabel: 'Reopen anyway',
+        danger: true,
+      });
       if (confirmed) {
         await call(
           `/api/admin/events/${e.event_code}/open`,

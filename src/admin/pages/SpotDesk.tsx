@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { confirmDialog } from '../../components/ui/dialog';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Check, Loader2, Plus, RotateCw, Search, Send, Trash2, UserPlus, Users, X } from 'lucide-react';
@@ -168,7 +169,13 @@ async function withWarningConfirm<T>(
       if (!stillHere()) return null;
       // The server's warning usually already ends by asking the question.
       const ask = e.message.trim().endsWith('?') ? e.message : `${e.message}\n\nRegister anyway?`;
-      if (!window.confirm(`${context}\n\n${ask}`)) return null;
+      const ok = await confirmDialog({
+        title: 'Check before registering',
+        message: `${context}\n\n${ask}`,
+        confirmLabel: 'Register anyway',
+      });
+      // The panel may have moved on to someone else while the question was open.
+      if (!ok || !stillHere()) return null;
       return run(true);
     }
     throw e;
@@ -1465,12 +1472,21 @@ function PersonPanel({
       if (ok) setTeamFor((cur) => (cur === card.event_code ? null : cur));
     });
 
-  const remove = (eventCode: string, eventName: string, isTeam: boolean, online: boolean) => {
+  const remove = async (eventCode: string, eventName: string, isTeam: boolean, online: boolean) => {
     const what = isTeam
       ? `Cancel the ${eventName} team for ${who}?\n\nThis removes it for EVERY member of the team.`
       : `Remove ${eventName} for ${who}?`;
     const note = online ? '\n\nThis was registered ONLINE, and nobody will be emailed about the change.' : '';
-    if (!window.confirm(what + note)) return;
+    if (
+      !(await confirmDialog({
+        title: isTeam ? 'Cancel this team?' : 'Remove this event?',
+        message: what + note,
+        confirmLabel: isTeam ? 'Cancel the team' : 'Remove',
+        cancelLabel: 'Keep it',
+        danger: true,
+      }))
+    )
+      return;
     act(`cancel:${eventCode}`, () =>
       adminFetch<{ message: string }>('/api/admin/spot/events/cancel', {
         method: 'POST',

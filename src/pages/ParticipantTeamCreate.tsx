@@ -9,6 +9,7 @@
 // components/ui/comic.tsx). Lookup and submit logic below is unchanged.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { confirmDialog } from '../components/ui/dialog';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, ExternalLink, Loader2, UserPlus, Users, X } from 'lucide-react';
 
@@ -164,7 +165,13 @@ export const ParticipantTeamCreatePage: React.FC = () => {
     let result = await createTeam(payload);
 
     if (!result.success && result.error_code === 'CONFIRMATION_REQUIRED') {
-      if (window.confirm(result.message)) {
+      if (
+        await confirmDialog({
+          title: 'Heads up',
+          message: result.message,
+          confirmLabel: 'Create anyway',
+        })
+      ) {
         result = await createTeam({ ...payload, confirm_warnings: true });
       } else {
         setSubmitting(false);

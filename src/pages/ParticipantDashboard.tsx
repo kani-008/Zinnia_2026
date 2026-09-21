@@ -16,6 +16,7 @@
 // informational and never blocks anything.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { confirmDialog } from '../components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -348,7 +349,11 @@ export const ParticipantDashboardPage: React.FC = () => {
     // R15: the server refuses to write a tight-but-legal combination until the
     // participant has actually seen the warning and said yes.
     if (!result.success && result.error_code === 'CONFIRMATION_REQUIRED') {
-      const proceed = window.confirm(result.message);
+      const proceed = await confirmDialog({
+        title: 'Heads up',
+        message: result.message,
+        confirmLabel: 'Register anyway',
+      });
       if (!proceed) {
         setBusyEvent(null);
         return;
@@ -375,7 +380,16 @@ export const ParticipantDashboardPage: React.FC = () => {
   };
 
   const onCancel = async (eventCode: EventCode, eventName: string) => {
-    if (!window.confirm(`Cancel your registration for ${eventName}?`)) return;
+    if (
+      !(await confirmDialog({
+        title: 'Cancel registration?',
+        message: `Cancel your registration for ${eventName}?`,
+        confirmLabel: 'Yes, cancel it',
+        cancelLabel: 'Keep it',
+        danger: true,
+      }))
+    )
+      return;
 
     setBusyEvent(eventCode);
     setError(null);
