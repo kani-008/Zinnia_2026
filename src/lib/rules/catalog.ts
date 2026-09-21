@@ -6,7 +6,7 @@
 //
 // TEAM SIZES (spec rule, matches the seed exactly):
 //   TECH team events are 2 students - except Paper Verse, which is 2-3.
-//   NON_TECH team events are 3 students, maximum 3.
+//   NON_TECH team events (Borderland, Think Strike Win, Plot Twist) are 2-3 students.
 //   Short Film is online and is exactly 1 (ruling of 4 September 2026).
 
 import type {
@@ -134,7 +134,8 @@ export const EVENTS: Record<EventCode, EventDef> = {
     name: 'Borderland @ GCEE',
     category: 'NON_TECH',
     type: 'FIXED',
-    minTeam: 3,
+    // 2 or 3 (organisers, 21 Sept) - with THINK_STRIKE_WIN and PLOT_TWIST; was exactly 3.
+    minTeam: 2,
     maxTeam: 3,
     capacity: null,
     durationMin: 120,
@@ -150,7 +151,7 @@ export const EVENTS: Record<EventCode, EventDef> = {
     name: 'Think, Strike, Win',
     category: 'NON_TECH',
     type: 'FIXED',
-    minTeam: 3,
+    minTeam: 2,
     maxTeam: 3,
     capacity: null,
     durationMin: 60,
@@ -166,7 +167,7 @@ export const EVENTS: Record<EventCode, EventDef> = {
     name: 'Plot Twist',
     category: 'NON_TECH',
     type: 'FIXED',
-    minTeam: 3,
+    minTeam: 2,
     maxTeam: 3,
     capacity: null,
     durationMin: 60,

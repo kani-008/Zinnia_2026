@@ -86,7 +86,7 @@ export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {
   BORDERLAND: {
     summary: 'Two rounds, running from midday to the end of the afternoon.',
     when: '12:00 PM - 3:00 PM (Round 1, then Round 2)',
-    team: 'Team of 3',
+    team: 'Team of 2-3',
     notes: [
       { tone: 'warn', text: 'Only the 11:00-12:00 hour stays free, so this rules out every afternoon event.' },
       { tone: 'info', text: 'In that free hour you can fit a paper slot plus one morning event, or both morning events - not all three.' },
@@ -96,7 +96,7 @@ export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {
   THINK_STRIKE_WIN: {
     summary: 'A full-hour afternoon event.',
     when: '2:00 PM - 3:00 PM',
-    team: 'Team of 3',
+    team: 'Team of 2-3',
     notes: [
       { tone: 'warn', text: 'Takes the whole afternoon hour. You can hold only ONE afternoon event, and it rules out Lost in SQL.' },
       { tone: 'good', text: 'Your mornings stay free for Debugging Protocol, The Last Signal and a morning paper slot.' },
@@ -106,7 +106,7 @@ export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {
   PLOT_TWIST: {
     summary: 'A full-hour afternoon event.',
     when: '2:00 PM - 3:00 PM',
-    team: 'Team of 3',
+    team: 'Team of 2-3',
     notes: [
       { tone: 'warn', text: 'Takes the whole afternoon hour. You can hold only ONE afternoon event, and it rules out Lost in SQL.' },
       { tone: 'good', text: 'Your mornings stay free for Debugging Protocol, The Last Signal and a morning paper slot.' },

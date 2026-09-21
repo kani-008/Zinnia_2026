@@ -504,11 +504,40 @@ def test_a_desk_team_is_confirmed_with_every_member_accepted(h):
     assert len(rows) == 3 and all(r["status"] == "CONFIRMED" and r["source"] == "SPOT" for r in rows)
 
 
+def test_every_event_keeps_its_team_size_and_non_tech_teams_are_two_or_three():
+    sizes = {c: (e.min_team, e.max_team) for c, e in rules.EVENTS.items()}
+    assert sizes == {
+        "BORDERLAND": (2, 3), "THINK_STRIKE_WIN": (2, 3), "PLOT_TWIST": (2, 3), "SHORT_FILM": (1, 1),
+        "PAPER_PRESENTATION": (2, 3), "GADGET_CODES": (2, 2),
+        "DEBUGGING": (1, 1), "LAST_SIGNAL": (1, 1), "LOST_IN_SQL": (1, 1),
+    }, sizes
+
+
+@with_harness()
+def test_non_tech_teams_of_two_and_three_register_and_one_or_four_do_not(h):
+    for event in ("BORDERLAND", "THINK_STRIKE_WIN", "PLOT_TWIST"):
+        # Fresh walk-ins per event: all three share the 2:00-3:00 slot.
+        ids = [h.walk_in(email=f"{event.lower()}{i}@test.com")["participant"]["user_id"] for i in range(9)]
+        for size in (1, 4):
+            before = len(h.fake.tables["registrations"])
+            res = spot.create_team(event, f"Size {size}", ids[:size])
+            assert not res["success"] and res["error_code"] == "TEAM_SIZE", (event, size, res)
+            assert len(h.fake.tables["registrations"]) == before, "a refused team writes nothing"
+        pair = spot.create_team(event, "Pair", ids[4:6])
+        assert pair["success"], (event, pair)
+        trio = spot.create_team(event, "Trio", ids[6:9])
+        assert trio["success"], (event, trio)
+        live = [r for r in h.fake.tables["registrations"] if r["event_code"] == event and r["status"] == "CONFIRMED"]
+        assert len(live) == 5, (event, live)
+    solo = spot.create_team("SHORT_FILM", "Film", [h.walk_in(email="film@test.com")["participant"]["user_id"]] * 2)
+    assert not solo["success"] and solo["error_code"] == "NOT_A_TEAM_EVENT", "Short Film stays individual"
+
+
 @with_harness()
 def test_team_size_and_paper_verse_topic_are_enforced(h):
     ids = _three(h)
-    res = spot.create_team("BORDERLAND", "Too small", ids[:2])
-    assert not res["success"] and res["error_code"] == "TEAM_SIZE", res
+    res = spot.create_team("BORDERLAND", "Too small", ids[:1])
+    assert not res["success"] and res["error_code"] == "TEAM_SIZE" and "2-3" in res["message"], res
 
     res = spot.create_team("PAPER_PRESENTATION", "Papers", ids[:2])
     assert not res["success"] and res["field"] == "topic", res

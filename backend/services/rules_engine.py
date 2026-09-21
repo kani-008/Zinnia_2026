@@ -151,17 +151,20 @@ EVENTS: Dict[str, EventDef] = {
         "LOST_IN_SQL", "Lost in SQL", "TECH", "RUNNING",
         1, 1, None, 30, AFTERNOON, (), True, _CLOSES_DEFAULT,
     ),
+    # The three non-tech team events take a team of 2 or 3 (organisers, 21
+    # September 2026) - they were exactly 3. Short Film stays individual.
+    # Mirrors src/lib/rules/catalog.ts and zin26.events (migration 020).
     "BORDERLAND": EventDef(
         "BORDERLAND", "Borderland @ GCEE", "NON_TECH", "FIXED",
-        3, 3, None, 120, None, ("B2", "B3", "B4"), True, _CLOSES_DEFAULT,
+        2, 3, None, 120, None, ("B2", "B3", "B4"), True, _CLOSES_DEFAULT,
     ),
     "THINK_STRIKE_WIN": EventDef(
         "THINK_STRIKE_WIN", "Think, Strike, Win", "NON_TECH", "FIXED",
-        3, 3, None, 60, None, ("B3", "B4"), True, _CLOSES_DEFAULT,
+        2, 3, None, 60, None, ("B3", "B4"), True, _CLOSES_DEFAULT,
     ),
     "PLOT_TWIST": EventDef(
         "PLOT_TWIST", "Plot Twist", "NON_TECH", "FIXED",
-        3, 3, None, 60, None, ("B3", "B4"), True, _CLOSES_DEFAULT,
+        2, 3, None, 60, None, ("B3", "B4"), True, _CLOSES_DEFAULT,
     ),
     "SHORT_FILM": EventDef(
         # Team of exactly 1 (ruling of 4 September 2026). It is online, occupies
@@ -596,11 +599,10 @@ def evaluate_catalog(
             "min_team": event.min_team,
             "max_team": event.max_team,
             # Two different questions the dashboard asks. `is_team_event` means a
-            # team is mandatory (min > 1 — Borderland needs three); `allows_team`
-            # means one is merely permitted (max > 1). Paper Verse is both,
-            # Debugging is neither, and Short Film is the case that separates them.
+            # team is mandatory (min > 1 — Borderland needs two or three); `allows_team`
+            # means one is merely permitted (max > 1). Paper Verse and the non-tech
+            # team events are both; Debugging and Short Film are neither.
             "is_team_event": event.min_team > 1,
-            # 1-3, so a team is optional here.
             "allows_team": event.max_team > 1,
         }
 
