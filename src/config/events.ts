@@ -254,7 +254,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     venue: 'CSE Dept',
     description: 'A single-round guessing battle for teams of two or three: one Clue Giver and one or two Guessers, eight questions, thirty seconds each. Score on speed and accuracy, spend your Lucky Strikers wisely, and top the board.',
     rules: [
-      'Team size: 2-3 members - 1 Clue Giver and 1-2 Guessers.',
+      'Team size: 2-3 members,members will be actors and guessers',
       'Single round: complete 8 questions within the given time.',
       'Each question has a maximum time limit of 30 seconds.',
       'Score points based on speed and accuracy.',

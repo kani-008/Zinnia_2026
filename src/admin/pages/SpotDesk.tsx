@@ -59,6 +59,9 @@ const USER_ID_RE = /^ZIN26-\d{4,}$/i;
  */
 const MEMBER_PREFIX = 'ZIN26-';
 
+/** How many of this set's latest walk-ins show at the top of the desk. */
+const SET_SHOWN = 6;
+
 function tidyMemberInput(raw: string): string {
   const v = raw.toUpperCase().replace(/\s+/g, '');
   const m = v.match(/^(?:ZIN26-?)+(.*)$/);
@@ -126,6 +129,8 @@ const labelCls = 'font-mono text-[10.5px] uppercase tracking-[0.1em] text-white/
 
 type Notice = { tone: 'ok' | 'warn'; text: string };
 type OpenTarget = { user_id: string; name: string };
+/** A walk-in registered in this set (since the last Refresh). */
+type GroupMember = { user_id: string; name: string; college?: string };
 
 /** Where one person's pass email stands. Kept by the page, so it outlives the panel. */
 type PassMail = { state: 'sending' | 'sent' | 'failed'; text: string };
@@ -894,14 +899,6 @@ function WalkInCard({
 
 /* ------------------------------------------------------------- team form */
 
-interface MemberSlot {
-  key: number;
-  value: string;
-  check: SpotMemberCheck | null;
-  error: string | null;
-  checking: boolean;
-}
-
 interface TeamBody {
   event_code: string;
   team_name: string;
@@ -909,63 +906,179 @@ interface TeamBody {
   member_user_ids: string[];
 }
 
-function MemberInput({
-  slot,
-  index,
-  eventCode,
-  canRemove,
+/** Someone who can be picked for a team: one of this set's walk-ins, or added by UserID. */
+interface TeamPick {
+  user_id: string;
+  name: string;
+  college: string;
+  check: SpotMemberCheck | null;
+  error: string | null;
+  checking: boolean;
+}
+
+const canJoin = (p: TeamPick) => !p.checking && !p.error && !!p.check && !p.check.blocked_reason;
+
+/** First name, for the one-tap team name. */
+const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? '';
+
+/**
+ * One person as a card: the name first and large, because that is what the desk
+ * reads out and the person answers to; the UserID and college under it; and
+ * whether they can join THIS event, before anyone is picked.
+ */
+function PersonCard({
+  pick,
+  selected,
   disabled,
-  onChange,
+  onClick,
   onRemove,
+  role,
 }: {
-  slot: MemberSlot;
-  index: number;
-  eventCode: string;
-  canRemove: boolean;
-  disabled: boolean;
-  onChange: (patch: Partial<MemberSlot>) => void;
-  onRemove: () => void;
+  pick: TeamPick;
+  selected?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  onRemove?: () => void;
+  role?: string;
 }) {
+  const status = pick.checking ? (
+    <span className="text-white/35">Checking…</span>
+  ) : pick.error ? (
+    <span className="text-rose-300">{pick.error}</span>
+  ) : pick.check?.blocked_reason ? (
+    <span className="text-rose-300">Can't join: {pick.check.blocked_reason}</span>
+  ) : pick.check ? (
+    <span className="text-emerald-300">Can join</span>
+  ) : null;
+
+  const body = (
+    <>
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[14px] font-semibold text-white">{pick.name || pick.user_id}</div>
+          <div className="truncate text-[12px] text-white/50">
+            <span className="font-mono text-white/70">{pick.user_id}</span>
+            {pick.college && ` · ${pick.college}`}
+          </div>
+        </div>
+        {role && (
+          <span className="shrink-0 rounded border border-indigo-400/40 px-1.5 py-0.5 font-mono text-[10px] uppercase text-indigo-200">
+            {role}
+          </span>
+        )}
+        {onClick && (
+          <span
+            className={cx(
+              'grid h-5 w-5 shrink-0 place-items-center rounded border',
+              selected ? 'border-emerald-400 bg-emerald-500 text-black' : 'border-white/25 text-transparent',
+            )}
+          >
+            <Check className="h-3.5 w-3.5" />
+          </span>
+        )}
+        {onRemove && (
+          <button
+            type="button"
+            onClick={onRemove}
+            disabled={disabled}
+            aria-label={`Remove ${pick.name || pick.user_id}`}
+            className="shrink-0 rounded p-0.5 text-white/40 hover:text-white disabled:opacity-40"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      {status && <div className="mt-1 text-[12px]">{status}</div>}
+    </>
+  );
+
+  const frame = cx(
+    'w-full rounded-md border px-3 py-2 text-left transition-colors',
+    selected ? 'border-emerald-400/60 bg-emerald-500/[0.08]' : 'border-white/10 bg-black/20',
+  );
+  return onClick ? (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={selected}
+      className={cx(frame, 'hover:border-white/30 disabled:opacity-50')}
+    >
+      {body}
+    </button>
+  ) : (
+    <div className={frame}>{body}</div>
+  );
+}
+
+/** Looks one UserID up for this event, as it is typed; the parent adds it once it checks out. */
+function AddById({
+  eventCode,
+  taken,
+  full,
+  disabled,
+  onAdd,
+}: {
+  eventCode: string;
+  taken: Set<string>;
+  full: boolean;
+  disabled: boolean;
+  onAdd: (p: TeamPick) => void;
+}) {
+  const [raw, setRaw] = useState(MEMBER_PREFIX);
+  const [pick, setPick] = useState<TeamPick | null>(null);
   const seq = useRef(0);
-  const value = memberId(slot.value);
+  const value = memberId(raw);
 
   useEffect(() => {
-    // Every change bumps the sequence, so a lookup still in flight for what was
-    // typed before can never land on the field after it has changed.
+    // A lookup still in flight for what was typed before never lands on what is typed now.
     const mine = ++seq.current;
     if (!USER_ID_RE.test(value)) {
-      onChange({ check: null, error: null, checking: false });
+      setPick(null);
       return;
     }
-    onChange({ checking: true, error: null });
+    setPick({ user_id: value, name: '', college: '', check: null, error: null, checking: true });
     const t = window.setTimeout(async () => {
       try {
         const res = await adminFetch<SpotMemberCheck>(
           `/api/admin/spot/check-member?${new URLSearchParams({ user_id: value, event: eventCode })}`,
         );
-        if (seq.current === mine) onChange({ check: res, error: null, checking: false });
+        if (seq.current === mine)
+          setPick({ user_id: res.user_id, name: res.name, college: res.college, check: res, error: null, checking: false });
       } catch (e) {
-        if (seq.current === mine) onChange({ check: null, error: errorText(e, 'Lookup failed.'), checking: false });
+        if (seq.current === mine)
+          setPick({ user_id: value, name: '', college: '', check: null, error: errorText(e, 'Lookup failed.'), checking: false });
       }
     }, 350);
     return () => window.clearTimeout(t);
-    // onChange is recreated by the parent on every render; the lookup depends
-    // only on what was typed and which event it is for.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, eventCode]);
 
-  const id = `spot-member-${slot.key}`;
+  const already = pick ? taken.has(pick.user_id.toUpperCase()) : false;
+  const add = () => {
+    if (!pick || !canJoin(pick) || already || full) return;
+    onAdd(pick);
+    setRaw(MEMBER_PREFIX);
+    setPick(null);
+  };
+
   return (
     <div>
-      <label htmlFor={id} className={labelCls}>
-        Member {index + 1}
+      <label htmlFor="spot-add-by-id" className={labelCls}>
+        Someone else · add by UserID
       </label>
       <div className="mt-1 flex gap-2">
         <input
-          id={id}
-          value={slot.value}
+          id="spot-add-by-id"
+          value={raw}
           disabled={disabled}
-          onChange={(e) => onChange({ value: tidyMemberInput(e.target.value) })}
+          onChange={(e) => setRaw(tidyMemberInput(e.target.value))}
+          onKeyDown={(e) => {
+            // Enter adds the person here; it must not submit the whole team.
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              add();
+            }
+          }}
           onFocus={(e) => {
             // Land after the prefilled ZIN26- rather than in front of it.
             const el = e.currentTarget;
@@ -973,31 +1086,22 @@ function MemberInput({
           }}
           placeholder="ZIN26-0000"
           autoComplete="off"
-          aria-describedby={`${id}-status`}
           className={cx(inputCls, 'font-mono uppercase')}
         />
-        {canRemove && (
-          <button
-            type="button"
-            onClick={onRemove}
-            disabled={disabled}
-            aria-label={`Remove member ${index + 1}`}
-            className="rounded-md border border-white/12 bg-white/5 px-2 text-white/40 hover:text-white disabled:opacity-40"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <Button onClick={add} disabled={disabled || !pick || !canJoin(pick) || already || full}>
+          <Plus className="w-3.5 h-3.5" />
+          Add
+        </Button>
       </div>
-      <div id={`${id}-status`} aria-live="polite" className="mt-1 min-h-[18px] text-[12px]">
-        {slot.checking && <span className="text-white/35">Checking…</span>}
-        {!slot.checking && slot.error && <span className="text-rose-300">{slot.error}</span>}
-        {!slot.checking && slot.check && (
-          <span className={slot.check.blocked_reason ? 'text-rose-300' : 'text-emerald-300'}>
-            {slot.check.name} · {slot.check.college}
-            {slot.check.blocked_reason && ` — ${slot.check.blocked_reason}`}
-          </span>
-        )}
-      </div>
+      {pick && (
+        <div className="mt-2">
+          <PersonCard pick={pick} />
+          {already && <div className="mt-1 text-[12px] text-amber-200">Already in this team.</div>}
+          {!already && full && canJoin(pick) && (
+            <div className="mt-1 text-[12px] text-amber-200">The team is full - remove someone first.</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1013,8 +1117,8 @@ function TeamForm({
 }: {
   card: SpotCatalogCard;
   captain: SpotPerson;
-  /** UserIDs registered in this group, in order; the captain's teammates are taken from here */
-  prefill: string[];
+  /** this set's walk-ins, in the order they registered; the captain's teammates are picked from here */
+  prefill: GroupMember[];
   /** any action on this person's panel is running */
   busy: boolean;
   /** this team is the one being saved */
@@ -1022,91 +1126,113 @@ function TeamForm({
   onSubmit: (body: TeamBody) => void;
   onCancel: () => void;
 }) {
-  const nextKey = useRef(1);
-  const makeSlot = (value = MEMBER_PREFIX): MemberSlot => ({
-    key: nextKey.current++,
-    value,
-    check: null,
-    error: null,
-    checking: false,
-  });
-
+  const cap = captain.user_id.toUpperCase();
   const [teamName, setTeamName] = useState('');
   const [topic, setTopic] = useState('');
-  // A team registers member by member, then forms from the captain: the others
-  // registered in this group fill the member fields, to be checked, not retyped.
-  const [groupIds] = useState(() =>
-    prefill.filter((id) => id !== captain.user_id).slice(0, Math.max(card.max_team - 1, 0)),
-  );
-  const [slots, setSlots] = useState<MemberSlot[]>(() =>
-    Array.from({ length: Math.max(card.min_team - 1, 1, groupIds.length) }, (_, i) =>
-      makeSlot(groupIds[i] ?? MEMBER_PREFIX),
-    ),
-  );
   const [problem, setProblem] = useState<string | null>(null);
 
-  const patch = (key: number, p: Partial<MemberSlot>) => {
-    setSlots((all) => all.map((s) => (s.key === key ? { ...s, ...p } : s)));
-    // A message about what was typed before must not sit under what is typed now.
-    if ('value' in p) setProblem(null);
+  // This set's other walk-ins, each looked up for this event as the form opens,
+  // so the desk sees who can join before picking anyone.
+  const [candidates, setCandidates] = useState<TeamPick[]>(() =>
+    prefill
+      .filter((g) => g.user_id.toUpperCase() !== cap)
+      .map((g) => ({
+        user_id: g.user_id.toUpperCase(),
+        name: g.name,
+        college: g.college ?? '',
+        check: null,
+        error: null,
+        checking: true,
+      })),
+  );
+  const [extra, setExtra] = useState<TeamPick[]>([]); // added by UserID
+  const [chosen, setChosen] = useState<string[]>([]);
+  const autoPicked = useRef(false);
+
+  useEffect(() => {
+    let alive = true;
+    candidates.forEach(async (c) => {
+      let next: Partial<TeamPick>;
+      try {
+        const res = await adminFetch<SpotMemberCheck>(
+          `/api/admin/spot/check-member?${new URLSearchParams({ user_id: c.user_id, event: card.event_code })}`,
+        );
+        next = { check: res, name: res.name || c.name, college: res.college || c.college, checking: false };
+      } catch (e) {
+        next = { error: errorText(e, 'Lookup failed.'), checking: false };
+      }
+      if (alive) setCandidates((all) => all.map((x) => (x.user_id === c.user_id ? { ...x, ...next } : x)));
+    });
+    return () => {
+      alive = false;
+    };
+    // Looked up once, when the form opens for this event.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [card.event_code]);
+
+  const room = Math.max(card.max_team - 1, 0);
+
+  // Once every lookup is back, tick the ones who can join, in the order they
+  // registered - the usual case is exactly the team standing at the desk, so
+  // it only needs a glance and a name. Only once, so an untick stays unticked.
+  useEffect(() => {
+    if (autoPicked.current || candidates.some((c) => c.checking)) return;
+    autoPicked.current = true;
+    setChosen(candidates.filter(canJoin).slice(0, room).map((c) => c.user_id));
+  }, [candidates, room]);
+
+  const everyone = [...candidates, ...extra];
+  const byId = (id: string) => everyone.find((p) => p.user_id === id);
+  const members = chosen.map(byId).filter((p): p is TeamPick => Boolean(p));
+  const teamSize = members.length + 1;
+  const full = members.length >= room;
+  const taken = new Set([cap, ...chosen]);
+
+  const size = card.min_team === card.max_team ? `${card.min_team}` : `${card.min_team}–${card.max_team}`;
+
+  const toggle = (p: TeamPick) => {
+    setProblem(null);
+    if (chosen.includes(p.user_id)) return setChosen((c) => c.filter((id) => id !== p.user_id));
+    if (!canJoin(p)) {
+      return setProblem(
+        p.checking
+          ? `Still checking ${p.name || p.user_id}.`
+          : `${p.name || p.user_id} cannot join: ${p.check?.blocked_reason || p.error || 'not checked'}`,
+      );
+    }
+    if (full) return setProblem(`${card.name} takes at most ${card.max_team}, captain included - untick someone first.`);
+    setChosen((c) => [...c, p.user_id]);
   };
 
-  const taken = new Set([captain.user_id, ...slots.map((s) => memberId(s.value)).filter(Boolean)]);
-  const teamSize = slots.length + 1;
-
-  const size =
-    card.min_team === card.max_team ? `${card.min_team}` : `${card.min_team}–${card.max_team}`;
+  // Not "Team X": the confirmation already reads "Team <name> is registered".
+  const suggestion = firstName(captain.name) ? `${firstName(captain.name)}'s Squad` : '';
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
     setProblem(null);
-
-    const ids = slots.map((s) => memberId(s.value)).filter(Boolean);
     if (!teamName.trim()) return setProblem('Give the team a name.');
     if (card.asks_topic && !topic.trim()) return setProblem('Enter the topic the team will present.');
-    if (ids.length + 1 < card.min_team)
-      return setProblem(`${card.name} needs ${size} members, captain included.`);
-    const bad = ids.find((id) => !USER_ID_RE.test(id));
-    if (bad) return setProblem(`${bad} does not look like a UserID.`);
-
-    // As on the participant dashboard: every member is looked up as their code
-    // is typed, and the team goes in only once each one checks out.
-    if (slots.some((sl) => sl.checking)) return setProblem('Wait for the member checks to finish.');
-    const failed = slots.find((sl) => memberId(sl.value) && (sl.error || sl.check?.blocked_reason));
-    if (failed) {
-      const who = memberId(failed.value);
-      return setProblem(
-        failed.check?.blocked_reason
-          ? `${who} cannot join: ${failed.check.blocked_reason}`
-          : `${who}: ${failed.error}`,
-      );
-    }
-
+    if (teamSize < card.min_team || teamSize > card.max_team)
+      return setProblem(`${card.name} needs ${size} members, captain included - the team has ${teamSize}.`);
+    const bad = members.find((m) => !canJoin(m));
+    if (bad) return setProblem(`${bad.name || bad.user_id} cannot join: ${bad.check?.blocked_reason || bad.error}`);
     onSubmit({
       event_code: card.event_code,
       team_name: teamName.trim(),
       topic: card.asks_topic ? topic.trim() : '',
-      member_user_ids: [captain.user_id, ...ids],
+      member_user_ids: [captain.user_id, ...members.map((m) => m.user_id)],
     });
   };
 
   return (
-    <form
-      onSubmit={submit}
-      className="space-y-3 rounded-lg border border-indigo-500/30 bg-indigo-500/[0.06] p-4"
-    >
+    <form onSubmit={submit} className="space-y-3 rounded-lg border border-indigo-500/30 bg-indigo-500/[0.06] p-4">
       <div className="flex items-start gap-3">
         <div>
           <div className="text-[14px] font-semibold text-white">Form a team · {card.name}</div>
           <div className="text-[12px] text-white/45">
             {size} members, captain included · confirmed straight away
           </div>
-          {groupIds.length > 0 && (
-            <div className="mt-0.5 text-[12px] text-indigo-200/80">
-              Filled with this group's walk-ins - check each one before registering.
-            </div>
-          )}
         </div>
         <button
           type="button"
@@ -1134,6 +1260,15 @@ function TeamForm({
             className={cx(inputCls, 'mt-1')}
             autoComplete="off"
           />
+          {suggestion && !teamName.trim() && (
+            <button
+              type="button"
+              onClick={() => setTeamName(suggestion)}
+              className="mt-1.5 rounded border border-white/15 bg-white/5 px-2 py-0.5 text-[12px] text-white/70 hover:bg-white/10"
+            >
+              Use “{suggestion}”
+            </button>
+          )}
         </div>
 
         {card.asks_topic && (
@@ -1155,41 +1290,63 @@ function TeamForm({
           </div>
         )}
 
+        {/* The team as it will be registered. */}
         <div>
-          <div className={labelCls}>Captain</div>
-          <div className="mt-1 rounded-md border border-white/10 bg-black/20 px-3 py-2 text-[13px] text-white/80">
-            <span className="font-mono">{captain.user_id}</span> · {captain.name}
+          <div className={labelCls}>
+            Team · {teamSize} of {size}
+          </div>
+          <div className="mt-1 space-y-1.5">
+            <PersonCard
+              pick={{ user_id: cap, name: captain.name, college: captain.college, check: null, error: null, checking: false }}
+              role="captain"
+            />
+            {members.map((m) => (
+              <PersonCard key={m.user_id} pick={m} onRemove={() => toggle(m)} disabled={busy} />
+            ))}
+            {teamSize < card.min_team && (
+              <div className="rounded-md border border-dashed border-white/15 px-3 py-2 text-[12px] text-white/40">
+                Pick {card.min_team - teamSize} more below.
+              </div>
+            )}
           </div>
         </div>
 
-        {slots.map((s, i) => (
-          <MemberInput
-            key={s.key}
-            slot={s}
-            index={i + 1}
-            eventCode={card.event_code}
-            canRemove={teamSize > card.min_team}
-            disabled={busy}
-            onChange={(p) => patch(s.key, p)}
-            onRemove={() => setSlots((all) => all.filter((x) => x.key !== s.key))}
-          />
-        ))}
-
-        {teamSize < card.max_team && (
+        {/* This set's walk-ins: one tap adds or removes. */}
+        {candidates.length > 0 && (
           <div>
-            <Button onClick={() => setSlots((all) => [...all, makeSlot()])} disabled={busy}>
-              <Plus className="w-3.5 h-3.5" />
-              Add member
-            </Button>
+            <div className={labelCls}>This set · tap to add or remove</div>
+            <div className="mt-1 grid gap-1.5 sm:grid-cols-2">
+              {candidates.map((c) => (
+                <PersonCard
+                  key={c.user_id}
+                  pick={c}
+                  selected={chosen.includes(c.user_id)}
+                  disabled={busy}
+                  onClick={() => toggle(c)}
+                />
+              ))}
+            </div>
           </div>
         )}
+
+        <AddById
+          eventCode={card.event_code}
+          taken={taken}
+          full={full}
+          disabled={busy}
+          onAdd={(p) => {
+            setProblem(null);
+            setExtra((all) => (all.some((x) => x.user_id === p.user_id) ? all : [...all, p]));
+            setChosen((c) => (c.includes(p.user_id) ? c : [...c, p.user_id]));
+          }}
+        />
       </fieldset>
 
       {problem && <Banner>{problem}</Banner>}
 
       <Button type="submit" variant="primary" disabled={busy} className="w-full py-2">
         {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Users className="w-3.5 h-3.5" />}
-        {saving ? 'Registering team…' : 'Register team'}
+        {saving ? 'Registering team…' : `Register team of ${teamSize}`}
       </Button>
     </form>
   );
@@ -1210,7 +1367,7 @@ function PersonPanel({
   /** this person's pass email, if one has been sent from this page */
   passMail: PassMail | undefined;
   /** UserIDs registered since the last Refresh - a team arriving together */
-  group: string[];
+  group: GroupMember[];
   onSendPass: (userId: string) => void;
   onOpen: (p: OpenTarget) => void;
 }) {
@@ -1666,7 +1823,7 @@ function SpotDeskPage({
   const [flash, setFlash] = useState<Notice | null>(null);
   // Walk-ins registered since the last Refresh: usually a team arriving
   // together. Forming the team from the captain fills the others in.
-  const [group, setGroup] = useState<OpenTarget[]>([]);
+  const [group, setGroup] = useState<GroupMember[]>([]);
   const [walkInBusy, setWalkInBusy] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -1679,20 +1836,10 @@ function SpotDeskPage({
     window.setTimeout(() => panelRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
   }, []);
 
-  const groupIds = useMemo(() => group.map((g) => g.user_id), [group]);
-
   return (
     <div className="space-y-4">
       <header className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h1 className="text-lg font-semibold tracking-tight text-white">On-spot desk</h1>
-        {group.length > 0 && (
-          <span
-            className="rounded border border-white/12 bg-white/5 px-2 py-0.5 font-mono text-[12px] text-white/55"
-            title={groupIds.join(', ')}
-          >
-            this group: {group.length} registered
-          </span>
-        )}
         {/* Clears everything for the next participant or team. Waits while a
             walk-in is being saved, so a registration is never cut off. */}
         <Button className="ml-auto" onClick={onRefresh} disabled={walkInBusy}>
@@ -1700,6 +1847,34 @@ function SpotDeskPage({
           Refresh · next group
         </Button>
       </header>
+
+      {/* This set: the latest walk-ins since Refresh, as tappable cards - one tap
+          opens that person (usually the captain, to Form team). Refresh starts
+          the next set. Only the latest few show; a set is one team or two. */}
+      {group.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className={labelCls}>
+            This set · {group.length} registered{group.length > SET_SHOWN ? ` · latest ${SET_SHOWN}` : ''} · tap to open
+          </span>
+          {group.slice(-SET_SHOWN).map((g) => (
+            <button
+              key={g.user_id}
+              type="button"
+              onClick={() => open(g)}
+              className={cx(
+                'rounded-md border px-2.5 py-1 text-left text-[12.5px] transition-colors',
+                selected === g.user_id.toUpperCase()
+                  ? 'border-indigo-400/60 bg-indigo-500/15 text-white'
+                  : 'border-white/12 bg-white/5 text-white/80 hover:bg-white/10',
+              )}
+            >
+              <span className="font-semibold">{g.name}</span>{' '}
+              <span className="font-mono text-white/50">{g.user_id}</span>
+              {g.college && <span className="text-white/40"> · {g.college}</span>}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* A pass that failed to send, for someone the desk has already moved on
           from. The open person's own panel shows theirs. */}
@@ -1732,7 +1907,9 @@ function SpotDeskPage({
           onOpen={(p) => open(p)}
           onCreated={(person, message) => {
             setGroup((g) =>
-              g.some((x) => x.user_id === person.user_id) ? g : [...g, { user_id: person.user_id, name: person.name }],
+              g.some((x) => x.user_id === person.user_id)
+                ? g
+                : [...g, { user_id: person.user_id, name: person.name, college: person.college }],
             );
             open(person, { tone: 'ok', text: message });
             void sendPass(person.user_id);
@@ -1751,7 +1928,7 @@ function SpotDeskPage({
                 flash={flash}
                 passMail={passMail[selected]}
                 onSendPass={(uid) => void sendPass(uid)}
-                group={groupIds}
+                group={group}
                 onOpen={(p) => open(p)}
               />
             ) : (
@@ -1762,7 +1939,7 @@ function SpotDeskPage({
                     Register a walk-in, or find someone who is already registered.
                   </p>
                   <p className="mt-1 text-[12.5px] text-white/30">
-                    For a team: register each member, then find the captain and Form team - the others fill in.
+                    For a team: register each member, then tap the captain under This set and Form team - tap to pick the others.
                     Refresh clears everything for the next group.
                   </p>
                 </div>
