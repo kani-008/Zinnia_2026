@@ -124,7 +124,7 @@ function SplitBar({ parts }: { parts: { label: string; n: number; color: string 
 }
 
 /**
- * A desk-only login (onspot1 / onspot2) sees its own till and the capacity
+ * A desk-only login (onspot1 ... onspot4) sees its own till and the capacity
  * board, nothing else. Admins and treasurers see their dashboard with every
  * desk's till as one of its sections.
  */
@@ -222,7 +222,7 @@ function TillTiles({ till, fee, wide = false }: { till: SpotTill; fee: number; w
 }
 
 /**
- * onspot1 / onspot2: their own till - what THIS login registered and took, in
+ * A desk login (onspot1 ... onspot4): its own till - what THIS login registered and took, in
  * cash and into its own UPI account - and the capacity board every login sees.
  */
 function DeskDashboard() {

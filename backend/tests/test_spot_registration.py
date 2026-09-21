@@ -83,6 +83,8 @@ DESK_ENV = {
     "SPOT_DESK_1_UPI_ID": "desk1@upi", "SPOT_DESK_1_ADMIN": "onspot1",
     "SPOT_DESK_2_UPI_ID": "desk2@upi", "SPOT_DESK_2_ADMIN": "onspot2",
     "TREASURER_UPI_ID": "website@upi",
+    # Every other desk slot blanked, so the real .env's desks never leak in.
+    **{f"SPOT_DESK_{n}_{part}": "" for n in range(3, 10) for part in ("UPI_ID", "ADMIN")},
 }
 ONSPOT1 = {"id": "11111111-1111-4111-8111-111111111111", "username": "onspot1", "name": "On-spot Desk 1",
            "role": "SPOT_DESK"}
@@ -903,6 +905,33 @@ def test_the_website_accounts_are_never_used_at_the_desk(h):
     assert not res["success"] and res["error_code"] == "PAYEE_NOT_CONFIGURED", \
         "with no desk account set, the desk takes cash - it never falls back to the website's"
     assert not h.fake.tables["payments"]
+
+
+@with_harness()
+def test_desks_three_and_four_each_take_upi_into_their_own_account_only(h):
+    extra = {"SPOT_DESK_3_UPI_ID": "desk3@upi", "SPOT_DESK_3_ADMIN": "onspot3",
+             "SPOT_DESK_4_UPI_ID": "desk4@upi", "SPOT_DESK_4_ADMIN": "onspot4"}
+    os.environ.update(extra)
+    try:
+        onspot3 = {"id": "33333333-3333-4333-8333-333333333333", "username": "onspot3",
+                   "name": "On-spot Desk 3", "role": "SPOT_DESK"}
+        onspot4 = {"id": "44444444-4444-4444-8444-444444444444", "username": "onspot4",
+                   "name": "On-spot Desk 4", "role": "SPOT_DESK"}
+        for admin, key, upi, label in ((onspot3, "D3", "desk3@upi", "Desk 3"), (onspot4, "D4", "desk4@upi", "Desk 4")):
+            payee = spot.desk_payee(admin)
+            assert payee["success"] and payee["fixed"], payee
+            assert [(a["key"], a["label"], a["upi_id"]) for a in payee["accounts"]] == [(key, label, upi)], payee
+            res = h.walk_in(email=f"{key}@test.com", method="UPI", admin=admin, payee_key=key)
+            assert res["success"], res
+            pay = h.fake.select_one("payments", f"user_id=eq.{res['participant']['user_id']}")
+            assert pay["payee_upi"] == upi, pay
+        refused = h.walk_in(email="cross@test.com", method="UPI", admin=onspot3, payee_key="D4")
+        assert not refused["success"] and refused["field"] == "payment_method", "desk 3 cannot use desk 4's QR"
+        assert not spot.desk_payee(ONSPOT1)["accounts"][0]["upi_id"] in ("desk3@upi", "desk4@upi")
+        assert [a["key"] for a in spot.desk_payee(ADMIN)["accounts"]] == ["D1", "D2", "D3", "D4"], \
+            "a treasurer or super admin can pick any of the four"
+    finally:
+        os.environ.update({k: "" for k in extra})  # back to blank; the harness restores the real env
 
 
 @with_harness()

@@ -461,8 +461,8 @@ function WalkInCard({
   };
 
   // --- which desk UPI account the QR points at -----------------------------------
-  // The desk's own accounts, never the website's. onspot1 / onspot2 always get
-  // their own; a treasurer or super admin picks Desk 1 or Desk 2. The key goes
+  // The desk's own accounts, never the website's. Each desk login (onspot1 ...
+  // onspot4) always gets its own; a treasurer or super admin picks a desk. The key goes
   // back with the registration and the server checks this login may use it, so
   // the account recorded is the account this QR showed.
   const [payee, setPayee] = useState<SpotPayee | null>(null);

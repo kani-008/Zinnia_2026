@@ -215,6 +215,7 @@ def _send_pass(participant: Dict[str, Any], on_spot: bool = True) -> bool:
 #
 #   SPOT_DESK_1_UPI_ID=...        SPOT_DESK_1_ADMIN=onspot1
 #   SPOT_DESK_2_UPI_ID=...        SPOT_DESK_2_ADMIN=onspot2
+#   ... one pair per desk, up to SPOT_DESK_9 (onspot3, onspot4 ...)
 #   SPOT_DESK_n_PAYEE_NAME        optional, shown in the payer's UPI app
 #
 # A desk login always takes UPI into its own account. Any other login allowed
@@ -222,7 +223,7 @@ def _send_pass(participant: Dict[str, Any], on_spot: bool = True) -> bool:
 # account BEFORE the participant exists, so its key comes back with the
 # registration and is checked against what this login may use.
 
-DESK_SLOTS = (1, 2)
+DESK_SLOTS = tuple(range(1, 10))  # SPOT_DESK_1 ... SPOT_DESK_9; unset slots are skipped
 
 # Roles that may use the desk and nothing else; see middleware DESK_ONLY_ROLES.
 DESK_ROLE = "SPOT_DESK"
@@ -307,8 +308,8 @@ def desk_payee(admin: Dict[str, Any]) -> Dict[str, Any]:
         if str(admin.get("role") or "").upper() == DESK_ROLE:
             who = admin.get("username") or "this"
             return _fail("PAYEE_NOT_CONFIGURED",
-                         f"No UPI account is set for the {who} login. Take cash, or set "
-                         f"SPOT_DESK_1_ADMIN / SPOT_DESK_2_ADMIN on the server.")
+                         f"No UPI account is set for the {who} login. Take cash, or set its "
+                         f"SPOT_DESK_n_UPI_ID and SPOT_DESK_n_ADMIN on the server.")
         return _fail("PAYEE_NOT_CONFIGURED",
                      "No on-spot UPI account is set. Take cash, or set SPOT_DESK_1_UPI_ID on the server.")
     username = str(admin.get("username") or "").strip().lower()
