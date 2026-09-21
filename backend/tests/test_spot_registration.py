@@ -605,6 +605,23 @@ def test_queue_files_desk_payments_as_approved_with_only_the_on_spot_flag(h):
     assert q["counts"]["APPROVED"] == 2 and q["counts"]["UNPAID"] == 0, q["counts"]
 
 
+@with_harness()
+def test_the_payment_drawer_lists_a_remade_teams_event_once(h):
+    # A team cancelled and made again (migration 013) leaves a CANCELLED row
+    # beside the live one; the drawer must not count it.
+    uid = h.walk_in(email="remade@test.com")["participant"]["user_id"]
+    h.fake.tables["registrations"] += [
+        {"reg_id": 9001, "user_id": uid, "event_code": "PAPER_PRESENTATION", "team_id": "ZIN26-PP0001",
+         "status": "CANCELLED", "source": "ONLINE", "created_at": "2026-09-19T14:08:00+00:00"},
+        {"reg_id": 9002, "user_id": uid, "event_code": "PAPER_PRESENTATION", "team_id": "ZIN26-PP0002",
+         "status": "CONFIRMED", "source": "ONLINE", "created_at": "2026-09-19T14:15:00+00:00"},
+    ]
+    d = panel.payment_detail(uid)
+    assert d["success"], d
+    assert d["payment"]["events_count"] == 1 and "," not in d["payment"]["event_list"], d["payment"]["event_list"]
+    assert [r["reg_id"] for r in d["registrations"]] == [9002], d["registrations"]
+
+
 def test_an_online_bypass_still_reads_as_bypassed():
     flags = panel._flags({}, {"amount": 250, "approval_note": "Paid in cash to the treasurer"}, True, set())
     assert flags == ["BYPASSED"], flags

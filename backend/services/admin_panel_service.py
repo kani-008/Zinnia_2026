@@ -710,9 +710,12 @@ def payment_detail(user_id: str) -> Dict[str, Any]:
             f"created_at,approved_at"
             f"&user_id=eq.{enc_uid}&order=created_at.desc",
         )
+        # Live rows only, like every other read (LIVE_REG). Since migration 013 a
+        # team cancelled and made again leaves its CANCELLED row beside the new
+        # one, and the drawer listed that event twice ("Paper Verse, Paper Verse").
         f_regs = pool.submit(
             db.select, "registrations",
-            f"select=reg_id,event_code,status,team_id,created_at&user_id=eq.{enc_uid}",
+            f"select=reg_id,event_code,status,team_id,created_at&user_id=eq.{enc_uid}&{LIVE_REG}",
         )
         f_otp = pool.submit(
             db.select_one, "login_otps",
