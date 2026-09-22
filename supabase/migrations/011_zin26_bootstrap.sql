@@ -205,10 +205,10 @@ INSERT INTO zin26.events
      counts_toward_limit, duration_min, window_code, has_rounds, is_active,
      reg_closes_at, sort_order)
 VALUES
-    ('DEBUGGING',          'Debugging Protocol', 'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'MORNING',   false, true, '2026-09-23T23:59:59+05:30', 1),
-    ('LAST_SIGNAL',        'The Last Signal',    'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'MORNING',   false, true, '2026-09-23T23:59:59+05:30', 2),
-    ('LOST_IN_SQL',        'Lost in SQL',        'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'AFTERNOON', false, true, '2026-09-23T23:59:59+05:30', 3),
-    ('GADGET_CODES',       'Gadget Codes',       'TECH',     'FIXED',   2, 2, NULL, false, true,  180, NULL,        true,  true, '2026-09-23T23:59:59+05:30', 4),
+    ('DEBUGGING',          'Debugging Protocol', 'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'MORNING',   false, true, '2026-09-23T21:00:00+05:30', 1),
+    ('LAST_SIGNAL',        'The Last Signal',    'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'MORNING',   false, true, '2026-09-23T21:00:00+05:30', 2),
+    ('LOST_IN_SQL',        'Lost in SQL',        'TECH',     'RUNNING', 1, 1, NULL, false, true,   30, 'AFTERNOON', false, true, '2026-09-23T21:00:00+05:30', 3),
+    ('GADGET_CODES',       'Gadget Codes',       'TECH',     'FIXED',   2, 2, NULL, false, true,  180, NULL,        true,  true, '2026-09-23T21:00:00+05:30', 4),
     -- 30 TEAMS (coordinators' ruling), counted as teams and not as heads: a
     -- team of 2 and a team of 3 each take one of the 30. capacity_map() and
     -- zin26.register_participant_event both count distinct team_id for an
@@ -217,10 +217,10 @@ VALUES
     -- NOTE: this exceeds what 2 panels of fifteen-minute slots hold. B1-B4 is
     -- 180 minutes per panel = 12 slots each = 24. 30 teams needs a third panel,
     -- shorter slots, or more time - a scheduling decision, not a code one.
-    ('PAPER_PRESENTATION', 'Paper Verse',        'TECH',     'SLOT',    2, 3,   30, true,  true,   15, NULL,        false, true, '2026-09-23T23:59:59+05:30', 5),
-    ('BORDERLAND',         'Borderland @ GCEE',  'NON_TECH', 'FIXED',   2, 3, NULL, false, true,  120, NULL,        true,  true, '2026-09-23T23:59:59+05:30', 6),
-    ('THINK_STRIKE_WIN',   'Think, Strike, Win', 'NON_TECH', 'FIXED',   2, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-23T23:59:59+05:30', 7),
-    ('PLOT_TWIST',         'Plot Twist',         'NON_TECH', 'FIXED',   2, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-23T23:59:59+05:30', 8),
+    ('PAPER_PRESENTATION', 'Paper Verse',        'TECH',     'SLOT',    2, 3,   30, true,  true,   15, NULL,        false, true, '2026-09-23T21:00:00+05:30', 5),
+    ('BORDERLAND',         'Borderland @ GCEE',  'NON_TECH', 'FIXED',   2, 3, NULL, false, true,  120, NULL,        true,  true, '2026-09-23T21:00:00+05:30', 6),
+    ('THINK_STRIKE_WIN',   'Think, Strike, Win', 'NON_TECH', 'FIXED',   2, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-23T21:00:00+05:30', 7),
+    ('PLOT_TWIST',         'Plot Twist',         'NON_TECH', 'FIXED',   2, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-23T21:00:00+05:30', 8),
     -- Online, no block, no count. Closes three days before everything else.
     -- Exactly 1 per the 4 September ruling.
     ('SHORT_FILM',         'Short Film',         'NON_TECH', 'ONLINE',  1, 1, NULL, false, true,    0, NULL,        false, true, '2026-09-20T23:59:59+05:30', 9)
@@ -245,7 +245,7 @@ CREATE TABLE IF NOT EXISTS public.app_settings (
 
 INSERT INTO public.app_settings (key, value) VALUES
     ('registration_fee',      '250'),
-    ('default_reg_closes_at', '"2026-09-23T23:59:59+05:30"'),
+    ('default_reg_closes_at', '"2026-09-23T21:00:00+05:30"'),
     ('short_film_closes_at',  '"2026-09-20T23:59:59+05:30"'),
     ('event_date',            '"2026-09-24"'),
     ('allow_tight_b1',        'true'),

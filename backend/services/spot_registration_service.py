@@ -1,7 +1,7 @@
 """
 Zinnia 2026 — on-spot registration desk (admin panel).
 
-Walk-ins on the fest day. The website's registration closes at the end of
+Walk-ins on the fest day. The website's registration closes at 9:00 PM on
 23 September (rules_engine._CLOSES_DEFAULT and zin26.events.reg_closes_at).
 This desk is the one path that keeps registering after that, and only through
 an authenticated TREASURER, SUPER_ADMIN or desk-only SPOT_DESK session - the
@@ -87,8 +87,12 @@ def _together(calls: Dict[str, Callable[[], Any]]) -> Dict[str, Any]:
         return {name: future.result() for name, future in futures.items()}
 
 
+def _utcnow() -> dt.datetime:
+    return dt.datetime.now(dt.timezone.utc)
+
+
 def _now_iso() -> str:
-    return dt.datetime.now(dt.timezone.utc).isoformat()
+    return _utcnow().isoformat()
 
 
 def _fail(code: str, message: str, **extra: Any) -> Dict[str, Any]:
@@ -103,7 +107,7 @@ def _participant(user_id: str) -> Optional[Dict[str, Any]]:
     return db.select_one("participants", f"select={PARTICIPANT_FIELDS}&user_id=eq.{db.enc(user_id)}")
 
 
-EVENT_FIELDS = "code,name,is_active,capacity,max_team"
+EVENT_FIELDS = "code,name,is_active,capacity,max_team,reg_closes_at"
 
 
 def _event_row(event_code: str) -> Optional[Dict[str, Any]]:
@@ -721,28 +725,44 @@ def check_member(user_id: str, event_code: str) -> Dict[str, Any]:
 
 # --- seats -----------------------------------------------------------------------
 
+def _past_online_close(event: Optional[Dict[str, Any]]) -> bool:
+    """Has this event's online registration closed (zin26.events.reg_closes_at)?"""
+    closes = (event or {}).get("reg_closes_at")
+    if not closes:
+        return False
+    try:
+        return _utcnow() >= dt.datetime.fromisoformat(str(closes))
+    except ValueError:
+        return False
+
+
 def _claim_seat(user_id: str, event_code: str, team_id: Optional[str] = None) -> str:
     """
     Write one registration row with source SPOT.
 
-    The locking database function goes first, because it re-counts capacity
-    under a row lock. It refuses every event once reg_closes_at has passed,
-    reporting that as ZIN26_EVENT_UNKNOWN - which after the website closes is
-    every call from this desk. Only then does the desk write the row itself,
-    after re-checking what the function would have: the event is still open on
-    the Events page, and there is still a seat. The partial unique index on
-    live (user_id, event_code) rows still stops a duplicate either way.
+    While online registration is open, the locking database function goes
+    first, because it re-counts capacity under a row lock. Once the event's
+    reg_closes_at has passed - 9:00 PM on 23 September, and all of the fest
+    day - that function refuses every call, so the desk does not try it: it
+    writes the row itself, after re-checking what the function would have:
+    the event is still open on the Events page, and there is still a seat.
+    Deciding by the clock rather than by how the database words its refusal
+    means a reworded error can never shut the desk. A refusal reported as
+    ZIN26_EVENT_UNKNOWN still falls through to the same write, as before. The
+    partial unique index on live (user_id, event_code) rows still stops a
+    duplicate either way.
 
     That capacity check is not under a lock, so the row is re-ranked after the
     insert: if two desks take the last seat at once, the later claim backs out.
     """
-    try:
-        return regs.rpc_register(user_id, event_code, team_id=team_id, status="CONFIRMED", source="SPOT")
-    except Zin26Error as e:
-        if e.code != "UNKNOWN_EVENT":
-            raise
-
     event = _event_row(event_code)
+    if not _past_online_close(event):
+        try:
+            return regs.rpc_register(user_id, event_code, team_id=team_id, status="CONFIRMED", source="SPOT")
+        except Zin26Error as e:
+            if e.code != "UNKNOWN_EVENT":
+                raise
+
     name = rules.EVENTS[event_code].name if event_code in rules.EVENTS else event_code
     if not event:
         raise Zin26Error("Unknown event", status=404, code="UNKNOWN_EVENT")

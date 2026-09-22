@@ -5,13 +5,19 @@ import { ON_SPOT_REGISTRATION_FEE, REGISTRATION_FEE_PER_HEAD } from '../../confi
 import { CLOSES_DEFAULT } from '../../lib/rules/catalog';
 
 /**
- * "23 Sept" - from the same constant the registration rules close on, so this
- * line cannot announce one date while registration shuts on another. Pinned to
- * IST so a visitor abroad still sees the desk's date.
+ * "23 Sept, 9 PM" - from the same constant the registration rules close on, so
+ * this line cannot announce one date while registration shuts on another. The
+ * hour is shown because it is not the end of the day. Pinned to IST so a
+ * visitor abroad still sees the desk's time.
  */
 const CLOSES_ON = new Intl.DateTimeFormat('en-IN', {
   day: 'numeric',
   month: 'short',
+  timeZone: 'Asia/Kolkata',
+}).format(new Date(CLOSES_DEFAULT));
+const CLOSES_AT = new Intl.DateTimeFormat('en-IN', {
+  hour: 'numeric',
+  hour12: true,
   timeZone: 'Asia/Kolkata',
 }).format(new Date(CLOSES_DEFAULT));
 
@@ -39,7 +45,7 @@ export const RegistrationFeeCallout: React.FC<{ className?: string }> = ({ class
       <div className="flex flex-nowrap items-center justify-center whitespace-nowrap font-comic uppercase tracking-[0.06em] leading-none text-[clamp(0.8rem,3.55vw,1.15rem)] text-[#D51F55] [text-shadow:1.5px_1.5px_0_#090A0B]">
         <span className="inline-flex items-center gap-[0.3em]">
           <Clock className="h-[0.85em] w-[0.85em] shrink-0" strokeWidth={2.5} />
-          Online registration closes on {CLOSES_ON}
+          Online registration closes {CLOSES_ON}, {CLOSES_AT}
         </span>
       </div>
     </div>
