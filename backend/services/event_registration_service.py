@@ -86,6 +86,72 @@ def capacity_map() -> Dict[str, Optional[int]]:
     return out
 
 
+# --- reopening a confirmed line-up --------------------------------------------
+#
+# "Confirm my events" is remembered only in the participant's browser, so a
+# participant who pressed it by mistake is left with no catalog and nothing on
+# the server to undo. An admin reopens their picking instead: that is an audit
+# row, and the dashboard carries the time of the latest one. The page drops a
+# confirmation older than it, and the catalog is back. Confirming again after
+# that sticks, because it is newer. The audit row is the record - no column.
+
+LINEUP_REOPEN = "LINEUP_REOPEN"
+
+
+def _iso_utc(when: dt.datetime) -> str:
+    """One timestamp format for the browser to compare: UTC, milliseconds, Z."""
+    return when.astimezone(dt.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def lineup_reopened_at(user_id: str) -> Optional[str]:
+    """When an admin last reopened this participant's event picking, or None."""
+    from services.audit_service import latest_at
+
+    at = latest_at(LINEUP_REOPEN, "participant", user_id)
+    if not at:
+        return None
+    try:
+        return _iso_utc(dt.datetime.fromisoformat(at))
+    except ValueError:
+        return at
+
+
+def reopen_lineup(user_id: str, reason: str) -> Dict[str, Any]:
+    """
+    Give a participant their event catalog back after a mistaken Confirm.
+
+    Changes nothing about their registrations - it only records the reopen,
+    which their dashboard picks up on its next load. The audit row IS the
+    reopen, so it is read back: "done" is only said once it is really there.
+    Needs a request context with g.admin, like every audited admin action.
+    """
+    from flask import g, has_request_context
+
+    from services.audit_service import log_action
+
+    if not has_request_context() or not getattr(g, "admin", None):
+        return {"success": False, "error_code": "NO_ADMIN_CONTEXT",
+                "message": "A reopen has to be made by a signed-in admin."}
+    participant = db.select_one("participants", f"select=user_id,name&user_id=eq.{db.enc(user_id)}")
+    if not participant:
+        return {"success": False, "error_code": "NOT_FOUND", "message": f"{user_id} not found."}
+
+    written = log_action(LINEUP_REOPEN, "participant", user_id, reason=reason,
+                         detail={"name": participant["name"]})
+    at = lineup_reopened_at(user_id) if written else None
+    if not at:
+        return {"success": False, "error_code": "AUDIT_WRITE_FAILED",
+                "message": f"The reopen for {user_id} was not saved - try again."}
+    return {
+        "success": True,
+        "user_id": user_id,
+        "name": participant["name"],
+        "reopened_at": at,
+        "message": f"Event picking reopened for {participant['name']} - they see the "
+                   f"event list again the next time they open their dashboard.",
+    }
+
+
 def get_dashboard(user_id: str) -> Dict[str, Any]:
     """GET /api/participant/dashboard"""
     participant = db.select_one(
@@ -146,6 +212,7 @@ def get_dashboard(user_id: str) -> Dict[str, Any]:
             capacity_by_event=capacity,
         ),
         "pending_invites": pending_invites(user_id),
+        "lineup_reopened_at": lineup_reopened_at(user_id),
     }
 
 
@@ -533,6 +600,8 @@ def confirm_lineup(user_id: str) -> Dict[str, Any]:
     sent = _send_lineup_confirmation(participant, held)
     return {
         "success": True,
+        # Server time, so the page can tell this apart from an admin's reopen.
+        "confirmed_at": _iso_utc(dt.datetime.now(dt.timezone.utc)),
         "event_count": len(held),
         "email_sent": sent,
         "message": (

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Check, ExternalLink, ImageOff, KeyRound, Loader2, Search, Send, X } from 'lucide-react';
+import { Check, ExternalLink, ImageOff, KeyRound, Loader2, RotateCcw, Search, Send, X } from 'lucide-react';
+import { confirmDialog } from '../../components/ui/dialog';
 import { useAdminQuery } from '../hooks/useAdminQuery';
 import { adminFetch } from '../auth/adminFetch';
 import {
@@ -198,6 +199,30 @@ function Drawer({
       setNotice(res.message);
     } catch (e: any) {
       setProblem(e?.message || 'The email could not be sent.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // For someone who pressed "Confirm my events" by mistake: brings their event
+  // list back. Their registrations are not touched.
+  const reopenPicking = async () => {
+    const ok = await confirmDialog({
+      title: 'Reopen event picking?',
+      message: `${p?.name || userId} will see the event list and the Confirm button again the next time they open their dashboard. Their events stay as they are.`,
+      confirmLabel: 'Reopen',
+    });
+    if (!ok) return;
+    setBusy(true);
+    setProblem(null);
+    setNotice(null);
+    try {
+      const res = await adminFetch<{ message: string }>(
+        `/api/admin/payments/${userId}/reopen-lineup`, { method: 'POST' },
+      );
+      setNotice(res.message);
+    } catch (e: any) {
+      setProblem(e?.message || 'The reopen could not be saved.');
     } finally {
       setBusy(false);
     }
@@ -448,10 +473,17 @@ function Drawer({
                     Resend pass
                   </Button>
                 )}
+                {p.payment_status === 'APPROVED' && (
+                  <Button className="w-full" disabled={busy} onClick={reopenPicking}>
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Reopen event picking
+                  </Button>
+                )}
                 <p className="pt-1 text-center font-mono text-[10.5px] leading-relaxed text-white/25">
                   A approve · R reject · Esc close
                   {p.payment_status === 'APPROVED' && (
-                    <><br />Resend emails the UserID, master QR and WhatsApp link again.</>
+                    <><br />Resend emails the UserID, master QR and WhatsApp link again.
+                    <br />Reopen gives back the event list to someone who pressed Confirm by mistake.</>
                   )}
                 </p>
               </div>

@@ -93,6 +93,11 @@ _add("/api/admin/payments/<user_id>/bypass", "admin_payment_bypass",
 # already-approved record without emailing.
 _add("/api/admin/payments/<user_id>/resend-pass", "admin_payment_resend",
      require_role(*TREASURER)(AdminPanelController.resend_pass), ["POST"])
+# Gives the event list back to a participant who pressed "Confirm my events"
+# by mistake. Touches no registration - it records the reopen, which their
+# dashboard reads on its next load.
+_add("/api/admin/payments/<user_id>/reopen-lineup", "admin_payment_reopen_lineup",
+     require_role(*TREASURER)(AdminPanelController.reopen_lineup), ["POST"])
 
 
 # ==============================================================================

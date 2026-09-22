@@ -263,6 +263,18 @@ class AdminPanelController:
             return _fail(e)
 
     @staticmethod
+    def reopen_lineup(user_id: str):
+        try:
+            from services import event_registration_service as events
+
+            body = request.get_json(silent=True) or {}
+            reason = str(body.get("reason") or "").strip()[:300] or "Pressed Confirm my events by mistake"
+            res = events.reopen_lineup(user_id, reason)
+            return jsonify(res), 200 if res.get("success") else 400
+        except Exception as e:
+            return _fail(e)
+
+    @staticmethod
     def bulk_approve():
         try:
             body = request.get_json(silent=True) or {}

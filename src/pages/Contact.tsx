@@ -93,9 +93,8 @@ interface Coordinator {
 }
 
 const COORDINATORS: Coordinator[] = [
-  { name: 'Saran S', role: 'Student Coordinator', phone: '+91 96299 93985', dial: '+919629993985' },
   { name: 'Kishore E', role: 'Student Coordinator', phone: '+91 89036 64244', dial: '+918903664244' },
-  { name: 'Bharani E K', role: 'Student Coordinator', phone: '+91 88071 76399', dial: '+918807176399' },
+  { name: 'Kanishkar M', role: 'Student Coordinator', phone: '+91 87787 84819', dial: '+918778784819' },
   { name: 'Nandhini S', role: 'Student Coordinator', phone: '+91 90427 36307', dial: '+919042736307' },
 ];
 
@@ -108,16 +107,16 @@ interface BusRun {
 
 /** Cyan group — departures from Erode Bus Stand. */
 const FROM_ERODE: BusRun[] = [
-  { time: '8:00 AM', service: 'Route Bus' },
-  { time: '8:00 AM', service: 'Town  Bus' },
-  { time: '8:30 AM', service: 'Town  Bus 5B' },
+  { time: '7:45 AM', service: 'Route Bus' },
+  { time: '7:45 AM', service: 'Town  Bus' },
+  { time: '8:20 AM', service: 'Town  Bus 5B' },
 ];
 
 /** Yellow group — departures from Chithode. */
 const FROM_CHITHODE: BusRun[] = [
-  { time: '8:15 – 8:20 AM', service: 'Route Bus' },
-  { time: '8:30 – 8:35 AM', service: 'Town Bus ' },
-  { time: 'Around 8:50 AM', service: 'Town Bus 5B' },
+  { time: '8:10 AM', service: 'Route Bus' },
+  { time: '8:20 AM', service: 'Town Bus ' },
+  { time: '8:45 AM', service: 'Town Bus 5B' },
 ];
 
 /**
@@ -125,8 +124,8 @@ const FROM_CHITHODE: BusRun[] = [
  * Lakshmi Nagar (Bhavani Bypass). One bus, two stops, so each row names its stop.
  */
 const FROM_BHAVANI: BusRun[] = [
-  { time: '8:00 AM', service: 'Town Bus B16', stop: 'Bhavani Bus stand' },
-  { time: '8:05 AM', service: 'Town Bus B16', stop: 'Lakshmi Nagar (Bhavani Bypass) bus stop' },
+  { time: '7:50 AM', service: 'Town Bus B16', stop: 'Bhavani Bus stand' },
+  { time: '7:55 AM', service: 'Town Bus B16', stop: 'Lakshmi Nagar (Bhavani Bypass) bus stop' },
 ];
 
 /**

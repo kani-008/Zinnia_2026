@@ -81,6 +81,7 @@ interface DashboardData {
   counted_max: number;
   catalog: DashboardCatalogCard[];
   pending_invites: PendingInvite[];
+  lineup_reopened_at?: string | null;
 }
 
 /** Same technical/non-technical split the homepage event cards colour by. */
@@ -148,22 +149,42 @@ const hasReadRules = (userId: string): boolean => {
  * Per participant, like the rules flag. Note this is a UI state only: the
  * server still accepts a cancellation, because confirming emails the list
  * rather than locking it. Hiding the buttons is what "done" means here.
+ *
+ * The value is WHEN they confirmed, in server time, so an admin can reopen
+ * the picking for someone who pressed it by mistake: the dashboard carries
+ * the time of the latest reopen, and a confirmation older than that is
+ * dropped. Confirmations from before this stored '1' - older than any reopen.
  */
 const LINEUP_KEY = (userId: string) => `zin26_lineup_confirmed_${userId}`;
 
 const hasConfirmedLineup = (userId: string): boolean => {
   try {
-    return window.localStorage.getItem(LINEUP_KEY(userId)) === '1';
+    return !!window.localStorage.getItem(LINEUP_KEY(userId));
   } catch {
     return false;
   }
 };
 
-const markLineupConfirmed = (userId: string): void => {
+const markLineupConfirmed = (userId: string, at?: string): void => {
   try {
-    window.localStorage.setItem(LINEUP_KEY(userId), '1');
+    window.localStorage.setItem(LINEUP_KEY(userId), at || new Date().toISOString());
   } catch {
     /* the confirm button simply stays visible */
+  }
+};
+
+/** Forget a confirmation made before an admin reopened this participant's picking. */
+const dropConfirmBefore = (userId: string, reopenedAt: string | null | undefined): void => {
+  const reopened = reopenedAt ? Date.parse(reopenedAt) : NaN;
+  if (Number.isNaN(reopened)) return;
+  try {
+    const stored = window.localStorage.getItem(LINEUP_KEY(userId));
+    if (!stored) return;
+    const confirmed = stored === '1' ? 0 : Date.parse(stored);
+    if (!Number.isNaN(confirmed) && confirmed >= reopened) return;
+    window.localStorage.removeItem(LINEUP_KEY(userId));
+  } catch {
+    /* storage blocked: nothing was stored to drop */
   }
 };
 
@@ -264,6 +285,13 @@ export const ParticipantDashboardPage: React.FC = () => {
       setError(result.message);
       return;
     }
+    // Before setData, so the first frame drawn already has the catalog back
+    // for someone an admin has reopened, rather than flashing it hidden.
+    const uid = flagKey();
+    if (uid) {
+      dropConfirmBefore(uid, result.lineup_reopened_at);
+      setLineupConfirmed(hasConfirmedLineup(uid));
+    }
     setData(result);
   }, [navigate]);
 
@@ -271,10 +299,13 @@ export const ParticipantDashboardPage: React.FC = () => {
     void load();
   }, [load]);
 
-  // Restore the confirmed state for whoever is logged in.
+  // Restore the confirmed state for whoever is logged in - unless an admin
+  // has reopened their picking since, which brings the catalog back.
   useEffect(() => {
     const uid = flagKey();
-    if (uid) setLineupConfirmed(hasConfirmedLineup(uid));
+    if (!uid) return;
+    dropConfirmBefore(uid, data?.lineup_reopened_at);
+    setLineupConfirmed(hasConfirmedLineup(uid));
   }, [data]);
 
   /** Open the description, and remember that it has now been read. */
@@ -335,7 +366,7 @@ export const ParticipantDashboardPage: React.FC = () => {
       return;
     }
     const uid = flagKey();
-    if (uid) markLineupConfirmed(uid);
+    if (uid) markLineupConfirmed(uid, result.confirmed_at);
     setLineupConfirmed(true);
     toast.success(result.message ?? 'Your events are confirmed - check your email.');
   };

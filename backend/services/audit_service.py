@@ -10,6 +10,7 @@ admin activity, which is not participant data and outlives any one data model.
 """
 
 from typing import Any, Dict, Optional
+from urllib.parse import quote
 
 from flask import g, request
 
@@ -28,16 +29,17 @@ def log_action(
     target_id: Optional[str] = None,
     reason: Optional[str] = None,
     detail: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> bool:
     """
-    Record one admin action.
+    Record one admin action. Returns whether the row was written - almost every
+    caller ignores that, but for LINEUP_REOPEN the row is the whole action.
 
     action      PAYMENT_APPROVE | PAYMENT_REJECT | EVENT_CLOSE | EXPORT | ...
     target_type participant | event | team | registration | setting
     """
     try:
         admin = getattr(g, "admin", None) or {}
-        http.post(
+        r = http.post(
             f"{SUPABASE_URL}/rest/v1/admin_audit_log",
             headers=get_headers(prefer_return="minimal"),
             timeout=TIMEOUT,
@@ -52,8 +54,38 @@ def log_action(
                 "ip": request.headers.get("X-Forwarded-For", request.remote_addr),
             },
         )
+        if r.status_code in (200, 201, 204):
+            return True
+        print(f"[Audit] write refused for {action}: HTTP {r.status_code} {r.text[:200]}")
+        return False
     except Exception as e:  # noqa: BLE001 — never re-raise, see module docstring
         print(f"[Audit] write failed for {action}: {type(e).__name__}: {e}")
+        return False
+
+
+def latest_at(action: str, target_type: str, target_id: str) -> Optional[str]:
+    """
+    When `action` was last recorded against this target, or None.
+
+    For the few actions that are also state something else has to see -
+    LINEUP_REOPEN is read by the participant dashboard. Never raises: None is
+    "not known", which callers treat the same as "never happened".
+    """
+    try:
+        r = http.get(
+            f"{SUPABASE_URL}/rest/v1/admin_audit_log?select=created_at"
+            f"&action=eq.{quote(action, safe='')}"
+            f"&target_type=eq.{quote(target_type, safe='')}"
+            f"&target_id=eq.{quote(str(target_id), safe='')}"
+            f"&order=created_at.desc&limit=1",
+            headers=get_headers(),
+            timeout=TIMEOUT,
+        )
+        rows = r.json() if r.status_code == 200 else []
+        return rows[0].get("created_at") if rows else None
+    except Exception as e:  # noqa: BLE001
+        print(f"[Audit] read of {action} for {target_id} failed: {type(e).__name__}: {e}")
+        return None
 
 
 def recent(limit: int = 50, offset: int = 0) -> list:

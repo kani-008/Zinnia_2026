@@ -7,6 +7,7 @@
 // registration are handled by the same branch.
 
 import type {
+  ConfirmLineupResponse,
   CreateTeamRequest,
   DashboardResponse,
   EventCode,
@@ -313,8 +314,8 @@ export const registerForEvent = (
  * "I am done picking." The only call that emails the event list — registrations
  * are already live before this, so it changes nothing except sending the mail.
  */
-export const confirmLineup = (): Promise<MutationResponse> =>
-  request<MutationResponse>('/api/participant/events/confirm', { method: 'POST', auth: true });
+export const confirmLineup = (): Promise<ConfirmLineupResponse> =>
+  request<ConfirmLineupResponse>('/api/participant/events/confirm', { method: 'POST', auth: true });
 
 export const cancelRegistration = (eventCode: EventCode): Promise<MutationResponse> =>
   request<MutationResponse>('/api/participant/events/cancel', {

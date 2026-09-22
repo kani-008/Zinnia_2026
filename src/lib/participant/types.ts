@@ -236,9 +236,13 @@ export type DashboardResponse = ApiResult<{
   catalog: DashboardCatalogCard[];
   capacity: Partial<Record<EventCode, number | null>>;
   pending_invites: PendingInvite[];
+  /** When an admin last reopened event picking for this participant. */
+  lineup_reopened_at?: string | null;
 }>;
 
 export type MutationResponse = ApiResult<{ message?: string }>;
+
+export type ConfirmLineupResponse = ApiResult<{ message?: string; confirmed_at?: string }>;
 
 /* ==========================================================================
    Teams (§4.3 / Phase 5)
