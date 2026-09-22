@@ -477,6 +477,56 @@ def test_the_invite_uses_the_agreed_wording_and_the_pass_code_as_the_qr():
     assert not res["success"] and "not configured" in res["error"], "no SMTP in tests: refused, never sent"
 
 
+def test_invites_reuse_a_few_gmail_connections_instead_of_logging_in_for_each():
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    stats = {"logins": 0, "open": 0, "max_open": 0, "sent": 0}
+    lock = threading.Lock()
+
+    class FakeSMTP:
+        def __init__(self, *a, **k):
+            with lock:
+                stats["open"] += 1
+                stats["max_open"] = max(stats["max_open"], stats["open"])
+            self.busy = False
+        def ehlo(self): pass
+        def starttls(self): pass
+        def login(self, *a):
+            with lock:
+                stats["logins"] += 1
+        def noop(self): return (250, b"ok")
+        def send_message(self, msg, to_addrs=None):
+            assert not self.busy, "one connection carried two messages at once"
+            self.busy = True
+            import time; time.sleep(0.02)
+            self.busy = False
+            with lock:
+                stats["sent"] += 1
+        def close(self):
+            with lock:
+                stats["open"] -= 1
+
+    saved = (smtplib.SMTP, email_service.SMTP_USER, email_service.SMTP_PASS, email_service.SMTP_PORT)
+    smtplib.SMTP = FakeSMTP
+    email_service.SMTP_USER, email_service.SMTP_PASS, email_service.SMTP_PORT = "demo@x.in", "pw", 587
+    email_service._pool.clear()
+    try:
+        juniors_ = [{"name": f"J{i}", "email": f"j{i}@x.in", "pass_code": f"ZIN26-J{i:03d}"} for i in range(1, 11)]
+        with ThreadPoolExecutor(max_workers=3) as ex:   # the page's PARALLEL
+            results = list(ex.map(email_service.send_junior_invite_email, juniors_))
+        assert all(r["success"] for r in results), results
+        assert stats["sent"] == 10
+        assert stats["logins"] <= 3, f"logged in {stats['logins']} times for 10 invites - not reused"
+        assert stats["max_open"] <= email_service._POOL_MAX, stats
+        assert stats["open"] == len(email_service._pool) <= email_service._POOL_MAX, "a connection was left dangling"
+    finally:
+        for conn, _ in list(email_service._pool):
+            conn.close()
+        email_service._pool.clear()
+        smtplib.SMTP, email_service.SMTP_USER, email_service.SMTP_PASS, email_service.SMTP_PORT = saved
+
+
 def test_the_invite_shows_a_name_as_text_and_goes_to_one_address_only():
     html = email_service.generate_junior_invite_email_html("A&B <Ravi>", "Veg", "ZIN26-J417")
     assert "A&amp;B &lt;Ravi&gt;" in html and "<Ravi>" not in html

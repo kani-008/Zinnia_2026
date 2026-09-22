@@ -8,6 +8,8 @@ import os
 import io
 import base64
 import smtplib
+import threading
+import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -1093,6 +1095,66 @@ def generate_junior_invite_email_html(name: str, food: str, pass_code: str, qr_c
     """
 
 
+# --- a small pool of Gmail connections, for the junior invites ---------------------
+#
+# Opening a fresh connection costs about two seconds before anything is sent
+# (connect, TLS, login) and another third of a second to hang up - most of the
+# time an invite took. Invites go out back to back and a few at once, so a few
+# logged-in connections are kept here and reused: each invite borrows one, sends,
+# and hands it back. A connection only ever carries one message at a time, one
+# that has sat idle is checked before use, and any failure closes it so the next
+# invite opens a fresh one. A failed invite is never retried here, so nobody is
+# mailed twice.
+
+_pool_lock = threading.Lock()
+_pool: List[Any] = []            # idle connections: (connection, last used)
+_POOL_MAX = 4                    # at least the page's PARALLEL
+_SMTP_IDLE_CHECK_SECONDS = 20
+
+
+def _close_quietly(conn) -> None:
+    try:
+        conn.close()
+    except Exception:
+        pass
+
+
+def _open_invite_connection():
+    if SMTP_PORT == 465:
+        conn = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15)
+    else:
+        conn = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15)
+        conn.ehlo()
+        conn.starttls()
+        conn.ehlo()
+    conn.login(SMTP_USER, SMTP_PASS)
+    return conn
+
+
+def _take_invite_connection():
+    with _pool_lock:
+        item = _pool.pop() if _pool else None
+    if item is not None:
+        conn, used = item
+        if time.monotonic() - used <= _SMTP_IDLE_CHECK_SECONDS:
+            return conn
+        try:
+            if conn.noop()[0] == 250:
+                return conn
+        except Exception:
+            pass
+        _close_quietly(conn)
+    return _open_invite_connection()
+
+
+def _give_back_invite_connection(conn) -> None:
+    with _pool_lock:
+        if len(_pool) < _POOL_MAX:
+            _pool.append((conn, time.monotonic()))
+            return
+    _close_quietly(conn)
+
+
 def send_junior_invite_email(junior: Dict[str, Any]) -> Dict[str, Any]:
     """
     One first-year's invite and lunch pass: {name, email, food_preference, pass_code}.
@@ -1159,21 +1221,16 @@ Final Year, CSE
     qr_file.add_header("Content-Disposition", "attachment", filename=f"zinnia2026-lunch-pass-{pass_code}.png")
     msg.attach(qr_file)
 
+    conn = None
     try:
-        if SMTP_PORT == 465:
-            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=15) as server:
-                server.login(SMTP_USER, SMTP_PASS)
-                server.send_message(msg, to_addrs=[recipient])
-        else:
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.login(SMTP_USER, SMTP_PASS)
-                server.send_message(msg, to_addrs=[recipient])
+        conn = _take_invite_connection()
+        conn.send_message(msg, to_addrs=[recipient])
+        _give_back_invite_connection(conn)
         print(f"[Email] Junior invite sent to {recipient} for {pass_code}")
         return {"success": True, "status": "SENT", "recipient": recipient}
     except Exception as e:
+        if conn is not None:
+            _close_quietly(conn)
         print(f"[SMTP Error] Junior invite to {recipient} failed: {e}")
         return {"success": False, "status": "FAILED", "recipient": recipient, "error": str(e)}
 

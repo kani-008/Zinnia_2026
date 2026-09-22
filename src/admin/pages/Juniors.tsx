@@ -11,13 +11,10 @@ import type { Junior, JuniorCounts, JuniorPreviewRow } from '../types';
  *
  * Upload a sheet of Name / Email / Food, check the preview, add the juniors -
  * each gets a shuffled code (ZIN26-J417) - then send the invites. Sending runs here in
- * the browser, one junior per request with a pause between mails, so no request
- * runs long and the mail server is not flooded. Lunch shows once the food
- * counter's scanner has recorded the pass.
+ * the browser, one junior per request, each starting as soon as the one before
+ * has finished, so no request runs long and there is no waiting between mails.
+ * Lunch shows once the food counter's scanner has recorded the pass.
  */
-
-/** Seconds between two invites. */
-const GAP_SECONDS = 4;
 
 const foodLabel = (f: string) => (f === 'NON_VEG' ? 'Non-veg' : f === 'VEG' ? 'Veg' : '—');
 
@@ -28,17 +25,15 @@ function errorText(e: unknown, fallback: string) {
   return e instanceof Error && e.message ? e.message : fallback;
 }
 
-/** Waits `seconds`, ticking `onTick(left)` each second; returns early once `stop()` is true. */
-async function pause(seconds: number, stop: () => boolean, onTick: (left: number) => void) {
-  for (let left = seconds; left > 0; left--) {
-    if (stop()) return;
-    onTick(left);
-    await new Promise((r) => window.setTimeout(r, 1000));
-  }
-  onTick(0);
-}
+type Sending = { done: number; total: number; current: string };
 
-type Sending = { done: number; total: number; current: string; wait: number };
+/**
+ * Invites in flight at once. Each one spends most of its time waiting on Gmail,
+ * so a few side by side cut a list of 60 from minutes to about a minute - well
+ * inside Gmail's limit on connections per account. Every junior is still sent
+ * exactly once: the server claims the row before mailing.
+ */
+const PARALLEL = 3;
 
 export function Juniors() {
   const { data, error, loading, reload } = useAdminQuery<{ juniors: Junior[]; counts: JuniorCounts }>(
@@ -150,33 +145,39 @@ export function Juniors() {
     let sent = 0;
     let failed = 0;
     let skipped = 0;
-    let i = 0;
-    for (; i < ids.length; i++) {
-      if (stopRef.current) break;
-      setSending({ done: i, total: ids.length, current: ids[i], wait: 0 });
-      const now = latest.current.find((j) => j.junior_id === ids[i]);
-      if (!now || now.invite_status === 'SENT') {
-        skipped += 1; // removed, or sent from somewhere else, since the run began
-        continue;
+    let next = 0; // the next junior to start
+    let done = 0;
+    setSending({ done: 0, total: ids.length, current: ids[0] });
+
+    // A few workers take juniors from the list in order, each starting its next
+    // one the moment its last one is finished - no waiting between mails.
+    const worker = async () => {
+      while (!stopRef.current && next < ids.length) {
+        const id = ids[next++];
+        const now = latest.current.find((j) => j.junior_id === id);
+        if (!now || now.invite_status === 'SENT') {
+          skipped += 1; // removed, or sent from somewhere else, since the run began
+        } else {
+          try {
+            await adminFetch(`/api/admin/juniors/${encodeURIComponent(id)}/send`, { method: 'POST' });
+            sent += 1;
+          } catch (e) {
+            // ALREADY_SENT / BUSY / NOT_FOUND: someone else dealt with this junior.
+            // Anything else is recorded as FAILED on the server, with the reason.
+            const code = e instanceof AdminError ? e.code : '';
+            if (code === 'ALREADY_SENT' || code === 'BUSY' || code === 'NOT_FOUND') skipped += 1;
+            else failed += 1;
+          }
+          // The list refreshes in the background; the server's own "already
+          // sent" check means a stale list never mails twice.
+          void reload();
+        }
+        done += 1;
+        setSending({ done, total: ids.length, current: id });
       }
-      try {
-        await adminFetch(`/api/admin/juniors/${encodeURIComponent(ids[i])}/send`, { method: 'POST' });
-        sent += 1;
-      } catch (e) {
-        // ALREADY_SENT / BUSY / NOT_FOUND: someone else dealt with this junior.
-        // Anything else is recorded as FAILED on the server, with the reason.
-        const code = e instanceof AdminError ? e.code : '';
-        if (code === 'ALREADY_SENT' || code === 'BUSY' || code === 'NOT_FOUND') skipped += 1;
-        else failed += 1;
-      }
-      await reload();
-      if (i < ids.length - 1) {
-        await pause(GAP_SECONDS, () => stopRef.current, (left) =>
-          setSending({ done: i + 1, total: ids.length, current: ids[i + 1], wait: left }),
-        );
-      }
-    }
-    const stoppedEarly = i < ids.length;
+    };
+    await Promise.all(Array.from({ length: Math.min(PARALLEL, ids.length) }, worker));
+    const stoppedEarly = next < ids.length;
     setSending(null);
     await reload();
     const parts = [`${sent} sent`];
@@ -354,7 +355,7 @@ export function Juniors() {
       <Card>
         <SectionTitle
           title="Juniors"
-          hint={`invites go one at a time, ${GAP_SECONDS} seconds apart`}
+          hint={`invites go ${PARALLEL} at a time, no waiting between them`}
           right={
             // Stop is NOT put where Send was: the second click of a double-click
             // would land on it and end the run after one invite.
@@ -377,7 +378,6 @@ export function Juniors() {
                 <Loader2 className="h-4 w-4 animate-spin text-indigo-300" />
                 Sending {Math.min(sending.done + 1, sending.total)} of {sending.total}
                 <span className="font-mono text-indigo-200">{sending.current}</span>
-                {sending.wait > 0 && <span className="text-white/45">· next in {sending.wait} s</span>}
                 <span className="ml-auto">
                   <Button variant="danger" onClick={() => (stopRef.current = true)}>
                     <Square className="h-3.5 w-3.5" /> Stop

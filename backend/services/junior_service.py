@@ -16,8 +16,8 @@ counter's scanner records their lunch in zin26.food_attendance under the same
 code, which migration 019 made possible; this module only reads that table to
 show who has eaten.
 
-Sending is one junior per request. The admin page walks the list with a pause
-between mails, so no request runs long and the mail server is not flooded.
+Sending is one junior per request. The admin page walks the list, each mail
+going as soon as the previous one has finished, so no request runs long.
 """
 
 from __future__ import annotations
