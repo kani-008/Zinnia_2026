@@ -1,13 +1,6 @@
 import { EventMission } from '../types';
 import { PAPER_VERSE_PPT_DUE, SITE_CONFIG } from './site';
 
-/**
- * zin26 event code -> the id used by OFFICIAL_MISSIONS below.
- *
- * The rule engine and this marketing catalog were written at different times
- * and never shared identifiers; this is the one bridge between them, used by
- * the Events page to put live state (closed, full) on the right card.
- */
 export const MISSION_ID_BY_EVENT_CODE: Record<string, string> = {
   DEBUGGING: 'debugging',
   LAST_SIGNAL: 'the-last-signal',

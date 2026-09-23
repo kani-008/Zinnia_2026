@@ -4,6 +4,7 @@ import { ArrowRight, Clock, MapPin, Trophy, Users, X, Zap } from 'lucide-react';
 import { EventMission } from '../../types';
 import { loadSession } from '../../lib/participant/api';
 import { REGISTRATION_CLOSED_LABEL, useRegistrationClosed } from '../../lib/registrationWindow';
+import { useClosedEventNotes } from '../../lib/eventStatus';
 
 /**
  * The event detail modal — briefing, rules, prizes, coordinators, register CTA.
@@ -72,8 +73,8 @@ export interface EventDetailModalProps {
   onRegisterFx?: () => void;
   /**
    * Said in place of the event's own urgency note once registration is over
-   * for it — closed on the admin panel, or every slot taken. The caller reads
-   * that from the server, so the popup itself stays a pure renderer.
+   * for it — closed on the admin panel, or every slot taken. The popup asks
+   * the server itself; this only overrides what it finds.
    */
   closedNote?: string | null;
 }
@@ -88,6 +89,9 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
   // Declared up here with the other hooks: React counts them, and the early
   // return below would otherwise make the count change when an event is picked.
   const closed = useRegistrationClosed();
+  // Every page that opens this popup - Home, Events, the schedule - gets the
+  // same live answer, instead of each one remembering to pass it in.
+  const liveNotes = useClosedEventNotes();
 
   // Freeze the page behind the overlay. Home and the schedule view each had
   // this; the events page did not, so its background scrolled under the modal.
@@ -105,6 +109,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
   if (!event) return null;
 
   const isTech = event.event_type === 'TECH';
+  const note = closedNote || liveNotes[event.id] || null;
 
   // Someone already registered picks events on their dashboard; sending them
   // back to the sign-up form offers a registration they cannot make. Deciding
@@ -218,14 +223,14 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             the briefing because it changes what you do, not what you know:
             someone who reads the brief first and the warning second has
             already spent the time they were being told to save. */}
-        {(closedNote || event.urgency_note) && (
+        {(note || event.urgency_note) && (
           <div className="relative border-2 border-[#F5D90A] bg-[#2A2410] px-3.5 py-3 shadow-[4px_4px_0px_#8A7400] -rotate-1">
             <span className="absolute -top-2.5 left-3 border-2 border-[#F5D90A] bg-[#F5D90A] px-1.5 font-mono text-[9px] font-black uppercase tracking-widest text-[#0D0D0F]">
               Heads up
             </span>
             <p className="flex items-start gap-2 font-mono text-xs sm:text-sm font-bold leading-relaxed text-[#F5D90A]">
               <Zap className="mt-0.5 w-3.5 h-3.5 shrink-0" />
-              <span>{closedNote || event.urgency_note}</span>
+              <span>{note || event.urgency_note}</span>
             </p>
           </div>
         )}

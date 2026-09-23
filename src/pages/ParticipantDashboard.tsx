@@ -692,7 +692,10 @@ export const ParticipantDashboardPage: React.FC = () => {
                             // above or the card edge below; px-4/py-3.5 and
                             // break-words keep long rules inside the border.
                             <div className="my-4 w-full overflow-hidden bg-[#0B0D10]/95 border-2 border-dashed border-[#23262D] px-4 py-3.5 text-left space-y-2.5 break-words">
-                              {mission.urgency_note && (
+                              {/* Not while the card is locked: "register as soon as you can" is
+    stale advice once the event is full, closed or clashing, and the
+    card already says which of those it is. */}
+{!locked && mission.urgency_note && (
                                 <p className="flex items-start gap-1.5 border-2 border-[#E5BD00] bg-[#2A2410] px-2.5 py-2 font-mono text-[10.5px] font-bold leading-relaxed text-[#E5BD00] shadow-[3px_3px_0px_#8A7400] -rotate-1">
                                   <ComicBolt tone="yellow" className="mt-0.5 h-3 w-3 shrink-0" />
                                   <span>{mission.urgency_note}</span>
@@ -1017,7 +1020,10 @@ export const ParticipantDashboardPage: React.FC = () => {
 
         {open && mission && (
           <div className="my-4 w-full overflow-hidden border-t-2 border-dashed border-[#23262D] pt-3.5 pb-1 space-y-2.5 break-words">
-            {mission.urgency_note && (
+            {/* Not while the card is locked: "register as soon as you can" is
+    stale advice once the event is full, closed or clashing, and the
+    card already says which of those it is. */}
+{!locked && mission.urgency_note && (
               <p className="flex items-start gap-1.5 border-2 border-[#E5BD00] bg-[#2A2410] px-2.5 py-2 font-mono text-[10.5px] font-bold leading-relaxed text-[#E5BD00] shadow-[3px_3px_0px_#8A7400] -rotate-1">
                 <ComicBolt tone="yellow" className="mt-0.5 h-3 w-3 shrink-0" />
                 <span>{mission.urgency_note}</span>
