@@ -72,6 +72,7 @@ import {
   ComicSectionTitle,
 } from '../components/ui/comic';
 import { toast, useToastOn } from '../components/ui/toast';
+import { useRegistrationClosed } from '../lib/registrationWindow';
 import { GENERAL_NOTES, notesFor } from '../config/eventRegistrationNotes';
 
 interface DashboardData {
@@ -232,6 +233,9 @@ export const ParticipantDashboardPage: React.FC = () => {
   const [showRules, setShowRules] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [lineupConfirmed, setLineupConfirmed] = useState(false);
+  // Registration is over: the page still shows everything, but it stops
+  // offering changes the server would refuse.
+  const registrationClosed = useRegistrationClosed();
 
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1337,9 +1341,10 @@ export const ParticipantDashboardPage: React.FC = () => {
                     </p>
                   </div>
 
-                  {/* Cancel disappears once they have confirmed the line-up:
-                      the point of confirming is that the picking is over. */}
-                  {!lineupConfirmed && (
+                  {/* Cancel disappears once they have confirmed the line-up -
+                      the point of confirming is that the picking is over - and
+                      once registrations close, when the server refuses it. */}
+                  {!lineupConfirmed && !registrationClosed && (
                     <button
                       onClick={() => void onCancel(reg.event_code, reg.event_name)}
                       disabled={busyEvent === reg.event_code}
@@ -1375,8 +1380,9 @@ export const ParticipantDashboardPage: React.FC = () => {
                   )}
                 </button>
                 <p className="text-center font-mono text-[11px] leading-relaxed text-[#71767B]">
-                  Confirm to get the list emailed to you. You can still change
-                  them until registrations close.
+                  {registrationClosed
+                    ? 'Registrations are closed, so this list is final. Confirm to get it emailed to you.'
+                    : 'Confirm to get the list emailed to you. You can still change them until registrations close.'}
                 </p>
               </div>
             )}

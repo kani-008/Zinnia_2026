@@ -376,7 +376,7 @@ const EMPTY_FORM: WalkInForm = {
   department: '',
   year: '',
   food_preference: 'VEG',
-  payment_method: 'CASH',
+  payment_method: 'UPI',
 };
 
 /**
@@ -778,8 +778,8 @@ function WalkInCard({
                   disabled={busy}
                   onChange={(v) => set('payment_method', v)}
                   options={[
-                    { value: 'CASH', label: 'Cash' },
                     { value: 'UPI', label: 'UPI' },
+                    { value: 'CASH', label: 'Cash' },
                   ]}
                 />
               </div>
@@ -1768,7 +1768,9 @@ function PersonPanel({
 export function SpotDesk() {
   const { user } = useAdminAuth();
   const [round, setRound] = useState(0);
-  const [method, setMethod] = useState<SpotPaymentMethod>('CASH');
+  // UPI first: it is what most walk-ins pay with, and a desk that takes cash
+  // switches once and stays there for the rest of the queue (onMethodChange).
+  const [method, setMethod] = useState<SpotPaymentMethod>('UPI');
   const [passMail, setPassMail] = useState<Record<string, PassMail>>({});
 
   // Closing the tab mid-send would leave nobody knowing whether it went.
