@@ -29,7 +29,7 @@ export interface EventRegistrationNotes {
 export const GENERAL_NOTES: EventNote[] = [
   { tone: 'info', text: 'You can hold at most 3 events in total. Every event counts towards that 3, including Paper Verse and Short Film.' },
   { tone: 'info', text: 'For a team event you register as the captain. Every teammate has to accept from their own dashboard before the team is confirmed.' },
-  { tone: 'info', text: 'You can cancel freely until registrations close on 23 September at 9:00 PM. After that no self-service changes.' },
+  { tone: 'info', text: 'You can cancel freely until registrations close on 23 September at 7:30 PM. After that no self-service changes.' },
 ];
 
 export const EVENT_NOTES: Record<string, EventRegistrationNotes> = {

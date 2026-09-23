@@ -1,7 +1,7 @@
 """
 Zinnia 2026 — on-spot registration desk (admin panel).
 
-Walk-ins on the fest day. The website's registration closes at 9:00 PM on
+Walk-ins on the fest day. The website's registration closes at 7:30 PM on
 23 September (rules_engine._CLOSES_DEFAULT and zin26.events.reg_closes_at).
 This desk is the one path that keeps registering after that, and only through
 an authenticated TREASURER, SUPER_ADMIN or desk-only SPOT_DESK session - the
@@ -742,7 +742,7 @@ def _claim_seat(user_id: str, event_code: str, team_id: Optional[str] = None) ->
 
     While online registration is open, the locking database function goes
     first, because it re-counts capacity under a row lock. Once the event's
-    reg_closes_at has passed - 9:00 PM on 23 September, and all of the fest
+    reg_closes_at has passed - 7:30 PM on 23 September, and all of the fest
     day - that function refuses every call, so the desk does not try it: it
     writes the row itself, after re-checking what the function would have:
     the event is still open on the Events page, and there is still a seat.

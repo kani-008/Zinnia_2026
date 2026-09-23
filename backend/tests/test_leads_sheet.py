@@ -202,11 +202,26 @@ def test_the_deadline_counts_from_capture_not_from_finish():
 
 def _registration_harness(sheet_endpoint, email_behaviour="ok"):
     """Run the real register_participant with its outside world stubbed."""
+    import datetime as real_dt
+    import types
+
     from services import participant_service as ps
     from services import participant_auth_service as auth
     from services.email_service import RecipientRefused
 
     ps.db.select_one = lambda *a, **k: None          # no existing participant
+
+    # These tests are about the leads sheet, not the calendar: the clock is held
+    # while the website is open, so they keep passing after registration closes.
+    fixed = real_dt.datetime.fromisoformat("2026-09-20T10:00:00+05:30")
+
+    class Frozen(real_dt.datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return fixed.astimezone(tz) if tz else fixed
+
+    ps.dt = types.SimpleNamespace(
+        datetime=Frozen, timezone=real_dt.timezone, timedelta=real_dt.timedelta)
 
     def fake_send(details, otp):
         if email_behaviour == "refused":

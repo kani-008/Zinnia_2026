@@ -177,7 +177,7 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
     from services.email_service import RecipientRefused
     from services.participant_auth_service import send_pending_otp_email
 
-    # The website closes at 9:00 PM on 23 September. The on-spot desk does not
+    # The website closes at 7:30 PM on 23 September. The on-spot desk does not
     # come through here at all (services/spot_registration_service.py), so it
     # keeps registering walk-ins on the fest day.
     if dt.datetime.now(dt.timezone.utc) > _website_closes_at():
@@ -185,7 +185,7 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
             "success": False,
             "error_code": "REGISTRATION_CLOSED",
             "message": (
-                "Online registration closed at 9:00 PM on 23 September. "
+                "Online registration closed at 7:30 PM on 23 September. "
                 "You can still join at the on-spot desk on the day."
             ),
         }

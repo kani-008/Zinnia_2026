@@ -715,38 +715,38 @@ def test_ignore_close_date_lifts_r14_for_on_campus_events_only():
 
 
 # ==============================================================================
-# 9:00 PM on 23 September: the website closes, the desk does not
+# 7:30 PM on 23 September: the website closes, the desk does not
 # ==============================================================================
 
-AT_9_30_PM = "2026-09-23T21:30:00+05:30"   # after the online close, before the old 11:59 PM one
-AT_8_59_PM = "2026-09-23T20:59:00+05:30"
+AFTER_CLOSE = "2026-09-23T20:00:00+05:30"   # after the online close, still the night before the fest
+BEFORE_CLOSE = "2026-09-23T19:29:00+05:30"
 ON_CAMPUS_SOLO = ("DEBUGGING", "LAST_SIGNAL", "LOST_IN_SQL")
 ON_CAMPUS_TEAMS = {"GADGET_CODES": 2, "PAPER_PRESENTATION": 3, "BORDERLAND": 3, "THINK_STRIKE_WIN": 2, "PLOT_TWIST": 3}
 
 
-def test_online_registration_closes_at_9_pm_ist_on_the_23rd():
+def test_online_registration_closes_at_7_30_pm_ist_on_the_23rd():
     closes = real_dt.datetime.fromisoformat(rules._CLOSES_DEFAULT)
-    assert closes == real_dt.datetime.fromisoformat("2026-09-23T21:00:00+05:30"), rules._CLOSES_DEFAULT
+    assert closes == real_dt.datetime.fromisoformat("2026-09-23T19:30:00+05:30"), rules._CLOSES_DEFAULT
     on_campus = [c for c in rules.EVENTS if c != "SHORT_FILM"]
     assert all(rules.EVENTS[c].reg_closes_at == rules._CLOSES_DEFAULT for c in on_campus)
     for code in on_campus:
         before = rules.can_register(payment_status="APPROVED", event_code=code, existing=[],
-                                    now=real_dt.datetime.fromisoformat(AT_8_59_PM))
+                                    now=real_dt.datetime.fromisoformat(BEFORE_CLOSE))
         after = rules.can_register(payment_status="APPROVED", event_code=code, existing=[],
-                                   now=real_dt.datetime.fromisoformat(AT_9_30_PM))
+                                   now=real_dt.datetime.fromisoformat(AFTER_CLOSE))
         assert before.code != "REGISTRATION_CLOSED", (code, before.code)
         assert after.code == "REGISTRATION_CLOSED", (code, after.code)
 
 
-@with_harness(AT_8_59_PM)
-def test_the_website_still_registers_at_8_59_pm(h):
+@with_harness(BEFORE_CLOSE)
+def test_the_website_still_registers_just_before_the_close(h):
     uid = h.walk_in()["participant"]["user_id"]
     res = regs.register_individual(uid, "DEBUGGING")
     assert res["success"], res
 
 
-@with_harness(AT_9_30_PM)
-def test_after_9_pm_the_website_refuses_every_on_campus_event(h):
+@with_harness(AFTER_CLOSE)
+def test_after_the_online_close_the_website_refuses_every_on_campus_event(h):
     from services import team_service
 
     uid = h.walk_in()["participant"]["user_id"]
@@ -760,8 +760,8 @@ def test_after_9_pm_the_website_refuses_every_on_campus_event(h):
     assert not h.fake.tables["registrations"] and not h.fake.tables["teams"]
 
 
-@with_harness(AT_9_30_PM)
-def test_after_9_pm_the_desk_registers_every_individual_on_campus_event(h):
+@with_harness(AFTER_CLOSE)
+def test_after_the_online_close_the_desk_registers_every_individual_on_campus_event(h):
     for code in ON_CAMPUS_SOLO:
         uid = h.walk_in(email=f"{code.lower()}@test.com")["participant"]["user_id"]
         res = spot.register_event(uid, code)
@@ -770,8 +770,8 @@ def test_after_9_pm_the_desk_registers_every_individual_on_campus_event(h):
         assert row and row["status"] == "CONFIRMED" and row["source"] == "SPOT", (code, row)
 
 
-@with_harness(AT_9_30_PM)
-def test_after_9_pm_the_desk_makes_a_team_for_every_team_event(h):
+@with_harness(AFTER_CLOSE)
+def test_after_the_online_close_the_desk_makes_a_team_for_every_team_event(h):
     for code, size in ON_CAMPUS_TEAMS.items():
         ids = [h.walk_in(email=f"{code.lower()}{i}@test.com")["participant"]["user_id"] for i in range(size)]
         res = spot.create_team(code, f"{code} desk team", ids, topic="Desk topic")
@@ -782,8 +782,8 @@ def test_after_9_pm_the_desk_makes_a_team_for_every_team_event(h):
         assert len(rows) == size and all(r["status"] == "CONFIRMED" and r["source"] == "SPOT" for r in rows), (code, rows)
 
 
-@with_harness(AT_9_30_PM)
-def test_after_9_pm_the_desk_sees_every_on_campus_event_open(h):
+@with_harness(AFTER_CLOSE)
+def test_after_the_online_close_the_desk_sees_every_on_campus_event_open(h):
     uid = h.walk_in()["participant"]["user_id"]
     detail = spot.person_detail(uid)
     closed = [c["event_code"] for c in detail["catalog"]
@@ -794,8 +794,8 @@ def test_after_9_pm_the_desk_sees_every_on_campus_event_open(h):
         assert check["success"] and check["blocked_reason"] is None, (code, check)
 
 
-@with_harness(AT_9_30_PM)
-def test_after_9_pm_the_desk_never_depends_on_how_the_database_words_its_refusal(h):
+@with_harness(AFTER_CLOSE)
+def test_after_the_online_close_the_desk_never_depends_on_how_the_database_words_its_refusal(h):
     # Whatever the live function says once it has closed - even an error this
     # code has never seen - the desk does not ask it: it writes its own seat.
     calls = []
@@ -816,8 +816,8 @@ def test_after_9_pm_the_desk_never_depends_on_how_the_database_words_its_refusal
     assert not calls, "the closed function was still asked"
 
 
-@with_harness(AT_8_59_PM)
-def test_before_9_pm_the_desk_still_uses_the_locking_function(h):
+@with_harness(BEFORE_CLOSE)
+def test_before_the_online_close_the_desk_still_uses_the_locking_function(h):
     calls = []
     original = regs.rpc_register
     regs.rpc_register = lambda *a, **k: (calls.append(k), original(*a, **k))[1]
@@ -834,23 +834,23 @@ def _website_form(email="walk.up@test.com"):
             "department": "CSE", "year": "III", "food_preference": "VEG"}
 
 
-@with_harness(AT_9_30_PM)
-def test_after_9_pm_the_website_takes_no_new_registration_at_all(h):
+@with_harness(AFTER_CLOSE)
+def test_after_the_online_close_the_website_takes_no_new_registration_at_all(h):
     res = participants.register_participant(_website_form())
     assert not res["success"] and res["error_code"] == "REGISTRATION_CLOSED", res
     assert "on-spot desk" in res["message"], res
     assert not h.fake.tables["participants"], "a refused registration wrote a row"
 
 
-@with_harness(AT_9_30_PM)
-def test_after_9_pm_the_desk_still_registers_a_walk_in(h):
+@with_harness(AFTER_CLOSE)
+def test_after_the_online_close_the_desk_still_registers_a_walk_in(h):
     res = h.walk_in(email="after.nine@test.com")
     assert res["success"], res
     assert res["participant"]["payment_status"] == "APPROVED", res
 
 
-@with_harness(AT_8_59_PM)
-def test_before_9_pm_the_website_form_is_not_refused_for_being_late(h):
+@with_harness(BEFORE_CLOSE)
+def test_before_the_online_close_the_website_form_is_not_refused_for_being_late(h):
     try:
         res = participants.register_participant(_website_form(email="early.bird@test.com"))
     except Exception:
@@ -858,8 +858,8 @@ def test_before_9_pm_the_website_form_is_not_refused_for_being_late(h):
     assert res.get("error_code") != "REGISTRATION_CLOSED", res
 
 
-@with_harness(AT_9_30_PM)
-def test_after_9_pm_the_desk_can_still_remove_and_replace_an_event(h):
+@with_harness(AFTER_CLOSE)
+def test_after_the_online_close_the_desk_can_still_remove_and_replace_an_event(h):
     uid = h.walk_in()["participant"]["user_id"]
     assert spot.register_event(uid, "DEBUGGING")["success"]
     res = spot.cancel_event(uid, "DEBUGGING", ADMIN)

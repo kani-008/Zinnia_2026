@@ -134,7 +134,7 @@ export const ParticipantRegisterPage: React.FC = () => {
           <ComicHeading fluid>Registration closed</ComicHeading>
           <ComicPanel tone="yellow" className="mt-6">
             <p className="font-mono text-sm leading-relaxed text-[#EEEEEA]">
-              Online registration for Zinnia&rsquo;26 closed at 9:00 PM on 23 September.
+              Online registration for Zinnia&rsquo;26 closed at 7:30 PM on 23 September.
             </p>
             <p className="mt-3 font-mono text-sm leading-relaxed text-[#B8B8B2]">
               You can still join on the day at the on-spot desk, at the entrance.

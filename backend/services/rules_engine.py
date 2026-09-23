@@ -81,11 +81,11 @@ WINDOWS: Dict[str, WindowDef] = {
     AFTERNOON: WindowDef(AFTERNOON, "2:00-3:00", 60),
 }
 
-# 9:00 PM IST on 23 September - moved from the 22nd (migration 017), then from
-# 11:59 PM to 9:00 PM (migration 021), both on the organisers' instruction.
+# 7:30 PM IST on 23 September - moved from the 22nd (migration 017), then to
+# 9:00 PM (021) and then to 7:30 PM (022), each on the organisers' instruction.
 # zin26.events.reg_closes_at enforces the same instant inside the database
 # (register_participant_event), so both must change together.
-_CLOSES_DEFAULT = "2026-09-23T21:00:00+05:30"
+_CLOSES_DEFAULT = "2026-09-23T19:30:00+05:30"
 _CLOSES_SHORT_FILM = "2026-09-20T23:59:59+05:30"
 
 # Explicit display order for every catalog the participant sees. Sorting by
