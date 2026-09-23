@@ -97,6 +97,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
       'Skills tested: SELECT, WHERE, GROUP BY, HAVING, JOIN, subqueries, aggregate functions and data analysis.',
       'Objective: analyze the database, uncover hidden clues, eliminate suspects, and identify the culprit.',
       'Winning criteria: accuracy + speed + score.',
+      'requirements:laptop with charger'
       'For any queries, contact the event coordinators listed below.',
     ],
     coordinators: [
