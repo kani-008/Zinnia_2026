@@ -57,6 +57,13 @@ _HEADERS = {
              "veg/non-veg", "veg / non-veg", "veg or non-veg", "food type"},
 }
 
+# A heading is rarely just the word. Sheets come in with "Food Preference
+# (Veg / Non veg)", "Email ID :" or "Name of the student", so a column whose
+# heading only CONTAINS the word is taken when nothing matched it exactly.
+# Exact matches are claimed first, so a plain "Name" is never lost to a
+# "Name of college" sitting further left.
+_HEADER_WORDS = {"name": ("name",), "email": ("mail",), "food": ("food", "veg")}
+
 _VEG = {"veg", "v", "vegetarian", "veg."}
 _NON_VEG = {"non-veg", "non veg", "nonveg", "non_veg", "nv", "non-vegetarian", "non vegetarian", "nonvegetarian"}
 
@@ -71,6 +78,24 @@ def _now() -> str:
 
 def _norm_header(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value or "").strip().lower())
+
+
+def _columns(heads: List[str]) -> Dict[str, Optional[int]]:
+    """Which column holds the name, the email and the food, or None for each."""
+    cols: Dict[str, Optional[int]] = {
+        key: next((i for i, h in enumerate(heads) if h in names), None)
+        for key, names in _HEADERS.items()
+    }
+    taken = {i for i in cols.values() if i is not None}
+    for key, words in _HEADER_WORDS.items():
+        if cols[key] is not None:
+            continue
+        found = next((i for i, h in enumerate(heads)
+                      if i not in taken and any(w in h for w in words)), None)
+        if found is not None:
+            cols[key] = found
+            taken.add(found)
+    return cols
 
 
 def _food(value: Any) -> Optional[str]:
@@ -133,7 +158,7 @@ def read_sheet(filename: str, data: bytes) -> Tuple[List[Dict[str, Any]], str]:
     if start is None:
         return [], "The sheet has no rows."
     heads = [_norm_header(c) for c in table[start]]
-    cols = {key: next((i for i, h in enumerate(heads) if h in names), None) for key, names in _HEADERS.items()}
+    cols = _columns(heads)
     missing = [key.capitalize() for key, i in cols.items() if i is None]
     if missing:
         return [], (f"The first row must be the headings Name, Email and Food. Missing: {', '.join(missing)}.")

@@ -173,7 +173,7 @@ export const OFFICIAL_MISSIONS: EventMission[] = [
     /** Short form for the dashboard card; full list stays in `rules`. */
     card_rules: [
       'Teams of 2 to 3. You choose your own topic.',
-      '10 slides maximum.',
+      '8 slides maximum.',
       '8 minutes to present, then 2 minutes of Q&A.',
     ],
     rules: [

@@ -201,6 +201,37 @@ def test_an_xlsx_is_read_and_bad_rows_are_named_not_dropped():
     assert "Same email as row 2" in problems[5]
 
 
+def test_headings_with_extra_words_around_them_are_still_understood():
+    # The shape a department sheet actually arrives in.
+    rows, why = juniors.read_sheet("First year CSE.xlsx", _xlsx([
+        ["S.No", "Name", "Email", "Food Preference (Veg / Non veg)"],
+        [1, "Abishek M", "abishekmanivel8@gmail.com", "non veg"],
+        [2, "Angelina Suji S", "nglnsanthosh@gmail.com", "Veg"],
+    ]))
+    assert not why, why
+    assert [(r["name"], r["email"], r["food_preference"], r["problem"]) for r in rows] == [
+        ("Abishek M", "abishekmanivel8@gmail.com", "NON_VEG", ""),
+        ("Angelina Suji S", "nglnsanthosh@gmail.com", "VEG", ""),
+    ], rows
+
+    rows, why = juniors.read_sheet("j.csv", _csv(
+        "Sl,Name of the student,Student Email ID :,Veg / Non veg\nWrong,Ravi,ravi@x.in,v"))
+    assert not why, why
+    assert (rows[0]["name"], rows[0]["email"], rows[0]["food_preference"]) == ("Ravi", "ravi@x.in", "VEG"), rows
+
+
+def test_an_exact_heading_is_never_lost_to_a_longer_one_beside_it():
+    rows, why = juniors.read_sheet("j.csv", _csv(
+        "Name of college,Name,Parent email,Email,Food\nGCEE,Ravi,dad@x.in,ravi@x.in,Veg"))
+    assert not why, why
+    assert (rows[0]["name"], rows[0]["email"]) == ("Ravi", "ravi@x.in"), rows
+
+
+def test_a_sheet_with_no_food_column_at_all_is_still_refused():
+    why = juniors.read_sheet("j.csv", _csv("S.No,Name,Email\n1,Ravi,ravi@x.in"))[1]
+    assert "Missing: Food" in why, why
+
+
 def test_a_file_that_is_not_the_juniors_sheet_is_refused_whole():
     assert juniors.read_sheet("x.pdf", b"%PDF")[1].startswith("Upload the sheet as .xlsx or .csv")
     assert "Missing: Food" in juniors.read_sheet("x.csv", _csv("Name,Email\nA,a@x.in"))[1]
