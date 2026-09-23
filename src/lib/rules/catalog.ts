@@ -49,7 +49,7 @@ export const EVENTS: Record<EventCode, EventDef> = {
     type: 'SLOT',
     minTeam: 2,
     maxTeam: 3,
-    capacity: 30,
+    capacity: 45,
     durationMin: 15,
     window: null,
     blocks: [],

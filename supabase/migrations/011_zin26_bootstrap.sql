@@ -217,7 +217,7 @@ VALUES
     -- NOTE: this exceeds what 2 panels of fifteen-minute slots hold. B1-B4 is
     -- 180 minutes per panel = 12 slots each = 24. 30 teams needs a third panel,
     -- shorter slots, or more time - a scheduling decision, not a code one.
-    ('PAPER_PRESENTATION', 'Paper Verse',        'TECH',     'SLOT',    2, 3,   30, true,  true,   15, NULL,        false, true, '2026-09-23T19:30:00+05:30', 5),
+    ('PAPER_PRESENTATION', 'Paper Verse',        'TECH',     'SLOT',    2, 3,   45, false,  true,   15, NULL,        false, true, '2026-09-23T19:30:00+05:30', 5),
     ('BORDERLAND',         'Borderland @ GCEE',  'NON_TECH', 'FIXED',   2, 3, NULL, false, true,  120, NULL,        true,  true, '2026-09-23T19:30:00+05:30', 6),
     ('THINK_STRIKE_WIN',   'Think, Strike, Win', 'NON_TECH', 'FIXED',   2, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-23T19:30:00+05:30', 7),
     ('PLOT_TWIST',         'Plot Twist',         'NON_TECH', 'FIXED',   2, 3, NULL, false, true,   60, NULL,        false, true, '2026-09-23T19:30:00+05:30', 8),

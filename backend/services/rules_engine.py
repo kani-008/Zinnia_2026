@@ -125,11 +125,14 @@ TOPIC_MAX_LEN = 160
 
 EVENTS: Dict[str, EventDef] = {
     "PAPER_PRESENTATION": EventDef(
-        # capacity is 30 TEAMS, not 30 people: capacity_map() and
+        # capacity is 45 TEAMS, not 45 people: capacity_map() and
         # zin26.register_participant_event both count distinct teams for an
         # event with max_team > 1, so a team of 2 and a team of 3 each take one.
+        # It was 30 until the fest eve, when the organisers added 15 more for
+        # the on-spot desk (migration 023). The live zin26.events.capacity is
+        # what the database enforces; this constant keeps the two in step.
         "PAPER_PRESENTATION", "Paper Verse", "TECH", "SLOT",
-        2, 3, 30, 15, None, (), True, _CLOSES_DEFAULT,
+        2, 3, 45, 15, None, (), True, _CLOSES_DEFAULT,
     ),
     "GADGET_CODES": EventDef(
         "GADGET_CODES", "Gadget Codes", "TECH", "FIXED",

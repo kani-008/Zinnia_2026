@@ -1258,7 +1258,7 @@ def test_each_desk_login_sees_its_own_till_and_everyone_the_same_capacity(h):
     cap = {e["event_code"]: e for e in one["capacity"]}
     assert cap["DEBUGGING"]["used"] == 2 and cap["DEBUGGING"]["desk_used"] == 2
     pv = cap["PAPER_PRESENTATION"]
-    assert (pv["used"], pv["capacity"], pv["remaining"], pv["desk_used"]) == (1, 30, 29, 0), pv
+    assert (pv["used"], pv["capacity"], pv["remaining"], pv["desk_used"]) == (1, 45, 44, 0), pv
 
     everyone = panel.spot_summary(ADMIN)["summary"]
     assert everyone["scope"] == "ALL"

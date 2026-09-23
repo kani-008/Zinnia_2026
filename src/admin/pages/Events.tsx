@@ -21,13 +21,13 @@ import type { AdminEvent } from '../types';
 /**
  * Why an event's capacity might not be editable. The flag itself comes from
  * zin26.events.capacity_is_locked — the reason is copy, so it lives here.
- * Paper Verse runs on two panels of twelve 15-minute slots, which is
- * exactly what the timeline holds; setting it to 30 would mean discovering on
- * the day that six teams have nowhere to present.
+ *
+ * Paper Verse used to be locked at 2 panels × 12 slots. The organisers took
+ * that lock off on the fest eve to seat walk-in teams at the on-spot desk, so
+ * the number is now theirs to set here — with the timetable in mind: every
+ * team past the slots that exist needs a panel and a room that can hold it.
  */
-const LOCK_REASON: Record<string, string> = {
-  PAPER_PRESENTATION: '2 panels × 12 slots — fixed by the timetable',
-};
+const LOCK_REASON: Record<string, string> = {};
 const lockReason = (e: AdminEvent) =>
   e.capacity_is_locked ? LOCK_REASON[e.event_code] || 'fixed — not coordinator-editable' : null;
 
