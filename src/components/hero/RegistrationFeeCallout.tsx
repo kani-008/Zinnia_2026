@@ -17,6 +17,7 @@ const CLOSES_ON = new Intl.DateTimeFormat('en-IN', {
 }).format(new Date(CLOSES_DEFAULT));
 const CLOSES_AT = new Intl.DateTimeFormat('en-IN', {
   hour: 'numeric',
+  minute: '2-digit',
   hour12: true,
   timeZone: 'Asia/Kolkata',
 }).format(new Date(CLOSES_DEFAULT));

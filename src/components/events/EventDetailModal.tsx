@@ -85,6 +85,9 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
   closedNote = null,
 }) => {
   const navigate = useNavigate();
+  // Declared up here with the other hooks: React counts them, and the early
+  // return below would otherwise make the count change when an event is picked.
+  const closed = useRegistrationClosed();
 
   // Freeze the page behind the overlay. Home and the schedule view each had
   // this; the events page did not, so its background scrolled under the modal.
@@ -107,7 +110,6 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
   // back to the sign-up form offers a registration they cannot make. Deciding
   // it here means no caller can get it wrong.
   const signedIn = Boolean(loadSession());
-  const closed = useRegistrationClosed();
   const onRegister = () => {
     onRegisterFx?.();
     if (!signedIn && closed) return;   // registration is over
