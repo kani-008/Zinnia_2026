@@ -14,6 +14,7 @@ import { BookOpen, ExternalLink, Loader2, Utensils } from 'lucide-react';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { REGISTRATION_STEPS, REGISTRATION_USER_MANUAL_URL } from '../config/site';
 import { registerParticipant } from '../lib/participant/api';
+import { useRegistrationClosed } from '../lib/registrationWindow';
 import { readRegistrationDraft, saveRegistrationDraft } from '../lib/participant/draft';
 import type { ParticipantDetails } from '../lib/participant/types';
 import {
@@ -44,6 +45,7 @@ const EMPTY: ParticipantDetails = {
 
 export const ParticipantRegisterPage: React.FC = () => {
   const navigate = useNavigate();
+  const closed = useRegistrationClosed();
 
   // Restored from the draft when someone came back here from the verify screen
   // to fix their email; EMPTY on a first visit.
@@ -121,6 +123,44 @@ export const ParticipantRegisterPage: React.FC = () => {
       state: { codeSent: true, emailHint: result.email_hint },
     });
   };
+
+  // Reached by an old link or a page left open: the server refuses a new
+  // registration now, so the form would only waste someone's time.
+  if (closed) {
+    return (
+      <ComicPageShell>
+        <WebsiteNavbar />
+        <main className="mx-auto max-w-2xl w-full px-5 sm:px-8 pb-24 pt-10">
+          <ComicHeading fluid>Registration closed</ComicHeading>
+          <ComicPanel tone="yellow" className="mt-6">
+            <p className="font-mono text-sm leading-relaxed text-[#EEEEEA]">
+              Online registration for Zinnia&rsquo;26 closed at 9:00 PM on 23 September.
+            </p>
+            <p className="mt-3 font-mono text-sm leading-relaxed text-[#B8B8B2]">
+              You can still join on the day at the on-spot desk, at the entrance.
+              Already registered? Log in with your UserID to see your pass.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => navigate('/participant/login')}
+                className="border-2 border-[#0FA9C6] px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-[#0FA9C6] hover:bg-[#0FA9C6] hover:text-[#090A0B]"
+              >
+                Log in
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="border-2 border-[#23262D] px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-[#B8B8B2] hover:border-[#E5BD00] hover:text-[#E5BD00]"
+              >
+                Back to home
+              </button>
+            </div>
+          </ComicPanel>
+        </main>
+      </ComicPageShell>
+    );
+  }
 
   return (
     <ComicPageShell>

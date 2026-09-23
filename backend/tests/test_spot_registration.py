@@ -293,6 +293,8 @@ class Harness:
         self._patch(rules, "_dt", types.SimpleNamespace(
             datetime=Frozen, timezone=real_dt.timezone, timedelta=real_dt.timedelta))
         self._patch(spot, "_utcnow", lambda: fixed)
+        self._patch(participants, "dt", types.SimpleNamespace(
+            datetime=Frozen, timezone=real_dt.timezone, timedelta=real_dt.timedelta))
 
     def _send_pass(self, participant, on_spot=False):
         self.emails.append(participant.get("email"))
@@ -825,6 +827,35 @@ def test_before_9_pm_the_desk_still_uses_the_locking_function(h):
     finally:
         regs.rpc_register = original
     assert calls and calls[0].get("source") == "SPOT"
+
+
+def _website_form(email="walk.up@test.com"):
+    return {"name": "Walk Up", "email": email, "phone": "9812345678", "college": "GCEE",
+            "department": "CSE", "year": "III", "food_preference": "VEG"}
+
+
+@with_harness(AT_9_30_PM)
+def test_after_9_pm_the_website_takes_no_new_registration_at_all(h):
+    res = participants.register_participant(_website_form())
+    assert not res["success"] and res["error_code"] == "REGISTRATION_CLOSED", res
+    assert "on-spot desk" in res["message"], res
+    assert not h.fake.tables["participants"], "a refused registration wrote a row"
+
+
+@with_harness(AT_9_30_PM)
+def test_after_9_pm_the_desk_still_registers_a_walk_in(h):
+    res = h.walk_in(email="after.nine@test.com")
+    assert res["success"], res
+    assert res["participant"]["payment_status"] == "APPROVED", res
+
+
+@with_harness(AT_8_59_PM)
+def test_before_9_pm_the_website_form_is_not_refused_for_being_late(h):
+    try:
+        res = participants.register_participant(_website_form(email="early.bird@test.com"))
+    except Exception:
+        return   # it got past the close and failed later (mail is blocked in tests)
+    assert res.get("error_code") != "REGISTRATION_CLOSED", res
 
 
 @with_harness(AT_9_30_PM)

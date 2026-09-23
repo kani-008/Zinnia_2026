@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import zinniaSvg from '../../assets/zinnia.svg';
 import { clearSession, loadSession } from '../../lib/participant/api';
+import { useRegistrationClosed } from '../../lib/registrationWindow';
 
 interface MagneticElementProps {
   children: React.ReactNode;
@@ -60,6 +61,7 @@ export const WebsiteNavbar: React.FC = () => {
   // they had been logged out. Re-read on navigation, and on `storage` so
   // signing out in one tab updates the others.
   const [signedIn, setSignedIn] = useState(() => Boolean(loadSession()));
+  const closed = useRegistrationClosed();
 
   useEffect(() => {
     setSignedIn(Boolean(loadSession()));
@@ -253,13 +255,15 @@ export const WebsiteNavbar: React.FC = () => {
               onClick={() =>
                 signedIn
                   ? handleNavClick('dashboard', 'DASHBOARD!')
+                  : closed
+                  ? undefined
                   : handleNavClick('register', 'REGISTER!')
               }
             >
               <button className="comic-button-cyan" type="button">
                 <span className="back-box-cyan" />
                 <span className="front-box-cyan">
-                  <span>{signedIn ? 'DASHBOARD' : 'REGISTER'}</span>
+                  <span>{signedIn ? 'DASHBOARD' : closed ? 'CLOSED' : 'REGISTER'}</span>
                 </span>
               </button>
             </MagneticElement>
@@ -373,12 +377,14 @@ export const WebsiteNavbar: React.FC = () => {
               onClick={() =>
                 signedIn
                   ? handleNavClick('dashboard', 'DASHBOARD!')
+                  : closed
+                  ? undefined
                   : handleNavClick('register', 'REGISTER!')
               }
             >
               <span className="back-box-cyan" />
               <span className="front-box-cyan">
-                <span>{signedIn ? 'DASHBOARD' : 'REGISTER'}</span>
+                <span>{signedIn ? 'DASHBOARD' : closed ? 'CLOSED' : 'REGISTER'}</span>
               </span>
             </button>
           </div>

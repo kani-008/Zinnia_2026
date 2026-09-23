@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
 import { loadSession, clearSession } from '../lib/participant/api';
+import { REGISTRATION_CLOSED_LABEL, useRegistrationClosed } from '../lib/registrationWindow';
 import { WebsiteFooter } from '../components/layout/Footer';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import robotMascot from '../assets/1.svg';
@@ -179,6 +180,14 @@ const calculateTimeLeft = () => {
 export const WebsiteHomePage: React.FC = () => {
   const navigate = useNavigate();
   const [signedIn, setSignedIn] = useState(() => Boolean(loadSession()));
+  // Registration is over: the CTA says so instead of opening a form the
+  // server would refuse. A signed-in participant still reaches their dashboard.
+  const closed = useRegistrationClosed();
+  const goRegister = () => {
+    if (signedIn) return navigate('/participant/dashboard');
+    if (closed) return;
+    navigate('/register');
+  };
   const location = useLocation();
 
   // Real-time ticking countdown to September 24, 2026 (calculated instantly without initial dummy values)
@@ -467,7 +476,7 @@ export const WebsiteHomePage: React.FC = () => {
 
             {/* Register CTA (mobile) */}
             <div className="relative z-20 mt-6 mb-5 w-full flex justify-center px-2">
-              <MagneticElement strength={0.3} onClick={() => navigate(signedIn ? '/participant/dashboard' : '/register')} className="w-full">
+              <MagneticElement strength={0.3} onClick={goRegister} className="w-full">
                 <div className="comic-cta-wrapper w-full group">
                   <span className="comic-cta-back" />
                   <button
@@ -478,7 +487,7 @@ export const WebsiteHomePage: React.FC = () => {
                       className="font-comic font-black tracking-wider uppercase italic text-[#090A0B] whitespace-nowrap"
                       style={{ fontSize: 'clamp(1rem, 4.6vw, 1.35rem)' }}
                     >
-                      {signedIn ? 'GO TO YOUR DASHBOARD' : 'REGISTER FOR ZINNIA'}
+                      {signedIn ? 'GO TO YOUR DASHBOARD' : closed ? REGISTRATION_CLOSED_LABEL : 'REGISTER FOR ZINNIA'}
                     </span>
                     <svg viewBox="0 0 32 20" className="w-5 h-4 sm:w-6 sm:h-4.5 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
                       <path d="M 3 10 L 25 10" strokeWidth="3.2" strokeLinecap="round" />
@@ -535,7 +544,7 @@ export const WebsiteHomePage: React.FC = () => {
 
             {/* REGISTER FOR ZINNIA → CTA Button */}
             <div className="mt-3.5 w-full max-w-md flex justify-center">
-              <MagneticElement strength={0.3} onClick={() => navigate(signedIn ? '/participant/dashboard' : '/register')} className="w-auto">
+              <MagneticElement strength={0.3} onClick={goRegister} className="w-auto">
                 <div className="comic-cta-wrapper w-auto group">
                   <span className="comic-cta-back" />
                   <div className="absolute -inset-2 pointer-events-none z-0">
@@ -565,7 +574,7 @@ export const WebsiteHomePage: React.FC = () => {
                     className="comic-cta-front px-12 md:px-14 py-3.5 flex items-center justify-center gap-3 w-auto"
                   >
                     <span className="font-comic font-black text-lg md:text-xl lg:text-2xl tracking-wider uppercase italic text-[#090A0B]">
-                      {signedIn ? 'GO TO YOUR DASHBOARD' : 'REGISTER FOR ZINNIA'}
+                      {signedIn ? 'GO TO YOUR DASHBOARD' : closed ? REGISTRATION_CLOSED_LABEL : 'REGISTER FOR ZINNIA'}
                     </span>
                     <svg viewBox="0 0 32 20" className="w-7 h-5 stroke-[#090A0B] fill-none shrink-0 group-hover:translate-x-1.5 transition-transform duration-150">
                       <path d="M 3 10 L 25 10" strokeWidth="3.2" strokeLinecap="round" />

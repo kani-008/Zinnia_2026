@@ -84,6 +84,12 @@ participant_bp.route("/api/participant/events/confirm", methods=["POST"])(
     require_participant(rate_limit(5)(ParticipantDashboardController.confirm_lineup))
 )
 
+# Public: the website's event cards, so a Close on the admin Events page shows
+# up for visitors who are not signed in.
+participant_bp.route("/api/events/status", methods=["GET"])(
+    rate_limit(60)(ParticipantDashboardController.event_status)
+)
+
 participant_bp.route("/api/participant/events/cancel", methods=["POST"])(
     require_participant(rate_limit(20)(ParticipantDashboardController.cancel_event))
 )

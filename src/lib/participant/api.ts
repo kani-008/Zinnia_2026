@@ -10,6 +10,7 @@ import type {
   ConfirmLineupResponse,
   CreateTeamRequest,
   DashboardResponse,
+  EventStatusResponse,
   EventCode,
   ApiResult,
   MutationResponse,
@@ -296,6 +297,10 @@ export const submitPayment = (payload: {
 /* ==========================================================================
    Dashboard + event registration (§4.3) — only meaningful once confirmed
    ========================================================================== */
+
+/** Public: which events are closed or full, for the website's event cards. */
+export const getEventStatus = (): Promise<EventStatusResponse> =>
+  request<EventStatusResponse>('/api/events/status');
 
 export const getDashboard = (): Promise<DashboardResponse> =>
   request<DashboardResponse>('/api/participant/dashboard', { auth: true });

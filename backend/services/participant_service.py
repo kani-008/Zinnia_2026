@@ -150,6 +150,14 @@ def _validate_details(data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
 # --- endpoints -------------------------------------------------------------
 
+def _website_closes_at() -> dt.datetime:
+    """When the website stops taking new registrations - the rule engine's instant."""
+    from services import rules_engine as rules
+
+    when = dt.datetime.fromisoformat(rules._CLOSES_DEFAULT)
+    return when if when.tzinfo else when.replace(tzinfo=dt.timezone.utc)
+
+
 def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
     """
     POST /api/participant/register
@@ -165,8 +173,22 @@ def register_participant(data: Dict[str, Any]) -> Dict[str, Any]:
     import secrets
 
     from services import pending_registration as pending
+    from services import rules_engine as rules
     from services.email_service import RecipientRefused
     from services.participant_auth_service import send_pending_otp_email
+
+    # The website closes at 9:00 PM on 23 September. The on-spot desk does not
+    # come through here at all (services/spot_registration_service.py), so it
+    # keeps registering walk-ins on the fest day.
+    if dt.datetime.now(dt.timezone.utc) > _website_closes_at():
+        return {
+            "success": False,
+            "error_code": "REGISTRATION_CLOSED",
+            "message": (
+                "Online registration closed at 9:00 PM on 23 September. "
+                "You can still join at the on-spot desk on the day."
+            ),
+        }
 
     invalid = _validate_details(data)
     if invalid:

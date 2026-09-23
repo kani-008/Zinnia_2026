@@ -16,6 +16,7 @@ import { Bus, Clock, Mail, MapPin, Phone } from 'lucide-react';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { WebsiteFooter } from '../components/layout/Footer';
 import { registerNav } from '../services/registerNavigation';
+import { useRegistrationClosed } from '../lib/registrationWindow';
 import {
   ComicBolt,
   ComicCTA,
@@ -188,6 +189,7 @@ const BusRunRow: React.FC<{ run: BusRun; tone: keyof typeof BUS_ROW_TONE }> = ({
 );
 
 export const WebsiteContactPage: React.FC = () => {
+  const closed = useRegistrationClosed();
   const navigate = useNavigate();
   const [interactiveSoundText, setInteractiveSoundText] = useState<string | null>(null);
 
@@ -464,12 +466,13 @@ export const WebsiteContactPage: React.FC = () => {
             tone="cyan"
             fullWidth={false}
             onClick={() => {
+              if (closed) return;   // registration is over
               triggerComicFX('REGISTER!');
               registerNav.setNavigator((path) => navigate(path));
               registerNav.trigger();
             }}
           >
-            Register for Zinnia
+            {closed ? 'Registration closed' : 'Register for Zinnia'}
           </ComicCTA>
         </div>
       </main>

@@ -125,6 +125,12 @@ class ParticipantDashboardController:
         )
 
     @staticmethod
+    def event_status():
+        """Public: what the website may say about each event. Reads only."""
+        endpoint = "GET /api/events/status"
+        return _guard(endpoint, lambda: _respond(events.public_status(), endpoint))
+
+    @staticmethod
     def confirm_lineup():
         endpoint = "POST /api/participant/events/confirm"
         return _guard(

@@ -3,7 +3,9 @@ import { RegistrationPassCard } from '../components/events/RegistrationPassCard'
 import { Link, useNavigate } from 'react-router-dom';
 import { store } from '../services/store';
 import { registerNav } from '../services/registerNavigation';
-import { loadSession } from '../lib/participant/api';
+import { getEventStatus, loadSession } from '../lib/participant/api';
+import { REGISTRATION_CLOSED_LABEL, useRegistrationClosed } from '../lib/registrationWindow';
+import { MISSION_ID_BY_EVENT_CODE } from '../config/events';
 import { EventMission } from '../types';
 import { WebsiteNavbar } from '../components/layout/Navbar';
 import { EventScheduleView } from '../components/ui/EventScheduleView';
@@ -33,11 +35,22 @@ export const WebsiteEventsPage: React.FC = () => {
   // event picking happens on the dashboard, which is also the only place that
   // knows what they already hold.
   const signedIn = Boolean(loadSession());
-  const goRegister = (missionId: string) =>
-    navigate(signedIn ? '/participant/dashboard' : `/register?mission=${missionId}`);
+  const closed = useRegistrationClosed();
+  const goRegister = (missionId: string) => {
+    if (signedIn) return navigate('/participant/dashboard');
+    if (closed) return;   // the button says so; the server would refuse anyway
+    navigate(`/register?mission=${missionId}`);
+  };
   const [activeTab, setActiveTab] = useState<'ALL' | 'TECH' | 'NON_TECH'>('ALL');
   const [events, setEvents] = useState<EventMission[]>(() => store.getEvents());
   const [selectedEvent, setSelectedEvent] = useState<EventMission | null>(null);
+  /**
+   * Mission id -> what to say instead of its urgency note, for events that
+   * are no longer taking registrations. The catalog here is static, so this
+   * is the one live thing on the page; if the request fails nothing is
+   * claimed, and the cards read exactly as they did before.
+   */
+  const [closedNotes, setClosedNotes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const unsub = store.subscribe(() => {
@@ -46,6 +59,30 @@ export const WebsiteEventsPage: React.FC = () => {
     store.syncFromSupabase();
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      const result = await getEventStatus();
+      if (!live || !result.success) return;
+      const notes: Record<string, string> = {};
+      for (const e of result.events) {
+        const id = MISSION_ID_BY_EVENT_CODE[e.code];
+        if (!id) continue;
+        // Full, or shut by the organisers on the admin panel: no seat to be
+        // had. A date that has simply passed is a different thing, and says so.
+        if (e.full || e.closed_by_organisers) notes[id] = 'Slots are full.';
+        else if (!e.open) notes[id] = 'Registration is closed.';
+      }
+      setClosedNotes(notes);
+    })();
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const closedNoteFor = (mission: EventMission | null) =>
+    (mission && closedNotes[mission.id]) || null;
 
   const byDisplayOrder = (a: EventMission, b: EventMission) =>
     (a.display_order ?? 99) - (b.display_order ?? 99);
@@ -165,7 +202,7 @@ export const WebsiteEventsPage: React.FC = () => {
                 : 'bg-[#141417] text-[#FF3366] border-[#FF3366] hover:bg-[#FF3366] hover:text-white'
             }`}
           >
-            <span>REGISTER FOR {e.code}</span>
+            <span>{closed ? REGISTRATION_CLOSED_LABEL : `REGISTER FOR ${e.code}`}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -367,7 +404,11 @@ export const WebsiteEventsPage: React.FC = () => {
         </div>
       </div>
 
-      <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+      <EventDetailModal
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        closedNote={closedNoteFor(selectedEvent)}
+      />
 
     </div>
   );

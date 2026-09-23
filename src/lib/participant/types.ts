@@ -242,6 +242,16 @@ export type DashboardResponse = ApiResult<{
 
 export type MutationResponse = ApiResult<{ message?: string }>;
 
+export interface PublicEventStatus {
+  code: EventCode;
+  open: boolean;
+  closed_by_organisers: boolean;
+  full: boolean;
+  seats_left: number | null;
+}
+
+export type EventStatusResponse = ApiResult<{ events: PublicEventStatus[] }>;
+
 export type ConfirmLineupResponse = ApiResult<{ message?: string; confirmed_at?: string }>;
 
 /* ==========================================================================

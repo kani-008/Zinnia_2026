@@ -216,6 +216,41 @@ def get_dashboard(user_id: str) -> Dict[str, Any]:
     }
 
 
+def public_status() -> Dict[str, Any]:
+    """
+    GET /api/events/status - what the website may say about each event.
+
+    Public and deliberately thin: whether an event still takes registrations
+    and whether it is full. No names, no counts of who registered - only what
+    a visitor already sees on the card. `open` is false the moment an admin
+    presses Close on the Events page, which is what the "Slots are full."
+    line on the site keys off.
+    """
+    capacity = capacity_map()
+    rows = {r["code"]: r for r in db.select("events", "select=code,is_active")}
+    now = dt.datetime.now(dt.timezone.utc)
+
+    events = []
+    for code, event in rules.EVENTS.items():
+        row = rows.get(code)
+        left = capacity.get(code)
+        closed_by_admin = bool(row) and row.get("is_active") is False
+        past_close = now > _parse_close(event.reg_closes_at)
+        events.append({
+            "code": code,
+            "open": not closed_by_admin and not past_close,
+            "closed_by_organisers": closed_by_admin,
+            "full": left is not None and left <= 0,
+            "seats_left": left,
+        })
+    return {"success": True, "events": events}
+
+
+def _parse_close(value: str) -> dt.datetime:
+    when = dt.datetime.fromisoformat(value)
+    return when if when.tzinfo else when.replace(tzinfo=dt.timezone.utc)
+
+
 def pending_invites(user_id: str) -> List[Dict[str, Any]]:
     """Teams awaiting this participant's Accept/Decline (D2). Used from Phase 5."""
     rows = db.select(
