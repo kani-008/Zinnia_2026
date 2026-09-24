@@ -7,6 +7,7 @@ import { Banner, Button, Card, SectionTitle, cx } from '../components';
 
 const SHEETS = [
   { key: 'participants', label: 'All participants', hint: 'the master list' },
+  { key: 'spot', label: 'On-spot desk', hint: 'walk-ins registered at the desk' },
   { key: 'events', label: 'One sheet per event', hint: 'team composition and payment state' },
   { key: 'food', label: 'Food — veg and non-veg', hint: 'two sheets, two counters' },
   { key: 'payments', label: 'Payment — verified and not', hint: 'the second one is the chase list' },

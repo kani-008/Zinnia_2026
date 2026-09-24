@@ -143,6 +143,27 @@ PAYMENT_COLUMNS = [
     ("events_count", "Events"),
 ]
 
+# The desk's own page: who was registered at the desk, by which desk, and how
+# they paid. Everything here is already on "All Participants"; this tab is the
+# slice the desk and the treasurer count at the end of the day.
+SPOT_COLUMNS = [
+    ("user_id", "UserID"),
+    ("name", "Name"),
+    ("college", "College"),
+    ("phone", "Phone"),
+    ("email", "Email"),
+    ("food", "Food"),
+    ("amount", "Amount"),
+    ("spot_method", "Paid by"),
+    ("spot_desk", "Collected by"),
+    ("payee_bank", "UPI account"),
+    ("payment_status", "Payment"),
+    ("events_count", "Events"),
+    ("event_list", "Event list"),
+    ("team_names", "Teams"),
+    ("registered_at", "Registered at"),
+]
+
 EVENT_COLUMNS = [
     ("team_name", "Team"),
     ("team_status", "Team status"),
@@ -249,6 +270,30 @@ def _participant_rows() -> List[Dict[str, Any]]:
     return out
 
 
+def _spot_rows(participants: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Walk-ins only, newest first.
+
+    A desk registration is marked by its payment note - "ON-SPOT | Cash |
+    collected by On-spot Desk 2" - which spot_registration_service writes and
+    owns the shape of. The note is split back into the two things anyone
+    actually reads off it: how they paid, and which desk took the money.
+    """
+    from services.spot_registration_service import is_spot_note
+
+    out = []
+    for r in participants:
+        note = str(r.get("approval_note") or "")
+        if not is_spot_note(note):
+            continue
+        parts = [p.strip() for p in note.split("|")]
+        method = parts[1] if len(parts) > 2 else ""
+        desk = parts[2].replace("collected by", "").strip() if len(parts) > 2 else ""
+        out.append({**r, "spot_method": method, "spot_desk": desk})
+    out.sort(key=lambda r: str(r.get("registered_at") or ""), reverse=True)
+    return out
+
+
 def _team_rows() -> List[Dict[str, Any]]:
     """One row per team, with its members inlined. Shaped to TEAM_COLUMNS."""
     events = {e["code"]: e["name"] for e in panel._events()}
@@ -294,7 +339,7 @@ def _match(row: Dict[str, Any], filters: Dict[str, Any]) -> bool:
 
 
 # Every tab group the export knows how to build, in workbook order.
-ALL_SHEETS = ["participants", "teams", "events", "food", "payments"]
+ALL_SHEETS = ["participants", "spot", "teams", "events", "food", "payments"]
 
 
 def _collect_sheets(
@@ -327,11 +372,14 @@ def _collect_sheets(
     # registrations, participants, teams and team_members from scratch.
     with panel.cached_reads():
         participants: List[Dict[str, Any]] = []
-        if {"participants", "food", "payments"} & set(sheets):
+        if {"participants", "spot", "food", "payments"} & set(sheets):
             participants = [r for r in _participant_rows() if _match(r, filters)]
 
         if "participants" in sheets:
             out.append(("All Participants", PARTICIPANT_COLUMNS, participants))
+
+        if "spot" in sheets:
+            out.append(("On-spot Desk", SPOT_COLUMNS, _spot_rows(participants)))
 
         if "teams" in sheets:
             out.append(("Teams", TEAM_COLUMNS, _team_rows()))
